@@ -179,6 +179,17 @@ git push origin main
 
 ## Troubleshooting
 
+### Build fails with "Cannot use assets with a binding in an assets-only Worker"
+
+**Solution**: This error occurs if `wrangler.toml` is configured incorrectly for Pages.
+- Cloudflare Pages does NOT use `wrangler.toml`
+- Configuration is done entirely in the Cloudflare Pages dashboard
+- If you see this error, remove or update `wrangler.toml`
+- All configuration should be:
+  - **Build command**: `npm run build`
+  - **Build output directory**: `dist/client`
+  - **Environment variables**: Set in Pages Settings
+
 ### Build fails with "cannot find module"
 
 **Solution**: Make sure all dependencies are in `package.json`

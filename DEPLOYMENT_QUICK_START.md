@@ -57,13 +57,14 @@ Deployed to https://fuzzy-deer-123.convex.cloud
 
 ### 4️⃣ CONFIGURE BUILD SETTINGS
 
-When prompted, use these settings:
+When prompted to configure the project, use these settings:
 
 | Setting | Value |
 |---------|-------|
 | **Build command** | `npm run build` |
 | **Build output directory** | `dist/client` |
 | **Root directory** | (leave blank) |
+| **Production branch** | `main` |
 
 Then click **Save and Deploy**
 
