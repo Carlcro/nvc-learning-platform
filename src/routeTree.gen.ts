@@ -13,7 +13,12 @@ import { Route as TestScoringRouteImport } from './routes/test-scoring'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LearnIndexRouteImport } from './routes/learn/index'
+import { Route as LearnRequestRouteImport } from './routes/learn/request'
+import { Route as LearnObservationRouteImport } from './routes/learn/observation'
+import { Route as LearnNeedRouteImport } from './routes/learn/need'
 import { Route as LearnIntroductionRouteImport } from './routes/learn/introduction'
+import { Route as LearnIntegrationRouteImport } from './routes/learn/integration'
+import { Route as LearnFeelingRouteImport } from './routes/learn/feeling'
 
 const TestScoringRoute = TestScoringRouteImport.update({
   id: '/test-scoring',
@@ -35,9 +40,34 @@ const LearnIndexRoute = LearnIndexRouteImport.update({
   path: '/learn/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnRequestRoute = LearnRequestRouteImport.update({
+  id: '/learn/request',
+  path: '/learn/request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnObservationRoute = LearnObservationRouteImport.update({
+  id: '/learn/observation',
+  path: '/learn/observation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnNeedRoute = LearnNeedRouteImport.update({
+  id: '/learn/need',
+  path: '/learn/need',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LearnIntroductionRoute = LearnIntroductionRouteImport.update({
   id: '/learn/introduction',
   path: '/learn/introduction',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnIntegrationRoute = LearnIntegrationRouteImport.update({
+  id: '/learn/integration',
+  path: '/learn/integration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnFeelingRoute = LearnFeelingRouteImport.update({
+  id: '/learn/feeling',
+  path: '/learn/feeling',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -45,14 +75,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-scoring': typeof TestScoringRoute
+  '/learn/feeling': typeof LearnFeelingRoute
+  '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
+  '/learn/need': typeof LearnNeedRoute
+  '/learn/observation': typeof LearnObservationRoute
+  '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-scoring': typeof TestScoringRoute
+  '/learn/feeling': typeof LearnFeelingRoute
+  '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
+  '/learn/need': typeof LearnNeedRoute
+  '/learn/observation': typeof LearnObservationRoute
+  '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
 }
 export interface FileRoutesById {
@@ -60,7 +100,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-scoring': typeof TestScoringRoute
+  '/learn/feeling': typeof LearnFeelingRoute
+  '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
+  '/learn/need': typeof LearnNeedRoute
+  '/learn/observation': typeof LearnObservationRoute
+  '/learn/request': typeof LearnRequestRoute
   '/learn/': typeof LearnIndexRoute
 }
 export interface FileRouteTypes {
@@ -69,16 +114,36 @@ export interface FileRouteTypes {
     | '/'
     | '/anotherPage'
     | '/test-scoring'
+    | '/learn/feeling'
+    | '/learn/integration'
     | '/learn/introduction'
+    | '/learn/need'
+    | '/learn/observation'
+    | '/learn/request'
     | '/learn'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/anotherPage' | '/test-scoring' | '/learn/introduction' | '/learn'
+  to:
+    | '/'
+    | '/anotherPage'
+    | '/test-scoring'
+    | '/learn/feeling'
+    | '/learn/integration'
+    | '/learn/introduction'
+    | '/learn/need'
+    | '/learn/observation'
+    | '/learn/request'
+    | '/learn'
   id:
     | '__root__'
     | '/'
     | '/anotherPage'
     | '/test-scoring'
+    | '/learn/feeling'
+    | '/learn/integration'
     | '/learn/introduction'
+    | '/learn/need'
+    | '/learn/observation'
+    | '/learn/request'
     | '/learn/'
   fileRoutesById: FileRoutesById
 }
@@ -86,7 +151,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnotherPageRoute: typeof AnotherPageRoute
   TestScoringRoute: typeof TestScoringRoute
+  LearnFeelingRoute: typeof LearnFeelingRoute
+  LearnIntegrationRoute: typeof LearnIntegrationRoute
   LearnIntroductionRoute: typeof LearnIntroductionRoute
+  LearnNeedRoute: typeof LearnNeedRoute
+  LearnObservationRoute: typeof LearnObservationRoute
+  LearnRequestRoute: typeof LearnRequestRoute
   LearnIndexRoute: typeof LearnIndexRoute
 }
 
@@ -120,11 +190,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/request': {
+      id: '/learn/request'
+      path: '/learn/request'
+      fullPath: '/learn/request'
+      preLoaderRoute: typeof LearnRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/observation': {
+      id: '/learn/observation'
+      path: '/learn/observation'
+      fullPath: '/learn/observation'
+      preLoaderRoute: typeof LearnObservationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/need': {
+      id: '/learn/need'
+      path: '/learn/need'
+      fullPath: '/learn/need'
+      preLoaderRoute: typeof LearnNeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/introduction': {
       id: '/learn/introduction'
       path: '/learn/introduction'
       fullPath: '/learn/introduction'
       preLoaderRoute: typeof LearnIntroductionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/integration': {
+      id: '/learn/integration'
+      path: '/learn/integration'
+      fullPath: '/learn/integration'
+      preLoaderRoute: typeof LearnIntegrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/feeling': {
+      id: '/learn/feeling'
+      path: '/learn/feeling'
+      fullPath: '/learn/feeling'
+      preLoaderRoute: typeof LearnFeelingRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -134,7 +239,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
   TestScoringRoute: TestScoringRoute,
+  LearnFeelingRoute: LearnFeelingRoute,
+  LearnIntegrationRoute: LearnIntegrationRoute,
   LearnIntroductionRoute: LearnIntroductionRoute,
+  LearnNeedRoute: LearnNeedRoute,
+  LearnObservationRoute: LearnObservationRoute,
+  LearnRequestRoute: LearnRequestRoute,
   LearnIndexRoute: LearnIndexRoute,
 }
 export const routeTree = rootRouteImport

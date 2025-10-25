@@ -4,19 +4,12 @@ import { convexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { QuizSection } from '~/components/features/QuizSection'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/learn/introduction')({
   component: IntroductionLesson,
 })
-
-interface ExampleItem {
-  title: string
-  scenario: string
-  giraffResponse: string
-  jackalResponse: string
-  explanation: string
-}
 
 function IntroductionLesson() {
   const { data: lesson } = useSuspenseQuery(
@@ -198,6 +191,15 @@ function IntroductionLesson() {
             </div>
           </CardBody>
         </Card>
+
+        {/* Quiz Section */}
+        {lesson.quiz && (
+          <QuizSection
+            questions={lesson.quiz.questions}
+            passingScore={lesson.quiz.passingScore}
+            title="Review Your Learning"
+          />
+        )}
 
         {/* Key Takeaways */}
         <Card className="mb-12 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 border-purple-200 dark:border-purple-700">

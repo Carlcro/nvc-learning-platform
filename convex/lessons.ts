@@ -29,6 +29,71 @@ const LESSONS = [
           "The giraffe response expresses the feeling (hurt) and need (connection) without blame. The jackal response uses judgment and generalization.",
       },
     ],
+    quiz: {
+      questions: [
+        {
+          question: "What does the 'Giraffe' symbol represent in NVC?",
+          options: [
+            "Tall and fast judgment",
+            "Empathy and compassionate communication",
+            "Abstract thinking",
+            "Predatory communication",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "In NVC, the giraffe symbolizes empathy and compassionate communication because it has a large heart and long neck to see different perspectives. The jackal represents reactive, defensive communication.",
+        },
+        {
+          question: "Which of the following is an example of Giraffe Language (NVC)?",
+          options: [
+            "You're so irresponsible and inconsiderate.",
+            "When you arrived late, I felt worried because punctuality helps me feel respected.",
+            "You always make the same mistakes.",
+            "You should know better than that.",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This response uses NVC by including an observation (arrived late), a feeling (worried), a need (respect), showing the core components of compassionate communication.",
+        },
+        {
+          question: "What is the PRIMARY goal of Non-Violent Communication?",
+          options: [
+            "To win arguments and get your way",
+            "To make others feel guilty for their actions",
+            "To express your needs and foster mutual understanding and compassion",
+            "To avoid all conflicts at any cost",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "NVC aims to create mutual understanding and compassion by expressing your needs authentically while remaining empathetic to the other person's needs.",
+        },
+        {
+          question: "Which statement is NOT one of the 4 pillars of NVC?",
+          options: [
+            "Observation",
+            "Judgment",
+            "Feeling",
+            "Request",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "The 4 pillars of NVC are: Observation, Feeling, Need, and Request. Judgment is the opposite of what NVC teaches—observations should be free of judgment.",
+        },
+        {
+          question: "What is the key difference between a Feeling and a Pseudo-feeling in NVC?",
+          options: [
+            "Feelings are more important than pseudo-feelings",
+            "Feelings are emotions, while pseudo-feelings contain thoughts or judgments",
+            "Pseudo-feelings are more honest and authentic",
+            "There is no difference between them",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "A feeling is a genuine emotion (sad, happy, anxious), while a pseudo-feeling often contains a judgment or thought. For example, 'I feel like you don't respect me' is a pseudo-feeling because it's actually a thought. The genuine feeling might be 'I feel sad and hurt.'",
+        },
+      ],
+      passingScore: 60,
+    },
   },
   {
     lessonId: "observation",
@@ -60,6 +125,71 @@ const LESSONS = [
           'The giraffe response is specific and factual. The jackal uses "never" which is a generalization.',
       },
     ],
+    quiz: {
+      questions: [
+        {
+          question: "What is the key difference between an observation and a judgment?",
+          options: [
+            "Observations are always positive, judgments are always negative",
+            "Observations describe observable facts without evaluation; judgments include interpretation and evaluation",
+            "Observations are used for good people; judgments are used for bad people",
+            "There is no difference between them",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "An observation states what you can see, hear, or experience without interpretation. A judgment adds evaluation, blame, or interpretation to what you observe.",
+        },
+        {
+          question: "Which of the following is a pure observation WITHOUT judgment?",
+          options: [
+            "You're always messy and disorganized",
+            "You left your shoes by the door three times this week",
+            "You're irresponsible with your belongings",
+            "You never put things away",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This is a specific, observable fact with a time frame. The others use generalizations ('always,' 'never') or judgments ('messy,' 'irresponsible').",
+        },
+        {
+          question: "What should you avoid in observations according to NVC?",
+          options: [
+            "Being too specific with details",
+            "Using numbers or measurements",
+            "Generalizations like 'always,' 'never,' 'constantly'",
+            "Describing exactly what happened",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "Generalizations distort the observation and make it sound like a judgment. Pure observations avoid words like 'always,' 'never,' 'constantly,' and other absolute statements.",
+        },
+        {
+          question: "How should you express an observation about someone's behavior?",
+          options: [
+            "Based on what you think about their character",
+            "What you directly see, hear, or experience without interpretation",
+            "Based on past patterns to predict future behavior",
+            "Based on what others have told you",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "An observation must be based on direct sensory experience - what you actually see or hear - without adding your interpretation or character judgment.",
+        },
+        {
+          question: "Which statement best follows the observation pillar of NVC?",
+          options: [
+            "When I see you roll your eyes at me, I assume you don't respect me",
+            "When you roll your eyes at me, I feel hurt because respect is important",
+            "You always roll your eyes at everything I say, which is disrespectful",
+            "I think you're judgmental because you roll your eyes",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This correctly separates the observation (you roll your eyes) from the feeling (hurt) without adding judgment or interpretation about their character or intentions.",
+        },
+      ],
+      passingScore: 60,
+    },
   },
   {
     lessonId: "feeling",
@@ -90,6 +220,71 @@ const LESSONS = [
           "The giraffe response owns the feeling. The jackal blames the other person for causing the feeling.",
       },
     ],
+    quiz: {
+      questions: [
+        {
+          question: "What is the main difference between a feeling and a pseudo-feeling?",
+          options: [
+            "Feelings are always stronger than pseudo-feelings",
+            "Feelings are actual emotions; pseudo-feelings contain thoughts or judgments",
+            "Pseudo-feelings are more important in NVC",
+            "There is no real difference between them",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "Genuine feelings are emotions like happy, sad, anxious, or angry. Pseudo-feelings like 'I feel rejected' or 'I feel betrayed' are actually thoughts or interpretations about what others think of you.",
+        },
+        {
+          question: "Which of these is a genuine feeling (not a pseudo-feeling)?",
+          options: [
+            "I feel like you don't care about me",
+            "I feel anxious and worried",
+            "I feel that you're being unfair",
+            "I feel like nobody respects me",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "'Anxious and worried' are actual emotions you can experience. The others are pseudo-feelings because they contain judgments about what others think (don't care, unfair, disrespectful).",
+        },
+        {
+          question: "In NVC, how should you express feelings?",
+          options: [
+            "Blame the other person for causing them",
+            "Own your feelings without blaming others for them",
+            "Assume the other person knows how you feel",
+            "Only express positive feelings",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "In NVC, you own your feelings by saying 'I felt sad' rather than 'You made me sad.' This empowers you and keeps communication focused on understanding rather than blame.",
+        },
+        {
+          question: "What's wrong with saying 'You made me angry'?",
+          options: [
+            "It's grammatically incorrect",
+            "Anger is not a real feeling",
+            "It gives the other person power over your emotions and suggests blame",
+            "It's too direct",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "While the other person's actions may have triggered your anger, they didn't 'make' you feel it. You're responsible for your feelings. NVC emphasizes owning emotions: 'I feel angry when...' instead of 'You made me angry.'",
+        },
+        {
+          question: "Which statement best expresses feelings authentically in NVC?",
+          options: [
+            "I feel like you never listen to me",
+            "I feel hurt and disappointed because connection is important to me",
+            "You always make me feel anxious",
+            "I feel that you don't understand me",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This response names genuine emotions (hurt, disappointed), owns the feelings, and connects them to a need (connection). It doesn't blame or include judgments about the other person.",
+        },
+      ],
+      passingScore: 60,
+    },
   },
   {
     lessonId: "need",
@@ -122,6 +317,71 @@ const LESSONS = [
           "The giraffe response connects to universal needs (reliability, respect). The jackal makes a demand without expressing the underlying need.",
       },
     ],
+    quiz: {
+      questions: [
+        {
+          question: "What is the difference between a need and a strategy?",
+          options: [
+            "Needs are demands, strategies are requests",
+            "A need is a universal human requirement; a strategy is a specific way to meet that need",
+            "Strategies are more important than needs",
+            "There is no difference between them",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "A need is something fundamental to human wellbeing (safety, connection, respect). A strategy is a specific action to meet that need. For example, 'connection' is a need; 'having dinner together' is a strategy.",
+        },
+        {
+          question: "Which of the following is a universal need (not a strategy)?",
+          options: [
+            "Your partner should help with housework",
+            "You should listen to me more",
+            "Autonomy and respect",
+            "You need to be on time",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "'Autonomy and respect' are universal human needs that apply to all people. The others are specific strategies or demands for particular behaviors.",
+        },
+        {
+          question: "How many universal human needs are there in NVC?",
+          options: [
+            "About 3-5",
+            "Exactly 10",
+            "About 15-20 major categories",
+            "It varies from person to person",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "Marshall Rosenberg identified approximately 15-20 major universal human needs including connection, autonomy, safety, meaning, creativity, rest, and many others that apply across all cultures.",
+        },
+        {
+          question: "What's the best way to identify your underlying need?",
+          options: [
+            "Demand that others meet your needs",
+            "Look beneath your feelings to understand what's important to you",
+            "Assume others know what you need",
+            "Express your needs as demands",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "In NVC, you identify needs by exploring what's important to you beneath your feelings. Ask yourself: 'What am I really wanting?' or 'What's important to me in this situation?'",
+        },
+        {
+          question: "Which statement best connects a feeling to a universal need?",
+          options: [
+            "I feel sad because you're not helping with chores",
+            "I feel hurt because respect and shared responsibility are important to me",
+            "I feel frustrated because you need to change",
+            "I feel angry because you never listen",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This response identifies the feeling (hurt), connects it to universal needs (respect, shared responsibility), and avoids blame. It shows what's truly important rather than focusing on specific behaviors.",
+        },
+      ],
+      passingScore: 60,
+    },
   },
   {
     lessonId: "request",
@@ -152,6 +412,71 @@ const LESSONS = [
           "The giraffe response asks for a positive action. The jackal uses negative language (what not to do).",
       },
     ],
+    quiz: {
+      questions: [
+        {
+          question: "What is the key characteristic of a request in NVC?",
+          options: [
+            "It's a demand that others must follow",
+            "It asks for a concrete action and the other person can say no",
+            "It assumes others know what you want",
+            "It focuses on what the other person shouldn't do",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "In NVC, a request is different from a demand. A request asks for a specific, doable action AND leaves room for the other person to decline without judgment or punishment.",
+        },
+        {
+          question: "Which of the following is a clear, actionable request?",
+          options: [
+            "You should stop being late",
+            "I need you to care more about our relationship",
+            "Would you be willing to call me when you're running late?",
+            "You have to listen better",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "This request is specific (call when running late), concrete (the person knows exactly what to do), and can be declined. The others are vague demands or judgments.",
+        },
+        {
+          question: "Why is positive language important in making requests?",
+          options: [
+            "Because people have to obey positive requests",
+            "Because it describes what you want rather than what you don't want",
+            "Because it sounds nicer",
+            "Because it doesn't require thinking",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "Positive requests tell people what TO DO rather than what NOT to do. 'Please speak quietly' is clearer than 'Stop being so loud.' Positive language helps people understand the action you're requesting.",
+        },
+        {
+          question: "What should you do if someone declines your request?",
+          options: [
+            "Punish them or withdraw affection",
+            "Listen to their needs and look for other strategies to meet yours",
+            "Repeat the same request over and over",
+            "Assume they don't care about you",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "In NVC, if someone can't meet your request, it's an opportunity for dialogue. You listen to their needs and constraints, then explore other ways to meet your needs together.",
+        },
+        {
+          question: "Which statement is the best example of an NVC request?",
+          options: [
+            "You need to be more responsible",
+            "Stop being so messy",
+            "Would you be willing to put dirty clothes in the hamper when you change?",
+            "You're always inconsiderate",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "This request is concrete (put dirty clothes in hamper), specific about the action, asks 'would you be willing' (leaving room for declining), and doesn't include blame or judgment.",
+        },
+      ],
+      passingScore: 60,
+    },
   },
   {
     lessonId: "integration",
@@ -185,6 +510,83 @@ const LESSONS = [
           "The giraffe response shows empathy and curiosity about the other person's feelings. The jackal dismisses and minimizes.",
       },
     ],
+    quiz: {
+      questions: [
+        {
+          question: "Which response includes all 4 NVC components (observation, feeling, need, request)?",
+          options: [
+            "You never listen to me and you don't care about my feelings.",
+            "When you interrupt me, I feel frustrated because being heard is important to me. Would you be willing to let me finish speaking?",
+            "I feel like you're not respecting me. You need to change.",
+            "You're inconsiderate and rude.",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This response includes: observation (you interrupt me), feeling (frustrated), need (being heard), and request (let me finish speaking). All four pillars are present.",
+        },
+        {
+          question: "In a complete NVC expression, what comes AFTER expressing your need?",
+          options: [
+            "Blame the other person",
+            "Repeat the observation",
+            "Make a clear request",
+            "Judge their character",
+          ],
+          correctAnswer: 2,
+          explanation:
+            "The complete NVC flow is: Observation → Feeling → Need → Request. The request comes last and asks for concrete action.",
+        },
+        {
+          question: "What is the purpose of making a request at the end of a complete NVC expression?",
+          options: [
+            "To demand that the other person obey you",
+            "To ask for a specific action that could meet your need, while respecting their freedom to say no",
+            "To make the other person feel guilty",
+            "To prove you're right",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "A request in NVC is meant to propose a concrete action that could help meet your need, while leaving the other person free to decline. It's collaborative, not coercive.",
+        },
+        {
+          question: "How would you translate this jackal statement into a complete NVC expression? 'You're always late and irresponsible.'",
+          options: [
+            "You're a bad person for being late.",
+            "When you arrive 15 minutes after we agreed, I feel anxious because reliability and respect are important to me. Would you be willing to call if you're running late?",
+            "Stop being irresponsible.",
+            "You never respect my time.",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This response provides: specific observation (15 minutes late), emotion (anxious), universal need (reliability, respect), and concrete request (call if running late).",
+        },
+        {
+          question: "What makes a complete NVC expression different from just expressing anger or frustration?",
+          options: [
+            "It's longer and more complicated",
+            "It expresses all four components and focuses on understanding rather than blame",
+            "It makes the other person feel worse",
+            "It's more forceful and demanding",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "A complete NVC expression moves beyond blame to mutual understanding by clearly naming observations, feelings, needs, and requests. This opens dialogue rather than closing it.",
+        },
+        {
+          question: "Which of the following is a complete and compassionate NVC expression?",
+          options: [
+            "You're selfish and you never think about anyone but yourself.",
+            "When I don't hear from you for days, I feel hurt and disconnected because friendship and closeness are important to me. Would you be willing to reach out more often?",
+            "You need to care about our friendship more.",
+            "You're a terrible friend.",
+          ],
+          correctAnswer: 1,
+          explanation:
+            "This expression includes all components: observation (no contact for days), feeling (hurt, disconnected), need (friendship, closeness), and request (reach out more often). It invites dialogue and understanding.",
+        },
+      ],
+      passingScore: 60,
+    },
   },
 ];
 
