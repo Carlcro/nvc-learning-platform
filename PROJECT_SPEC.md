@@ -24,8 +24,7 @@ Create a fun, interactive learning platform that teaches users to communicate us
 - **Scheduled Tasks**: Convex Crons
 
 ### AI Integration
-- **Provider**: Anthropic Claude API (via Convex Actions)
-- **Primary Model**: Claude Sonnet 4.5
+- **Provider**: OPEN AI (via Convex Actions)
 - **Use Cases**: 
   - Roleplay conversation generation
   - NVC response analysis and scoring
@@ -619,7 +618,7 @@ npx convex dev      # Convex local development
 ### Technical Documentation
 - TanStack Start: https://tanstack.com/start
 - Convex: https://docs.convex.dev
-- Anthropic Claude: https://docs.anthropic.com
+- create chat with open ai https://stack.convex.dev/full-stack-chatgpt-app
 - Cloudflare Pages: https://developers.cloudflare.com/pages
 
 ---

@@ -8,7 +8,9 @@
  * @module
  */
 
-import type * as myFunctions from "../myFunctions.js";
+import type * as ai from "../ai.js";
+import type * as lessons from "../lessons.js";
+import type * as scenarios from "../scenarios.js";
 
 import type {
   ApiFromModules,
@@ -25,7 +27,9 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  myFunctions: typeof myFunctions;
+  ai: typeof ai;
+  lessons: typeof lessons;
+  scenarios: typeof scenarios;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

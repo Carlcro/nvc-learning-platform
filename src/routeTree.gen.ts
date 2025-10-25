@@ -9,9 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestScoringRouteImport } from './routes/test-scoring'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LearnIndexRouteImport } from './routes/learn/index'
+import { Route as LearnIntroductionRouteImport } from './routes/learn/introduction'
 
+const TestScoringRoute = TestScoringRouteImport.update({
+  id: '/test-scoring',
+  path: '/test-scoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnotherPageRoute = AnotherPageRouteImport.update({
   id: '/anotherPage',
   path: '/anotherPage',
@@ -22,35 +30,75 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnIndexRoute = LearnIndexRouteImport.update({
+  id: '/learn/',
+  path: '/learn/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnIntroductionRoute = LearnIntroductionRouteImport.update({
+  id: '/learn/introduction',
+  path: '/learn/introduction',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/test-scoring': typeof TestScoringRoute
+  '/learn/introduction': typeof LearnIntroductionRoute
+  '/learn': typeof LearnIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/test-scoring': typeof TestScoringRoute
+  '/learn/introduction': typeof LearnIntroductionRoute
+  '/learn': typeof LearnIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/test-scoring': typeof TestScoringRoute
+  '/learn/introduction': typeof LearnIntroductionRoute
+  '/learn/': typeof LearnIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/anotherPage'
+  fullPaths:
+    | '/'
+    | '/anotherPage'
+    | '/test-scoring'
+    | '/learn/introduction'
+    | '/learn'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/anotherPage'
-  id: '__root__' | '/' | '/anotherPage'
+  to: '/' | '/anotherPage' | '/test-scoring' | '/learn/introduction' | '/learn'
+  id:
+    | '__root__'
+    | '/'
+    | '/anotherPage'
+    | '/test-scoring'
+    | '/learn/introduction'
+    | '/learn/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnotherPageRoute: typeof AnotherPageRoute
+  TestScoringRoute: typeof TestScoringRoute
+  LearnIntroductionRoute: typeof LearnIntroductionRoute
+  LearnIndexRoute: typeof LearnIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/test-scoring': {
+      id: '/test-scoring'
+      path: '/test-scoring'
+      fullPath: '/test-scoring'
+      preLoaderRoute: typeof TestScoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/anotherPage': {
       id: '/anotherPage'
       path: '/anotherPage'
@@ -65,12 +113,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/': {
+      id: '/learn/'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/introduction': {
+      id: '/learn/introduction'
+      path: '/learn/introduction'
+      fullPath: '/learn/introduction'
+      preLoaderRoute: typeof LearnIntroductionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
+  TestScoringRoute: TestScoringRoute,
+  LearnIntroductionRoute: LearnIntroductionRoute,
+  LearnIndexRoute: LearnIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx convex dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(CONVEX_DEPLOYMENT=\"dev:good-vole-921\" npx convex dev:*)",
+      "Bash(cat:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
