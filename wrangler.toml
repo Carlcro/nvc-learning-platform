@@ -1,0 +1,22 @@
+name = "nvc-learning-platform"
+type = "javascript"
+compatibility_date = "2024-11-15"
+
+# Build configuration for Cloudflare Pages
+[build]
+command = "npm run build"
+cwd = "./dist/client"
+
+# Environment variables (set these in Cloudflare Pages dashboard)
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+# Define route handlers for API calls
+[[routes]]
+pattern = "/api/*"
+zone_name = "example.com"
+
+# Asset upload configuration
+[assets]
+binding = "ASSETS"
+directory = "dist/client"
