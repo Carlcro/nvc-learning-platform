@@ -595,7 +595,7 @@ const LESSONS = [
  * Returns lessons in order with all content needed for the UI
  */
 export const getAllLessons = query({
-  handler: async (ctx) => {
+  handler: async () => {
     // Return the hardcoded lessons in order
     // In the future, this could query from the database
     return LESSONS.sort((a, b) => a.order - b.order);
@@ -607,7 +607,7 @@ export const getAllLessons = query({
  */
 export const getLessonById = query({
   args: { lessonId: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (_, args) => {
     return LESSONS.find((lesson) => lesson.lessonId === args.lessonId) || null;
   },
 });

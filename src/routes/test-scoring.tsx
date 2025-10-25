@@ -54,13 +54,6 @@ function TestScoringPage() {
     }
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 20) return 'text-green-600'
-    if (score >= 15) return 'text-blue-600'
-    if (score >= 10) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   const getTotalColor = (total: number) => {
     if (total >= 90) return 'bg-green-100 text-green-800'
     if (total >= 70) return 'bg-blue-100 text-blue-800'

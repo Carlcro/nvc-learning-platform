@@ -13,16 +13,27 @@ interface Lesson {
   lessonId: string
   title: string
   description: string
-  component:
-    | 'introduction'
-    | 'observation'
-    | 'feeling'
-    | 'need'
-    | 'request'
-    | 'integration'
+  component: string
   order: number
   estimatedDuration: number
   icon: string
+  content: string
+  examples: Array<{
+    title: string
+    scenario: string
+    giraffResponse: string
+    jackalResponse: string
+    explanation: string
+  }>
+  quiz: {
+    questions: Array<{
+      question: string
+      options: string[]
+      correctAnswer: number
+      explanation: string
+    }>
+    passingScore: number
+  }
 }
 
 function LearnHub() {
@@ -98,8 +109,10 @@ function LessonCard({ lesson }: LessonCardProps) {
   const isCompleted = false // TODO: Check user progress
   const lessonNumber = lesson.order
 
+  const href = `/learn/${lesson.lessonId}` as '/learn/introduction' | '/learn/observation' | '/learn/feeling' | '/learn/need' | '/learn/request' | '/learn/integration'
+
   return (
-    <Link to={`/learn/${lesson.lessonId}`}>
+    <Link to={href}>
       <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden">
         {/* Lesson Number Badge */}
         <div className="bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-700 dark:to-emerald-700 px-6 py-4">
