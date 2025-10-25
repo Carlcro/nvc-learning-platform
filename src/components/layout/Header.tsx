@@ -1,12 +1,12 @@
 import React, { type HTMLAttributes } from 'react'
 
-export interface HeaderProps extends HTMLAttributes<HTMLElement> {
+export interface HeaderProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
   sticky?: boolean
   sticky_class?: string
 }
 
-export interface HeaderNavProps extends HTMLAttributes<HTMLElement> {
+export interface HeaderNavProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
 }
 

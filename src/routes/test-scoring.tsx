@@ -54,13 +54,6 @@ function TestScoringPage() {
     }
   }
 
-  const getTotalColor = (total: number) => {
-    if (total >= 90) return 'bg-green-100 text-green-800'
-    if (total >= 70) return 'bg-blue-100 text-blue-800'
-    if (total >= 50) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
-  }
-
   const getTotalStatus = (total: number) => {
     if (total >= 90) return 'Excellent NVC (Pure Giraffe)'
     if (total >= 70) return 'Good NVC (Minor improvements)'
@@ -135,7 +128,15 @@ function TestScoringPage() {
                     Overall Score
                   </h2>
                   <div
-                    className={`text-5xl font-bold px-6 py-3 rounded-lg ${getTotalColor(result.total)}`}
+                    className={`text-5xl font-bold px-6 py-3 rounded-lg ${
+                      result.total >= 90
+                        ? 'bg-green-100 text-green-800'
+                        : result.total >= 70
+                          ? 'bg-blue-100 text-blue-800'
+                          : result.total >= 50
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                    }`}
                   >
                     {result.total}/100
                   </div>

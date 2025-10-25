@@ -284,6 +284,7 @@ function ComponentCard({
   icon,
   color,
 }: ComponentCardProps) {
+  // ComponentCard is a helper component for displaying lesson components
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">

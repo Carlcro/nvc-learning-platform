@@ -41,6 +41,11 @@ function LearnHub() {
     convexQuery(api.lessons.getAllLessons, {})
   )
 
+  // Filter to ensure we have only valid lesson types
+  const validLessons = lessons?.filter(lesson =>
+    ['observation', 'feeling', 'need', 'request', 'introduction', 'integration'].includes(lesson.component)
+  ) || []
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -73,7 +78,7 @@ function LearnHub() {
       {/* Lessons Grid */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lessons.map((lesson: Lesson) => (
+          {validLessons.map((lesson) => (
             <LessonCard key={lesson.lessonId} lesson={lesson} />
           ))}
         </div>
@@ -109,7 +114,18 @@ function LessonCard({ lesson }: LessonCardProps) {
   const isCompleted = false // TODO: Check user progress
   const lessonNumber = lesson.order
 
-  const href = `/learn/${lesson.lessonId}` as '/learn/introduction' | '/learn/observation' | '/learn/feeling' | '/learn/need' | '/learn/request' | '/learn/integration'
+  // Type-safe routing - map valid lesson IDs to their routes
+  type ValidLessonId = 'introduction' | 'observation' | 'feeling' | 'need' | 'request' | 'integration'
+  const lessonRoutes: Record<ValidLessonId, any> = {
+    introduction: '/learn/introduction',
+    observation: '/learn/observation',
+    feeling: '/learn/feeling',
+    need: '/learn/need',
+    request: '/learn/request',
+    integration: '/learn/integration',
+  }
+
+  const href = lessonRoutes[lesson.lessonId as ValidLessonId] || '/learn'
 
   return (
     <Link to={href}>
