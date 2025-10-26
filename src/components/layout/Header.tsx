@@ -28,7 +28,7 @@ export function Header({
   return (
     <header
       className={`
-        w-full bg-white border-b border-gray-200 shadow-sm
+        w-full bg-brown-700 text-cream border-b border-brown-800 shadow-lg
         ${sticky ? 'sticky top-0 z-50' : ''}
         ${sticky_class || ''}
         ${className || ''}
@@ -67,7 +67,7 @@ export function HeaderBrand({
     <div
       className={`
         flex items-center gap-2
-        text-xl font-bold text-gray-900
+        text-2xl font-bold text-giraffe-300
         ${className || ''}
       `}
       {...props}

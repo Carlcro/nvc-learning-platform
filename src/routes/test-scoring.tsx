@@ -62,14 +62,14 @@ function TestScoringPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-giraffe-50 dark:bg-brown-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-4xl font-bold text-brown-800 dark:text-white mb-2">
             NVC Scoring Test Page
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-brown-600 dark:text-brown-400">
             Enter text below to test the NVC analysis. This is for development
             testing only.
           </p>
@@ -82,7 +82,7 @@ function TestScoringPage() {
               <div>
                 <label
                   htmlFor="userInput"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-brown-700 dark:text-brown-400 mb-2"
                 >
                   Enter a message to analyze:
                 </label>
@@ -91,7 +91,7 @@ function TestScoringPage() {
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   placeholder="e.g., 'When you arrive late without telling me, I feel frustrated because reliability is important to me. Would you be willing to text me if you're running late?'"
-                  className="w-full h-32 p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                  className="w-full h-32 p-3 border border-giraffe-200 dark:border-brown-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-brown-800 dark:text-white"
                   disabled={isLoading}
                 />
               </div>
@@ -110,9 +110,9 @@ function TestScoringPage() {
 
         {/* Error Message */}
         {error && (
-          <Card className="mb-8 border border-red-300 bg-red-50 dark:bg-red-900 dark:border-red-700">
+          <Card className="mb-8 border border-empathy-low bg-empathy-low dark:bg-empathy-low dark:border-empathy-low">
             <CardBody>
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-empathy-low dark:text-empathy-low">{error}</p>
             </CardBody>
           </Card>
         )}
@@ -124,25 +124,25 @@ function TestScoringPage() {
             <Card>
               <CardBody>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-2xl font-bold text-brown-800 dark:text-white">
                     Overall Score
                   </h2>
                   <div
                     className={`text-5xl font-bold px-6 py-3 rounded-lg ${
                       result.total >= 90
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-empathy-high text-empathy-high'
                         : result.total >= 70
-                          ? 'bg-blue-100 text-blue-800'
+                          ? 'bg-giraffe-100 text-giraffe-800'
                           : result.total >= 50
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-giraffe-100 text-giraffe-800'
+                            : 'bg-empathy-low text-empathy-low'
                     }`}
                   >
                     {result.total}/100
                   </div>
                 </div>
                 <p
-                  className={`text-lg mt-4 font-semibold ${result.total >= 70 ? 'text-green-600' : 'text-yellow-600'}`}
+                  className={`text-lg mt-4 font-semibold ${result.total >= 70 ? 'text-empathy-high' : 'text-giraffe-600'}`}
                 >
                   {getTotalStatus(result.total)}
                 </p>
@@ -152,7 +152,7 @@ function TestScoringPage() {
             {/* Component Scores */}
             <Card>
               <CardBody>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-xl font-bold text-brown-800 dark:text-white mb-4">
                   NVC Component Scores
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -188,12 +188,12 @@ function TestScoringPage() {
                     {result.isJackalLanguage ? '🐺' : '🦒'}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-xl font-bold text-brown-800 dark:text-white">
                       {result.isJackalLanguage
                         ? 'Jackal Language'
                         : 'Giraffe Language'}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-brown-600 dark:text-brown-400">
                       {result.isJackalLanguage
                         ? 'This message contains judgmental or reactive language'
                         : 'This message uses compassionate, empathetic communication'}
@@ -205,9 +205,9 @@ function TestScoringPage() {
 
             {/* Jackal Phrases */}
             {result.jackalPhrases.length > 0 && (
-              <Card className="border border-orange-300 bg-orange-50 dark:bg-orange-900 dark:border-orange-700">
+              <Card className="border border-empathy-low bg-empathy-low dark:bg-empathy-low dark:border-empathy-low">
                 <CardBody>
-                  <h3 className="text-lg font-bold text-orange-900 dark:text-orange-200 mb-3">
+                  <h3 className="text-lg font-bold text-empathy-low dark:text-empathy-low mb-3">
                     Potential Jackal Phrases Detected
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -222,12 +222,12 @@ function TestScoringPage() {
             )}
 
             {/* What Went Well */}
-            <Card className="border border-green-300 bg-green-50 dark:bg-green-900 dark:border-green-700">
+            <Card className="border border-empathy-high bg-empathy-high dark:bg-empathy-high dark:border-empathy-high">
               <CardBody>
-                <h3 className="text-lg font-bold text-green-900 dark:text-green-200 mb-2">
+                <h3 className="text-lg font-bold text-empathy-high dark:text-empathy-high mb-2">
                   ✨ What Went Well
                 </h3>
-                <p className="text-green-800 dark:text-green-200">
+                <p className="text-empathy-high dark:text-empathy-high">
                   {result.whatWentWell}
                 </p>
               </CardBody>
@@ -236,22 +236,22 @@ function TestScoringPage() {
             {/* Feedback */}
             <Card>
               <CardBody>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-lg font-bold text-brown-800 dark:text-white mb-3">
                   💭 Coaching Feedback
                 </h3>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p className="text-brown-700 dark:text-brown-400 leading-relaxed">
                   {result.feedback}
                 </p>
               </CardBody>
             </Card>
 
             {/* Giraffe Alternative */}
-            <Card className="border border-emerald-300 bg-emerald-50 dark:bg-emerald-900 dark:border-emerald-700">
+            <Card className="border border-giraffe-300 bg-giraffe-50 dark:bg-brown-900 dark:border-giraffe-700">
               <CardBody>
-                <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-200 mb-2">
+                <h3 className="text-lg font-bold text-brown-900 dark:text-giraffe-200 mb-2">
                   🦒 Giraffe Alternative
                 </h3>
-                <p className="text-emerald-800 dark:text-emerald-200 italic">
+                <p className="text-brown-800 dark:text-giraffe-200 italic">
                   "{result.giraffeAlternative}"
                 </p>
               </CardBody>
@@ -263,7 +263,7 @@ function TestScoringPage() {
         {!result && (
           <Card>
             <CardBody>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-lg font-bold text-brown-800 dark:text-white mb-4">
                 Try These Examples:
               </h3>
               <div className="space-y-3">
@@ -313,25 +313,25 @@ function ScoreComponent({ name, score, description }: ScoreComponentProps) {
   const percentage = (score / 25) * 100
   const color =
     score >= 20
-      ? 'bg-green-500'
+      ? 'bg-empathy-high'
       : score >= 15
-        ? 'bg-blue-500'
+        ? 'bg-giraffe-500'
         : score >= 10
-          ? 'bg-yellow-500'
-          : 'bg-red-500'
+          ? 'bg-giraffe-500'
+          : 'bg-empathy-low'
 
   return (
-    <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="p-4 border border-giraffe-100 dark:border-brown-700 rounded-lg">
       <div className="flex justify-between items-center mb-2">
-        <h4 className="font-semibold text-gray-900 dark:text-white">{name}</h4>
-        <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
+        <h4 className="font-semibold text-brown-800 dark:text-white">{name}</h4>
+        <span className="text-lg font-bold text-brown-700 dark:text-brown-400">
           {score}/25
         </span>
       </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+      <p className="text-sm text-brown-600 dark:text-brown-400 mb-3">
         {description}
       </p>
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-giraffe-200 dark:bg-brown-700 rounded-full h-2 overflow-hidden">
         <div
           className={`h-full ${color} rounded-full transition-all duration-500`}
           style={{ width: `${percentage}%` }}
@@ -351,12 +351,12 @@ function ExamplePrompt({ label, text, onSelect }: ExamplePromptProps) {
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      className="w-full text-left p-4 border border-giraffe-200 dark:border-brown-600 rounded-lg hover:bg-giraffe-100 dark:hover:bg-brown-800 transition-colors"
     >
-      <p className="font-semibold text-gray-900 dark:text-white mb-1">
+      <p className="font-semibold text-brown-800 dark:text-white mb-1">
         {label}
       </p>
-      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+      <p className="text-sm text-brown-600 dark:text-brown-400 line-clamp-2">
         {text}
       </p>
     </button>

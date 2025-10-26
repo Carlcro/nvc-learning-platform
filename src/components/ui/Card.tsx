@@ -26,8 +26,8 @@ export function Card({
   return (
     <div
       className={`
-        bg-white rounded-lg border border-gray-200 shadow-sm
-        ${hoverable ? 'hover:shadow-md transition-shadow duration-200' : ''}
+        bg-white rounded-lg border-2 border-giraffe-100 shadow-sm
+        ${hoverable ? 'hover:shadow-md hover:border-giraffe-200 transition-all duration-200' : ''}
         ${className || ''}
       `}
       {...props}
@@ -45,7 +45,7 @@ export function CardHeader({
   return (
     <div
       className={`
-        px-6 py-4 border-b border-gray-200
+        px-6 py-4 border-b border-giraffe-100 bg-giraffe-50
         ${className || ''}
       `}
       {...props}
@@ -81,7 +81,7 @@ export function CardFooter({
   return (
     <div
       className={`
-        px-6 py-4 border-t border-gray-200 bg-gray-50
+        px-6 py-4 border-t border-giraffe-100 bg-giraffe-50
         ${className || ''}
       `}
       {...props}

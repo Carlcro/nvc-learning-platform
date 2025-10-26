@@ -16,7 +16,8 @@
       "Bash(git config:*)",
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:developers.cloudflare.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash({} +)"
     ],
     "deny": [],
     "ask": []

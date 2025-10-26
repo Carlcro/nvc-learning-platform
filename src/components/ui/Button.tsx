@@ -10,13 +10,13 @@ export interface ButtonProps
 
 const variantStyles = {
   primary:
-    'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+    'bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 disabled:bg-giraffe-200 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2 font-semibold shadow-sm',
   secondary:
-    'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-400 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2',
+    'bg-brown-600 text-cream hover:bg-brown-700 disabled:bg-brown-400 focus:ring-2 focus:ring-brown-500 focus:ring-offset-2 font-semibold shadow-sm',
   outline:
-    'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 disabled:border-blue-300 disabled:text-blue-300 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+    'border-2 border-giraffe-400 text-brown-700 hover:bg-giraffe-50 disabled:border-giraffe-200 disabled:text-giraffe-200 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2',
   ghost:
-    'text-blue-600 hover:bg-blue-50 disabled:text-blue-300 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+    'text-giraffe-600 hover:bg-giraffe-100 disabled:text-giraffe-200 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2',
 }
 
 const sizeStyles = {

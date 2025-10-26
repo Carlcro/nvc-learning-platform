@@ -5,6 +5,7 @@ import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
+import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/learn/introduction')({
@@ -17,6 +18,8 @@ function IntroductionLesson() {
   )
 
   const [selectedExample, setSelectedExample] = useState<number>(0)
+  const { isLessonCompleted } = useLessonProgress()
+  const lessonCompleted = isLessonCompleted('introduction')
 
   if (!lesson) {
     return (
@@ -30,18 +33,31 @@ function IntroductionLesson() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* Completion Banner */}
+      {lessonCompleted && (
+        <div className="bg-gradient-to-r from-yellow-100 to-emerald-100 dark:from-yellow-900 dark:to-emerald-900 border-b-2 border-giraffe-300 dark:border-giraffe-600 px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-4xl mx-auto flex items-center gap-3">
+            <span className="text-2xl">🎓✨</span>
+            <div>
+              <p className="font-bold text-giraffe-900 dark:text-giraffe-100">Lesson Completed!</p>
+              <p className="text-sm text-giraffe-800 dark:text-giraffe-200">You achieved a perfect score on this lesson.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <section className="bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-700 dark:to-emerald-700 text-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-5xl">{lesson.icon}</span>
             <div>
-              <div className="text-sm font-semibold text-blue-100">Lesson 1</div>
+              <div className="text-sm font-semibold text-giraffe-100">Lesson 1</div>
               <h1 className="text-4xl font-bold">{lesson.title}</h1>
             </div>
           </div>
-          <p className="text-lg text-blue-100 max-w-2xl">{lesson.description}</p>
-          <div className="mt-4 flex items-center gap-4 text-blue-100">
+          <p className="text-lg text-giraffe-100 max-w-2xl">{lesson.description}</p>
+          <div className="mt-4 flex items-center gap-4 text-giraffe-100">
             <span className="text-sm">⏱️ {lesson.estimatedDuration} minutes</span>
           </div>
         </div>
@@ -52,17 +68,17 @@ function IntroductionLesson() {
         {/* Introduction */}
         <Card className="mb-12">
           <CardBody className="prose prose-sm dark:prose-invert max-w-none">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
               What is Non-Violent Communication?
             </h2>
-            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+            <p className="text-brown-700 dark:text-brown-400 text-lg leading-relaxed">
               {lesson.content}
             </p>
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-600 rounded">
-              <p className="text-gray-800 dark:text-gray-200 font-semibold mb-2">
+            <div className="mt-6 p-4 bg-giraffe-50 dark:bg-giraffe-900 border-l-4 border-giraffe-600 rounded">
+              <p className="text-brown-700 dark:text-brown-300 font-semibold mb-2">
                 🦒 Did you know?
               </p>
-              <p className="text-gray-700 dark:text-gray-300">
+              <p className="text-brown-700 dark:text-brown-400">
                 The giraffe is the symbol of NVC because it has the largest heart of any land animal and a long neck that allows it to see from a wider perspective—just like compassionate communication!
               </p>
             </div>
@@ -71,7 +87,7 @@ function IntroductionLesson() {
 
         {/* Core Concepts */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
             The 4 Components of NVC
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -107,62 +123,62 @@ function IntroductionLesson() {
         </div>
 
         {/* Giraffe vs Jackal Language */}
-        <Card className="mb-12 border-2 border-emerald-200 dark:border-emerald-800">
-          <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900 dark:to-blue-900 border-b-2 border-emerald-200 dark:border-emerald-800">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <Card className="mb-12 border-2 border-giraffe-200 dark:border-brown-800">
+          <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900 dark:to-blue-900 border-b-2 border-giraffe-200 dark:border-brown-800">
+            <h2 className="text-2xl font-bold text-brown-800 dark:text-white">
               Giraffe vs Jackal Language
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
+            <p className="text-brown-600 dark:text-brown-400 mt-2">
               See how compassionate communication differs from judgmental language
             </p>
           </CardHeader>
           <CardBody>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <div className="bg-white dark:bg-brown-800 rounded-lg p-6">
               {/* Example Display */}
               <div className="mb-8">
                 <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-semibold text-brown-800 dark:text-white mb-2">
                     Scenario
                   </h3>
-                  <p className="text-gray-700 dark:text-gray-300 italic">
+                  <p className="text-brown-700 dark:text-brown-400 italic">
                     {currentExample?.scenario}
                   </p>
                 </div>
 
                 {/* Giraffe Response */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900 rounded-lg border-2 border-emerald-200 dark:border-emerald-700">
+                  <div className="p-4 bg-giraffe-50 dark:bg-brown-900 rounded-lg border-2 border-giraffe-200 dark:border-giraffe-700">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-3xl">🦒</span>
-                      <h4 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
+                      <h4 className="text-lg font-bold text-brown-900 dark:text-giraffe-100">
                         Giraffe Language
                       </h4>
                     </div>
-                    <p className="text-emerald-800 dark:text-emerald-200 leading-relaxed">
+                    <p className="text-brown-800 dark:text-giraffe-200 leading-relaxed">
                       {currentExample?.giraffResponse}
                     </p>
                   </div>
 
                   {/* Jackal Response */}
-                  <div className="p-4 bg-red-50 dark:bg-red-900 rounded-lg border-2 border-red-200 dark:border-red-700">
+                  <div className="p-4 bg-empathy-low dark:bg-empathy-low rounded-lg border-2 border-empathy-low dark:border-empathy-low">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-3xl">🐺</span>
-                      <h4 className="text-lg font-bold text-red-900 dark:text-red-100">
+                      <h4 className="text-lg font-bold text-empathy-low dark:text-empathy-low">
                         Jackal Language
                       </h4>
                     </div>
-                    <p className="text-red-800 dark:text-red-200 leading-relaxed">
+                    <p className="text-empathy-low dark:text-empathy-low leading-relaxed">
                       {currentExample?.jackalResponse}
                     </p>
                   </div>
                 </div>
 
                 {/* Explanation */}
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                <div className="mt-6 p-4 bg-giraffe-50 dark:bg-giraffe-900 rounded-lg">
+                  <h4 className="font-semibold text-giraffe-900 dark:text-giraffe-100 mb-2">
                     Why does this matter?
                   </h4>
-                  <p className="text-blue-800 dark:text-blue-200">
+                  <p className="text-giraffe-800 dark:text-giraffe-200">
                     {currentExample?.explanation}
                   </p>
                 </div>
@@ -171,7 +187,7 @@ function IntroductionLesson() {
               {/* Example Navigation */}
               {lesson.examples && lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mr-4">
+                  <p className="text-sm text-brown-600 dark:text-brown-400 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
                   </p>
                   {lesson.examples.map((_, index) => (
@@ -180,8 +196,8 @@ function IntroductionLesson() {
                       onClick={() => setSelectedExample(index)}
                       className={`w-3 h-3 rounded-full transition-all ${
                         index === selectedExample
-                          ? 'bg-blue-600 w-8'
-                          : 'bg-gray-300 dark:bg-gray-600'
+                          ? 'bg-giraffe-600 w-8'
+                          : 'bg-brown-300 dark:bg-brown-600'
                       }`}
                       aria-label={`Go to example ${index + 1}`}
                     />
@@ -198,37 +214,38 @@ function IntroductionLesson() {
             questions={lesson.quiz.questions}
             passingScore={lesson.quiz.passingScore}
             title="Review Your Learning"
+            lessonId="introduction"
           />
         )}
 
         {/* Key Takeaways */}
-        <Card className="mb-12 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 border-purple-200 dark:border-purple-700">
+        <Card className="mb-12 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 border-giraffe-200 dark:border-giraffe-700">
           <CardBody>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
               Key Takeaways
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
                 <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-brown-700 dark:text-brown-400">
                   NVC is a framework for compassionate, empathetic communication
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-brown-700 dark:text-brown-400">
                   It combines 4 components: Observation, Feeling, Need, and Request
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-brown-700 dark:text-brown-400">
                   Giraffe language focuses on understanding and connection
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-brown-700 dark:text-brown-400">
                   Jackal language uses judgment, blame, and demands
                 </span>
               </li>
@@ -237,12 +254,12 @@ function IntroductionLesson() {
         </Card>
 
         {/* Next Steps */}
-        <Card className="border-2 border-emerald-200 dark:border-emerald-800 mb-12">
+        <Card className="border-2 border-giraffe-200 dark:border-brown-800 mb-12">
           <CardBody>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
               What's Next?
             </h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
+            <p className="text-brown-700 dark:text-brown-400 mb-6">
               Now that you understand the basics of NVC, you're ready to dive deeper into each component. In the next lesson, we'll explore <strong>Observations Without Evaluation</strong> — the foundation of clear communication.
             </p>
             <div className="flex gap-4">
@@ -269,12 +286,12 @@ interface ComponentCardProps {
 }
 
 const colorMap = {
-  blue: 'from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-blue-200 dark:border-blue-700',
+  blue: 'from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-giraffe-200 dark:border-giraffe-700',
   purple:
-    'from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 border-purple-200 dark:border-purple-700',
-  red: 'from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 border-red-200 dark:border-red-700',
+    'from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 border-giraffe-200 dark:border-giraffe-700',
+  red: 'from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 border-empathy-low dark:border-empathy-low',
   emerald:
-    'from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 border-emerald-200 dark:border-emerald-700',
+    'from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 border-giraffe-200 dark:border-giraffe-700',
 }
 
 function ComponentCard({
@@ -291,15 +308,15 @@ function ComponentCard({
         <div className="flex items-center gap-2">
           <span className="text-3xl">{icon}</span>
           <div>
-            <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+            <div className="text-sm font-semibold text-brown-600 dark:text-brown-400">
               Step {number}
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-brown-800 dark:text-white">
               {title}
             </h3>
           </div>
         </div>
-        <p className="text-gray-700 dark:text-gray-300">{description}</p>
+        <p className="text-brown-700 dark:text-brown-400">{description}</p>
       </CardBody>
     </Card>
   )

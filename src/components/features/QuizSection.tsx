@@ -1,23 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { useLessonProgress } from '~/hooks/useLessonProgress'
 
 export interface Question {
   question: string
-  options: string[]
+  options: Array<string>
   correctAnswer: number
   explanation: string
 }
 
 export interface QuizSectionProps {
-  questions: Question[]
+  questions: Array<Question>
   passingScore: number
   title?: string
+  lessonId?: string // Optional lesson ID for progress tracking
 }
 
 interface QuizState {
   currentQuestion: number
-  selectedAnswers: (number | null)[]
+  selectedAnswers: Array<number | null>
   submitted: boolean
   showFeedback: boolean
 }
@@ -26,7 +28,9 @@ export function QuizSection({
   questions,
   passingScore,
   title = 'Review Your Learning',
+  lessonId,
 }: QuizSectionProps) {
+  const { completeLesson, isLessonCompleted } = useLessonProgress()
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestion: 0,
     selectedAnswers: Array(questions.length).fill(null),
@@ -66,6 +70,11 @@ export function QuizSection({
   }
 
   const handleSubmit = () => {
+    const score = calculateScore()
+    // Save lesson completion if user gets 100% (all correct)
+    if (lessonId && score === 100) {
+      completeLesson(lessonId, score)
+    }
     setQuizState((prev) => ({
       ...prev,
       submitted: true,
@@ -106,58 +115,89 @@ export function QuizSection({
     currentQ.correctAnswer
 
   if (quizState.submitted) {
+    const isPerfectScore = score === 100
+    const lessonCompleted = lessonId && isLessonCompleted(lessonId)
+
     return (
       <Card className="mb-12">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900 dark:to-emerald-900">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <CardHeader
+          className={`bg-gradient-to-r ${
+            isPerfectScore
+              ? 'from-giraffe-50 to-empathy-high/20 dark:from-giraffe-900 dark:to-empathy-high/40'
+              : 'from-giraffe-50 to-empathy-medium/20 dark:from-giraffe-900 dark:to-empathy-medium/40'
+          }`}
+        >
+          <h2 className="text-2xl font-bold text-brown-800 dark:text-cream">
             Quiz Complete!
           </h2>
         </CardHeader>
         <CardBody>
           <div className="text-center py-8">
+            {/* Perfect Score & Lesson Completion Banner */}
+            {isPerfectScore && lessonCompleted && (
+              <div className="mb-8 p-6 rounded-lg bg-gradient-to-r from-giraffe-100 to-empathy-high/30 dark:from-giraffe-800 dark:to-empathy-high/40 border-2 border-giraffe-300 dark:border-giraffe-600">
+                <div className="text-5xl mb-3">🎓✨</div>
+                <h3 className="text-2xl font-bold text-giraffe-700 dark:text-giraffe-100 mb-2">
+                  Lesson Complete!
+                </h3>
+                <p className="text-giraffe-600 dark:text-giraffe-200">
+                  Perfect score! You've mastered this lesson and it's been saved
+                  to your progress.
+                </p>
+              </div>
+            )}
+
             {/* Score Display */}
             <div className="mb-8">
               <div className="text-6xl font-bold mb-4">
                 {score >= passingScore ? '🎉' : '📚'}
               </div>
-              <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
+              <div className="text-5xl font-bold text-brown-800 dark:text-cream mb-2">
                 {score}%
               </div>
-              <div className="text-lg text-gray-600 dark:text-gray-300">
-                {score >= passingScore
-                  ? 'Excellent! You passed the quiz!'
-                  : `Keep practicing! You need ${passingScore}% to pass.`}
+              <div className="text-lg text-brown-600 dark:text-brown-200">
+                {isPerfectScore && lessonCompleted
+                  ? 'Outstanding! You answered every question correctly!'
+                  : score >= passingScore
+                    ? 'Excellent! You passed the quiz!'
+                    : `Keep practicing! You need ${passingScore}% to pass. Remember, you need a perfect score (100%) to complete this lesson.`}
               </div>
             </div>
 
             {/* Score Details */}
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-8">
+            <div className="bg-giraffe-50 dark:bg-brown-800 rounded-lg p-6 mb-8">
               <div className="flex justify-around">
                 <div>
-                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                    {quizState.selectedAnswers.filter(
-                      (answer, index) => answer === questions[index].correctAnswer
-                    ).length}
+                  <div className="text-3xl font-bold text-empathy-high dark:text-empathy-high">
+                    {
+                      quizState.selectedAnswers.filter(
+                        (answer, index) =>
+                          answer === questions[index].correctAnswer,
+                      ).length
+                    }
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <div className="text-sm text-brown-600 dark:text-brown-200 mt-1">
                     Correct
                   </div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-red-600 dark:text-red-400">
-                    {quizState.selectedAnswers.filter(
-                      (answer, index) => answer !== questions[index].correctAnswer
-                    ).length}
+                  <div className="text-3xl font-bold text-empathy-low dark:text-empathy-low">
+                    {
+                      quizState.selectedAnswers.filter(
+                        (answer, index) =>
+                          answer !== questions[index].correctAnswer,
+                      ).length
+                    }
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <div className="text-sm text-brown-600 dark:text-brown-200 mt-1">
                     Incorrect
                   </div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-3xl font-bold text-giraffe-600 dark:text-giraffe-300">
                     {questions.length}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <div className="text-sm text-brown-600 dark:text-brown-200 mt-1">
                     Total
                   </div>
                 </div>
@@ -166,7 +206,7 @@ export function QuizSection({
 
             {/* Review Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-lg font-semibold text-brown-800 dark:text-cream mb-4">
                 Review Your Answers
               </h3>
               <div className="space-y-2 mb-6">
@@ -177,18 +217,18 @@ export function QuizSection({
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-gray-100 dark:bg-gray-700"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-giraffe-100 dark:bg-brown-700"
                     >
                       <span
                         className={`text-lg ${
                           isAnswerCorrect
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-empathy-high dark:text-empathy-high'
+                            : 'text-empathy-low dark:text-empathy-low'
                         }`}
                       >
                         {isAnswerCorrect ? '✓' : '✗'}
                       </span>
-                      <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                      <span className="text-sm text-brown-700 dark:text-brown-100 flex-1">
                         Question {index + 1}
                       </span>
                     </div>
@@ -214,23 +254,23 @@ export function QuizSection({
 
   return (
     <Card className="mb-12">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900 dark:to-emerald-900">
+      <CardHeader className="bg-gradient-to-r from-giraffe-50 to-giraffe-100 dark:from-giraffe-900 dark:to-brown-800">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-brown-800 dark:text-cream">
               {title}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-brown-600 dark:text-brown-200 mt-1">
               Test your understanding of the lesson
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+            <div className="text-sm font-semibold text-brown-600 dark:text-brown-200">
               Question {quizState.currentQuestion + 1} of {questions.length}
             </div>
-            <div className="mt-2 bg-gray-200 dark:bg-gray-700 rounded-full h-2 w-48">
+            <div className="mt-2 bg-giraffe-200 dark:bg-brown-700 rounded-full h-2 w-48">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-giraffe-400 h-2 rounded-full transition-all duration-300"
                 style={{
                   width: `${((quizState.currentQuestion + 1) / questions.length) * 100}%`,
                 }}
@@ -243,7 +283,7 @@ export function QuizSection({
       <CardBody>
         {/* Question */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          <h3 className="text-xl font-semibold text-brown-800 dark:text-cream mb-6">
             {currentQ.question}
           </h3>
 
@@ -264,24 +304,24 @@ export function QuizSection({
                   disabled={quizState.submitted}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                     showCorrect
-                      ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-900 dark:border-emerald-400'
+                      ? 'bg-empathy-high/10 border-empathy-high dark:bg-empathy-high/20 dark:border-empathy-high'
                       : showIncorrect
-                        ? 'bg-red-50 border-red-500 dark:bg-red-900 dark:border-red-400'
+                        ? 'bg-empathy-low/10 border-empathy-low dark:bg-empathy-low/20 dark:border-empathy-low'
                         : isSelected
-                          ? 'bg-blue-50 border-blue-600 dark:bg-blue-900 dark:border-blue-400'
-                          : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:hover:border-gray-500'
-                  } ${quizState.submitted ? 'cursor-default' : 'cursor-pointer hover:border-gray-400'}`}
+                          ? 'bg-giraffe-50 border-giraffe-400 dark:bg-giraffe-900/50 dark:border-giraffe-400'
+                          : 'bg-white border-giraffe-200 dark:bg-brown-900 dark:border-brown-700 dark:hover:border-brown-600'
+                  } ${quizState.submitted ? 'cursor-default' : 'cursor-pointer hover:border-giraffe-300'}`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         showCorrect
-                          ? 'bg-emerald-500 border-emerald-500'
+                          ? 'bg-empathy-high border-empathy-high'
                           : showIncorrect
-                            ? 'bg-red-500 border-red-500'
+                            ? 'bg-empathy-low border-empathy-low'
                             : isSelected
-                              ? 'bg-blue-600 border-blue-600'
-                              : 'border-gray-400'
+                              ? 'bg-giraffe-400 border-giraffe-400'
+                              : 'border-giraffe-200 dark:border-brown-600'
                       }`}
                     >
                       {showCorrect && (
@@ -294,12 +334,12 @@ export function QuizSection({
                     <span
                       className={
                         showCorrect
-                          ? 'text-emerald-900 dark:text-emerald-100 font-medium'
+                          ? 'text-empathy-high dark:text-empathy-high font-medium'
                           : showIncorrect
-                            ? 'text-red-900 dark:text-red-100 font-medium'
+                            ? 'text-empathy-low dark:text-empathy-low font-medium'
                             : isSelected
-                              ? 'text-blue-900 dark:text-blue-100 font-medium'
-                              : 'text-gray-900 dark:text-white'
+                              ? 'text-giraffe-700 dark:text-giraffe-100 font-medium'
+                              : 'text-brown-800 dark:text-cream'
                       }
                     >
                       {option}
@@ -315,8 +355,8 @@ export function QuizSection({
             <div
               className={`p-4 rounded-lg ${
                 isCorrect
-                  ? 'bg-emerald-50 border border-emerald-200 dark:bg-emerald-900 dark:border-emerald-700'
-                  : 'bg-red-50 border border-red-200 dark:bg-red-900 dark:border-red-700'
+                  ? 'bg-empathy-high/10 border border-empathy-high/30 dark:bg-empathy-high/20 dark:border-empathy-high/40'
+                  : 'bg-empathy-low/10 border border-empathy-low/30 dark:bg-empathy-low/20 dark:border-empathy-low/40'
               }`}
             >
               <div className="flex gap-3">
@@ -327,8 +367,8 @@ export function QuizSection({
                   <h4
                     className={`font-semibold mb-2 ${
                       isCorrect
-                        ? 'text-emerald-900 dark:text-emerald-100'
-                        : 'text-red-900 dark:text-red-100'
+                        ? 'text-empathy-high dark:text-empathy-high'
+                        : 'text-empathy-low dark:text-empathy-low'
                     }`}
                   >
                     {isCorrect ? 'Correct!' : 'Not quite right.'}
@@ -336,8 +376,8 @@ export function QuizSection({
                   <p
                     className={
                       isCorrect
-                        ? 'text-emerald-800 dark:text-emerald-200'
-                        : 'text-red-800 dark:text-red-200'
+                        ? 'text-empathy-high/80 dark:text-empathy-high/90'
+                        : 'text-empathy-low/80 dark:text-empathy-low/90'
                     }
                   >
                     {currentQ.explanation}
@@ -349,7 +389,7 @@ export function QuizSection({
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4 pt-6 border-t border-giraffe-200 dark:border-brown-700">
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -386,11 +426,7 @@ export function QuizSection({
           )}
 
           {quizState.showFeedback && (
-            <Button
-              variant="ghost"
-              size="md"
-              onClick={handleShowFeedback}
-            >
+            <Button variant="ghost" size="md" onClick={handleShowFeedback}>
               Hide Answer
             </Button>
           )}
@@ -409,7 +445,7 @@ export function QuizSection({
 
         {/* Answer Indicator */}
         {quizState.selectedAnswers[quizState.currentQuestion] === null && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+          <p className="text-sm text-brown-500 dark:text-brown-300 mt-4">
             Please select an answer to continue
           </p>
         )}
