@@ -1,4 +1,4 @@
-"use node";
+'use node'
 
 /**
  * AI Integration Module for NVC Analysis
@@ -11,43 +11,43 @@
  * See PROJECT_SPEC.md "AI Integration Specifications" section for details
  */
 
-import { action } from "./_generated/server";
-import { v } from "convex/values";
-import OpenAI from "openai";
+import { v } from 'convex/values'
+import OpenAI from 'openai'
+import { action } from './_generated/server'
 
 // Initialize OpenAI client with API key from environment
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+})
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
 export interface NVCScore {
-  observation: number; // 0-25
-  feeling: number; // 0-25
-  need: number; // 0-25
-  request: number; // 0-25
-  total: number; // 0-100
+  observation: number // 0-25
+  feeling: number // 0-25
+  need: number // 0-25
+  request: number // 0-25
+  total: number // 0-100
 }
 
 export interface NVCAnalysisResult {
-  observation: number;
-  feeling: number;
-  need: number;
-  request: number;
-  total: number;
-  feedback: string;
-  isJackalLanguage: boolean;
-  jackalPhrases: string[];
-  giraffeAlternative: string;
-  whatWentWell: string;
+  observation: number
+  feeling: number
+  need: number
+  request: number
+  total: number
+  feedback: string
+  isJackalLanguage: boolean
+  jackalPhrases: Array<string>
+  giraffeAlternative: string
+  whatWentWell: string
 }
 
 export interface ConversationMessage {
-  role: "user" | "assistant";
-  content: string;
+  role: 'user' | 'assistant'
+  content: string
 }
 
 // ============================================================================
@@ -75,24 +75,20 @@ export const analyzeNVCResponse = action({
     conversationHistory: v.optional(
       v.array(
         v.object({
-          role: v.union(v.literal("user"), v.literal("assistant")),
+          role: v.union(v.literal('user'), v.literal('assistant')),
           content: v.string(),
-        })
-      )
+        }),
+      ),
     ),
   },
   handler: async (_ctx, args): Promise<NVCAnalysisResult> => {
-    if (!openai) {
-      throw new Error(
-        "OpenAI client not initialized. Ensure OPENAI_API_KEY is set in environment."
-      );
-    }
-
     // Build conversation context for analysis
     const conversationContext =
       args.conversationHistory && args.conversationHistory.length > 0
-        ? args.conversationHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")
-        : "This is the start of a new conversation.";
+        ? args.conversationHistory
+            .map((msg) => `${msg.role}: ${msg.content}`)
+            .join('\n')
+        : 'This is the start of a new conversation.'
 
     // Construct the analysis prompt based on PROJECT_SPEC.md
     const analysisPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing a user's response in a roleplay conversation.
@@ -170,56 +166,58 @@ Important:
 - Be encouraging and constructive in feedback
 - If there are no jackal phrases, return empty array
 - Always provide a giraffe alternative even if current response is good
-- Acknowledge specific strengths in whatWentWell`;
+- Acknowledge specific strengths in whatWentWell`
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         max_tokens: 1000,
         messages: [
           {
-            role: "user",
+            role: 'user',
             content: analysisPrompt,
           },
         ],
-      });
+      })
 
       // Extract the text response
-      const textContent = response.choices[0]?.message?.content;
+      const textContent = response.choices[0]?.message?.content
       if (!textContent) {
-        throw new Error("No text response from OpenAI");
+        throw new Error('No text response from OpenAI')
       }
 
       // Parse JSON response
-      const analysisText = textContent;
+      const analysisText = textContent
 
       // Try to extract JSON from the response (in case it includes markdown)
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      const jsonMatch = analysisText.match(/\{[\s\S]*\}/)
       if (!jsonMatch) {
-        console.error("Could not find JSON in response:", analysisText);
-        throw new Error("Invalid response format from OpenAI");
+        console.error('Could not find JSON in response:', analysisText)
+        throw new Error('Invalid response format from OpenAI')
       }
 
-      const analysis = JSON.parse(jsonMatch[0]) as NVCAnalysisResult;
+      const analysis = JSON.parse(jsonMatch[0]) as NVCAnalysisResult
 
       // Validate response structure
       if (
-        !("observation" in analysis) ||
-        !("feeling" in analysis) ||
-        !("need" in analysis) ||
-        !("request" in analysis) ||
-        !("total" in analysis)
+        !('observation' in analysis) ||
+        !('feeling' in analysis) ||
+        !('need' in analysis) ||
+        !('request' in analysis) ||
+        !('total' in analysis)
       ) {
-        throw new Error("Missing required fields in analysis response");
+        throw new Error('Missing required fields in analysis response')
       }
 
-      return analysis;
+      return analysis
     } catch (error) {
-      console.error("Error analyzing NVC response:", error);
-      throw new Error(`Failed to analyze NVC response: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error analyzing NVC response:', error)
+      throw new Error(
+        `Failed to analyze NVC response: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   },
-});
+})
 
 // ============================================================================
 // CHARACTER ROLEPLAY ACTION
@@ -247,9 +245,9 @@ export const generateCharacterResponse = action({
     userMessage: v.string(),
     conversationHistory: v.array(
       v.object({
-        role: v.union(v.literal("user"), v.literal("assistant")),
+        role: v.union(v.literal('user'), v.literal('assistant')),
         content: v.string(),
-      })
+      }),
     ),
     characterName: v.string(),
     characterPersonality: v.string(),
@@ -257,24 +255,18 @@ export const generateCharacterResponse = action({
     userNVCScore: v.optional(v.number()), // Average NVC score to adjust difficulty
   },
   handler: async (_ctx, args): Promise<string> => {
-    if (!openai) {
-      throw new Error(
-        "OpenAI client not initialized. Ensure OPENAI_API_KEY is set in environment."
-      );
-    }
-
     // Determine difficulty adjustment based on user's NVC score
-    let difficultyGuidance = "";
+    let difficultyGuidance = ''
     if (args.userNVCScore !== undefined) {
       if (args.userNVCScore >= 70) {
         difficultyGuidance =
-          "The user is using good NVC. You should gradually become more open, understanding, and willing to cooperate. Show signs of de-escalation.";
+          'The user is using good NVC. You should gradually become more open, understanding, and willing to cooperate. Show signs of de-escalation.'
       } else if (args.userNVCScore >= 50) {
         difficultyGuidance =
-          "The user is using some NVC but also some judgmental language. React realistically - show some openness but also some defensiveness.";
+          'The user is using some NVC but also some judgmental language. React realistically - show some openness but also some defensiveness.'
       } else {
         difficultyGuidance =
-          "The user is using primarily jackal language (judgments, blame). You should become more defensive or reactive, but still stay human and realistic.";
+          'The user is using primarily jackal language (judgments, blame). You should become more defensive or reactive, but still stay human and realistic.'
       }
     }
 
@@ -297,39 +289,39 @@ Behavioral Rules:
 7. If they're doing well with empathy, you can de-escalate naturally
 8. If they're struggling, escalate slightly to maintain challenge
 
-${difficultyGuidance ? `Current adjustment: ${difficultyGuidance}` : ""}
+${difficultyGuidance ? `Current adjustment: ${difficultyGuidance}` : ''}
 
-IMPORTANT: Never break character. Never mention NVC explicitly. Never explain what you're doing.`;
+IMPORTANT: Never break character. Never mention NVC explicitly. Never explain what you're doing.`
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         max_tokens: 300,
         messages: [
           {
-            role: "system",
+            role: 'system',
             content: systemPrompt,
           },
           ...args.conversationHistory,
           {
-            role: "user",
+            role: 'user',
             content: args.userMessage,
           },
         ],
-      });
+      })
 
       // Extract the text response
-      const textContent = response.choices[0]?.message?.content;
+      const textContent = response.choices[0]?.message?.content
       if (!textContent) {
-        throw new Error("No text response from OpenAI");
+        throw new Error('No text response from OpenAI')
       }
 
-      return textContent;
+      return textContent
     } catch (error) {
-      console.error("Error generating character response:", error);
+      console.error('Error generating character response:', error)
       throw new Error(
-        `Failed to generate character response: ${error instanceof Error ? error.message : String(error)}`
-      );
+        `Failed to generate character response: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   },
-});
+})

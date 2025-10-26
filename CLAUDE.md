@@ -23,7 +23,7 @@ You are working on an **interactive web application that teaches Non-Violent Com
 - **Frontend**: TanStack Start + React + TypeScript + Tailwind CSS
 - **Backend**: Convex (database + serverless functions)
 - **AI**: Anthropic Claude API (called via Convex Actions)
-- **Hosting**: Cloudflare Pages (frontend) + Convex Cloud (backend)
+- **Hosting**: Netlify (frontend) + Convex Cloud (backend)
 
 ---
 

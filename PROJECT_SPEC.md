@@ -31,7 +31,7 @@ Create a fun, interactive learning platform that teaches users to communicate us
   - Feedback generation
 
 ### Hosting
-- **Frontend**: Cloudflare Pages
+- **Frontend**: Netlify
 - **Backend**: Convex Cloud (managed)
 
 ---
@@ -496,7 +496,7 @@ Return JSON:
 - Handle 10,000+ concurrent users
 - Convex real-time sync for all users
 - Efficient AI token usage (concise prompts)
-- CDN for static assets (Cloudflare)
+- CDN for static assets (Netlify)
 
 ---
 
@@ -557,14 +557,14 @@ npx convex dev      # Convex local development
 
 ### Staging
 - Auto-deploy from `develop` branch
-- Cloudflare Pages preview deployments
+- Netlify preview deployments
 - Convex dev environment
 
 ### Production
 - Manual deploy from `main` branch
-- Cloudflare Pages production
+- Netlify production
 - Convex production environment
-- Monitor with Convex dashboard + Cloudflare analytics
+- Monitor with Convex dashboard + Netlify analytics
 
 ---
 
@@ -619,7 +619,7 @@ npx convex dev      # Convex local development
 - TanStack Start: https://tanstack.com/start
 - Convex: https://docs.convex.dev
 - create chat with open ai https://stack.convex.dev/full-stack-chatgpt-app
-- Cloudflare Pages: https://developers.cloudflare.com/pages
+- Netlify: https://docs.netlify.com
 
 ---
 
