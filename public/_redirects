@@ -1,7 +1,0 @@
-# Cloudflare Pages with Worker SSR
-# The Worker (from wrangler.toml) handles all routing
-# This file is kept minimal to avoid conflicts with SSR
-
-# Static assets - serve directly
-/assets/* /assets/:splat 200!
-/public/* /public/:splat 200!
