@@ -8,16 +8,37 @@ import type { Handler } from '@netlify/functions'
 export const handler: Handler = async (event) => {
   try {
     // Construct the full URL for the request
+    // Use rawUrl which includes the full path and query string
     const protocol = event.headers['x-forwarded-proto'] || 'https'
     const host = event.headers.host || event.headers['x-forwarded-host'] || 'localhost'
-    const path = event.path || '/'
-    const querystring = event.rawUrl.split('?')[1] || ''
-    const url = `${protocol}://${host}${path}${querystring ? `?${querystring}` : ''}`
+
+    // rawUrl might already be absolute, so check
+    let url: string
+    if (event.rawUrl.startsWith('http')) {
+      url = event.rawUrl
+    } else {
+      url = `${protocol}://${host}${event.rawUrl}`
+    }
+
+    console.log('Incoming request:', {
+      method: event.httpMethod,
+      url,
+      rawUrl: event.rawUrl,
+      path: event.path,
+    })
 
     // Create a Web API Request from the Netlify function event
     const request = new Request(url, {
       method: event.httpMethod,
-      headers: event.headers as Record<string, string>,
+      headers: {
+        // Remove host-related headers that might cause issues
+        ...Object.fromEntries(
+          Object.entries(event.headers).filter(
+            ([key]) => !['host', 'x-forwarded-host', 'x-forwarded-proto'].includes(key.toLowerCase())
+          )
+        ),
+        host: new URL(url).host,
+      },
       body:
         event.httpMethod === 'GET' || event.httpMethod === 'HEAD'
           ? undefined
@@ -25,7 +46,10 @@ export const handler: Handler = async (event) => {
     })
 
     // Pass the request to the TanStack Start server
+    console.log('Calling server.fetch...')
     const response = await server.fetch(request)
+
+    console.log('Got response:', { status: response.status })
 
     // Read the response body
     const body = await response.text()
@@ -41,8 +65,8 @@ export const handler: Handler = async (event) => {
     console.error('Server function error:', error)
     return {
       statusCode: 500,
-      body: 'Internal Server Error',
-      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ error: String(error) }),
+      headers: { 'Content-Type': 'application/json' },
     }
   }
 }
