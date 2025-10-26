@@ -1,0 +1,19 @@
+[build]
+  command = "npx convex deploy --cmd 'npm run build'"
+  publish = "dist/client"
+  functions = "netlify/functions"
+
+[functions]
+  external_node_modules = ["convex", "openai"]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
+  conditions = { SkipProcessing = false }
+
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
