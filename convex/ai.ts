@@ -15,10 +15,12 @@ import { v } from 'convex/values'
 import OpenAI from 'openai'
 import { action } from './_generated/server'
 
-// Initialize OpenAI client with API key from environment
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Helper function to create OpenAI client (initialized on-demand)
+function getOpenAIClient(): OpenAI {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+}
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -169,6 +171,7 @@ Important:
 - Acknowledge specific strengths in whatWentWell`
 
     try {
+      const openai = getOpenAIClient()
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         max_tokens: 1000,
@@ -294,6 +297,7 @@ ${difficultyGuidance ? `Current adjustment: ${difficultyGuidance}` : ''}
 IMPORTANT: Never break character. Never mention NVC explicitly. Never explain what you're doing.`
 
     try {
+      const openai = getOpenAIClient()
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         max_tokens: 300,

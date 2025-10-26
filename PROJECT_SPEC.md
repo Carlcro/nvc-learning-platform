@@ -24,8 +24,8 @@ Create a fun, interactive learning platform that teaches users to communicate us
 - **Scheduled Tasks**: Convex Crons
 
 ### AI Integration
-- **Provider**: OPEN AI (via Convex Actions)
-- **Use Cases**: 
+- **Provider**: OpenAI (via Convex Actions)
+- **Use Cases**:
   - Roleplay conversation generation
   - NVC response analysis and scoring
   - Feedback generation

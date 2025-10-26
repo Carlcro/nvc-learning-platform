@@ -22,7 +22,7 @@ You are working on an **interactive web application that teaches Non-Violent Com
 ### Tech Stack Quick Look
 - **Frontend**: TanStack Start + React + TypeScript + Tailwind CSS
 - **Backend**: Convex (database + serverless functions)
-- **AI**: Anthropic Claude API (called via Convex Actions)
+- **AI**: OpenAI API (called via Convex Actions)
 - **Hosting**: Netlify (frontend) + Convex Cloud (backend)
 
 ---
@@ -138,7 +138,7 @@ export const create = mutation({
 })
 ```
 
-### Working with AI (Claude API)
+### Working with AI (OpenAI API)
 
 **Always use Convex Actions for AI calls** - Never call APIs from the frontend:
 
@@ -148,14 +148,14 @@ export const create = mutation({
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
 export const analyzeResponse = action({
-  args: { 
+  args: {
     userMessage: v.string(),
     conversationHistory: v.array(v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
@@ -163,15 +163,15 @@ export const analyzeResponse = action({
     }))
   },
   handler: async (ctx, args) => {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       max_tokens: 1000,
       messages: args.conversationHistory.concat([
         { role: "user", content: args.userMessage }
       ]),
     });
-    
-    return response.content[0].text;
+
+    return response.choices[0].message.content;
   },
 });
 ```
@@ -503,9 +503,9 @@ return <div>{data.name}</div>
 
 ```typescript
 // ❌ Bad - Exposes API key!
-import Anthropic from "@anthropic-ai/sdk"
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const response = await anthropic.messages.create({...})
+import OpenAI from "openai"
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const response = await openai.chat.completions.create({...})
 
 // ✅ Good - Use Convex Action
 const analyzeMessage = useAction(api.ai.analyzeResponse)
