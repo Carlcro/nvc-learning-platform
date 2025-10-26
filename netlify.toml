@@ -1,13 +1,18 @@
 [build]
   command = "npx convex deploy --cmd 'npm run build'"
   publish = "dist/client"
-  edge_functions = "netlify/edge-functions"
+  functions = "netlify/functions"
 
-[[edge_functions]]
-  function = "server"
-  path = "/*"
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["convex", "openai"]
 
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
   status = 200
