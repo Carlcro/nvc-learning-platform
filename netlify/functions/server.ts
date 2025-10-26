@@ -5,7 +5,7 @@ import type { Handler } from '@netlify/functions'
  * Netlify Function that wraps the TanStack Start server
  * Routes all requests to the server's fetch handler
  */
-export const handler: Handler = async (event, context) => {
+export const handler: Handler = async (event) => {
   // Create a Web API Request from the Netlify function event
   const request = new Request(new URL(event.rawUrl).href, {
     method: event.httpMethod,
