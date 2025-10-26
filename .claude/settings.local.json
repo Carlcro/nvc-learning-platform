@@ -13,7 +13,10 @@
       "Bash(xargs:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "WebFetch(domain:tanstack.com)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

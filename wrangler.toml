@@ -1,0 +1,22 @@
+name = "nvc-learning-platform"
+type = "javascript"
+account_id = ""
+workers_dev = true
+main = "dist/server/index.js"
+site = { bucket = "dist/client" }
+build = { command = "npm run build" }
+compatibility_date = "2024-12-09"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "nvc-learning-platform-prod"
+routes = [
+  { pattern = "nvc-learning-platform.pages.dev", zone_name = "nvc-learning-platform.pages.dev" }
+]
+
+
+[env.development]
+name = "nvc-learning-platform-dev"
+
+[triggers.crons]
+crons = []

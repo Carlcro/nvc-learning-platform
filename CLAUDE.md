@@ -23,7 +23,7 @@ You are working on an **interactive web application that teaches Non-Violent Com
 - **Frontend**: TanStack Start + React + TypeScript + Tailwind CSS
 - **Backend**: Convex (database + serverless functions)
 - **AI**: OpenAI API (called via Convex Actions)
-- **Hosting**: Netlify (frontend) + Convex Cloud (backend)
+- **Hosting**: Cloudflare Pages (frontend) + Convex Cloud (backend)
 
 ---
 

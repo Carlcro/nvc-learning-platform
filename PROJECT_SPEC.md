@@ -31,7 +31,7 @@ Create a fun, interactive learning platform that teaches users to communicate us
   - Feedback generation
 
 ### Hosting
-- **Frontend**: Netlify
+- **Frontend**: Cloudflare Pages
 - **Backend**: Convex Cloud (managed)
 
 ---
@@ -557,14 +557,14 @@ npx convex dev      # Convex local development
 
 ### Staging
 - Auto-deploy from `develop` branch
-- Netlify preview deployments
+- Cloudflare Pages preview deployments
 - Convex dev environment
 
 ### Production
 - Manual deploy from `main` branch
-- Netlify production
+- Cloudflare Pages production
 - Convex production environment
-- Monitor with Convex dashboard + Netlify analytics
+- Monitor with Convex dashboard + Cloudflare analytics
 
 ---
 
