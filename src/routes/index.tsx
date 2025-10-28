@@ -10,60 +10,113 @@ function Home() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-950 dark:to-blue-950 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center py-20">
-          {/* Giraffe Emoji / Symbol */}
-          <div className="text-7xl mb-8 animate-bounce">🦒</div>
+      <section className="min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 dark:from-brown-800 dark:to-brown-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto py-20">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left side - Giraffe Mascot */}
+            <div className="flex flex-col items-center">
+              {/* Speech Bubble */}
+              <div className="mb-8 bg-white dark:bg-brown-700 rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 dark:border-giraffe-600 relative max-w-sm">
+                <p className="text-lg text-brown-800 dark:text-giraffe-100 text-center font-medium">
+                  Hi there! I'm your compassionate communication guide.
+                  Together, we'll learn to express ourselves authentically and
+                  truly listen to others. Ready to begin?
+                </p>
+                {/* Speech bubble tail */}
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-brown-700"></div>
+              </div>
 
-          <h1 className="text-5xl sm:text-6xl font-bold text-brown-800 dark:text-white mb-6">
-            Learn to Communicate
-            <br />
-            <span className="bg-gradient-to-r from-emerald-600 to-blue-600 dark:from-emerald-400 dark:to-blue-400 bg-clip-text text-transparent">
-              with Compassion
-            </span>
-          </h1>
+              {/* Giraffe Image */}
+              <img
+                src="/giraff.png"
+                alt="Giraffe - Your NVC Guide"
+                className="mx-auto object-contain h-80 w-auto scale-x-[-1]"
+              />
+            </div>
 
-          <p className="text-xl text-brown-700 dark:text-brown-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Master Non-Violent Communication (NVC) through interactive lessons
-            and real conversations with AI. Learn to express yourself
-            authentically while truly understanding others.
-          </p>
+            {/* Right side - Content */}
+            <div className="text-center md:text-left">
+              <h1 className="text-5xl sm:text-6xl font-bold text-brown-800 dark:text-white mb-6">
+                Learn to Communicate
+                <br />
+                <span className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 dark:from-giraffe-400 dark:to-giraffe-300 bg-clip-text text-transparent">
+                  with Compassion
+                </span>
+              </h1>
 
-          {/* Key Benefits */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <BenefitCard
-              emoji="💭"
-              title="4 Core Skills"
-              description="Learn observation, feeling, need, and request—the foundation of compassionate communication."
-            />
-            <BenefitCard
-              emoji="🎯"
-              title="Practice in Real Scenarios"
-              description="Have meaningful conversations with AI characters and get instant feedback on your communication."
-            />
-            <BenefitCard
-              emoji="📈"
-              title="See Your Progress"
-              description="Track your growth as you develop your ability to communicate with empathy and clarity."
-            />
+              <p className="text-xl text-brown-700 dark:text-brown-300 mb-8 leading-relaxed">
+                Master Non-Violent Communication (NVC) through interactive
+                lessons and real conversations with AI. Learn to express
+                yourself authentically while truly understanding others.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center md:items-start">
+                <Link to="/learn">
+                  <Button size="lg" variant="primary" className="px-8">
+                    Start Learning
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="px-8">
+                  Learn More
+                </Button>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/learn">
-              <Button size="lg" variant="primary" className="px-8">
-                Start Learning
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="px-8">
-              Learn More
-            </Button>
+      {/* Key Benefits Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left side - Benefits */}
+            <div className="order-1 md:order-1">
+              <div className="space-y-4">
+                <BenefitCard
+                  emoji="💭"
+                  title="4 Core Skills"
+                  description="Learn observation, feeling, need, and request—the foundation of compassionate communication."
+                />
+                <BenefitCard
+                  emoji="🎯"
+                  title="Practice in Real Scenarios"
+                  description="Have meaningful conversations with AI characters and get instant feedback on your communication."
+                />
+                <BenefitCard
+                  emoji="📈"
+                  title="See Your Progress"
+                  description="Track your growth as you develop your ability to communicate with empathy and clarity."
+                />
+              </div>
+            </div>
+
+            {/* Right side - Giraffe with Speech Bubble */}
+            <div className="flex flex-col items-center order-2 md:order-2">
+              {/* Speech Bubble */}
+              <div className="mb-8 bg-white dark:bg-brown-700 rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 dark:border-giraffe-600 relative max-w-sm">
+                <p className="text-lg text-brown-800 dark:text-giraffe-100 text-center font-medium">
+                  Here's what you'll master on your journey with me! Each skill
+                  builds on the others to help you communicate with true
+                  compassion.
+                </p>
+                {/* Speech bubble tail */}
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-brown-700"></div>
+              </div>
+
+              {/* Giraffe Image */}
+              <img
+                src="/giraff.png"
+                alt="Giraffe - Your NVC Guide"
+                className="mx-auto object-contain h-72 w-auto"
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* What is NVC Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-brown-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-brown-800 dark:text-white mb-12 text-center">
             What is Non-Violent Communication?
@@ -118,7 +171,7 @@ function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-900">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-brown-800 dark:text-white mb-12 text-center">
             How the App Works
@@ -150,65 +203,91 @@ function Home() {
       </section>
 
       {/* Giraffe vs Jackal */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-brown-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-brown-800 dark:text-white mb-12 text-center">
             Giraffe Language vs Jackal Language
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-giraffe-50 dark:bg-brown-900 rounded-lg p-8 border-2 border-giraffe-200 dark:border-giraffe-700">
-              <h3 className="text-2xl font-bold text-brown-900 dark:text-giraffe-200 mb-4">
-                🦒 Giraffe Language
-              </h3>
-              <p className="text-brown-700 dark:text-brown-400 mb-4">
-                Compassionate, empathetic communication
-              </p>
-              <ul className="space-y-3 text-brown-700 dark:text-brown-400">
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✓</span>
-                  <span>Focuses on facts without judgment</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✓</span>
-                  <span>Expresses feelings and needs openly</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✓</span>
-                  <span>Makes requests, not demands</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✓</span>
-                  <span>Creates understanding and connection</span>
-                </li>
-              </ul>
+            {/* Giraffe Language Card */}
+            <div className="bg-white dark:bg-brown-900 rounded-lg overflow-hidden border-2 border-giraffe-300 dark:border-giraffe-700 shadow-lg">
+              {/* Image Container */}
+              <div className="bg-giraffe-100 dark:bg-brown-800 p-6 flex items-center justify-center h-48">
+                <img
+                  src="/giraff.png"
+                  alt="Giraffe - Compassionate Communication"
+                  className="h-40 w-auto object-contain"
+                />
+              </div>
+
+              {/* Content Container */}
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-brown-900 dark:text-giraffe-200 mb-2">
+                  🦒 Giraffe Language
+                </h3>
+                <p className="text-brown-700 dark:text-brown-400 mb-6 font-medium">
+                  Compassionate, empathetic communication
+                </p>
+                <ul className="space-y-3 text-brown-700 dark:text-brown-400">
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-giraffe-600">✓</span>
+                    <span>Focuses on facts without judgment</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-giraffe-600">✓</span>
+                    <span>Expresses feelings and needs openly</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-giraffe-600">✓</span>
+                    <span>Makes requests, not demands</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-giraffe-600">✓</span>
+                    <span>Creates understanding and connection</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div className="bg-empathy-low dark:bg-empathy-low rounded-lg p-8 border-2 border-empathy-low dark:border-empathy-low">
-              <h3 className="text-2xl font-bold text-empathy-low dark:text-empathy-low mb-4">
-                🐺 Jackal Language
-              </h3>
-              <p className="text-brown-700 dark:text-brown-400 mb-4">
-                Judgmental, reactive communication
-              </p>
-              <ul className="space-y-3 text-brown-700 dark:text-brown-400">
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✗</span>
-                  <span>Uses judgment and blame</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✗</span>
-                  <span>Makes demands and ultimatums</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✗</span>
-                  <span>Criticizes or diagnoses</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-xl mt-1">✗</span>
-                  <span>Creates defensiveness and distance</span>
-                </li>
-              </ul>
+            {/* Jackal Language Card */}
+            <div className="bg-white dark:bg-brown-900 rounded-lg overflow-hidden border-2 border-empathy-low dark:border-empathy-low shadow-lg">
+              {/* Image Container */}
+              <div className="bg-empathy-low dark:bg-brown-800 p-6 flex items-center justify-center h-48">
+                <img
+                  src="/jakyll.png"
+                  alt="Jackal - Reactive Communication"
+                  className="h-40 w-auto object-contain"
+                />
+              </div>
+
+              {/* Content Container */}
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-black dark:text-empathy-low mb-2">
+                  🐺 Jackal Language
+                </h3>
+                <p className="text-brown-700 dark:text-brown-400 mb-6 font-medium">
+                  Judgmental, reactive communication
+                </p>
+                <ul className="space-y-3 text-brown-700 dark:text-brown-400">
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-empathy-low">✗</span>
+                    <span>Uses judgment and blame</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-empathy-low">✗</span>
+                    <span>Makes demands and ultimatums</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-empathy-low">✗</span>
+                    <span>Criticizes or diagnoses</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-xl mt-1 text-empathy-low">✗</span>
+                    <span>Creates defensiveness and distance</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
 
@@ -223,14 +302,14 @@ function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-emerald-600 to-blue-600 dark:from-emerald-700 dark:to-blue-700">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-giraffe-600 to-giraffe-500 dark:from-giraffe-700 dark:to-giraffe-600">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Transform Your Communication?
           </h2>
           <p className="text-xl text-giraffe-50 mb-10">
             Start your journey toward more compassionate, authentic
-            conversations today.
+            conversations today. Let your giraffe guide you!
           </p>
           <Link to="/learn">
             <Button
