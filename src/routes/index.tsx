@@ -224,7 +224,7 @@ function Home() {
               {/* Content Container */}
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-brown-900 dark:text-giraffe-200 mb-2">
-                  🦒 Giraffe Language
+                  Giraffe Language
                 </h3>
                 <p className="text-brown-700 dark:text-brown-400 mb-6 font-medium">
                   Compassionate, empathetic communication
@@ -264,7 +264,7 @@ function Home() {
               {/* Content Container */}
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-black dark:text-empathy-low mb-2">
-                  🐺 Jackal Language
+                  Jackal Language
                 </h3>
                 <p className="text-brown-700 dark:text-brown-400 mb-6 font-medium">
                   Judgmental, reactive communication
