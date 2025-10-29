@@ -120,22 +120,22 @@ function LearnHub() {
         </div>
       </section>
       {/* Header with Giraffe */}
-      <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 py-12 px-4 sm:px-6 lg:px-24">
-        <div className="max-w-6xl mx-auto px-40">
-          <div className="grid md:grid-cols-2 gap-8 items-stretch">
+      <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto lg:px-40">
+          <div className="flex flex-col-reverse md:flex-row gap-8 items-stretch">
             {/* Left side - Current Lesson Card */}
-            <div>
+            <div className="flex-1">
               {/* Current Lesson Card */}
               {currentLesson && (
                 <Link
                   to={getLessonRoute(currentLesson.lessonId as ValidLessonId)}
                 >
-                  <Card className="h-full w-96 hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-giraffe-300 flex flex-col">
+                  <Card className="h-full lg:w-96 hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-giraffe-300 flex flex-col">
                     <div className="bg-gradient-to-r from-giraffe-500 to-giraffe-400 px-6 py-4">
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="text-sm font-semibold text-white">
-                            Lesson {currentLesson.order}
+                            Next Lesson
                           </div>
                           <div className="text-3xl mt-2">
                             {currentLesson.icon}
@@ -164,13 +164,13 @@ function LearnHub() {
             </div>
 
             {/* Right side - Giraffe Image with Speech Bubble */}
-            <div className="flex flex-col justify-center items-center">
+            <div className="flex-1 flex flex-col justify-center items-center">
               {/* Giraffe Greeting */}
               <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm mb-4">
                 <p className="text-lg text-brown-800 font-medium">
                   {completedLessonsCount === 0
                     ? "Welcome to your learning journey! I'm so excited to guide you through mastering compassionate communication. Let's start with Lesson 1!"
-                    : `Great progress! You've completed ${completedLessonsCount} lesson${completedLessonsCount > 1 ? 's' : ''}. Let's continue with Lesson ${currentLesson.order}!`}
+                    : `You've completed ${completedLessonsCount} lesson${completedLessonsCount > 1 ? 's' : ''} and you're building real compassionate communication skills. Let's continue with Lesson ${currentLesson.order}.`}
                 </p>
                 {/* Speech bubble tail pointing down */}
                 <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
