@@ -11,7 +11,6 @@ import {
   CheckIcon,
   EyeIcon,
   HeartIcon,
-  LightbulbIcon,
   StarIcon,
   TargetIcon,
   ThoughtIcon,

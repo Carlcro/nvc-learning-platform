@@ -8,13 +8,12 @@ import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import {
-  CheckIcon,
-  TargetIcon,
-  XIcon,
-  ScaleIcon,
   ChatIcon,
+  CheckIcon,
   HandshakeIcon,
   LightbulbIcon,
+  ScaleIcon,
+  TargetIcon,
 } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/request')({

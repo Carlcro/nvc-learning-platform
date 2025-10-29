@@ -91,11 +91,6 @@ function LearnHub() {
   const currentLesson =
     currentLessonIndex >= 0 ? validLessons[currentLessonIndex] : validLessons[0]
 
-  // Get the previous lesson number for the giraffe message
-  const completedLessonsCount = validLessons.filter((lesson) =>
-    isLessonCompleted(lesson.lessonId),
-  ).length
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
       {/* Progress Overview */}

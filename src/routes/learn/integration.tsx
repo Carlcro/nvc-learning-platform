@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
+import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
@@ -9,13 +10,11 @@ import { useLessonProgress } from '~/hooks/useLessonProgress'
 import {
   CheckIcon,
   EyeIcon,
-  ThoughtIcon,
   HeartIcon,
-  TargetIcon,
   StarIcon,
-  LightbulbIcon,
+  TargetIcon,
+  ThoughtIcon,
 } from '~/components/ui/Icons'
-import { useState } from 'react'
 
 export const Route = createFileRoute('/learn/integration')({
   component: IntegrationLesson,

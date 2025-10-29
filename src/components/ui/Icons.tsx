@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface IconProps {
   className?: string
   size?: number
@@ -238,7 +236,14 @@ export function GlobeIcon({ className = 'w-6 h-6', size }: IconProps) {
         strokeWidth={2}
         d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20H19a2 2 0 002-2v-2a2 2 0 00-2-2h-2.236a2 2 0 01-1.964-1.277L13.464 9.8a2 2 0 001.964-1.277"
       />
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={2} fill="none" />
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        stroke="currentColor"
+        strokeWidth={2}
+        fill="none"
+      />
     </svg>
   )
 }
