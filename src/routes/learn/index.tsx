@@ -58,6 +58,10 @@ function getLessonRoute(lessonId: ValidLessonId): string {
   return lessonRoutes[lessonId] || '/learn'
 }
 
+function getLessonImagePath(lessonOrder: number): string {
+  return `/lesson${lessonOrder}.png`
+}
+
 function LearnHub() {
   const { data: lessons } = useSuspenseQuery(
     convexQuery(api.lessons.getAllLessons, {}),
@@ -67,7 +71,7 @@ function LearnHub() {
 
   // Filter to ensure we have only valid lesson types
   const validLessons =
-    lessons?.filter((lesson) =>
+    lessons.filter((lesson) =>
       [
         'observation',
         'feeling',
@@ -119,72 +123,61 @@ function LearnHub() {
           </div>
         </div>
       </section>
-      {/* Header with Giraffe */}
+      {/* Header with Current Lesson */}
       <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto lg:px-40">
-          <div className="flex flex-col-reverse md:flex-row gap-8 items-stretch">
-            {/* Left side - Current Lesson Card */}
-            <div className="flex-1">
-              {/* Current Lesson Card */}
-              {currentLesson && (
-                <Link
-                  to={getLessonRoute(currentLesson.lessonId as ValidLessonId)}
-                >
-                  <Card className="h-full lg:w-96 hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-giraffe-300 flex flex-col">
-                    <div className="bg-gradient-to-r from-giraffe-500 to-giraffe-400 px-6 py-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="text-sm font-semibold text-white">
-                            Next Lesson
-                          </div>
-                          <div className="text-3xl mt-2">
-                            {currentLesson.icon}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white bg-opacity-30 text-white font-bold text-lg">
-                          {currentLesson.order}
-                        </div>
+        <div className="max-w-6xl mx-auto">
+          {
+            <Link to={getLessonRoute(currentLesson.lessonId as ValidLessonId)}>
+              <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-giraffe-300">
+                <div className="flex flex-col md:flex-row">
+                  {/* Left side - Content */}
+                  <div className="flex-1 bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white p-8">
+                    <div className="mb-4">
+                      <div className="text-sm font-semibold text-giraffe-50 mb-2">
+                        NEXT LESSON
                       </div>
-                    </div>
-                    <CardBody className="flex flex-col gap-3 pt-4 flex-grow">
-                      <h3 className="text-lg font-bold text-brown-800 group-hover:text-giraffe-600 transition-colors">
+                      <div className="text-sm font-semibold text-giraffe-50 mb-2">
+                        Lesson {currentLesson.order}
+                      </div>
+                      <h2 className="text-4xl font-bold mb-4">
                         {currentLesson.title}
-                      </h3>
-                      <p className="text-brown-600 text-sm flex-grow">
-                        {currentLesson.description}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-brown-600 pt-2">
-                        <span>⏱️</span>
-                        <span>{currentLesson.estimatedDuration} minutes</span>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </Link>
-              )}
-            </div>
+                      </h2>
+                    </div>
+                    <p className="text-lg text-giraffe-50 mb-6 max-w-xl">
+                      {currentLesson.description}
+                    </p>
+                    <div className="flex items-center gap-2 text-giraffe-50">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span>{currentLesson.estimatedDuration} minutes</span>
+                    </div>
+                  </div>
 
-            {/* Right side - Giraffe Image with Speech Bubble */}
-            <div className="flex-1 flex flex-col justify-center items-center">
-              {/* Giraffe Greeting */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm mb-4">
-                <p className="text-lg text-brown-800 font-medium">
-                  {completedLessonsCount === 0
-                    ? "Welcome to your learning journey! I'm so excited to guide you through mastering compassionate communication. Let's start with Lesson 1!"
-                    : `You've completed ${completedLessonsCount} lesson${completedLessonsCount > 1 ? 's' : ''} and you're building real compassionate communication skills. Let's continue with Lesson ${currentLesson.order}.`}
-                </p>
-                {/* Speech bubble tail pointing down */}
-                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
-              </div>
-
-              <div className="bg-transparent p-4">
-                <img
-                  src="/giraff.png"
-                  alt="Giraffe - Your Learning Guide"
-                  className="mx-auto object-contain h-64 w-auto"
-                />
-              </div>
-            </div>
-          </div>
+                  {/* Right side - Image */}
+                  <div className="flex-1 p-8 flex items-center justify-center bg-gradient-to-b from-white to-giraffe-50">
+                    <div className="bg-transparent max-w-1/3">
+                      <img
+                        src={getLessonImagePath(currentLesson.order)}
+                        alt={currentLesson.title}
+                        className="w-full h-auto object-contain rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          }
         </div>
       </section>
 
@@ -226,10 +219,6 @@ function LearnHub() {
 
 interface LessonCardProps {
   lesson: Lesson
-}
-
-function getLessonImagePath(lessonOrder: number): string {
-  return `/lesson${lessonOrder}.png`
 }
 
 function LessonCard({ lesson }: LessonCardProps) {
