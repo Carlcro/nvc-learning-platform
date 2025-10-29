@@ -605,6 +605,7 @@ When working on this codebase:
 4. **Test your changes** - explain how you would test the code
 5. **Consider NVC principles** - the app should embody what it teaches
 6. **Think about the user experience** - is this encouraging? Clear? Fun?
+7. **You dont need to add dark mode** - users will not need dark mode
 
 ### Response Style
 

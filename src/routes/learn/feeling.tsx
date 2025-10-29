@@ -32,32 +32,32 @@ function FeelingLesson() {
   const currentExample = lesson.examples[selectedExample]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
       {/* Completion Banner */}
       {lessonCompleted && (
-        <div className="bg-gradient-to-r from-yellow-100 to-emerald-100 dark:from-yellow-900 dark:to-emerald-900 border-b-2 border-giraffe-300 dark:border-giraffe-600 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
             <span className="text-2xl">🎓✨</span>
             <div>
-              <p className="font-bold text-giraffe-900 dark:text-giraffe-100">Lesson Completed!</p>
-              <p className="text-sm text-giraffe-800 dark:text-giraffe-200">You achieved a perfect score on this lesson.</p>
+              <p className="font-bold text-brown-800">Lesson Completed!</p>
+              <p className="text-sm text-brown-700">You achieved a perfect score on this lesson.</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <section className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-700 dark:to-pink-700 text-white py-8 px-4 sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-5xl">{lesson.icon}</span>
             <div>
-              <div className="text-sm font-semibold text-giraffe-100">Lesson 3</div>
+              <div className="text-sm font-semibold text-giraffe-50">Lesson 3</div>
               <h1 className="text-4xl font-bold">{lesson.title}</h1>
             </div>
           </div>
-          <p className="text-lg text-giraffe-100 max-w-2xl">{lesson.description}</p>
-          <div className="mt-4 flex items-center gap-4 text-giraffe-100">
+          <p className="text-lg text-giraffe-50 max-w-2xl">{lesson.description}</p>
+          <div className="mt-4 flex items-center gap-4 text-giraffe-50">
             <span className="text-sm">⏱️ {lesson.estimatedDuration} minutes</span>
           </div>
         </div>
@@ -119,62 +119,87 @@ function FeelingLesson() {
         </div>
 
         {/* Giraffe vs Jackal Language */}
-        <Card className="mb-12 border-2 border-giraffe-200 dark:border-brown-800">
-          <CardHeader className="bg-gradient-to-r from-emerald-50 to-purple-50 dark:from-emerald-900 dark:to-purple-900 border-b-2 border-giraffe-200 dark:border-brown-800">
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white">
+        <Card className="mb-12 border-2 border-giraffe-200">
+          <CardHeader className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-200">
+            <h2 className="text-2xl font-bold text-brown-800">
               Real Feelings vs. Pseudo-Feelings
             </h2>
-            <p className="text-brown-600 dark:text-brown-400 mt-2">
+            <p className="text-brown-600 mt-2">
               See the difference between authentic emotions and judgments disguised as feelings
             </p>
           </CardHeader>
           <CardBody>
-            <div className="bg-white dark:bg-brown-800 rounded-lg p-6">
+            <div className="bg-white rounded-lg p-6">
               {/* Example Display */}
               <div className="mb-8">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-brown-800 dark:text-white mb-2">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-brown-800 mb-2">
                     Scenario
                   </h3>
-                  <p className="text-brown-700 dark:text-brown-400 italic">
+                  <p className="text-brown-700 italic">
                     {currentExample?.scenario}
                   </p>
                 </div>
 
-                {/* Giraffe Response */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  <div className="p-4 bg-giraffe-50 dark:bg-brown-900 rounded-lg border-2 border-giraffe-200 dark:border-giraffe-700">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-3xl">🦒</span>
-                      <h4 className="text-lg font-bold text-brown-900 dark:text-giraffe-100">
-                        Authentic Feelings
-                      </h4>
+                {/* Giraffe and Jackal Comparison with Images */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                  {/* Giraffe Card */}
+                  <div className="bg-white border-2 border-giraffe-300 rounded-lg overflow-hidden shadow-lg">
+                    {/* Image Container */}
+                    <div className="bg-giraffe-100 p-6 flex items-center justify-center h-48">
+                      <img
+                        src="/giraff.png"
+                        alt="Giraffe - Compassionate Communication"
+                        className="h-40 w-auto object-contain"
+                      />
                     </div>
-                    <p className="text-brown-800 dark:text-giraffe-200 leading-relaxed">
-                      {currentExample?.giraffResponse}
-                    </p>
+
+                    {/* Content Container */}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-3xl">🦒</span>
+                        <h4 className="text-lg font-bold text-brown-900">
+                          Authentic Feelings
+                        </h4>
+                      </div>
+                      <p className="text-brown-800 leading-relaxed">
+                        {currentExample?.giraffResponse}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Jackal Response */}
-                  <div className="p-4 bg-empathy-low dark:bg-empathy-low rounded-lg border-2 border-empathy-low dark:border-empathy-low">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-3xl">🐺</span>
-                      <h4 className="text-lg font-bold text-empathy-low dark:text-empathy-low">
-                        Pseudo-Feelings
-                      </h4>
+                  {/* Jackal Card */}
+                  <div className="bg-white border-2 border-empathy-low rounded-lg overflow-hidden shadow-lg">
+                    {/* Image Container */}
+                    <div className="bg-empathy-low p-6 flex items-center justify-center h-48">
+                      <img
+                        src="/jakyll.png"
+                        alt="Jackal - Reactive Communication"
+                        className="h-40 w-auto object-contain"
+                      />
                     </div>
-                    <p className="text-empathy-low dark:text-empathy-low leading-relaxed">
-                      {currentExample?.jackalResponse}
-                    </p>
+
+                    {/* Content Container */}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-3xl">🐺</span>
+                        <h4 className="text-lg font-bold text-empathy-low">
+                          Pseudo-Feelings
+                        </h4>
+                      </div>
+                      <p className="text-empathy-low leading-relaxed">
+                        {currentExample?.jackalResponse}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Explanation */}
-                <div className="mt-6 p-4 bg-giraffe-50 dark:bg-giraffe-900 rounded-lg">
-                  <h4 className="font-semibold text-giraffe-900 dark:text-giraffe-100 mb-2">
+                <div className="mt-6 p-4 bg-giraffe-50 rounded-lg">
+                  <h4 className="font-semibold text-brown-800 mb-2">
                     What's the difference?
                   </h4>
-                  <p className="text-giraffe-800 dark:text-giraffe-200">
+                  <p className="text-brown-700">
                     {currentExample?.explanation}
                   </p>
                 </div>
@@ -183,7 +208,7 @@ function FeelingLesson() {
               {/* Example Navigation */}
               {lesson.examples && lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
-                  <p className="text-sm text-brown-600 dark:text-brown-400 mr-4">
+                  <p className="text-sm text-brown-600 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
                   </p>
                   {lesson.examples.map((_, index) => (
@@ -193,7 +218,7 @@ function FeelingLesson() {
                       className={`w-3 h-3 rounded-full transition-all ${
                         index === selectedExample
                           ? 'bg-giraffe-600 w-8'
-                          : 'bg-brown-300 dark:bg-brown-600'
+                          : 'bg-brown-300'
                       }`}
                       aria-label={`Go to example ${index + 1}`}
                     />
@@ -215,33 +240,33 @@ function FeelingLesson() {
         )}
 
         {/* Key Takeaways */}
-        <Card className="mb-12 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 border-giraffe-200 dark:border-giraffe-700">
+        <Card className="mb-12 bg-gradient-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
           <CardBody>
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
+            <h2 className="text-2xl font-bold text-brown-800 mb-6">
               Key Takeaways
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-brown-700 dark:text-brown-400">
+                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <span className="text-brown-700">
                   Real feelings are actual emotions; pseudo-feelings contain judgments about others
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-brown-700 dark:text-brown-400">
+                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <span className="text-brown-700">
                   Avoid saying "I feel like..." or "I feel that..." as these introduce thoughts
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-brown-700 dark:text-brown-400">
+                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <span className="text-brown-700">
                   Own your feelings without blaming others for them
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0">✓</span>
-                <span className="text-brown-700 dark:text-brown-400">
+                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <span className="text-brown-700">
                   Emotional authenticity creates space for genuine connection
                 </span>
               </li>
@@ -250,12 +275,12 @@ function FeelingLesson() {
         </Card>
 
         {/* Next Steps */}
-        <Card className="border-2 border-giraffe-200 dark:border-brown-800 mb-12">
+        <Card className="border-2 border-giraffe-200 mb-12">
           <CardBody>
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
+            <h2 className="text-2xl font-bold text-brown-800 mb-4">
               What's Next?
             </h2>
-            <p className="text-brown-700 dark:text-brown-400 mb-6">
+            <p className="text-brown-700 mb-6">
               Now that you can express your feelings authentically, the next step is understanding the universal needs behind those feelings. In Lesson 4, we'll explore how to connect your emotions to what truly matters to you.
             </p>
             <div className="flex gap-4">
@@ -282,11 +307,11 @@ interface ConceptCardProps {
 
 const colorMap = {
   emerald:
-    'from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 border-giraffe-200 dark:border-giraffe-700',
-  red: 'from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 border-empathy-low dark:border-empathy-low',
-  blue: 'from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-giraffe-200 dark:border-giraffe-700',
+    'from-emerald-50 to-emerald-100 border-giraffe-200',
+  red: 'from-red-50 to-red-100 border-empathy-low',
+  blue: 'from-blue-50 to-blue-100 border-giraffe-200',
   purple:
-    'from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 border-giraffe-200 dark:border-giraffe-700',
+    'from-purple-50 to-purple-100 border-giraffe-200',
 }
 
 function ConceptCard({
@@ -300,11 +325,11 @@ function ConceptCard({
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
           <span className="text-3xl">{icon}</span>
-          <h3 className="text-lg font-bold text-brown-800 dark:text-white">
+          <h3 className="text-lg font-bold text-brown-800">
             {title}
           </h3>
         </div>
-        <p className="text-brown-700 dark:text-brown-400">{description}</p>
+        <p className="text-brown-700">{description}</p>
       </CardBody>
     </Card>
   )

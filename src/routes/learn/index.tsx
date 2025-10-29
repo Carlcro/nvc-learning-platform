@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
@@ -29,7 +29,7 @@ interface Lesson {
   quiz: {
     questions: Array<{
       question: string
-      options: string[]
+      options: Array<string>
       correctAnswer: number
       explanation: string
     }>
@@ -39,43 +39,70 @@ interface Lesson {
 
 function LearnHub() {
   const { data: lessons } = useSuspenseQuery(
-    convexQuery(api.lessons.getAllLessons, {})
+    convexQuery(api.lessons.getAllLessons, {}),
   )
 
   const { getProgressPercentage } = useLessonProgress()
 
   // Filter to ensure we have only valid lesson types
-  const validLessons = lessons?.filter(lesson =>
-    ['observation', 'feeling', 'need', 'request', 'introduction', 'integration'].includes(lesson.component)
-  ) || []
+  const validLessons =
+    lessons?.filter((lesson) =>
+      [
+        'observation',
+        'feeling',
+        'need',
+        'request',
+        'introduction',
+        'integration',
+      ].includes(lesson.component),
+    ) || []
 
   const progressPercentage = getProgressPercentage(validLessons.length)
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-      {/* Header */}
-      <section className="bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-700 dark:to-emerald-700 text-white py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream dark:from-brown-800 dark:to-brown-900">
+      {/* Header with Giraffe */}
+      <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 dark:from-brown-800 dark:to-brown-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">🎓</span>
-            <h1 className="text-4xl font-bold">Learning Center</h1>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Left side - Text Content */}
+            <div>
+              {/* Giraffe Greeting */}
+              <div className="mb-8 bg-white dark:bg-brown-700 rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 dark:border-giraffe-600 relative max-w-lg">
+                <p className="text-lg text-brown-800 dark:text-giraffe-100 font-medium">
+                  Welcome to your learning journey! I'm so excited to guide you
+                  through mastering compassionate communication. Let's start
+                  with the first lesson!
+                </p>
+                {/* Speech bubble tail */}
+                <div className="absolute -bottom-4 left-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-brown-700"></div>
+              </div>
+            </div>
+
+            {/* Right side - Giraffe Image */}
+            <div className="flex justify-center">
+              <div className="bg-transparent p-4">
+                <img
+                  src="/giraff.png"
+                  alt="Giraffe - Your Learning Guide"
+                  className="mx-auto object-contain h-64 w-auto"
+                />
+              </div>
+            </div>
           </div>
-          <p className="text-lg text-giraffe-100 max-w-2xl">
-            Master the 4 components of Non-Violent Communication through bite-sized lessons.
-            Each lesson takes just 7-10 minutes and includes real-world examples.
-          </p>
         </div>
       </section>
 
       {/* Progress Overview */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-giraffe-50 dark:bg-giraffe-900 border border-giraffe-200 dark:border-giraffe-700 rounded-lg p-6">
+        <div className="bg-giraffe-50rounded-lg p-6">
           <h2 className="text-lg font-semibold text-giraffe-900 dark:text-giraffe-200 mb-2">
             Your Learning Path
           </h2>
           <p className="text-giraffe-800 dark:text-giraffe-300 mb-4">
-            Complete these 6 foundational lessons to build your NVC skills. You'll progress from
-            basics to real-world application, and then move on to practical roleplay scenarios.
+            Complete these 6 foundational lessons to build your NVC skills.
+            You'll progress from basics to real-world application, and then move
+            on to practical roleplay scenarios.
           </p>
           {/* Progress Bar */}
           <div className="flex items-center gap-4">
@@ -102,18 +129,24 @@ function LearnHub() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900 dark:to-blue-900 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-100 dark:border-brown-700">
+      <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 dark:from-giraffe-700 dark:to-giraffe-600 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 dark:border-giraffe-700">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-brown-800 dark:text-white mb-4">
+          <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Practice?
           </h2>
-          <p className="text-brown-700 dark:text-brown-400 mb-8 text-lg">
-            After completing the lessons, you'll practice NVC in real conversations with AI characters.
+          <p className="text-giraffe-50 mb-8 text-lg">
+            After completing the lessons, you'll practice NVC in real
+            conversations with AI characters.
           </p>
-          <Button size="lg" variant="primary" disabled className="opacity-50 cursor-not-allowed">
+          <Button
+            size="lg"
+            variant="primary"
+            disabled
+            className="opacity-50 cursor-not-allowed bg-white text-giraffe-600"
+          >
             Roleplay Scenarios (Coming Soon)
           </Button>
-          <p className="text-sm text-brown-600 dark:text-brown-400 mt-4">
+          <p className="text-sm text-giraffe-100 mt-4">
             Complete lessons to unlock scenario practice
           </p>
         </div>
@@ -132,7 +165,13 @@ function LessonCard({ lesson }: LessonCardProps) {
   const lessonNumber = lesson.order
 
   // Type-safe routing - map valid lesson IDs to their routes
-  type ValidLessonId = 'introduction' | 'observation' | 'feeling' | 'need' | 'request' | 'integration'
+  type ValidLessonId =
+    | 'introduction'
+    | 'observation'
+    | 'feeling'
+    | 'need'
+    | 'request'
+    | 'integration'
   const lessonRoutes: Record<ValidLessonId, any> = {
     introduction: '/learn/introduction',
     observation: '/learn/observation',
@@ -148,10 +187,10 @@ function LessonCard({ lesson }: LessonCardProps) {
     <Link to={href}>
       <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden">
         {/* Lesson Number Badge */}
-        <div className="bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-700 dark:to-emerald-700 px-6 py-4">
+        <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 dark:from-giraffe-700 dark:to-giraffe-600 px-6 py-4">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-sm font-semibold text-giraffe-100">
+              <div className="text-sm font-semibold text-giraffe-50">
                 Lesson {lessonNumber}
               </div>
               <div className="text-4xl mt-2">{lesson.icon}</div>
