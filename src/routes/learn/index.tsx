@@ -37,12 +37,33 @@ interface Lesson {
   }
 }
 
+type ValidLessonId =
+  | 'introduction'
+  | 'observation'
+  | 'feeling'
+  | 'need'
+  | 'request'
+  | 'integration'
+
+const lessonRoutes: Record<ValidLessonId, string> = {
+  introduction: '/learn/introduction',
+  observation: '/learn/observation',
+  feeling: '/learn/feeling',
+  need: '/learn/need',
+  request: '/learn/request',
+  integration: '/learn/integration',
+}
+
+function getLessonRoute(lessonId: ValidLessonId): string {
+  return lessonRoutes[lessonId] || '/learn'
+}
+
 function LearnHub() {
   const { data: lessons } = useSuspenseQuery(
     convexQuery(api.lessons.getAllLessons, {}),
   )
 
-  const { getProgressPercentage } = useLessonProgress()
+  const { getProgressPercentage, isLessonCompleted } = useLessonProgress()
 
   // Filter to ensure we have only valid lesson types
   const validLessons =
@@ -59,40 +80,20 @@ function LearnHub() {
 
   const progressPercentage = getProgressPercentage(validLessons.length)
 
+  // Find the current lesson (first incomplete, or first if all complete)
+  const currentLessonIndex = validLessons.findIndex(
+    (lesson) => !isLessonCompleted(lesson.lessonId),
+  )
+  const currentLesson =
+    currentLessonIndex >= 0 ? validLessons[currentLessonIndex] : validLessons[0]
+
+  // Get the previous lesson number for the giraffe message
+  const completedLessonsCount = validLessons.filter((lesson) =>
+    isLessonCompleted(lesson.lessonId),
+  ).length
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
-      {/* Header with Giraffe */}
-      <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Left side - Text Content */}
-            <div>
-              {/* Giraffe Greeting */}
-              <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-lg">
-                <p className="text-lg text-brown-800 font-medium">
-                  Welcome to your learning journey! I'm so excited to guide you
-                  through mastering compassionate communication. Let's start
-                  with the first lesson!
-                </p>
-                {/* Speech bubble tail */}
-                <div className="absolute -bottom-4 left-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
-              </div>
-            </div>
-
-            {/* Right side - Giraffe Image */}
-            <div className="flex justify-center">
-              <div className="bg-transparent p-4">
-                <img
-                  src="/giraff.png"
-                  alt="Giraffe - Your Learning Guide"
-                  className="mx-auto object-contain h-64 w-auto"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Progress Overview */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-giraffe-50rounded-lg p-6">
@@ -115,6 +116,74 @@ function LearnHub() {
             <span className="text-sm font-semibold text-giraffe-900 whitespace-nowrap">
               {progressPercentage}% Complete
             </span>
+          </div>
+        </div>
+      </section>
+      {/* Header with Giraffe */}
+      <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 py-12 px-4 sm:px-6 lg:px-24">
+        <div className="max-w-6xl mx-auto px-40">
+          <div className="grid md:grid-cols-2 gap-8 items-stretch">
+            {/* Left side - Current Lesson Card */}
+            <div>
+              {/* Current Lesson Card */}
+              {currentLesson && (
+                <Link
+                  to={getLessonRoute(currentLesson.lessonId as ValidLessonId)}
+                >
+                  <Card className="h-full w-96 hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-giraffe-300 flex flex-col">
+                    <div className="bg-gradient-to-r from-giraffe-500 to-giraffe-400 px-6 py-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="text-sm font-semibold text-white">
+                            Lesson {currentLesson.order}
+                          </div>
+                          <div className="text-3xl mt-2">
+                            {currentLesson.icon}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white bg-opacity-30 text-white font-bold text-lg">
+                          {currentLesson.order}
+                        </div>
+                      </div>
+                    </div>
+                    <CardBody className="flex flex-col gap-3 pt-4 flex-grow">
+                      <h3 className="text-lg font-bold text-brown-800 group-hover:text-giraffe-600 transition-colors">
+                        {currentLesson.title}
+                      </h3>
+                      <p className="text-brown-600 text-sm flex-grow">
+                        {currentLesson.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-brown-600 pt-2">
+                        <span>⏱️</span>
+                        <span>{currentLesson.estimatedDuration} minutes</span>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Link>
+              )}
+            </div>
+
+            {/* Right side - Giraffe Image with Speech Bubble */}
+            <div className="flex flex-col justify-center items-center">
+              {/* Giraffe Greeting */}
+              <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm mb-4">
+                <p className="text-lg text-brown-800 font-medium">
+                  {completedLessonsCount === 0
+                    ? "Welcome to your learning journey! I'm so excited to guide you through mastering compassionate communication. Let's start with Lesson 1!"
+                    : `Great progress! You've completed ${completedLessonsCount} lesson${completedLessonsCount > 1 ? 's' : ''}. Let's continue with Lesson ${currentLesson.order}!`}
+                </p>
+                {/* Speech bubble tail pointing down */}
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+              </div>
+
+              <div className="bg-transparent p-4">
+                <img
+                  src="/giraff.png"
+                  alt="Giraffe - Your Learning Guide"
+                  className="mx-auto object-contain h-64 w-auto"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -164,24 +233,7 @@ function LessonCard({ lesson }: LessonCardProps) {
   const isCompleted = isLessonCompleted(lesson.lessonId)
   const lessonNumber = lesson.order
 
-  // Type-safe routing - map valid lesson IDs to their routes
-  type ValidLessonId =
-    | 'introduction'
-    | 'observation'
-    | 'feeling'
-    | 'need'
-    | 'request'
-    | 'integration'
-  const lessonRoutes: Record<ValidLessonId, any> = {
-    introduction: '/learn/introduction',
-    observation: '/learn/observation',
-    feeling: '/learn/feeling',
-    need: '/learn/need',
-    request: '/learn/request',
-    integration: '/learn/integration',
-  }
-
-  const href = lessonRoutes[lesson.lessonId as ValidLessonId] || '/learn'
+  const href = getLessonRoute(lesson.lessonId as ValidLessonId)
 
   return (
     <Link to={href}>
@@ -209,9 +261,7 @@ function LessonCard({ lesson }: LessonCardProps) {
             </h3>
           </div>
 
-          <p className="text-brown-600 flex-grow">
-            {lesson.description}
-          </p>
+          <p className="text-brown-600 flex-grow">{lesson.description}</p>
 
           {/* Duration & Status */}
           <div className="pt-4 border-t border-giraffe-100">
