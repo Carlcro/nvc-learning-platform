@@ -7,6 +7,15 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
+import {
+  CheckIcon,
+  TargetIcon,
+  XIcon,
+  ScaleIcon,
+  ChatIcon,
+  HandshakeIcon,
+  LightbulbIcon,
+} from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/request')({
   component: RequestLesson,
@@ -37,10 +46,15 @@ function RequestLesson() {
       {lessonCompleted && (
         <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <span className="text-2xl">🎓✨</span>
+            <div className="flex gap-1 text-giraffe-600">
+              <CheckIcon className="w-6 h-6" />
+              <CheckIcon className="w-6 h-6" />
+            </div>
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">You achieved a perfect score on this lesson.</p>
+              <p className="text-sm text-brown-700">
+                You achieved a perfect score on this lesson.
+              </p>
             </div>
           </div>
         </div>
@@ -48,23 +62,52 @@ function RequestLesson() {
 
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-5xl">{lesson.icon}</span>
-            <div>
-              <div className="text-sm font-semibold text-giraffe-50">
-                Lesson 5
+        <div className="max-w-6xl mx-auto flex items-center gap-8">
+          {/* Left side - content */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-giraffe-50">
+                <TargetIcon className="w-12 h-12" />
               </div>
-              <h1 className="text-4xl font-bold">{lesson.title}</h1>
+              <div>
+                <div className="text-sm font-semibold text-giraffe-50">
+                  Lesson 5
+                </div>
+                <h1 className="text-4xl font-bold">{lesson.title}</h1>
+              </div>
+            </div>
+            <p className="text-lg text-giraffe-50 max-w-xl">
+              {lesson.description}
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-giraffe-50">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">
+                {lesson.estimatedDuration} minutes
+              </span>
             </div>
           </div>
-          <p className="text-lg text-giraffe-50 max-w-2xl">
-            {lesson.description}
-          </p>
-          <div className="mt-4 flex items-center gap-4 text-giraffe-50">
-            <span className="text-sm">
-              ⏱️ {lesson.estimatedDuration} minutes
-            </span>
+
+          {/* Right side - image */}
+          <div className="flex-1 flex justify-center">
+            <div className="bg-transparent max-w-xs">
+              <img
+                src="/lesson5.png"
+                alt="Making Clear and Compassionate Requests"
+                className="w-full h-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -81,9 +124,10 @@ function RequestLesson() {
               {lesson.content}
             </p>
             <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-600 rounded">
-              <p className="text-brown-700 font-semibold mb-2">
-                💡 Key Point
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <LightbulbIcon className="w-5 h-5 text-amber-600" />
+                <p className="text-brown-700 font-semibold">Key Point</p>
+              </div>
               <p className="text-brown-700">
                 A true request is distinguishable from a demand: it's concrete,
                 specific, and leaves the other person free to say no. When
@@ -101,25 +145,25 @@ function RequestLesson() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ConceptCard
-              icon="🎯"
+              icon={<TargetIcon className="w-6 h-6" />}
               title="Clear Requests"
               description="Specific, concrete, doable actions phrased positively"
               color="emerald"
             />
             <ConceptCard
-              icon="⚖️"
+              icon={<ScaleIcon className="w-6 h-6" />}
               title="Leave Room for No"
               description="'Would you be willing...' respects the other person's freedom"
               color="blue"
             />
             <ConceptCard
-              icon="💬"
+              icon={<ChatIcon className="w-6 h-6" />}
               title="Positive Language"
               description="Ask for what you want, not what you don't want"
               color="amber"
             />
             <ConceptCard
-              icon="🤝"
+              icon={<HandshakeIcon className="w-6 h-6" />}
               title="Mutual Dialogue"
               description="Refusal opens conversation, not conflict"
               color="purple"
@@ -166,12 +210,9 @@ function RequestLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🦒</span>
-                        <h4 className="text-lg font-bold text-brown-900">
-                          Clear Request
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-brown-900 mb-3">
+                        Clear Request
+                      </h4>
                       <p className="text-brown-800 leading-relaxed">
                         {currentExample.giraffResponse}
                       </p>
@@ -191,12 +232,9 @@ function RequestLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🐺</span>
-                        <h4 className="text-lg font-bold text-empathy-low">
-                          Demand
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-empathy-low mb-3">
+                        Demand
+                      </h4>
                       <p className="text-empathy-low leading-relaxed">
                         {currentExample.jackalResponse}
                       </p>
@@ -209,9 +247,7 @@ function RequestLesson() {
                   <h4 className="font-semibold text-brown-800 mb-2">
                     What's the difference?
                   </h4>
-                  <p className="text-brown-700">
-                    {currentExample.explanation}
-                  </p>
+                  <p className="text-brown-700">{currentExample.explanation}</p>
                 </div>
               </div>
 
@@ -257,27 +293,27 @@ function RequestLesson() {
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Requests are concrete and doable; they tell people exactly
                   what you want
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Use positive language to ask for what you DO want, not what
                   you DON'T want
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   A true request leaves the other person free to say no
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   When requests are refused, it opens dialogue to understand
                   both people's needs
@@ -315,20 +351,17 @@ function RequestLesson() {
 }
 
 interface ConceptCardProps {
-  icon: string
+  icon: React.ReactNode
   title: string
   description: string
   color: 'emerald' | 'blue' | 'amber' | 'purple'
 }
 
 const colorMap = {
-  emerald:
-    'from-emerald-50 to-emerald-100 border-giraffe-200',
+  emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
   blue: 'from-blue-50 to-blue-100 border-giraffe-200',
-  amber:
-    'from-amber-50 to-amber-100 border-amber-200',
-  purple:
-    'from-purple-50 to-purple-100 border-giraffe-200',
+  amber: 'from-amber-50 to-amber-100 border-amber-200',
+  purple: 'from-purple-50 to-purple-100 border-giraffe-200',
 }
 
 function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
@@ -336,10 +369,8 @@ function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">{icon}</span>
-          <h3 className="text-lg font-bold text-brown-800">
-            {title}
-          </h3>
+          <div className="text-brown-800">{icon}</div>
+          <h3 className="text-lg font-bold text-brown-800">{title}</h3>
         </div>
         <p className="text-brown-700">{description}</p>
       </CardBody>

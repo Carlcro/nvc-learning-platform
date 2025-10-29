@@ -6,6 +6,14 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
+import {
+  CheckIcon,
+  EyeIcon,
+  XIcon,
+  PinIcon,
+  WarningIcon,
+  LightbulbIcon,
+} from '~/components/ui/Icons'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/learn/observation')({
@@ -14,7 +22,7 @@ export const Route = createFileRoute('/learn/observation')({
 
 function ObservationLesson() {
   const { data: lesson } = useSuspenseQuery(
-    convexQuery(api.lessons.getLessonById, { lessonId: 'observation' })
+    convexQuery(api.lessons.getLessonById, { lessonId: 'observation' }),
   )
 
   const [selectedExample, setSelectedExample] = useState<number>(0)
@@ -37,10 +45,15 @@ function ObservationLesson() {
       {lessonCompleted && (
         <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <span className="text-2xl">🎓✨</span>
+            <div className="flex gap-1 text-giraffe-600">
+              <CheckIcon className="w-6 h-6" />
+              <CheckIcon className="w-6 h-6" />
+            </div>
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">You achieved a perfect score on this lesson.</p>
+              <p className="text-sm text-brown-700">
+                You achieved a perfect score on this lesson.
+              </p>
             </div>
           </div>
         </div>
@@ -48,17 +61,52 @@ function ObservationLesson() {
 
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-5xl">{lesson.icon}</span>
-            <div>
-              <div className="text-sm font-semibold text-giraffe-50">Lesson 2</div>
-              <h1 className="text-4xl font-bold">{lesson.title}</h1>
+        <div className="max-w-6xl mx-auto flex items-center gap-8">
+          {/* Left side - content */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-giraffe-50">
+                <EyeIcon className="w-12 h-12" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-giraffe-50">
+                  Lesson 2
+                </div>
+                <h1 className="text-4xl font-bold">{lesson.title}</h1>
+              </div>
+            </div>
+            <p className="text-lg text-giraffe-50 max-w-xl">
+              {lesson.description}
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-giraffe-50">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">
+                {lesson.estimatedDuration} minutes
+              </span>
             </div>
           </div>
-          <p className="text-lg text-giraffe-50 max-w-2xl">{lesson.description}</p>
-          <div className="mt-4 flex items-center gap-4 text-giraffe-50">
-            <span className="text-sm">⏱️ {lesson.estimatedDuration} minutes</span>
+
+          {/* Right side - image */}
+          <div className="flex-1 flex justify-center">
+            <div className="bg-transparent max-w-xs">
+              <img
+                src="/lesson2.png"
+                alt="Observations Without Evaluation"
+                className="w-full h-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -75,11 +123,15 @@ function ObservationLesson() {
               {lesson.content}
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
-              <p className="text-brown-700 font-semibold mb-2">
-                💡 Key Point
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <LightbulbIcon className="w-5 h-5 text-giraffe-600" />
+                <p className="text-brown-700 font-semibold">Key Point</p>
+              </div>
               <p className="text-brown-700">
-                Observations are like photographs—they capture what is actually there without filters, interpretations, or judgments. When you describe observable facts, you create the foundation for understanding and connection.
+                Observations are like photographs—they capture what is actually
+                there without filters, interpretations, or judgments. When you
+                describe observable facts, you create the foundation for
+                understanding and connection.
               </p>
             </div>
           </CardBody>
@@ -92,25 +144,25 @@ function ObservationLesson() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ConceptCard
-              icon="👁️"
+              icon={<EyeIcon className="w-6 h-6" />}
               title="See What's There"
               description="Describe what you actually see or hear without interpretation"
               color="blue"
             />
             <ConceptCard
-              icon="❌"
+              icon={<XIcon className="w-6 h-6" />}
               title="Avoid Judgment"
               description="Don't label, evaluate, or interpret what you observe"
               color="red"
             />
             <ConceptCard
-              icon="📍"
+              icon={<PinIcon className="w-6 h-6" />}
               title="Be Specific"
               description="Include times, dates, or quantities when relevant"
               color="emerald"
             />
             <ConceptCard
-              icon="⚠️"
+              icon={<WarningIcon className="w-6 h-6" />}
               title="Skip Generalizations"
               description="Avoid 'always,' 'never,' 'constantly,' and other absolutes"
               color="amber"
@@ -156,12 +208,9 @@ function ObservationLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🦒</span>
-                        <h4 className="text-lg font-bold text-brown-900">
-                          Pure Observation
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-brown-900 mb-3">
+                        Pure Observation
+                      </h4>
                       <p className="text-brown-800 leading-relaxed">
                         {currentExample?.giraffResponse}
                       </p>
@@ -181,12 +230,9 @@ function ObservationLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🐺</span>
-                        <h4 className="text-lg font-bold text-empathy-low">
-                          Judgment-Filled
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-empathy-low mb-3">
+                        Judgment-Filled
+                      </h4>
                       <p className="text-empathy-low leading-relaxed">
                         {currentExample?.jackalResponse}
                       </p>
@@ -247,27 +293,30 @@ function ObservationLesson() {
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Observations describe facts without evaluation or judgment
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
-                  Pure observations are specific and avoid generalizations like "always" or "never"
+                  Pure observations are specific and avoid generalizations like
+                  "always" or "never"
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
-                  Base observations on what you actually see, hear, or experience
+                  Base observations on what you actually see, hear, or
+                  experience
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
-                  Observations create the foundation for all other NVC components
+                  Observations create the foundation for all other NVC
+                  components
                 </span>
               </li>
             </ul>
@@ -281,7 +330,10 @@ function ObservationLesson() {
               What's Next?
             </h2>
             <p className="text-brown-700 mb-6">
-              Now that you understand how to make pure observations, we'll move to the second component: identifying and expressing your <strong>feelings</strong> authentically. This emotional awareness is crucial for compassionate communication.
+              Now that you understand how to make pure observations, we'll move
+              to the second component: identifying and expressing your{' '}
+              <strong>feelings</strong> authentically. This emotional awareness
+              is crucial for compassionate communication.
             </p>
             <div className="flex gap-4">
               <Button variant="primary" size="lg">
@@ -299,7 +351,7 @@ function ObservationLesson() {
 }
 
 interface ConceptCardProps {
-  icon: string
+  icon: React.ReactNode
   title: string
   description: string
   color: 'blue' | 'red' | 'emerald' | 'amber'
@@ -308,26 +360,17 @@ interface ConceptCardProps {
 const colorMap = {
   blue: 'from-blue-50 to-blue-100 border-giraffe-200',
   red: 'from-red-50 to-red-100 border-empathy-low',
-  emerald:
-    'from-emerald-50 to-emerald-100 border-giraffe-200',
-  amber:
-    'from-amber-50 to-amber-100 border-amber-200',
+  emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
+  amber: 'from-amber-50 to-amber-100 border-amber-200',
 }
 
-function ConceptCard({
-  icon,
-  title,
-  description,
-  color,
-}: ConceptCardProps) {
+function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">{icon}</span>
-          <h3 className="text-lg font-bold text-brown-800">
-            {title}
-          </h3>
+          <div className="text-brown-800">{icon}</div>
+          <h3 className="text-lg font-bold text-brown-800">{title}</h3>
         </div>
         <p className="text-brown-700">{description}</p>
       </CardBody>

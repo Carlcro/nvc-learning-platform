@@ -6,6 +6,14 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
+import {
+  CheckIcon,
+  ThoughtIcon,
+  SmileIcon,
+  PersonIcon,
+  SparkleIcon,
+  LightbulbIcon,
+} from '~/components/ui/Icons'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/learn/feeling')({
@@ -14,7 +22,7 @@ export const Route = createFileRoute('/learn/feeling')({
 
 function FeelingLesson() {
   const { data: lesson } = useSuspenseQuery(
-    convexQuery(api.lessons.getLessonById, { lessonId: 'feeling' })
+    convexQuery(api.lessons.getLessonById, { lessonId: 'feeling' }),
   )
 
   const [selectedExample, setSelectedExample] = useState<number>(0)
@@ -37,10 +45,15 @@ function FeelingLesson() {
       {lessonCompleted && (
         <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <span className="text-2xl">🎓✨</span>
+            <div className="flex gap-1 text-giraffe-600">
+              <CheckIcon className="w-6 h-6" />
+              <CheckIcon className="w-6 h-6" />
+            </div>
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">You achieved a perfect score on this lesson.</p>
+              <p className="text-sm text-brown-700">
+                You achieved a perfect score on this lesson.
+              </p>
             </div>
           </div>
         </div>
@@ -48,17 +61,52 @@ function FeelingLesson() {
 
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-5xl">{lesson.icon}</span>
-            <div>
-              <div className="text-sm font-semibold text-giraffe-50">Lesson 3</div>
-              <h1 className="text-4xl font-bold">{lesson.title}</h1>
+        <div className="max-w-6xl mx-auto flex items-center gap-8">
+          {/* Left side - content */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-giraffe-50">
+                <ThoughtIcon className="w-12 h-12" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-giraffe-50">
+                  Lesson 3
+                </div>
+                <h1 className="text-4xl font-bold">{lesson.title}</h1>
+              </div>
+            </div>
+            <p className="text-lg text-giraffe-50 max-w-xl">
+              {lesson.description}
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-giraffe-50">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">
+                {lesson.estimatedDuration} minutes
+              </span>
             </div>
           </div>
-          <p className="text-lg text-giraffe-50 max-w-2xl">{lesson.description}</p>
-          <div className="mt-4 flex items-center gap-4 text-giraffe-50">
-            <span className="text-sm">⏱️ {lesson.estimatedDuration} minutes</span>
+
+          {/* Right side - image */}
+          <div className="flex-1 flex justify-center">
+            <div className="bg-transparent max-w-xs">
+              <img
+                src="/lesson3.png"
+                alt="Understanding and Expressing Feelings"
+                className="w-full h-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -75,11 +123,16 @@ function FeelingLesson() {
               {lesson.content}
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
-              <p className="text-brown-700 font-semibold mb-2">
-                💡 Key Point
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <LightbulbIcon className="w-5 h-5 text-giraffe-600" />
+                <p className="text-brown-700 font-semibold">Key Point</p>
+              </div>
               <p className="text-brown-700">
-                Real feelings are actual emotions you experience in your body and heart. Pseudo-feelings often contain judgments about what you think others feel or think about you. Learning to distinguish between them is essential for authentic communication.
+                Real feelings are actual emotions you experience in your body
+                and heart. Pseudo-feelings often contain judgments about what
+                you think others feel or think about you. Learning to
+                distinguish between them is essential for authentic
+                communication.
               </p>
             </div>
           </CardBody>
@@ -92,25 +145,25 @@ function FeelingLesson() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ConceptCard
-              icon="😊"
+              icon={<SmileIcon className="w-6 h-6" />}
               title="Genuine Feelings"
               description="Emotions you actually experience: happy, sad, angry, anxious, excited"
               color="emerald"
             />
             <ConceptCard
-              icon="🤔"
+              icon={<ThoughtIcon className="w-6 h-6" />}
               title="Pseudo-Feelings"
               description="Thoughts disguised as feelings: rejected, attacked, betrayed, misunderstood"
               color="red"
             />
             <ConceptCard
-              icon="👤"
+              icon={<PersonIcon className="w-6 h-6" />}
               title="Own Your Feelings"
               description="Take responsibility for your emotions without blaming others"
               color="blue"
             />
             <ConceptCard
-              icon="✨"
+              icon={<SparkleIcon className="w-6 h-6" />}
               title="Emotional Authenticity"
               description="Express your true emotional experience in a non-blaming way"
               color="purple"
@@ -125,7 +178,8 @@ function FeelingLesson() {
               Real Feelings vs. Pseudo-Feelings
             </h2>
             <p className="text-brown-600 mt-2">
-              See the difference between authentic emotions and judgments disguised as feelings
+              See the difference between authentic emotions and judgments
+              disguised as feelings
             </p>
           </CardHeader>
           <CardBody>
@@ -156,12 +210,9 @@ function FeelingLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🦒</span>
-                        <h4 className="text-lg font-bold text-brown-900">
-                          Authentic Feelings
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-brown-900 mb-3">
+                        Authentic Feelings
+                      </h4>
                       <p className="text-brown-800 leading-relaxed">
                         {currentExample?.giraffResponse}
                       </p>
@@ -181,12 +232,9 @@ function FeelingLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🐺</span>
-                        <h4 className="text-lg font-bold text-empathy-low">
-                          Pseudo-Feelings
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-empathy-low mb-3">
+                        Pseudo-Feelings
+                      </h4>
                       <p className="text-empathy-low leading-relaxed">
                         {currentExample?.jackalResponse}
                       </p>
@@ -247,25 +295,27 @@ function FeelingLesson() {
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
-                  Real feelings are actual emotions; pseudo-feelings contain judgments about others
+                  Real feelings are actual emotions; pseudo-feelings contain
+                  judgments about others
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
-                  Avoid saying "I feel like..." or "I feel that..." as these introduce thoughts
+                  Avoid saying "I feel like..." or "I feel that..." as these
+                  introduce thoughts
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Own your feelings without blaming others for them
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Emotional authenticity creates space for genuine connection
                 </span>
@@ -281,7 +331,10 @@ function FeelingLesson() {
               What's Next?
             </h2>
             <p className="text-brown-700 mb-6">
-              Now that you can express your feelings authentically, the next step is understanding the universal needs behind those feelings. In Lesson 4, we'll explore how to connect your emotions to what truly matters to you.
+              Now that you can express your feelings authentically, the next
+              step is understanding the universal needs behind those feelings.
+              In Lesson 4, we'll explore how to connect your emotions to what
+              truly matters to you.
             </p>
             <div className="flex gap-4">
               <Button variant="primary" size="lg">
@@ -299,35 +352,26 @@ function FeelingLesson() {
 }
 
 interface ConceptCardProps {
-  icon: string
+  icon: React.ReactNode
   title: string
   description: string
   color: 'emerald' | 'red' | 'blue' | 'purple'
 }
 
 const colorMap = {
-  emerald:
-    'from-emerald-50 to-emerald-100 border-giraffe-200',
+  emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
   red: 'from-red-50 to-red-100 border-empathy-low',
   blue: 'from-blue-50 to-blue-100 border-giraffe-200',
-  purple:
-    'from-purple-50 to-purple-100 border-giraffe-200',
+  purple: 'from-purple-50 to-purple-100 border-giraffe-200',
 }
 
-function ConceptCard({
-  icon,
-  title,
-  description,
-  color,
-}: ConceptCardProps) {
+function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">{icon}</span>
-          <h3 className="text-lg font-bold text-brown-800">
-            {title}
-          </h3>
+          <div className="text-brown-800">{icon}</div>
+          <h3 className="text-lg font-bold text-brown-800">{title}</h3>
         </div>
         <p className="text-brown-700">{description}</p>
       </CardBody>

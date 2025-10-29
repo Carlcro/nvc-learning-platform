@@ -6,6 +6,15 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
+import {
+  CheckIcon,
+  EyeIcon,
+  ThoughtIcon,
+  HeartIcon,
+  TargetIcon,
+  StarIcon,
+  LightbulbIcon,
+} from '~/components/ui/Icons'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/learn/integration')({
@@ -14,7 +23,7 @@ export const Route = createFileRoute('/learn/integration')({
 
 function IntegrationLesson() {
   const { data: lesson } = useSuspenseQuery(
-    convexQuery(api.lessons.getLessonById, { lessonId: 'integration' })
+    convexQuery(api.lessons.getLessonById, { lessonId: 'integration' }),
   )
 
   const [selectedExample, setSelectedExample] = useState<number>(0)
@@ -37,10 +46,15 @@ function IntegrationLesson() {
       {lessonCompleted && (
         <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <span className="text-2xl">🎓✨</span>
+            <div className="flex gap-1 text-giraffe-600">
+              <CheckIcon className="w-6 h-6" />
+              <CheckIcon className="w-6 h-6" />
+            </div>
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">You achieved a perfect score on this lesson.</p>
+              <p className="text-sm text-brown-700">
+                You achieved a perfect score on this lesson.
+              </p>
             </div>
           </div>
         </div>
@@ -48,17 +62,52 @@ function IntegrationLesson() {
 
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-5xl">{lesson.icon}</span>
-            <div>
-              <div className="text-sm font-semibold text-giraffe-50">Lesson 6 - Final Lesson</div>
-              <h1 className="text-4xl font-bold">{lesson.title}</h1>
+        <div className="max-w-6xl mx-auto flex items-center gap-8">
+          {/* Left side - content */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-giraffe-50">
+                <StarIcon className="w-12 h-12" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-giraffe-50">
+                  6 - Final Lesson
+                </div>
+                <h1 className="text-4xl font-bold">{lesson.title}</h1>
+              </div>
+            </div>
+            <p className="text-lg text-giraffe-50 max-w-xl">
+              {lesson.description}
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-giraffe-50">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">
+                {lesson.estimatedDuration} minutes
+              </span>
             </div>
           </div>
-          <p className="text-lg text-giraffe-50 max-w-2xl">{lesson.description}</p>
-          <div className="mt-4 flex items-center gap-4 text-giraffe-50">
-            <span className="text-sm">⏱️ {lesson.estimatedDuration} minutes</span>
+
+          {/* Right side - image */}
+          <div className="flex-1 flex justify-center">
+            <div className="bg-transparent max-w-xs">
+              <img
+                src="/lesson6.png"
+                alt="Integrating All Four Pillars of NVC"
+                className="w-full h-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -76,13 +125,15 @@ function IntegrationLesson() {
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
               <p className="text-brown-700 font-semibold mb-2">
-                🦒 The NVC Formula
+                The NVC Formula
               </p>
               <p className="text-brown-700 font-mono mb-2">
-                When [Observation], I feel [Feeling] because [Need]. Would you be willing to [Request]?
+                When [Observation], I feel [Feeling] because [Need]. Would you
+                be willing to [Request]?
               </p>
               <p className="text-brown-700 text-sm">
-                This simple formula brings together everything you've learned into a powerful expression that transforms communication.
+                This simple formula brings together everything you've learned
+                into a powerful expression that transforms communication.
               </p>
             </div>
           </CardBody>
@@ -96,28 +147,28 @@ function IntegrationLesson() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PillarCard
               number={1}
-              icon="👀"
+              icon={<EyeIcon className="w-6 h-6" />}
               title="Observation"
               description="What you actually see and hear without judgment"
               color="blue"
             />
             <PillarCard
               number={2}
-              icon="💭"
+              icon={<ThoughtIcon className="w-6 h-6" />}
               title="Feeling"
               description="Your authentic emotional experience"
               color="purple"
             />
             <PillarCard
               number={3}
-              icon="❤️"
+              icon={<HeartIcon className="w-6 h-6" />}
               title="Need"
               description="The universal human need behind your feeling"
               color="red"
             />
             <PillarCard
               number={4}
-              icon="🎯"
+              icon={<TargetIcon className="w-6 h-6" />}
               title="Request"
               description="A concrete, doable action you're asking for"
               color="emerald"
@@ -152,7 +203,6 @@ function IntegrationLesson() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                   <div className="p-4 bg-giraffe-50 rounded-lg border-2 border-giraffe-200">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-3xl">🦒</span>
                       <h4 className="text-lg font-bold text-brown-900">
                         Complete NVC Expression
                       </h4>
@@ -164,20 +214,36 @@ function IntegrationLesson() {
                     {/* Component Breakdown */}
                     <div className="text-sm space-y-2 pt-4 border-t border-giraffe-200">
                       <div>
-                        <span className="font-semibold text-brown-900">👀 Observation:</span>
-                        <p className="text-brown-800 text-xs">The specific fact observed</p>
+                        <span className="font-semibold text-brown-900">
+                          👀 Observation:
+                        </span>
+                        <p className="text-brown-800 text-xs">
+                          The specific fact observed
+                        </p>
                       </div>
                       <div>
-                        <span className="font-semibold text-brown-900">💭 Feeling:</span>
-                        <p className="text-brown-800 text-xs">The emotional response</p>
+                        <span className="font-semibold text-brown-900">
+                          💭 Feeling:
+                        </span>
+                        <p className="text-brown-800 text-xs">
+                          The emotional response
+                        </p>
                       </div>
                       <div>
-                        <span className="font-semibold text-brown-900">❤️ Need:</span>
-                        <p className="text-brown-800 text-xs">The universal need at stake</p>
+                        <span className="font-semibold text-brown-900">
+                          ❤️ Need:
+                        </span>
+                        <p className="text-brown-800 text-xs">
+                          The universal need at stake
+                        </p>
                       </div>
                       <div>
-                        <span className="font-semibold text-brown-900">🎯 Request:</span>
-                        <p className="text-brown-800 text-xs">The concrete action being requested</p>
+                        <span className="font-semibold text-brown-900">
+                          🎯 Request:
+                        </span>
+                        <p className="text-brown-800 text-xs">
+                          The concrete action being requested
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -185,7 +251,6 @@ function IntegrationLesson() {
                   {/* Jackal Response */}
                   <div className="p-4 bg-empathy-lowlow rounded-lg border-2 border-empathy-lowlow">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-3xl">🐺</span>
                       <h4 className="text-lg font-bold text-empathy-lowlow">
                         Judgmental Response
                       </h4>
@@ -197,7 +262,9 @@ function IntegrationLesson() {
                     {/* Problem Breakdown */}
                     <div className="text-sm space-y-2 pt-4 border-t border-empathy-lowlow">
                       <div>
-                        <span className="font-semibold text-empathy-lowlow">❌ Issues:</span>
+                        <span className="font-semibold text-empathy-lowlow">
+                          ❌ Issues:
+                        </span>
                       </div>
                       <ul className="list-disc list-inside text-empathy-lowlow text-xs space-y-1">
                         <li>Uses judgment and blame</li>
@@ -257,12 +324,14 @@ function IntegrationLesson() {
         {/* Completion Celebration */}
         <Card className="mb-12 bg-gradient-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
           <CardBody className="text-center py-8">
-            <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-3xl font-bold text-brown-800 mb-4">
               Congratulations!
             </h2>
             <p className="text-lg text-brown-700 mb-6 max-w-2xl mx-auto">
-              You've completed the 6 foundational lessons of Non-Violent Communication. You now understand all four pillars: Observation, Feeling, Need, and Request. This is the foundation for compassionate, authentic communication.
+              You've completed the 6 foundational lessons of Non-Violent
+              Communication. You now understand all four pillars: Observation,
+              Feeling, Need, and Request. This is the foundation for
+              compassionate, authentic communication.
             </p>
             <div className="bg-white rounded-lg p-6 mb-6 max-w-2xl mx-auto">
               <h3 className="text-lg font-semibold text-brown-800 mb-4">
@@ -270,24 +339,34 @@ function IntegrationLesson() {
               </h3>
               <ul className="space-y-3 text-left">
                 <li className="flex gap-3">
-                  <span className="text-2xl flex-shrink-0">✓</span>
-                  <span className="text-brown-700">How to make observations without judgment</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                  <span className="text-brown-700">
+                    How to make observations without judgment
+                  </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-2xl flex-shrink-0">✓</span>
-                  <span className="text-brown-700">How to express feelings authentically</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                  <span className="text-brown-700">
+                    How to express feelings authentically
+                  </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-2xl flex-shrink-0">✓</span>
-                  <span className="text-brown-700">How to identify universal human needs</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                  <span className="text-brown-700">
+                    How to identify universal human needs
+                  </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-2xl flex-shrink-0">✓</span>
-                  <span className="text-brown-700">How to make clear, compassionate requests</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                  <span className="text-brown-700">
+                    How to make clear, compassionate requests
+                  </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-2xl flex-shrink-0">✓</span>
-                  <span className="text-brown-700">How to bring it all together in complete expressions</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                  <span className="text-brown-700">
+                    How to bring it all together in complete expressions
+                  </span>
                 </li>
               </ul>
             </div>
@@ -301,19 +380,23 @@ function IntegrationLesson() {
               What's Next?
             </h2>
             <p className="text-brown-700 mb-6">
-              You now have the foundation of NVC! The next step is to practice these skills in real conversations. Here are ways to continue your learning:
+              You now have the foundation of NVC! The next step is to practice
+              these skills in real conversations. Here are ways to continue your
+              learning:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
-                <div className="text-2xl mb-2">🎭</div>
-                <h3 className="font-semibold text-brown-800 mb-2">AI Roleplay Scenarios</h3>
+                <h3 className="font-semibold text-brown-800 mb-2">
+                  AI Roleplay Scenarios
+                </h3>
                 <p className="text-sm text-brown-700">
                   Practice NVC in realistic conversations with AI characters
                 </p>
               </div>
               <div className="p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
-                <div className="text-2xl mb-2">🎯</div>
-                <h3 className="font-semibold text-brown-800 mb-2">Daily Challenges</h3>
+                <h3 className="font-semibold text-brown-800 mb-2">
+                  Daily Challenges
+                </h3>
                 <p className="text-sm text-brown-700">
                   Apply NVC to new scenarios every day to build fluency
                 </p>
@@ -336,7 +419,7 @@ function IntegrationLesson() {
 
 interface PillarCardProps {
   number: number
-  icon: string
+  icon: React.ReactNode
   title: string
   description: string
   color: 'blue' | 'purple' | 'red' | 'emerald'
@@ -344,11 +427,9 @@ interface PillarCardProps {
 
 const colorMap = {
   blue: 'from-blue-50 to-blue-100 border-giraffe-200',
-  purple:
-    'from-purple-50 to-purple-100 border-giraffe-200',
+  purple: 'from-purple-50 to-purple-100 border-giraffe-200',
   red: 'from-red-50 to-red-100 border-empathy-low',
-  emerald:
-    'from-emerald-50 to-emerald-100 border-giraffe-200',
+  emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
 }
 
 function PillarCard({
@@ -362,14 +443,12 @@ function PillarCard({
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">{icon}</span>
+          <div className="text-brown-800">{icon}</div>
           <div>
             <div className="text-sm font-semibold text-brown-600">
               Pillar {number}
             </div>
-            <h3 className="text-lg font-bold text-brown-800">
-              {title}
-            </h3>
+            <h3 className="text-lg font-bold text-brown-800">{title}</h3>
           </div>
         </div>
         <p className="text-brown-700">{description}</p>

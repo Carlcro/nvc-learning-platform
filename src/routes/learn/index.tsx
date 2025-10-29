@@ -228,63 +228,76 @@ interface LessonCardProps {
   lesson: Lesson
 }
 
+function getLessonImagePath(lessonOrder: number): string {
+  return `/lesson${lessonOrder}.png`
+}
+
 function LessonCard({ lesson }: LessonCardProps) {
   const { isLessonCompleted } = useLessonProgress()
   const isCompleted = isLessonCompleted(lesson.lessonId)
   const lessonNumber = lesson.order
+  const imagePath = getLessonImagePath(lessonNumber)
 
   const href = getLessonRoute(lesson.lessonId as ValidLessonId)
 
   return (
     <Link to={href}>
-      <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden">
-        {/* Lesson Number Badge */}
-        <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 px-6 py-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm font-semibold text-giraffe-50">
-                Lesson {lessonNumber}
-              </div>
-              <div className="text-4xl mt-2">{lesson.icon}</div>
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white bg-opacity-20 text-white font-bold">
-              {lessonNumber}
-            </div>
+      <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden flex flex-col">
+        {/* Lesson Image Header */}
+        <div className="relative bg-gradient-to-r from-giraffe-600 to-giraffe-500 h-48 overflow-hidden">
+          <img
+            src={imagePath}
+            alt={lesson.title}
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+          />
+          {/* Lesson Number Badge - Overlay */}
+          <div className="absolute top-4 right-4 flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-md font-bold text-giraffe-600">
+            {lessonNumber}
           </div>
         </div>
 
         {/* Content */}
-        <CardBody className="flex flex-col gap-4 pt-6">
+        <CardBody className="flex flex-col gap-3 pt-4 flex-grow">
           <div>
-            <h3 className="text-xl font-bold text-brown-800 group-hover:text-giraffe-600 transition-colors">
+            <div className="text-xs font-semibold text-giraffe-600 uppercase tracking-wide mb-1">
+              Lesson {lessonNumber}
+            </div>
+            <h3 className="text-lg font-bold text-brown-800 group-hover:text-giraffe-600 transition-colors">
               {lesson.title}
             </h3>
           </div>
 
-          <p className="text-brown-600 flex-grow">{lesson.description}</p>
+          <p className="text-brown-600 text-sm flex-grow">
+            {lesson.description}
+          </p>
 
           {/* Duration & Status */}
-          <div className="pt-4 border-t border-giraffe-100">
+          <div className="pt-3 border-t border-giraffe-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-brown-600">
-                <span className="text-lg">⏱️</span>
-                <span>{lesson.estimatedDuration} minutes</span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>{lesson.estimatedDuration} min</span>
               </div>
               <div
-                className={`text-sm font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 ${
+                className={`text-sm font-semibold px-3 py-1.5 rounded-full ${
                   isCompleted
-                    ? 'bg-gradient-to-r from-emerald-100 to-green-100 text-empathy-high border border-empathy-high'
+                    ? 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-300'
                     : 'bg-giraffe-100 text-giraffe-800'
                 }`}
               >
-                {isCompleted ? (
-                  <>
-                    <span>🎓</span>
-                    <span>Completed</span>
-                  </>
-                ) : (
-                  'Start'
-                )}
+                {isCompleted ? 'Completed' : 'Start'}
               </div>
             </div>
           </div>

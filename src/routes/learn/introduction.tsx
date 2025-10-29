@@ -1,12 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
+import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import { useState } from 'react'
+import {
+  CheckIcon,
+  EyeIcon,
+  HeartIcon,
+  LightbulbIcon,
+  StarIcon,
+  TargetIcon,
+  ThoughtIcon,
+} from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/introduction')({
   component: IntroductionLesson,
@@ -14,7 +23,7 @@ export const Route = createFileRoute('/learn/introduction')({
 
 function IntroductionLesson() {
   const { data: lesson } = useSuspenseQuery(
-    convexQuery(api.lessons.getLessonById, { lessonId: 'introduction' })
+    convexQuery(api.lessons.getLessonById, { lessonId: 'introduction' }),
   )
 
   const [selectedExample, setSelectedExample] = useState<number>(0)
@@ -37,10 +46,15 @@ function IntroductionLesson() {
       {lessonCompleted && (
         <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <span className="text-2xl">🎓✨</span>
+            <div className="flex gap-1 text-giraffe-600">
+              <StarIcon className="w-6 h-6" />
+              <StarIcon className="w-6 h-6" />
+            </div>
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">You achieved a perfect score on this lesson.</p>
+              <p className="text-sm text-brown-700">
+                You achieved a perfect score on this lesson.
+              </p>
             </div>
           </div>
         </div>
@@ -48,17 +62,52 @@ function IntroductionLesson() {
 
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-5xl">{lesson.icon}</span>
-            <div>
-              <div className="text-sm font-semibold text-giraffe-50">Lesson 1</div>
-              <h1 className="text-4xl font-bold">{lesson.title}</h1>
+        <div className="max-w-6xl mx-auto flex items-center gap-8">
+          {/* Left side - content */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-giraffe-50">
+                <StarIcon className="w-12 h-12" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-giraffe-50">
+                  Lesson 1
+                </div>
+                <h1 className="text-4xl font-bold">{lesson.title}</h1>
+              </div>
+            </div>
+            <p className="text-lg text-giraffe-50 max-w-xl">
+              {lesson.description}
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-giraffe-50">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-sm">
+                {lesson.estimatedDuration} minutes
+              </span>
             </div>
           </div>
-          <p className="text-lg text-giraffe-50 max-w-2xl">{lesson.description}</p>
-          <div className="mt-4 flex items-center gap-4 text-giraffe-50">
-            <span className="text-sm">⏱️ {lesson.estimatedDuration} minutes</span>
+
+          {/* Right side - image */}
+          <div className="flex-1 flex justify-center">
+            <div className="bg-transparent max-w-xs">
+              <img
+                src="/lesson1.png"
+                alt="Non-Violent Communication Introduction"
+                className="w-full h-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -75,11 +124,14 @@ function IntroductionLesson() {
               {lesson.content}
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
-              <p className="text-brown-700 font-semibold mb-2">
-                🦒 Did you know?
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <HeartIcon className="w-5 h-5 text-giraffe-600" />
+                <p className="text-brown-700 font-semibold">Did you know?</p>
+              </div>
               <p className="text-brown-700">
-                The giraffe is the symbol of NVC because it has the largest heart of any land animal and a long neck that allows it to see from a wider perspective—just like compassionate communication!
+                The giraffe is the symbol of NVC because it has the largest
+                heart of any land animal and a long neck that allows it to see
+                from a wider perspective—just like compassionate communication!
               </p>
             </div>
           </CardBody>
@@ -95,28 +147,28 @@ function IntroductionLesson() {
               number={1}
               title="Observation"
               description="Describe what you see/hear without judgment"
-              icon="👀"
+              icon={<EyeIcon className="w-6 h-6" />}
               color="blue"
             />
             <ComponentCard
               number={2}
               title="Feeling"
               description="Express your emotions authentically"
-              icon="💭"
+              icon={<ThoughtIcon className="w-6 h-6" />}
               color="purple"
             />
             <ComponentCard
               number={3}
               title="Need"
               description="Connect your feelings to universal needs"
-              icon="❤️"
+              icon={<HeartIcon className="w-6 h-6" />}
               color="red"
             />
             <ComponentCard
               number={4}
               title="Request"
               description="Ask for concrete, positive action"
-              icon="🎯"
+              icon={<TargetIcon className="w-6 h-6" />}
               color="emerald"
             />
           </div>
@@ -129,7 +181,8 @@ function IntroductionLesson() {
               Giraffe vs Jackal Language
             </h2>
             <p className="text-brown-600 mt-2">
-              See how compassionate communication differs from judgmental language
+              See how compassionate communication differs from judgmental
+              language
             </p>
           </CardHeader>
           <CardBody>
@@ -160,12 +213,9 @@ function IntroductionLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🦒</span>
-                        <h4 className="text-lg font-bold text-brown-900">
-                          Giraffe Language
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-brown-900 mb-3">
+                        Giraffe Language
+                      </h4>
                       <p className="text-brown-800 leading-relaxed">
                         {currentExample?.giraffResponse}
                       </p>
@@ -185,12 +235,9 @@ function IntroductionLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-3xl">🐺</span>
-                        <h4 className="text-lg font-bold text-empathy-low">
-                          Jackal Language
-                        </h4>
-                      </div>
+                      <h4 className="text-lg font-bold text-empathy-low mb-3">
+                        Jackal Language
+                      </h4>
                       <p className="text-empathy-low leading-relaxed">
                         {currentExample?.jackalResponse}
                       </p>
@@ -251,25 +298,26 @@ function IntroductionLesson() {
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   NVC is a framework for compassionate, empathetic communication
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
-                  It combines 4 components: Observation, Feeling, Need, and Request
+                  It combines 4 components: Observation, Feeling, Need, and
+                  Request
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-giraffe-600">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Giraffe language focuses on understanding and connection
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="text-xl flex-shrink-0 text-empathy-low">✓</span>
+                <CheckIcon className="w-5 h-5 flex-shrink-0 text-empathy-low" />
                 <span className="text-brown-700">
                   Jackal language uses judgment, blame, and demands
                 </span>
@@ -285,7 +333,10 @@ function IntroductionLesson() {
               What's Next?
             </h2>
             <p className="text-brown-700 dark:text-brown-400 mb-6">
-              Now that you understand the basics of NVC, you're ready to dive deeper into each component. In the next lesson, we'll explore <strong>Observations Without Evaluation</strong> — the foundation of clear communication.
+              Now that you understand the basics of NVC, you're ready to dive
+              deeper into each component. In the next lesson, we'll explore{' '}
+              <strong>Observations Without Evaluation</strong> — the foundation
+              of clear communication.
             </p>
             <div className="flex gap-4">
               <Button variant="primary" size="lg">
@@ -306,17 +357,15 @@ interface ComponentCardProps {
   number: number
   title: string
   description: string
-  icon: string
+  icon: React.ReactNode
   color: 'blue' | 'purple' | 'red' | 'emerald'
 }
 
 const colorMap = {
   blue: 'from-blue-50 to-blue-100 border-giraffe-200',
-  purple:
-    'from-purple-50 to-purple-100 border-giraffe-200',
+  purple: 'from-purple-50 to-purple-100 border-giraffe-200',
   red: 'from-red-50 to-red-100 border-empathy-low',
-  emerald:
-    'from-emerald-50 to-emerald-100 border-giraffe-200',
+  emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
 }
 
 function ComponentCard({
@@ -331,14 +380,12 @@ function ComponentCard({
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">{icon}</span>
+          <div className="text-brown-800">{icon}</div>
           <div>
             <div className="text-sm font-semibold text-brown-600">
               Step {number}
             </div>
-            <h3 className="text-lg font-bold text-brown-800">
-              {title}
-            </h3>
+            <h3 className="text-lg font-bold text-brown-800">{title}</h3>
           </div>
         </div>
         <p className="text-brown-700">{description}</p>
