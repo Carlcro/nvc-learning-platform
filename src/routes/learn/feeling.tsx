@@ -67,18 +67,18 @@ function FeelingLesson() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Introduction */}
         <Card className="mb-12">
-          <CardBody className="prose prose-sm dark:prose-invert max-w-none">
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
+          <CardBody className="prose prose-sm max-w-none">
+            <h2 className="text-2xl font-bold text-brown-800 mb-4">
               The Gateway to Emotional Authenticity
             </h2>
-            <p className="text-brown-700 dark:text-brown-400 text-lg leading-relaxed">
+            <p className="text-brown-700 text-lg leading-relaxed">
               {lesson.content}
             </p>
-            <div className="mt-6 p-4 bg-giraffe-50 dark:bg-brown-900 border-l-4 border-giraffe-600 rounded">
-              <p className="text-brown-700 dark:text-brown-300 font-semibold mb-2">
+            <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
+              <p className="text-brown-700 font-semibold mb-2">
                 💡 Key Point
               </p>
-              <p className="text-brown-700 dark:text-brown-400">
+              <p className="text-brown-700">
                 Real feelings are actual emotions you experience in your body and heart. Pseudo-feelings often contain judgments about what you think others feel or think about you. Learning to distinguish between them is essential for authentic communication.
               </p>
             </div>
@@ -87,7 +87,7 @@ function FeelingLesson() {
 
         {/* Core Concepts */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
+          <h2 className="text-2xl font-bold text-brown-800 mb-6">
             Understanding Feelings
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

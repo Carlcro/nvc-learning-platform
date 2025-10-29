@@ -67,18 +67,18 @@ function NeedLesson() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Introduction */}
         <Card className="mb-12">
-          <CardBody className="prose prose-sm dark:prose-invert max-w-none">
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
+          <CardBody className="prose prose-sm max-w-none">
+            <h2 className="text-2xl font-bold text-brown-800 mb-4">
               The Heart of What Matters
             </h2>
-            <p className="text-brown-700 dark:text-brown-400 text-lg leading-relaxed">
+            <p className="text-brown-700 text-lg leading-relaxed">
               {lesson.content}
             </p>
-            <div className="mt-6 p-4 bg-empathy-low dark:bg-empathy-low border-l-4 border-empathy-low rounded">
-              <p className="text-brown-700 dark:text-brown-300 font-semibold mb-2">
+            <div className="mt-6 p-4 bg-empathy-low border-l-4 border-empathy-low rounded">
+              <p className="text-brown-700 font-semibold mb-2">
                 💡 Key Point
               </p>
-              <p className="text-brown-700 dark:text-brown-400">
+              <p className="text-brown-700">
                 Needs are universal human values that apply to everyone, in every culture. They're separate from the strategies we use to meet them. Understanding this distinction is transformative for communication and problem-solving.
               </p>
             </div>
@@ -87,7 +87,7 @@ function NeedLesson() {
 
         {/* Core Concepts */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
+          <h2 className="text-2xl font-bold text-brown-800 mb-6">
             Needs vs. Strategies
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

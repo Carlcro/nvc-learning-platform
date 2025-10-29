@@ -73,18 +73,18 @@ function RequestLesson() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Introduction */}
         <Card className="mb-12">
-          <CardBody className="prose prose-sm dark:prose-invert max-w-none">
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
+          <CardBody className="prose prose-sm max-w-none">
+            <h2 className="text-2xl font-bold text-brown-800 mb-4">
               Asking for What You Need
             </h2>
-            <p className="text-brown-700 dark:text-brown-400 text-lg leading-relaxed">
+            <p className="text-brown-700 text-lg leading-relaxed">
               {lesson.content}
             </p>
-            <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900 border-l-4 border-amber-600 rounded">
-              <p className="text-brown-700 dark:text-brown-300 font-semibold mb-2">
+            <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-600 rounded">
+              <p className="text-brown-700 font-semibold mb-2">
                 💡 Key Point
               </p>
-              <p className="text-brown-700 dark:text-brown-400">
+              <p className="text-brown-700">
                 A true request is distinguishable from a demand: it's concrete,
                 specific, and leaves the other person free to say no. When
                 requests are met with refusal, it's a chance for dialogue, not a
@@ -96,7 +96,7 @@ function RequestLesson() {
 
         {/* Core Concepts */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
+          <h2 className="text-2xl font-bold text-brown-800 mb-6">
             Requests vs. Demands
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

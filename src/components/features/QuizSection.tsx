@@ -123,11 +123,11 @@ export function QuizSection({
         <CardHeader
           className={`bg-gradient-to-r ${
             isPerfectScore
-              ? 'from-giraffe-50 to-empathy-high/20 dark:from-giraffe-900 dark:to-empathy-high/40'
-              : 'from-giraffe-50 to-empathy-medium/20 dark:from-giraffe-900 dark:to-empathy-medium/40'
+              ? 'from-giraffe-50 to-empathy-high/20'
+              : 'from-giraffe-50 to-empathy-medium/20'
           }`}
         >
-          <h2 className="text-2xl font-bold text-brown-800 dark:text-cream">
+          <h2 className="text-2xl font-bold text-brown-800">
             Quiz Complete!
           </h2>
         </CardHeader>
@@ -135,12 +135,12 @@ export function QuizSection({
           <div className="text-center py-8">
             {/* Perfect Score & Lesson Completion Banner */}
             {isPerfectScore && lessonCompleted && (
-              <div className="mb-8 p-6 rounded-lg bg-gradient-to-r from-giraffe-100 to-empathy-high/30 dark:from-giraffe-800 dark:to-empathy-high/40 border-2 border-giraffe-300 dark:border-giraffe-600">
+              <div className="mb-8 p-6 rounded-lg bg-gradient-to-r from-giraffe-100 to-empathy-high/30 border-2 border-giraffe-300">
                 <div className="text-5xl mb-3">🎓✨</div>
-                <h3 className="text-2xl font-bold text-giraffe-700 dark:text-giraffe-100 mb-2">
+                <h3 className="text-2xl font-bold text-giraffe-700 mb-2">
                   Lesson Complete!
                 </h3>
-                <p className="text-giraffe-600 dark:text-giraffe-200">
+                <p className="text-giraffe-600">
                   Perfect score! You've mastered this lesson and it's been saved
                   to your progress.
                 </p>
@@ -152,10 +152,10 @@ export function QuizSection({
               <div className="text-6xl font-bold mb-4">
                 {score >= passingScore ? '🎉' : '📚'}
               </div>
-              <div className="text-5xl font-bold text-brown-800 dark:text-cream mb-2">
+              <div className="text-5xl font-bold text-brown-800 mb-2">
                 {score}%
               </div>
-              <div className="text-lg text-brown-600 dark:text-brown-200">
+              <div className="text-lg text-brown-600">
                 {isPerfectScore && lessonCompleted
                   ? 'Outstanding! You answered every question correctly!'
                   : score >= passingScore
@@ -165,10 +165,10 @@ export function QuizSection({
             </div>
 
             {/* Score Details */}
-            <div className="bg-giraffe-50 dark:bg-brown-800 rounded-lg p-6 mb-8">
+            <div className="bg-giraffe-50 rounded-lg p-6 mb-8">
               <div className="flex justify-around">
                 <div>
-                  <div className="text-3xl font-bold text-empathy-high dark:text-empathy-high">
+                  <div className="text-3xl font-bold text-empathy-high">
                     {
                       quizState.selectedAnswers.filter(
                         (answer, index) =>
@@ -176,12 +176,12 @@ export function QuizSection({
                       ).length
                     }
                   </div>
-                  <div className="text-sm text-brown-600 dark:text-brown-200 mt-1">
+                  <div className="text-sm text-brown-600 mt-1">
                     Correct
                   </div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-empathy-low dark:text-empathy-low">
+                  <div className="text-3xl font-bold text-empathy-low">
                     {
                       quizState.selectedAnswers.filter(
                         (answer, index) =>
@@ -189,15 +189,15 @@ export function QuizSection({
                       ).length
                     }
                   </div>
-                  <div className="text-sm text-brown-600 dark:text-brown-200 mt-1">
+                  <div className="text-sm text-brown-600 mt-1">
                     Incorrect
                   </div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-giraffe-600 dark:text-giraffe-300">
+                  <div className="text-3xl font-bold text-giraffe-600">
                     {questions.length}
                   </div>
-                  <div className="text-sm text-brown-600 dark:text-brown-200 mt-1">
+                  <div className="text-sm text-brown-600 mt-1">
                     Total
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export function QuizSection({
 
             {/* Review Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-brown-800 dark:text-cream mb-4">
+              <h3 className="text-lg font-semibold text-brown-800 mb-4">
                 Review Your Answers
               </h3>
               <div className="space-y-2 mb-6">
@@ -217,18 +217,18 @@ export function QuizSection({
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-giraffe-100 dark:bg-brown-700"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-giraffe-100"
                     >
                       <span
                         className={`text-lg ${
                           isAnswerCorrect
-                            ? 'text-empathy-high dark:text-empathy-high'
-                            : 'text-empathy-low dark:text-empathy-low'
+                            ? 'text-empathy-high'
+                            : 'text-empathy-low'
                         }`}
                       >
                         {isAnswerCorrect ? '✓' : '✗'}
                       </span>
-                      <span className="text-sm text-brown-700 dark:text-brown-100 flex-1">
+                      <span className="text-sm text-brown-700 flex-1">
                         Question {index + 1}
                       </span>
                     </div>
@@ -254,21 +254,21 @@ export function QuizSection({
 
   return (
     <Card className="mb-12">
-      <CardHeader className="bg-gradient-to-r from-giraffe-50 to-giraffe-100 dark:from-giraffe-900 dark:to-brown-800">
+      <CardHeader className="bg-gradient-to-r from-giraffe-50 to-giraffe-100">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-cream">
+            <h2 className="text-2xl font-bold text-brown-800">
               {title}
             </h2>
-            <p className="text-brown-600 dark:text-brown-200 mt-1">
+            <p className="text-brown-600 mt-1">
               Test your understanding of the lesson
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm font-semibold text-brown-600 dark:text-brown-200">
+            <div className="text-sm font-semibold text-brown-600">
               Question {quizState.currentQuestion + 1} of {questions.length}
             </div>
-            <div className="mt-2 bg-giraffe-200 dark:bg-brown-700 rounded-full h-2 w-48">
+            <div className="mt-2 bg-giraffe-200 rounded-full h-2 w-48">
               <div
                 className="bg-giraffe-400 h-2 rounded-full transition-all duration-300"
                 style={{
@@ -283,7 +283,7 @@ export function QuizSection({
       <CardBody>
         {/* Question */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold text-brown-800 dark:text-cream mb-6">
+          <h3 className="text-xl font-semibold text-brown-800 mb-6">
             {currentQ.question}
           </h3>
 
@@ -304,12 +304,12 @@ export function QuizSection({
                   disabled={quizState.submitted}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                     showCorrect
-                      ? 'bg-empathy-high/10 border-empathy-high dark:bg-empathy-high/20 dark:border-empathy-high'
+                      ? 'bg-empathy-high/10 border-empathy-high'
                       : showIncorrect
-                        ? 'bg-empathy-low/10 border-empathy-low dark:bg-empathy-low/20 dark:border-empathy-low'
+                        ? 'bg-empathy-low/10 border-empathy-low'
                         : isSelected
-                          ? 'bg-giraffe-50 border-giraffe-400 dark:bg-giraffe-900/50 dark:border-giraffe-400'
-                          : 'bg-white border-giraffe-200 dark:bg-brown-900 dark:border-brown-700 dark:hover:border-brown-600'
+                          ? 'bg-giraffe-50 border-giraffe-400'
+                          : 'bg-white border-giraffe-200'
                   } ${quizState.submitted ? 'cursor-default' : 'cursor-pointer hover:border-giraffe-300'}`}
                 >
                   <div className="flex items-center gap-3">
@@ -321,7 +321,7 @@ export function QuizSection({
                             ? 'bg-empathy-low border-empathy-low'
                             : isSelected
                               ? 'bg-giraffe-400 border-giraffe-400'
-                              : 'border-giraffe-200 dark:border-brown-600'
+                              : 'border-giraffe-200'
                       }`}
                     >
                       {showCorrect && (
@@ -334,12 +334,12 @@ export function QuizSection({
                     <span
                       className={
                         showCorrect
-                          ? 'text-empathy-high dark:text-empathy-high font-medium'
+                          ? 'text-empathy-high font-medium'
                           : showIncorrect
-                            ? 'text-empathy-low dark:text-empathy-low font-medium'
+                            ? 'text-empathy-low font-medium'
                             : isSelected
-                              ? 'text-giraffe-700 dark:text-giraffe-100 font-medium'
-                              : 'text-brown-800 dark:text-cream'
+                              ? 'text-giraffe-700 font-medium'
+                              : 'text-brown-800'
                       }
                     >
                       {option}
@@ -355,8 +355,8 @@ export function QuizSection({
             <div
               className={`p-4 rounded-lg ${
                 isCorrect
-                  ? 'bg-empathy-high/10 border border-empathy-high/30 dark:bg-empathy-high/20 dark:border-empathy-high/40'
-                  : 'bg-empathy-low/10 border border-empathy-low/30 dark:bg-empathy-low/20 dark:border-empathy-low/40'
+                  ? 'bg-empathy-high/10 border border-empathy-high/30'
+                  : 'bg-empathy-low/10 border border-empathy-low/30'
               }`}
             >
               <div className="flex gap-3">
@@ -367,8 +367,8 @@ export function QuizSection({
                   <h4
                     className={`font-semibold mb-2 ${
                       isCorrect
-                        ? 'text-empathy-high dark:text-empathy-high'
-                        : 'text-empathy-low dark:text-empathy-low'
+                        ? 'text-empathy-high'
+                        : 'text-empathy-low'
                     }`}
                   >
                     {isCorrect ? 'Correct!' : 'Not quite right.'}
@@ -376,8 +376,8 @@ export function QuizSection({
                   <p
                     className={
                       isCorrect
-                        ? 'text-empathy-high/80 dark:text-empathy-high/90'
-                        : 'text-empathy-low/80 dark:text-empathy-low/90'
+                        ? 'text-empathy-high/80'
+                        : 'text-empathy-low/80'
                     }
                   >
                     {currentQ.explanation}
@@ -389,7 +389,7 @@ export function QuizSection({
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between gap-4 pt-6 border-t border-giraffe-200 dark:border-brown-700">
+        <div className="flex items-center justify-between gap-4 pt-6 border-t border-giraffe-200">
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -445,7 +445,7 @@ export function QuizSection({
 
         {/* Answer Indicator */}
         {quizState.selectedAnswers[quizState.currentQuestion] === null && (
-          <p className="text-sm text-brown-500 dark:text-brown-300 mt-4">
+          <p className="text-sm text-brown-500 mt-4">
             Please select an answer to continue
           </p>
         )}

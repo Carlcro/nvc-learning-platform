@@ -10,20 +10,20 @@ function Home() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 dark:from-brown-800 dark:to-brown-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <section className="min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto py-20">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Giraffe Mascot */}
             <div className="flex flex-col items-center">
               {/* Speech Bubble */}
-              <div className="mb-8 bg-white dark:bg-brown-700 rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 dark:border-giraffe-600 relative max-w-sm">
-                <p className="text-lg text-brown-800 dark:text-giraffe-100 text-center font-medium">
+              <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
+                <p className="text-lg text-brown-800 text-center font-medium">
                   Hi there! I'm your compassionate communication guide.
                   Together, we'll learn to express ourselves authentically and
                   truly listen to others. Ready to begin?
                 </p>
                 {/* Speech bubble tail */}
-                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-brown-700"></div>
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
               </div>
 
               {/* Giraffe Image */}
@@ -36,15 +36,15 @@ function Home() {
 
             {/* Right side - Content */}
             <div className="text-center md:text-left">
-              <h1 className="text-5xl sm:text-6xl font-bold text-brown-800 dark:text-white mb-6">
+              <h1 className="text-5xl sm:text-6xl font-bold text-brown-800 mb-6">
                 Learn to Communicate
                 <br />
-                <span className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 dark:from-giraffe-400 dark:to-giraffe-300 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
                   with Compassion
                 </span>
               </h1>
 
-              <p className="text-xl text-brown-700 dark:text-brown-300 mb-8 leading-relaxed">
+              <p className="text-xl text-brown-700 mb-8 leading-relaxed">
                 Master Non-Violent Communication (NVC) through interactive
                 lessons and real conversations with AI. Learn to express
                 yourself authentically while truly understanding others.
@@ -67,7 +67,7 @@ function Home() {
       </section>
 
       {/* Key Benefits Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Benefits */}
@@ -94,14 +94,14 @@ function Home() {
             {/* Right side - Giraffe with Speech Bubble */}
             <div className="flex flex-col items-center order-2 md:order-2">
               {/* Speech Bubble */}
-              <div className="mb-8 bg-white dark:bg-brown-700 rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 dark:border-giraffe-600 relative max-w-sm">
-                <p className="text-lg text-brown-800 dark:text-giraffe-100 text-center font-medium">
+              <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
+                <p className="text-lg text-brown-800 text-center font-medium">
                   Here's what you'll master on your journey with me! Each skill
                   builds on the others to help you communicate with true
                   compassion.
                 </p>
                 {/* Speech bubble tail */}
-                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-brown-700"></div>
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
               </div>
 
               {/* Giraffe Image */}
@@ -116,13 +116,13 @@ function Home() {
       </section>
 
       {/* What is NVC Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-brown-800 dark:text-white mb-12 text-center">
+          <h2 className="text-4xl font-bold text-brown-800 mb-12 text-center">
             What is Non-Violent Communication?
           </h2>
 
-          <p className="text-lg text-brown-700 dark:text-brown-400 mb-12 leading-relaxed">
+          <p className="text-lg text-brown-700 mb-12 leading-relaxed">
             Non-Violent Communication (NVC) is a communication framework created
             by Marshall Rosenberg. It's based on the idea that all humans share
             the same universal needs—like understanding, respect, and
@@ -158,8 +158,8 @@ function Home() {
             />
           </div>
 
-          <div className="bg-giraffe-50 dark:bg-giraffe-900 border-l-4 border-giraffe-500 p-6 rounded">
-            <p className="text-brown-700 dark:text-brown-300">
+          <div className="bg-giraffe-50 border-l-4 border-giraffe-500 p-6 rounded">
+            <p className="text-brown-700">
               <strong>Why it works:</strong> When we communicate our
               observations, feelings, and needs clearly, we help others
               understand us. When we listen for others' feelings and needs, we
@@ -171,9 +171,9 @@ function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-brown-800 dark:text-white mb-12 text-center">
+          <h2 className="text-4xl font-bold text-brown-800 mb-12 text-center">
             How the App Works
           </h2>
 
@@ -203,17 +203,17 @@ function Home() {
       </section>
 
       {/* Giraffe vs Jackal */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50 dark:bg-brown-800">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-brown-800 dark:text-white mb-12 text-center">
+          <h2 className="text-4xl font-bold text-brown-800 mb-12 text-center">
             Giraffe Language vs Jackal Language
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Giraffe Language Card */}
-            <div className="bg-white dark:bg-brown-900 rounded-lg overflow-hidden border-2 border-giraffe-300 dark:border-giraffe-700 shadow-lg">
+            <div className="bg-white rounded-lg overflow-hidden border-2 border-giraffe-300 shadow-lg">
               {/* Image Container */}
-              <div className="bg-giraffe-100 dark:bg-brown-800 p-6 flex items-center justify-center h-48">
+              <div className="bg-giraffe-100 p-6 flex items-center justify-center h-48">
                 <img
                   src="/giraff.png"
                   alt="Giraffe - Compassionate Communication"
@@ -223,13 +223,13 @@ function Home() {
 
               {/* Content Container */}
               <div className="p-8">
-                <h3 className="text-2xl font-bold text-brown-900 dark:text-giraffe-200 mb-2">
+                <h3 className="text-2xl font-bold text-brown-900 mb-2">
                   Giraffe Language
                 </h3>
-                <p className="text-brown-700 dark:text-brown-400 mb-6 font-medium">
+                <p className="text-brown-700 mb-6 font-medium">
                   Compassionate, empathetic communication
                 </p>
-                <ul className="space-y-3 text-brown-700 dark:text-brown-400">
+                <ul className="space-y-3 text-brown-700">
                   <li className="flex items-start gap-2">
                     <span className="text-xl mt-1 text-giraffe-600">✓</span>
                     <span>Focuses on facts without judgment</span>
@@ -251,9 +251,9 @@ function Home() {
             </div>
 
             {/* Jackal Language Card */}
-            <div className="bg-white dark:bg-brown-900 rounded-lg overflow-hidden border-2 border-empathy-low dark:border-empathy-low shadow-lg">
+            <div className="bg-white rounded-lg overflow-hidden border-2 border-empathy-low shadow-lg">
               {/* Image Container */}
-              <div className="bg-empathy-low dark:bg-brown-800 p-6 flex items-center justify-center h-48">
+              <div className="bg-empathy-low p-6 flex items-center justify-center h-48">
                 <img
                   src="/jakyll.png"
                   alt="Jackal - Reactive Communication"
@@ -263,13 +263,13 @@ function Home() {
 
               {/* Content Container */}
               <div className="p-8">
-                <h3 className="text-2xl font-bold text-black dark:text-empathy-low mb-2">
+                <h3 className="text-2xl font-bold text-black mb-2">
                   Jackal Language
                 </h3>
-                <p className="text-brown-700 dark:text-brown-400 mb-6 font-medium">
+                <p className="text-brown-700 mb-6 font-medium">
                   Judgmental, reactive communication
                 </p>
-                <ul className="space-y-3 text-brown-700 dark:text-brown-400">
+                <ul className="space-y-3 text-brown-700">
                   <li className="flex items-start gap-2">
                     <span className="text-xl mt-1 text-empathy-low">✗</span>
                     <span>Uses judgment and blame</span>
@@ -291,8 +291,8 @@ function Home() {
             </div>
           </div>
 
-          <div className="mt-8 bg-giraffe-50 dark:bg-giraffe-900 border-l-4 border-giraffe-500 p-6 rounded">
-            <p className="text-brown-700 dark:text-brown-300">
+          <div className="mt-8 bg-giraffe-50 border-l-4 border-giraffe-500 p-6 rounded">
+            <p className="text-brown-700">
               <strong>Our goal:</strong> Help you become more fluent in giraffe
               language. We're not here to judge; we're here to celebrate your
               growth and help you communicate more authentically.
@@ -302,7 +302,7 @@ function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-giraffe-600 to-giraffe-500 dark:from-giraffe-700 dark:to-giraffe-600">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-giraffe-600 to-giraffe-500">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Transform Your Communication?
@@ -337,10 +337,10 @@ function BenefitCard({ emoji, title, description }: BenefitCardProps) {
     <Card className="hover:shadow-lg transition-shadow duration-200">
       <CardBody className="text-center py-8">
         <div className="text-5xl mb-4">{emoji}</div>
-        <h3 className="text-xl font-bold text-brown-800 dark:text-white mb-3">
+        <h3 className="text-xl font-bold text-brown-800 mb-3">
           {title}
         </h3>
-        <p className="text-brown-600 dark:text-brown-400">{description}</p>
+        <p className="text-brown-600">{description}</p>
       </CardBody>
     </Card>
   )
@@ -363,17 +363,17 @@ function NVCComponent({
     <Card className="border-l-4 border-l-blue-500">
       <CardBody>
         <div className="flex items-start gap-4">
-          <div className="text-3xl font-bold text-giraffe-600 dark:text-giraffe-400 flex-shrink-0">
+          <div className="text-3xl font-bold text-giraffe-600 flex-shrink-0">
             {number}
           </div>
           <div className="flex-grow">
-            <h3 className="text-xl font-bold text-brown-800 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-brown-800 mb-2">
               {title}
             </h3>
-            <p className="text-brown-600 dark:text-brown-400 mb-3">
+            <p className="text-brown-600 mb-3">
               {description}
             </p>
-            <p className="text-sm text-brown-700 dark:text-giraffe-300 italic">
+            <p className="text-sm text-brown-700 italic">
               {example}
             </p>
           </div>
@@ -392,14 +392,14 @@ interface StepCardProps {
 function StepCard({ step, title, description }: StepCardProps) {
   return (
     <div className="flex gap-6 items-start">
-      <div className="bg-giraffe-600 dark:bg-giraffe-500 text-white rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0 font-bold text-xl">
+      <div className="bg-giraffe-600 text-white rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0 font-bold text-xl">
         {step}
       </div>
       <div className="flex-grow">
-        <h3 className="text-2xl font-bold text-brown-800 dark:text-white mb-2">
+        <h3 className="text-2xl font-bold text-brown-800 mb-2">
           {title}
         </h3>
-        <p className="text-brown-600 dark:text-brown-400 text-lg">
+        <p className="text-brown-600 text-lg">
           {description}
         </p>
       </div>

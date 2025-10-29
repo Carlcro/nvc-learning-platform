@@ -67,18 +67,18 @@ function IntroductionLesson() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Introduction */}
         <Card className="mb-12">
-          <CardBody className="prose prose-sm dark:prose-invert max-w-none">
-            <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-4">
+          <CardBody className="prose prose-sm max-w-none">
+            <h2 className="text-2xl font-bold text-brown-800 mb-4">
               What is Non-Violent Communication?
             </h2>
-            <p className="text-brown-700 dark:text-brown-400 text-lg leading-relaxed">
+            <p className="text-brown-700 text-lg leading-relaxed">
               {lesson.content}
             </p>
-            <div className="mt-6 p-4 bg-giraffe-50 dark:bg-giraffe-900 border-l-4 border-giraffe-600 rounded">
-              <p className="text-brown-700 dark:text-brown-300 font-semibold mb-2">
+            <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
+              <p className="text-brown-700 font-semibold mb-2">
                 🦒 Did you know?
               </p>
-              <p className="text-brown-700 dark:text-brown-400">
+              <p className="text-brown-700">
                 The giraffe is the symbol of NVC because it has the largest heart of any land animal and a long neck that allows it to see from a wider perspective—just like compassionate communication!
               </p>
             </div>
@@ -87,7 +87,7 @@ function IntroductionLesson() {
 
         {/* Core Concepts */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-brown-800 dark:text-white mb-6">
+          <h2 className="text-2xl font-bold text-brown-800 mb-6">
             The 4 Components of NVC
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,7 +212,7 @@ function IntroductionLesson() {
               {/* Example Navigation */}
               {lesson.examples && lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
-                  <p className="text-sm text-brown-600 dark:text-brown-400 mr-4">
+                  <p className="text-sm text-brown-600 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
                   </p>
                   {lesson.examples.map((_, index) => (
@@ -222,7 +222,7 @@ function IntroductionLesson() {
                       className={`w-3 h-3 rounded-full transition-all ${
                         index === selectedExample
                           ? 'bg-giraffe-600 w-8'
-                          : 'bg-brown-300 dark:bg-brown-600'
+                          : 'bg-brown-300'
                       }`}
                       aria-label={`Go to example ${index + 1}`}
                     />
@@ -311,12 +311,12 @@ interface ComponentCardProps {
 }
 
 const colorMap = {
-  blue: 'from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-giraffe-200 dark:border-giraffe-700',
+  blue: 'from-blue-50 to-blue-100 border-giraffe-200',
   purple:
-    'from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 border-giraffe-200 dark:border-giraffe-700',
-  red: 'from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 border-empathy-low dark:border-empathy-low',
+    'from-purple-50 to-purple-100 border-giraffe-200',
+  red: 'from-red-50 to-red-100 border-empathy-low',
   emerald:
-    'from-emerald-50 to-emerald-100 dark:from-emerald-900 dark:to-emerald-800 border-giraffe-200 dark:border-giraffe-700',
+    'from-emerald-50 to-emerald-100 border-giraffe-200',
 }
 
 function ComponentCard({
@@ -333,15 +333,15 @@ function ComponentCard({
         <div className="flex items-center gap-2">
           <span className="text-3xl">{icon}</span>
           <div>
-            <div className="text-sm font-semibold text-brown-600 dark:text-brown-400">
+            <div className="text-sm font-semibold text-brown-600">
               Step {number}
             </div>
-            <h3 className="text-lg font-bold text-brown-800 dark:text-white">
+            <h3 className="text-lg font-bold text-brown-800">
               {title}
             </h3>
           </div>
         </div>
-        <p className="text-brown-700 dark:text-brown-400">{description}</p>
+        <p className="text-brown-700">{description}</p>
       </CardBody>
     </Card>
   )
