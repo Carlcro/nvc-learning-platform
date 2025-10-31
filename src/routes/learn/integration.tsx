@@ -7,14 +7,7 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import {
-  CheckIcon,
-  EyeIcon,
-  HeartIcon,
-  StarIcon,
-  TargetIcon,
-  ThoughtIcon,
-} from '~/components/ui/Icons'
+import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/integration')({
   component: IntegrationLesson,
@@ -65,9 +58,6 @@ function IntegrationLesson() {
           {/* Left side - content */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-giraffe-50">
-                <StarIcon className="w-12 h-12" />
-              </div>
               <div>
                 <div className="text-sm font-semibold text-giraffe-50">
                   6 - Final Lesson
@@ -99,12 +89,12 @@ function IntegrationLesson() {
           </div>
 
           {/* Right side - image */}
-          <div className="flex-1 flex justify-center">
-            <div className="bg-transparent max-w-xs">
+          <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
+            <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
                 src="/lesson6.png"
                 alt="Integrating All Four Pillars of NVC"
-                className="w-full h-auto object-contain rounded-lg"
+                className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
             </div>
           </div>
@@ -146,28 +136,24 @@ function IntegrationLesson() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PillarCard
               number={1}
-              icon={<EyeIcon className="w-6 h-6" />}
               title="Observation"
               description="What you actually see and hear without judgment"
               color="blue"
             />
             <PillarCard
               number={2}
-              icon={<ThoughtIcon className="w-6 h-6" />}
               title="Feeling"
               description="Your authentic emotional experience"
               color="purple"
             />
             <PillarCard
               number={3}
-              icon={<HeartIcon className="w-6 h-6" />}
               title="Need"
               description="The universal human need behind your feeling"
               color="red"
             />
             <PillarCard
               number={4}
-              icon={<TargetIcon className="w-6 h-6" />}
               title="Request"
               description="A concrete, doable action you're asking for"
               color="emerald"
@@ -194,7 +180,7 @@ function IntegrationLesson() {
                     Scenario
                   </h3>
                   <p className="text-brown-700 italic">
-                    {currentExample?.scenario}
+                    {currentExample.scenario}
                   </p>
                 </div>
 
@@ -207,7 +193,7 @@ function IntegrationLesson() {
                       </h4>
                     </div>
                     <p className="text-brown-800 leading-relaxed mb-4">
-                      {currentExample?.giraffResponse}
+                      {currentExample.giraffResponse}
                     </p>
 
                     {/* Component Breakdown */}
@@ -255,7 +241,7 @@ function IntegrationLesson() {
                       </h4>
                     </div>
                     <p className="text-empathy-lowlow leading-relaxed mb-4">
-                      {currentExample?.jackalResponse}
+                      {currentExample.jackalResponse}
                     </p>
 
                     {/* Problem Breakdown */}
@@ -281,13 +267,13 @@ function IntegrationLesson() {
                     Why this works
                   </h4>
                   <p className="text-giraffe-800">
-                    {currentExample?.explanation}
+                    {currentExample.explanation}
                   </p>
                 </div>
               </div>
 
               {/* Example Navigation */}
-              {lesson.examples && lesson.examples.length > 1 && (
+              {lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
                   <p className="text-sm text-brown-600 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
@@ -311,14 +297,13 @@ function IntegrationLesson() {
         </Card>
 
         {/* Quiz Section */}
-        {lesson.quiz && (
-          <QuizSection
-            questions={lesson.quiz.questions}
-            passingScore={lesson.quiz.passingScore}
-            title="Master the Integration"
-            lessonId="integration"
-          />
-        )}
+
+        <QuizSection
+          questions={lesson.quiz.questions}
+          passingScore={lesson.quiz.passingScore}
+          title="Master the Integration"
+          lessonId="integration"
+        />
 
         {/* Completion Celebration */}
         <Card className="mb-12 bg-gradient-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
@@ -418,7 +403,6 @@ function IntegrationLesson() {
 
 interface PillarCardProps {
   number: number
-  icon: React.ReactNode
   title: string
   description: string
   color: 'blue' | 'purple' | 'red' | 'emerald'
@@ -431,18 +415,11 @@ const colorMap = {
   emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
 }
 
-function PillarCard({
-  number,
-  icon,
-  title,
-  description,
-  color,
-}: PillarCardProps) {
+function PillarCard({ number, title, description, color }: PillarCardProps) {
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <div className="text-brown-800">{icon}</div>
           <div>
             <div className="text-sm font-semibold text-brown-600">
               Pillar {number}

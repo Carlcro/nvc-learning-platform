@@ -1,20 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
+import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import {
-  CheckIcon,
-  EyeIcon,
-  XIcon,
-  PinIcon,
-  WarningIcon,
-  LightbulbIcon,
-} from '~/components/ui/Icons'
-import { useState } from 'react'
+import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/observation')({
   component: ObservationLesson,
@@ -65,9 +58,6 @@ function ObservationLesson() {
           {/* Left side - content */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-giraffe-50">
-                <EyeIcon className="w-12 h-12" />
-              </div>
               <div>
                 <div className="text-sm font-semibold text-giraffe-50">
                   Lesson 2
@@ -99,12 +89,12 @@ function ObservationLesson() {
           </div>
 
           {/* Right side - image */}
-          <div className="flex-1 flex justify-center">
-            <div className="bg-transparent max-w-xs">
+          <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
+            <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
                 src="/lesson2.png"
                 alt="Observations Without Evaluation"
-                className="w-full h-auto object-contain rounded-lg"
+                className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
             </div>
           </div>
@@ -124,7 +114,6 @@ function ObservationLesson() {
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
               <div className="flex items-center gap-2 mb-2">
-                <LightbulbIcon className="w-5 h-5 text-giraffe-600" />
                 <p className="text-brown-700 font-semibold">Key Point</p>
               </div>
               <p className="text-brown-700">
@@ -144,25 +133,21 @@ function ObservationLesson() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ConceptCard
-              icon={<EyeIcon className="w-6 h-6" />}
               title="See What's There"
               description="Describe what you actually see or hear without interpretation"
               color="blue"
             />
             <ConceptCard
-              icon={<XIcon className="w-6 h-6" />}
               title="Avoid Judgment"
               description="Don't label, evaluate, or interpret what you observe"
               color="red"
             />
             <ConceptCard
-              icon={<PinIcon className="w-6 h-6" />}
               title="Be Specific"
               description="Include times, dates, or quantities when relevant"
               color="emerald"
             />
             <ConceptCard
-              icon={<WarningIcon className="w-6 h-6" />}
               title="Skip Generalizations"
               description="Avoid 'always,' 'never,' 'constantly,' and other absolutes"
               color="amber"
@@ -189,7 +174,7 @@ function ObservationLesson() {
                     Scenario
                   </h3>
                   <p className="text-brown-700 italic">
-                    {currentExample?.scenario}
+                    {currentExample.scenario}
                   </p>
                 </div>
 
@@ -212,7 +197,7 @@ function ObservationLesson() {
                         Pure Observation
                       </h4>
                       <p className="text-brown-800 leading-relaxed">
-                        {currentExample?.giraffResponse}
+                        {currentExample.giraffResponse}
                       </p>
                     </div>
                   </div>
@@ -234,7 +219,7 @@ function ObservationLesson() {
                         Judgment-Filled
                       </h4>
                       <p className="text-empathy-low leading-relaxed">
-                        {currentExample?.jackalResponse}
+                        {currentExample.jackalResponse}
                       </p>
                     </div>
                   </div>
@@ -245,14 +230,12 @@ function ObservationLesson() {
                   <h4 className="font-semibold text-brown-800 mb-2">
                     What's the difference?
                   </h4>
-                  <p className="text-brown-700">
-                    {currentExample?.explanation}
-                  </p>
+                  <p className="text-brown-700">{currentExample.explanation}</p>
                 </div>
               </div>
 
               {/* Example Navigation */}
-              {lesson.examples && lesson.examples.length > 1 && (
+              {lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
                   <p className="text-sm text-brown-600 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
@@ -276,14 +259,13 @@ function ObservationLesson() {
         </Card>
 
         {/* Quiz Section */}
-        {lesson.quiz && (
-          <QuizSection
-            questions={lesson.quiz.questions}
-            passingScore={lesson.quiz.passingScore}
-            title="Review Your Learning"
-            lessonId="observation"
-          />
-        )}
+
+        <QuizSection
+          questions={lesson.quiz.questions}
+          passingScore={lesson.quiz.passingScore}
+          title="Review Your Learning"
+          lessonId="observation"
+        />
 
         {/* Key Takeaways */}
         <Card className="mb-12 bg-gradient-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
@@ -306,14 +288,14 @@ function ObservationLesson() {
                 </span>
               </li>
               <li className="flex gap-3">
-                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                <CheckIcon className="w-5 h-5 shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Base observations on what you actually see, hear, or
                   experience
                 </span>
               </li>
               <li className="flex gap-3">
-                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                <CheckIcon className="w-5 h-5 shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Observations create the foundation for all other NVC
                   components
@@ -339,9 +321,6 @@ function ObservationLesson() {
               <Button variant="primary" size="lg">
                 Next Lesson: Feelings
               </Button>
-              <Button variant="outline" size="lg">
-                Review Content
-              </Button>
             </div>
           </CardBody>
         </Card>
@@ -351,7 +330,6 @@ function ObservationLesson() {
 }
 
 interface ConceptCardProps {
-  icon: React.ReactNode
   title: string
   description: string
   color: 'blue' | 'red' | 'emerald' | 'amber'
@@ -364,12 +342,11 @@ const colorMap = {
   amber: 'from-amber-50 to-amber-100 border-amber-200',
 }
 
-function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
+function ConceptCard({ title, description, color }: ConceptCardProps) {
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <div className="text-brown-800">{icon}</div>
           <h3 className="text-lg font-bold text-brown-800">{title}</h3>
         </div>
         <p className="text-brown-700">{description}</p>

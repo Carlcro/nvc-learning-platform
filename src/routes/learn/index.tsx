@@ -69,27 +69,14 @@ function LearnHub() {
 
   const { getProgressPercentage, isLessonCompleted } = useLessonProgress()
 
-  // Filter to ensure we have only valid lesson types
-  const validLessons =
-    lessons.filter((lesson) =>
-      [
-        'observation',
-        'feeling',
-        'need',
-        'request',
-        'introduction',
-        'integration',
-      ].includes(lesson.component),
-    ) || []
-
-  const progressPercentage = getProgressPercentage(validLessons.length)
+  const progressPercentage = getProgressPercentage(lessons.length)
 
   // Find the current lesson (first incomplete, or first if all complete)
-  const currentLessonIndex = validLessons.findIndex(
+  const currentLessonIndex = lessons.findIndex(
     (lesson) => !isLessonCompleted(lesson.lessonId),
   )
   const currentLesson =
-    currentLessonIndex >= 0 ? validLessons[currentLessonIndex] : validLessons[0]
+    currentLessonIndex >= 0 ? lessons[currentLessonIndex] : lessons[0]
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
@@ -160,12 +147,12 @@ function LearnHub() {
                   </div>
 
                   {/* Right side - Image */}
-                  <div className="flex-1 p-8 flex items-center justify-center bg-gradient-to-b from-white to-giraffe-50">
-                    <div className="bg-transparent max-w-1/3">
+                  <div className="hidden md:flex md:flex-1 p-8 items-center justify-center bg-gradient-to-b from-white to-giraffe-50">
+                    <div className="bg-transparent w-full max-w-xs max-h-48">
                       <img
                         src={getLessonImagePath(currentLesson.order)}
                         alt={currentLesson.title}
-                        className="w-full h-auto object-contain rounded-lg"
+                        className="w-auto h-auto max-h-48 object-contain rounded-lg"
                       />
                     </div>
                   </div>
@@ -179,7 +166,7 @@ function LearnHub() {
       {/* Lessons Grid */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {validLessons.map((lesson) => (
+          {lessons.map((lesson) => (
             <LessonCard key={lesson.lessonId} lesson={lesson} />
           ))}
         </div>
@@ -228,7 +215,7 @@ function LessonCard({ lesson }: LessonCardProps) {
     <Link to={href}>
       <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden flex flex-col">
         {/* Lesson Image Header */}
-        <div className="relative bg-gradient-to-r from-giraffe-600 to-giraffe-500 h-48 overflow-hidden">
+        <div className="relative bg-gradient-to-r from-giraffe-600 to-giraffe-500 h-40 overflow-hidden flex items-center justify-center hidden md:flex">
           <img
             src={imagePath}
             alt={lesson.title}

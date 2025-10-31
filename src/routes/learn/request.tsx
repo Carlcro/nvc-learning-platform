@@ -7,14 +7,7 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import {
-  ChatIcon,
-  CheckIcon,
-  HandshakeIcon,
-  LightbulbIcon,
-  ScaleIcon,
-  TargetIcon,
-} from '~/components/ui/Icons'
+import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/request')({
   component: RequestLesson,
@@ -65,9 +58,6 @@ function RequestLesson() {
           {/* Left side - content */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-giraffe-50">
-                <TargetIcon className="w-12 h-12" />
-              </div>
               <div>
                 <div className="text-sm font-semibold text-giraffe-50">
                   Lesson 5
@@ -99,12 +89,12 @@ function RequestLesson() {
           </div>
 
           {/* Right side - image */}
-          <div className="flex-1 flex justify-center">
-            <div className="bg-transparent max-w-xs">
+          <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
+            <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
                 src="/lesson5.png"
                 alt="Making Clear and Compassionate Requests"
-                className="w-full h-auto object-contain rounded-lg"
+                className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
             </div>
           </div>
@@ -124,7 +114,6 @@ function RequestLesson() {
             </p>
             <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-600 rounded">
               <div className="flex items-center gap-2 mb-2">
-                <LightbulbIcon className="w-5 h-5 text-amber-600" />
                 <p className="text-brown-700 font-semibold">Key Point</p>
               </div>
               <p className="text-brown-700">
@@ -144,25 +133,21 @@ function RequestLesson() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ConceptCard
-              icon={<TargetIcon className="w-6 h-6" />}
               title="Clear Requests"
               description="Specific, concrete, doable actions phrased positively"
               color="emerald"
             />
             <ConceptCard
-              icon={<ScaleIcon className="w-6 h-6" />}
               title="Leave Room for No"
               description="'Would you be willing...' respects the other person's freedom"
               color="blue"
             />
             <ConceptCard
-              icon={<ChatIcon className="w-6 h-6" />}
               title="Positive Language"
               description="Ask for what you want, not what you don't want"
               color="amber"
             />
             <ConceptCard
-              icon={<HandshakeIcon className="w-6 h-6" />}
               title="Mutual Dialogue"
               description="Refusal opens conversation, not conflict"
               color="purple"
@@ -338,9 +323,6 @@ function RequestLesson() {
               <Button variant="primary" size="lg">
                 Next Lesson: Integration
               </Button>
-              <Button variant="outline" size="lg">
-                Review Content
-              </Button>
             </div>
           </CardBody>
         </Card>
@@ -350,7 +332,6 @@ function RequestLesson() {
 }
 
 interface ConceptCardProps {
-  icon: React.ReactNode
   title: string
   description: string
   color: 'emerald' | 'blue' | 'amber' | 'purple'
@@ -363,12 +344,11 @@ const colorMap = {
   purple: 'from-purple-50 to-purple-100 border-giraffe-200',
 }
 
-function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
+function ConceptCard({ title, description, color }: ConceptCardProps) {
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <div className="text-brown-800">{icon}</div>
           <h3 className="text-lg font-bold text-brown-800">{title}</h3>
         </div>
         <p className="text-brown-700">{description}</p>

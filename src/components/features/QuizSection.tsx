@@ -121,21 +121,19 @@ export function QuizSection({
     return (
       <Card className="mb-12">
         <CardHeader
-          className={`bg-gradient-to-r ${
+          className={`bg-linear-to-r ${
             isPerfectScore
               ? 'from-giraffe-50 to-empathy-high/20'
               : 'from-giraffe-50 to-empathy-medium/20'
           }`}
         >
-          <h2 className="text-2xl font-bold text-brown-800">
-            Quiz Complete!
-          </h2>
+          <h2 className="text-2xl font-bold text-brown-800">Quiz Complete!</h2>
         </CardHeader>
         <CardBody>
           <div className="text-center py-8">
             {/* Perfect Score & Lesson Completion Banner */}
             {isPerfectScore && lessonCompleted && (
-              <div className="mb-8 p-6 rounded-lg bg-gradient-to-r from-giraffe-100 to-empathy-high/30 border-2 border-giraffe-300">
+              <div className="mb-8 p-6 rounded-lg bg-linear-to-r from-giraffe-100 to-empathy-high/30 border-2 border-giraffe-300">
                 <div className="text-5xl mb-3">🎓✨</div>
                 <h3 className="text-2xl font-bold text-giraffe-700 mb-2">
                   Lesson Complete!
@@ -176,9 +174,7 @@ export function QuizSection({
                       ).length
                     }
                   </div>
-                  <div className="text-sm text-brown-600 mt-1">
-                    Correct
-                  </div>
+                  <div className="text-sm text-brown-600 mt-1">Correct</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-empathy-low">
@@ -189,17 +185,13 @@ export function QuizSection({
                       ).length
                     }
                   </div>
-                  <div className="text-sm text-brown-600 mt-1">
-                    Incorrect
-                  </div>
+                  <div className="text-sm text-brown-600 mt-1">Incorrect</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-giraffe-600">
                     {questions.length}
                   </div>
-                  <div className="text-sm text-brown-600 mt-1">
-                    Total
-                  </div>
+                  <div className="text-sm text-brown-600 mt-1">Total</div>
                 </div>
               </div>
             </div>
@@ -254,12 +246,10 @@ export function QuizSection({
 
   return (
     <Card className="mb-12">
-      <CardHeader className="bg-gradient-to-r from-giraffe-50 to-giraffe-100">
+      <CardHeader className="bg-linear-to-r from-giraffe-50 to-giraffe-100">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-brown-800">
-              {title}
-            </h2>
+            <h2 className="text-2xl font-bold text-brown-800">{title}</h2>
             <p className="text-brown-600 mt-1">
               Test your understanding of the lesson
             </p>
@@ -302,26 +292,26 @@ export function QuizSection({
                   key={index}
                   onClick={() => handleSelectAnswer(index)}
                   disabled={quizState.submitted}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all shadow-sm ${
                     showCorrect
-                      ? 'bg-empathy-high/10 border-empathy-high'
+                      ? 'bg-empathy-high/15 border-empathy-high border-2 shadow-md'
                       : showIncorrect
-                        ? 'bg-empathy-low/10 border-empathy-low'
+                        ? 'bg-empathy-low/15 border-empathy-low border-2 shadow-md'
                         : isSelected
-                          ? 'bg-giraffe-50 border-giraffe-400'
-                          : 'bg-white border-giraffe-200'
-                  } ${quizState.submitted ? 'cursor-default' : 'cursor-pointer hover:border-giraffe-300'}`}
+                          ? 'bg-giraffe-100 border-giraffe-600 shadow-md'
+                          : 'bg-white border-giraffe-400'
+                  } ${quizState.submitted ? 'cursor-default' : 'cursor-pointer hover:border-giraffe-500 hover:shadow-md'}`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                         showCorrect
                           ? 'bg-empathy-high border-empathy-high'
                           : showIncorrect
                             ? 'bg-empathy-low border-empathy-low'
                             : isSelected
-                              ? 'bg-giraffe-400 border-giraffe-400'
-                              : 'border-giraffe-200'
+                              ? 'bg-giraffe-500 border-giraffe-600'
+                              : 'border-giraffe-400 bg-white'
                       }`}
                     >
                       {showCorrect && (
@@ -360,24 +350,20 @@ export function QuizSection({
               }`}
             >
               <div className="flex gap-3">
-                <span className="text-2xl flex-shrink-0">
+                <span className="text-2xl shrink-0">
                   {isCorrect ? '✓' : '💡'}
                 </span>
                 <div>
                   <h4
                     className={`font-semibold mb-2 ${
-                      isCorrect
-                        ? 'text-empathy-high'
-                        : 'text-empathy-low'
+                      isCorrect ? 'text-empathy-high' : 'text-empathy-low'
                     }`}
                   >
                     {isCorrect ? 'Correct!' : 'Not quite right.'}
                   </h4>
                   <p
                     className={
-                      isCorrect
-                        ? 'text-empathy-high/80'
-                        : 'text-empathy-low/80'
+                      isCorrect ? 'text-empathy-high/80' : 'text-empathy-low/80'
                     }
                   >
                     {currentQ.explanation}

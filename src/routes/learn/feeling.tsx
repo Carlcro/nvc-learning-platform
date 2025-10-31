@@ -1,20 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
+import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import {
-  CheckIcon,
-  ThoughtIcon,
-  SmileIcon,
-  PersonIcon,
-  SparkleIcon,
-  LightbulbIcon,
-} from '~/components/ui/Icons'
-import { useState } from 'react'
+import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/feeling')({
   component: FeelingLesson,
@@ -65,9 +58,6 @@ function FeelingLesson() {
           {/* Left side - content */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-giraffe-50">
-                <ThoughtIcon className="w-12 h-12" />
-              </div>
               <div>
                 <div className="text-sm font-semibold text-giraffe-50">
                   Lesson 3
@@ -99,12 +89,12 @@ function FeelingLesson() {
           </div>
 
           {/* Right side - image */}
-          <div className="flex-1 flex justify-center">
-            <div className="bg-transparent max-w-xs">
+          <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
+            <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
                 src="/lesson3.png"
                 alt="Understanding and Expressing Feelings"
-                className="w-full h-auto object-contain rounded-lg"
+                className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
             </div>
           </div>
@@ -124,7 +114,6 @@ function FeelingLesson() {
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
               <div className="flex items-center gap-2 mb-2">
-                <LightbulbIcon className="w-5 h-5 text-giraffe-600" />
                 <p className="text-brown-700 font-semibold">Key Point</p>
               </div>
               <p className="text-brown-700">
@@ -145,25 +134,21 @@ function FeelingLesson() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ConceptCard
-              icon={<SmileIcon className="w-6 h-6" />}
               title="Genuine Feelings"
               description="Emotions you actually experience: happy, sad, angry, anxious, excited"
               color="emerald"
             />
             <ConceptCard
-              icon={<ThoughtIcon className="w-6 h-6" />}
               title="Pseudo-Feelings"
               description="Thoughts disguised as feelings: rejected, attacked, betrayed, misunderstood"
               color="red"
             />
             <ConceptCard
-              icon={<PersonIcon className="w-6 h-6" />}
               title="Own Your Feelings"
               description="Take responsibility for your emotions without blaming others"
               color="blue"
             />
             <ConceptCard
-              icon={<SparkleIcon className="w-6 h-6" />}
               title="Emotional Authenticity"
               description="Express your true emotional experience in a non-blaming way"
               color="purple"
@@ -173,7 +158,7 @@ function FeelingLesson() {
 
         {/* Giraffe vs Jackal Language */}
         <Card className="mb-12 border-2 border-giraffe-200">
-          <CardHeader className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-200">
+          <CardHeader className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-200">
             <h2 className="text-2xl font-bold text-brown-800">
               Real Feelings vs. Pseudo-Feelings
             </h2>
@@ -191,7 +176,7 @@ function FeelingLesson() {
                     Scenario
                   </h3>
                   <p className="text-brown-700 italic">
-                    {currentExample?.scenario}
+                    {currentExample.scenario}
                   </p>
                 </div>
 
@@ -214,7 +199,7 @@ function FeelingLesson() {
                         Authentic Feelings
                       </h4>
                       <p className="text-brown-800 leading-relaxed">
-                        {currentExample?.giraffResponse}
+                        {currentExample.giraffResponse}
                       </p>
                     </div>
                   </div>
@@ -236,7 +221,7 @@ function FeelingLesson() {
                         Pseudo-Feelings
                       </h4>
                       <p className="text-empathy-low leading-relaxed">
-                        {currentExample?.jackalResponse}
+                        {currentExample.jackalResponse}
                       </p>
                     </div>
                   </div>
@@ -247,14 +232,12 @@ function FeelingLesson() {
                   <h4 className="font-semibold text-brown-800 mb-2">
                     What's the difference?
                   </h4>
-                  <p className="text-brown-700">
-                    {currentExample?.explanation}
-                  </p>
+                  <p className="text-brown-700">{currentExample.explanation}</p>
                 </div>
               </div>
 
               {/* Example Navigation */}
-              {lesson.examples && lesson.examples.length > 1 && (
+              {lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
                   <p className="text-sm text-brown-600 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
@@ -278,44 +261,44 @@ function FeelingLesson() {
         </Card>
 
         {/* Quiz Section */}
-        {lesson.quiz && (
+        {
           <QuizSection
             questions={lesson.quiz.questions}
             passingScore={lesson.quiz.passingScore}
             title="Review Your Learning"
             lessonId="feeling"
           />
-        )}
+        }
 
         {/* Key Takeaways */}
-        <Card className="mb-12 bg-gradient-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
+        <Card className="mb-12 bg-linear-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
           <CardBody>
             <h2 className="text-2xl font-bold text-brown-800 mb-6">
               Key Takeaways
             </h2>
             <ul className="space-y-4">
               <li className="flex gap-3">
-                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                <CheckIcon className="w-5 h-5 shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Real feelings are actual emotions; pseudo-feelings contain
                   judgments about others
                 </span>
               </li>
               <li className="flex gap-3">
-                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                <CheckIcon className="w-5 h-5 shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Avoid saying "I feel like..." or "I feel that..." as these
                   introduce thoughts
                 </span>
               </li>
               <li className="flex gap-3">
-                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                <CheckIcon className="w-5 h-5 shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Own your feelings without blaming others for them
                 </span>
               </li>
               <li className="flex gap-3">
-                <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                <CheckIcon className="w-5 h-5 shrink-0 text-giraffe-600" />
                 <span className="text-brown-700">
                   Emotional authenticity creates space for genuine connection
                 </span>
@@ -340,9 +323,6 @@ function FeelingLesson() {
               <Button variant="primary" size="lg">
                 Next Lesson: Needs
               </Button>
-              <Button variant="outline" size="lg">
-                Review Content
-              </Button>
             </div>
           </CardBody>
         </Card>
@@ -352,7 +332,6 @@ function FeelingLesson() {
 }
 
 interface ConceptCardProps {
-  icon: React.ReactNode
   title: string
   description: string
   color: 'emerald' | 'red' | 'blue' | 'purple'
@@ -365,12 +344,11 @@ const colorMap = {
   purple: 'from-purple-50 to-purple-100 border-giraffe-200',
 }
 
-function ConceptCard({ icon, title, description, color }: ConceptCardProps) {
+function ConceptCard({ title, description, color }: ConceptCardProps) {
   return (
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <div className="text-brown-800">{icon}</div>
           <h3 className="text-lg font-bold text-brown-800">{title}</h3>
         </div>
         <p className="text-brown-700">{description}</p>

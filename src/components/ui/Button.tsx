@@ -14,7 +14,7 @@ const variantStyles = {
   secondary:
     'bg-brown-600 text-cream hover:bg-brown-700 disabled:bg-brown-400 focus:ring-2 focus:ring-brown-500 focus:ring-offset-2 font-semibold shadow-sm',
   outline:
-    'border-2 border-giraffe-400 text-brown-700 hover:bg-giraffe-50 disabled:border-giraffe-200 disabled:text-giraffe-200 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2',
+    'border-2 border-giraffe-400 text-brown-700 hover:bg-giraffe-50 disabled:border-giraffe-300 disabled:text-giraffe-700 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2',
   ghost:
     'text-giraffe-600 hover:bg-giraffe-100 disabled:text-giraffe-200 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2',
 }

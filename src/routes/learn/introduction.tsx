@@ -7,14 +7,7 @@ import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import {
-  CheckIcon,
-  EyeIcon,
-  HeartIcon,
-  StarIcon,
-  TargetIcon,
-  ThoughtIcon,
-} from '~/components/ui/Icons'
+import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/introduction')({
   component: IntroductionLesson,
@@ -45,10 +38,6 @@ function IntroductionLesson() {
       {lessonCompleted && (
         <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <div className="flex gap-1 text-giraffe-600">
-              <StarIcon className="w-6 h-6" />
-              <StarIcon className="w-6 h-6" />
-            </div>
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
               <p className="text-sm text-brown-700">
@@ -65,9 +54,6 @@ function IntroductionLesson() {
           {/* Left side - content */}
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="text-giraffe-50">
-                <StarIcon className="w-12 h-12" />
-              </div>
               <div>
                 <div className="text-sm font-semibold text-giraffe-50">
                   Lesson 1
@@ -99,12 +85,12 @@ function IntroductionLesson() {
           </div>
 
           {/* Right side - image */}
-          <div className="flex-1 flex justify-center">
-            <div className="bg-transparent max-w-xs">
+          <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
+            <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
                 src="/lesson1.png"
                 alt="Non-Violent Communication Introduction"
-                className="w-full h-auto object-contain rounded-lg"
+                className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
             </div>
           </div>
@@ -124,7 +110,6 @@ function IntroductionLesson() {
             </p>
             <div className="mt-6 p-4 bg-giraffe-50 border-l-4 border-giraffe-600 rounded">
               <div className="flex items-center gap-2 mb-2">
-                <HeartIcon className="w-5 h-5 text-giraffe-600" />
                 <p className="text-brown-700 font-semibold">Did you know?</p>
               </div>
               <p className="text-brown-700">
@@ -146,28 +131,24 @@ function IntroductionLesson() {
               number={1}
               title="Observation"
               description="Describe what you see/hear without judgment"
-              icon={<EyeIcon className="w-6 h-6" />}
               color="blue"
             />
             <ComponentCard
               number={2}
               title="Feeling"
               description="Express your emotions authentically"
-              icon={<ThoughtIcon className="w-6 h-6" />}
               color="purple"
             />
             <ComponentCard
               number={3}
               title="Need"
               description="Connect your feelings to universal needs"
-              icon={<HeartIcon className="w-6 h-6" />}
               color="red"
             />
             <ComponentCard
               number={4}
               title="Request"
               description="Ask for concrete, positive action"
-              icon={<TargetIcon className="w-6 h-6" />}
               color="emerald"
             />
           </div>
@@ -193,7 +174,7 @@ function IntroductionLesson() {
                     Scenario
                   </h3>
                   <p className="text-brown-700 italic">
-                    {currentExample?.scenario}
+                    {currentExample.scenario}
                   </p>
                 </div>
 
@@ -216,7 +197,7 @@ function IntroductionLesson() {
                         Giraffe Language
                       </h4>
                       <p className="text-brown-800 leading-relaxed">
-                        {currentExample?.giraffResponse}
+                        {currentExample.giraffResponse}
                       </p>
                     </div>
                   </div>
@@ -238,7 +219,7 @@ function IntroductionLesson() {
                         Jackal Language
                       </h4>
                       <p className="text-empathy-low leading-relaxed">
-                        {currentExample?.jackalResponse}
+                        {currentExample.jackalResponse}
                       </p>
                     </div>
                   </div>
@@ -249,14 +230,12 @@ function IntroductionLesson() {
                   <h4 className="font-semibold text-brown-800 mb-2">
                     Why does this matter?
                   </h4>
-                  <p className="text-brown-700">
-                    {currentExample?.explanation}
-                  </p>
+                  <p className="text-brown-700">{currentExample.explanation}</p>
                 </div>
               </div>
 
               {/* Example Navigation */}
-              {lesson.examples && lesson.examples.length > 1 && (
+              {lesson.examples.length > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
                   <p className="text-sm text-brown-600 mr-4">
                     Example {selectedExample + 1} of {lesson.examples.length}
@@ -280,14 +259,13 @@ function IntroductionLesson() {
         </Card>
 
         {/* Quiz Section */}
-        {lesson.quiz && (
-          <QuizSection
-            questions={lesson.quiz.questions}
-            passingScore={lesson.quiz.passingScore}
-            title="Review Your Learning"
-            lessonId="introduction"
-          />
-        )}
+
+        <QuizSection
+          questions={lesson.quiz.questions}
+          passingScore={lesson.quiz.passingScore}
+          title="Review Your Learning"
+          lessonId="introduction"
+        />
 
         {/* Key Takeaways */}
         <Card className="mb-12 bg-gradient-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
@@ -341,9 +319,6 @@ function IntroductionLesson() {
               <Button variant="primary" size="lg">
                 Next Lesson: Observations
               </Button>
-              <Button variant="outline" size="lg">
-                Review Content
-              </Button>
             </div>
           </CardBody>
         </Card>
@@ -356,7 +331,6 @@ interface ComponentCardProps {
   number: number
   title: string
   description: string
-  icon: React.ReactNode
   color: 'blue' | 'purple' | 'red' | 'emerald'
 }
 
@@ -371,7 +345,6 @@ function ComponentCard({
   number,
   title,
   description,
-  icon,
   color,
 }: ComponentCardProps) {
   // ComponentCard is a helper component for displaying lesson components
@@ -379,7 +352,6 @@ function ComponentCard({
     <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
-          <div className="text-brown-800">{icon}</div>
           <div>
             <div className="text-sm font-semibold text-brown-600">
               Step {number}

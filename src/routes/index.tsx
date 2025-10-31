@@ -57,9 +57,6 @@ function Home() {
                     Start Learning
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="px-8">
-                  Learn More
-                </Button>
               </div>
             </div>
           </div>
@@ -337,9 +334,7 @@ function BenefitCard({ emoji, title, description }: BenefitCardProps) {
     <Card className="hover:shadow-lg transition-shadow duration-200">
       <CardBody className="text-center py-8">
         <div className="text-5xl mb-4">{emoji}</div>
-        <h3 className="text-xl font-bold text-brown-800 mb-3">
-          {title}
-        </h3>
+        <h3 className="text-xl font-bold text-brown-800 mb-3">{title}</h3>
         <p className="text-brown-600">{description}</p>
       </CardBody>
     </Card>
@@ -367,15 +362,9 @@ function NVCComponent({
             {number}
           </div>
           <div className="flex-grow">
-            <h3 className="text-xl font-bold text-brown-800 mb-2">
-              {title}
-            </h3>
-            <p className="text-brown-600 mb-3">
-              {description}
-            </p>
-            <p className="text-sm text-brown-700 italic">
-              {example}
-            </p>
+            <h3 className="text-xl font-bold text-brown-800 mb-2">{title}</h3>
+            <p className="text-brown-600 mb-3">{description}</p>
+            <p className="text-sm text-brown-700 italic">{example}</p>
           </div>
         </div>
       </CardBody>
@@ -396,12 +385,8 @@ function StepCard({ step, title, description }: StepCardProps) {
         {step}
       </div>
       <div className="flex-grow">
-        <h3 className="text-2xl font-bold text-brown-800 mb-2">
-          {title}
-        </h3>
-        <p className="text-brown-600 text-lg">
-          {description}
-        </p>
+        <h3 className="text-2xl font-bold text-brown-800 mb-2">{title}</h3>
+        <p className="text-brown-600 text-lg">{description}</p>
       </div>
     </div>
   )
