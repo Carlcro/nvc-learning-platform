@@ -57,6 +57,11 @@ function Home() {
                     Start Learning
                   </Button>
                 </Link>
+                <Link to="/practice">
+                  <Button size="lg" variant="secondary" className="px-8">
+                    Practice
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -308,15 +313,26 @@ function Home() {
             Start your journey toward more compassionate, authentic
             conversations today. Let your giraffe guide you!
           </p>
-          <Link to="/learn">
-            <Button
-              size="lg"
-              variant="primary"
-              className="bg-white text-giraffe-600 hover:bg-giraffe-100 px-8"
-            >
-              Begin Your Learning Journey
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/learn">
+              <Button
+                size="lg"
+                variant="primary"
+                className="bg-white text-giraffe-600 hover:bg-giraffe-100 px-8"
+              >
+                Begin Your Learning Journey
+              </Button>
+            </Link>
+            <Link to="/practice">
+              <Button
+                size="lg"
+                variant="primary"
+                className="bg-giraffe-700 text-white hover:bg-giraffe-800 px-8"
+              >
+                Practice with AI
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </main>
