@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { BackButton } from '~/components/ui/BackButton'
 import { QuizSection } from '~/components/features/QuizSection'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { CheckIcon } from '~/components/ui/Icons'
@@ -51,6 +52,11 @@ function NeedLesson() {
           </div>
         </div>
       )}
+
+      {/* Back Button */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <BackButton to="/learn" />
+      </section>
 
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
