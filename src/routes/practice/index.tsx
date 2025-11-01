@@ -67,7 +67,7 @@ function PracticeHub() {
 
       {/* Header with Giraffe Speaking */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
             {/* Left side - Giraffe Mascot */}
 
