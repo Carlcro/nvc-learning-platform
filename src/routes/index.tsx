@@ -46,8 +46,8 @@ function Home() {
 
               <p className="text-xl text-brown-700 mb-8 leading-relaxed">
                 Master Non-Violent Communication (NVC) through interactive
-                lessons and real conversations with AI. Learn to express
-                yourself authentically while truly understanding others.
+                lessons and conversations. Learn to express yourself
+                authentically while truly understanding others.
               </p>
 
               {/* CTA Buttons */}
@@ -59,7 +59,7 @@ function Home() {
                 </Link>
                 <Link to="/practice">
                   <Button size="lg" variant="secondary" className="px-8">
-                    Practice
+                    Start Practicing
                   </Button>
                 </Link>
               </div>
@@ -76,17 +76,14 @@ function Home() {
             <div className="order-1 md:order-1">
               <div className="space-y-4">
                 <BenefitCard
-                  emoji="💭"
                   title="4 Core Skills"
                   description="Learn observation, feeling, need, and request—the foundation of compassionate communication."
                 />
                 <BenefitCard
-                  emoji="🎯"
                   title="Practice in Real Scenarios"
-                  description="Have meaningful conversations with AI characters and get instant feedback on your communication."
+                  description="Have meaningful conversations with characters and get instant feedback on your communication."
                 />
                 <BenefitCard
-                  emoji="📈"
                   title="See Your Progress"
                   description="Track your growth as you develop your ability to communicate with empathy and clarity."
                 />
@@ -232,19 +229,19 @@ function Home() {
                   Compassionate, empathetic communication
                 </p>
                 <ul className="space-y-3 text-brown-700">
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-giraffe-600">✓</span>
                     <span>Focuses on facts without judgment</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-giraffe-600">✓</span>
                     <span>Expresses feelings and needs openly</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-giraffe-600">✓</span>
                     <span>Makes requests, not demands</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-giraffe-600">✓</span>
                     <span>Creates understanding and connection</span>
                   </li>
@@ -272,19 +269,19 @@ function Home() {
                   Judgmental, reactive communication
                 </p>
                 <ul className="space-y-3 text-brown-700">
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-empathy-low">✗</span>
                     <span>Uses judgment and blame</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-empathy-low">✗</span>
                     <span>Makes demands and ultimatums</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-empathy-low">✗</span>
                     <span>Criticizes or diagnoses</span>
                   </li>
-                  <li className="flex items-start gap-2">
+                  <li className="flex items-center gap-2">
                     <span className="text-xl mt-1 text-empathy-low">✗</span>
                     <span>Creates defensiveness and distance</span>
                   </li>
@@ -340,16 +337,14 @@ function Home() {
 }
 
 interface BenefitCardProps {
-  emoji: string
   title: string
   description: string
 }
 
-function BenefitCard({ emoji, title, description }: BenefitCardProps) {
+function BenefitCard({ title, description }: BenefitCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200">
       <CardBody className="text-center py-8">
-        <div className="text-5xl mb-4">{emoji}</div>
         <h3 className="text-xl font-bold text-brown-800 mb-3">{title}</h3>
         <p className="text-brown-600">{description}</p>
       </CardBody>

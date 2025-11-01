@@ -185,8 +185,8 @@ function LearnHub() {
             Ready to Practice?
           </h2>
           <p className="text-giraffe-50 mb-8 text-lg">
-            After completing the lessons, you'll practice NVC in real
-            conversations with AI characters.
+            After completing the lessons, you'll practice NVC in conversations
+            with different characters.
           </p>
           <Button
             size="lg"
