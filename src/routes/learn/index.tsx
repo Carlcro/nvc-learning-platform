@@ -147,8 +147,8 @@ function LearnHub() {
                   </div>
 
                   {/* Right side - Image */}
-                  <div className="hidden md:flex md:flex-1 p-8 items-center justify-center bg-gradient-to-b from-white to-giraffe-50">
-                    <div className="bg-transparent w-full max-w-xs max-h-48">
+                  <div className="flex flex-1 p-8 items-center justify-center bg-gradient-to-b from-white to-giraffe-50">
+                    <div className="bg-transparent w-full max-w-xs max-h-48 flex items-center justify-center">
                       <img
                         src={getLessonImagePath(currentLesson.order)}
                         alt={currentLesson.title}
@@ -215,7 +215,7 @@ function LessonCard({ lesson }: LessonCardProps) {
     <Link to={href}>
       <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden flex flex-col">
         {/* Lesson Image Header */}
-        <div className="relative bg-gradient-to-r from-giraffe-600 to-giraffe-500 h-40 overflow-hidden flex items-center justify-center hidden md:flex">
+        <div className="relative bg-gradient-to-r from-giraffe-600 to-giraffe-500 h-40 overflow-hidden flex items-center justify-center md:flex">
           <img
             src={imagePath}
             alt={lesson.title}
