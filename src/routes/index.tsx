@@ -329,7 +329,7 @@ function Home() {
                 variant="primary"
                 className="bg-giraffe-700 text-white hover:bg-giraffe-800 px-8"
               >
-                Practice with AI
+                Practice with Real Scenarios
               </Button>
             </Link>
           </div>

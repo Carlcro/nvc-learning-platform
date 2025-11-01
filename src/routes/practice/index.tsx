@@ -43,13 +43,12 @@ function PracticeHub() {
   const categories: Array<{
     value: Category | 'all'
     label: string
-    emoji: string
   }> = [
-    { value: 'all', label: 'All', emoji: '🎯' },
-    { value: 'workplace', label: 'Workplace', emoji: '💼' },
-    { value: 'family', label: 'Family', emoji: '👨‍👩‍👧‍👦' },
-    { value: 'friendship', label: 'Friendship', emoji: '🤝' },
-    { value: 'self_expression', label: 'Self-Expression', emoji: '🗣️' },
+    { value: 'all', label: 'All' },
+    { value: 'workplace', label: 'Workplace' },
+    { value: 'family', label: 'Family' },
+    { value: 'friendship', label: 'Friendship' },
+    { value: 'self_expression', label: 'Self-Expression' },
   ]
 
   const difficulties: Array<{ value: Difficulty | 'all'; label: string }> = [
@@ -74,8 +73,8 @@ function PracticeHub() {
               Practice Scenarios
             </h1>
             <p className="text-lg text-giraffe-50 max-w-2xl mx-auto">
-              Practice Non-Violent Communication in realistic scenarios with AI
-              characters. Learn by doing in a safe, judgment-free environment.
+              Practice Non-Violent Communication in realistic scenarios. Learn
+              by doing in a safe, judgment-free environment.
             </p>
           </div>
 
@@ -105,7 +104,7 @@ function PracticeHub() {
                       : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
                   }`}
                 >
-                  {cat.emoji} {cat.label}
+                  {cat.label}
                 </button>
               ))}
             </div>
@@ -139,7 +138,6 @@ function PracticeHub() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {filteredScenarios.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">🦒</div>
             <p className="text-brown-600">
               No scenarios match your filters. Try adjusting them!
             </p>
@@ -173,21 +171,18 @@ function PracticeHub() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4 border-2 border-giraffe-100">
-              <div className="text-2xl mb-2">👀</div>
               <p className="text-sm text-brown-700 font-semibold">Observe</p>
               <p className="text-xs text-brown-600 mt-1">
                 Describe facts without judgment
               </p>
             </div>
             <div className="bg-white rounded-lg p-4 border-2 border-giraffe-100">
-              <div className="text-2xl mb-2">❤️</div>
               <p className="text-sm text-brown-700 font-semibold">Feel</p>
               <p className="text-xs text-brown-600 mt-1">
                 Express actual emotions
               </p>
             </div>
             <div className="bg-white rounded-lg p-4 border-2 border-giraffe-100">
-              <div className="text-2xl mb-2">🎯</div>
               <p className="text-sm text-brown-700 font-semibold">Request</p>
               <p className="text-xs text-brown-600 mt-1">
                 Ask for what you need

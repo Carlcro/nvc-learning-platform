@@ -21,30 +21,25 @@ interface ScenarioResultsProps {
 function getGrade(score: number): {
   label: string
   color: string
-  emoji: string
 } {
   if (score >= 90)
     return {
       label: 'Excellent',
       color: 'from-emerald-400 to-emerald-500',
-      emoji: '🌟',
     }
   if (score >= 70)
     return {
       label: 'Good',
       color: 'from-giraffe-400 to-giraffe-500',
-      emoji: '⭐',
     }
   if (score >= 50)
     return {
       label: 'Partial',
       color: 'from-yellow-400 to-orange-400',
-      emoji: '🌱',
     }
   return {
     label: 'Needs Practice',
     color: 'from-red-400 to-orange-400',
-    emoji: '💪',
   }
 }
 
@@ -63,7 +58,6 @@ export function ScenarioResults({
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="text-6xl">{grade.emoji}</div>
           <h1 className="text-4xl font-bold text-brown-800">
             Scenario Complete!
           </h1>
@@ -114,7 +108,6 @@ export function ScenarioResults({
         <Card className="bg-blue-50 border-2 border-blue-300">
           <CardBody className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="text-2xl">💡</div>
               <div>
                 <h3 className="font-bold text-blue-900 mb-2">Key Takeaway</h3>
                 <p className="text-blue-800 text-sm leading-relaxed">
@@ -132,16 +125,20 @@ export function ScenarioResults({
         </Card>
 
         {/* Encouragement */}
-        <Card className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-2 border-giraffe-300">
+        <Card className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-2 border-giraffe-300">
           <CardBody>
             <div className="flex items-start gap-3">
-              <div className="text-2xl">🦒</div>
               <p className="text-brown-800 text-sm leading-relaxed">
                 Remember, practicing NVC is about growth, not perfection. Each
                 conversation helps you develop greater empathy and
                 understanding. You're building a valuable skill that will
                 improve your real-world relationships.
               </p>
+              <img
+                src="/giraff.png"
+                alt="Giraffe Coach"
+                className="w-24 h-24 object-contain flex-shrink-0"
+              />
             </div>
           </CardBody>
         </Card>
@@ -153,20 +150,14 @@ export function ScenarioResults({
             onClick={onViewTranscript}
             className="flex-1"
           >
-            📋 View Transcript
+            View Transcript
           </Button>
           <Button variant="secondary" onClick={onRetry} className="flex-1">
-            🔄 Try Again
+            Try Again
           </Button>
           <Button variant="primary" onClick={onNext} className="flex-1">
-            ➜ Next Scenario
+            Next Scenario
           </Button>
-        </div>
-
-        {/* Footer Stats */}
-        <div className="text-center text-sm text-brown-600 space-y-1">
-          <p>💪 Keep practicing to unlock more challenging scenarios</p>
-          <p>🌟 Your progress is being tracked</p>
         </div>
       </div>
     </div>

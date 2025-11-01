@@ -21,7 +21,7 @@ export function MessageInput({
   onSubmit,
   isLoading = false,
   disabled = false,
-  placeholder = "Type your response here... Express your observations, feelings, needs, and requests.",
+  placeholder = 'Type your response here... Express your observations, feelings, needs, and requests.',
 }: MessageInputProps) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -48,14 +48,28 @@ export function MessageInput({
     setError(null)
     setIsSubmitting(true)
 
+    // Clear textbox immediately
+    const messageToSend = value
+    setValue('')
+
     try {
-      await onSubmit(value)
-      setValue('')
+      await onSubmit(messageToSend)
     } catch (err) {
       setError('Failed to send message. Please try again.')
       console.error('Error submitting message:', err)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Send on Enter, but allow Shift+Enter for new lines
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      // Only submit if there's content and not already submitting
+      if (value.trim() && !isSubmitting && !disabled && !isLoading) {
+        handleSubmit(e as any)
+      }
     }
   }
 
@@ -76,6 +90,7 @@ export function MessageInput({
             setValue(e.target.value)
             setError(null)
           }}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled || isLoading || isSubmitting}
           maxLength={MAX_MESSAGE_LENGTH}
@@ -111,9 +126,9 @@ export function MessageInput({
             variant="primary"
             disabled={disabled || isLoading || isSubmitting || !value.trim()}
             isLoading={isSubmitting}
-            className="flex-1"
+            className="flex-1 text-nowrap"
           >
-            {isSubmitting ? 'Sending...' : 'Send Response'}
+            {'Send Response'}
           </Button>
         </div>
 

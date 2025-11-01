@@ -57,6 +57,7 @@ function RoleplayComponent() {
 
   const [conversationId, setConversationId] = useState<any | null>(null)
   const [conversationStarted, setConversationStarted] = useState(false)
+  const [mobileFeedbackExpanded, setMobileFeedbackExpanded] = useState(false)
 
   // Initialize conversation on mount
   useEffect(() => {
@@ -100,14 +101,22 @@ function RoleplayComponent() {
       setFeedback(null)
 
       try {
+        // Step 0: Add user message immediately (optimistic update)
+        const userMsg: Message = {
+          role: 'user',
+          content: userMessage,
+          timestamp: Date.now(),
+        }
+        setMessages((prev) => [...prev, userMsg])
+
         // Step 1: Analyze message
         const analysis = await analyzeMessage({
           userMessage,
-          conversationHistory: messages,
+          conversationHistory: [...messages, userMsg],
           userLevel: 5, // Dev user level
         })
 
-        // Step 2: Add user message with score
+        // Step 2: Add user message with score (backend)
         await addMessage({
           conversationId,
           role: 'user',
@@ -126,22 +135,26 @@ function RoleplayComponent() {
           whatWentWell: analysis.whatWentWell,
         })
 
-        // Update local messages
-        const userMsg: Message = {
-          role: 'user',
-          content: userMessage,
-          timestamp: Date.now(),
-          nvcScore: {
-            observation: analysis.observation,
-            feeling: analysis.feeling,
-            need: analysis.need,
-            request: analysis.request,
-            total: analysis.total,
-          },
-          feedback: analysis.feedback,
-          whatWentWell: analysis.whatWentWell,
-        }
-        setMessages((prev) => [...prev, userMsg])
+        // Update user message with score and feedback
+        setMessages((prev) => {
+          const updated = [...prev]
+          const lastIndex = updated.length - 1
+          if (updated[lastIndex]?.role === 'user') {
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              nvcScore: {
+                observation: analysis.observation,
+                feeling: analysis.feeling,
+                need: analysis.need,
+                request: analysis.request,
+                total: analysis.total,
+              },
+              feedback: analysis.feedback,
+              whatWentWell: analysis.whatWentWell,
+            }
+          }
+          return updated
+        })
 
         // Display feedback
         setFeedback({
@@ -159,9 +172,23 @@ function RoleplayComponent() {
         })
 
         // Step 3: Generate character response
+        // Use the current messages state which now includes the user message with scores
         const characterResponse = await generateCharacterResponse({
           userMessage,
-          conversationHistory: [...messages, userMsg],
+          conversationHistory: messages.concat([
+            {
+              role: 'user',
+              content: userMessage,
+              timestamp: Date.now(),
+              nvcScore: {
+                observation: analysis.observation,
+                feeling: analysis.feeling,
+                need: analysis.need,
+                request: analysis.request,
+                total: analysis.total,
+              },
+            },
+          ]),
           scenario: {
             title: scenario.title,
             characterName: scenario.characterName,
@@ -305,7 +332,7 @@ function RoleplayComponent() {
             onClick={() => navigate({ to: '/practice' })}
             className="text-giraffe-100 hover:text-white transition-colors"
           >
-            ✕
+            Close
           </button>
         </div>
       </div>
@@ -316,14 +343,14 @@ function RoleplayComponent() {
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6">
               <h2 className="text-lg font-bold text-brown-800 mb-3">
-                📋 Situation
+                Situation
               </h2>
               <p className="text-brown-700 leading-relaxed mb-4">
                 {scenario.situation}
               </p>
 
               <h3 className="text-sm font-bold text-giraffe-700 mt-4 mb-2">
-                🎯 What You'll Practice:
+                What You'll Practice:
               </h3>
               <ul className="space-y-1 mb-6">
                 {scenario.learningGoals.map((goal, idx) => (
@@ -338,7 +365,7 @@ function RoleplayComponent() {
               </ul>
 
               <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 text-sm text-blue-800">
-                <strong>💡 Tip:</strong> Remember to express your observations,
+                <strong>Tip:</strong> Remember to express your observations,
                 feelings, needs, and requests clearly.
               </div>
             </div>
@@ -357,30 +384,32 @@ function RoleplayComponent() {
 
       {/* Main Conversation Area */}
       {conversationStarted && (
-        <div className="flex-1 flex overflow-hidden gap-6 max-w-7xl mx-auto w-full p-6">
+        <div className="flex-1 flex overflow-hidden gap-6 max-w-7xl mx-auto w-full">
           {/* Conversation Column */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <ConversationView
-              messages={messages}
-              characterName={scenario.characterName}
-              isLoading={isLoading}
-            />
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* Scrollable Conversation Messages */}
+            <div className="flex-1 overflow-hidden p-6">
+              <ConversationView
+                messages={messages}
+                characterName={scenario.characterName}
+                isLoading={isLoading}
+              />
+            </div>
 
-            {/* End Conversation Button */}
-            {messages.length > 3 && (
-              <div className="mt-4 flex gap-3">
+            {/* Fixed Bottom Area - Always Visible */}
+            <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3">
+              {/* End Conversation Button */}
+              {messages.length > 3 && (
                 <Button
                   onClick={handleCompleteScenario}
                   variant="secondary"
-                  className="flex-1"
+                  className="w-full"
                 >
-                  ✓ End & Get Results
+                  End & Get Results
                 </Button>
-              </div>
-            )}
+              )}
 
-            {/* Message Input */}
-            <div className="mt-4 border-t border-giraffe-200 pt-4">
+              {/* Message Input */}
               <MessageInput
                 onSubmit={handleSendMessage}
                 isLoading={isLoading}
@@ -390,17 +419,92 @@ function RoleplayComponent() {
           </div>
 
           {/* Feedback Panel */}
-          <div className="w-80 hidden lg:flex flex-col min-w-0">
-            <FeedbackPanel feedback={feedback} isLoading={isLoading} />
+          <div className="w-80 hidden lg:flex flex-col min-w-0 p-6 overflow-hidden">
+            <FeedbackPanel
+              feedback={feedback}
+              isLoading={isLoading}
+              messageCount={messages.filter((m) => m.role === 'user').length}
+            />
           </div>
         </div>
       )}
 
-      {/* Mobile Feedback */}
-      {conversationStarted && feedback && (
-        <div className="lg:hidden border-t border-giraffe-200 bg-giraffe-50 p-4 max-h-64 overflow-y-auto">
-          <FeedbackPanel feedback={feedback} isLoading={false} />
-        </div>
+      {/* Mobile Feedback - Minimized by default */}
+      {conversationStarted && (
+        <>
+          {/* Minimized Feedback Tab */}
+          {!mobileFeedbackExpanded && (
+            <div className="lg:hidden border-t border-giraffe-200 bg-white px-4 py-3">
+              <button
+                onClick={() => setMobileFeedbackExpanded(true)}
+                className="w-full flex items-center justify-between gap-2 text-giraffe-700 hover:text-giraffe-800 font-semibold text-sm"
+              >
+                <span>View Feedback</span>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Expanded Full-Screen Feedback */}
+          {mobileFeedbackExpanded && (
+            <div className="lg:hidden fixed inset-0 bg-white z-50 flex flex-col">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-4 py-4 flex items-center justify-between">
+                <h2 className="font-bold text-lg">Live Feedback</h2>
+                <button
+                  onClick={() => setMobileFeedbackExpanded(false)}
+                  className="text-white hover:text-giraffe-100 transition-colors"
+                  aria-label="Close feedback panel"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto">
+                <FeedbackPanel
+                  feedback={feedback}
+                  isLoading={isLoading}
+                  messageCount={messages.filter((m) => m.role === 'user').length}
+                />
+              </div>
+
+              {/* Close Button */}
+              <div className="border-t border-giraffe-200 bg-white px-4 py-3">
+                <button
+                  onClick={() => setMobileFeedbackExpanded(false)}
+                  className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white font-semibold py-3 rounded-lg transition-colors"
+                >
+                  Continue Conversation
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
