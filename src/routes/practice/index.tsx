@@ -153,7 +153,6 @@ function PracticeHub() {
                 category={scenario.category}
                 difficulty={scenario.difficulty}
                 characterName={scenario.characterName}
-                estimatedDuration={scenario.estimatedDuration}
                 unlockLevel={scenario.unlockLevel}
                 isLocked={userLevel < scenario.unlockLevel}
                 onStart={handleStartScenario}

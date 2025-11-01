@@ -86,7 +86,6 @@ export default defineSchema({
     // ============ Learning & Progression ============
     learningGoals: v.array(v.string()), // What NVC skills this scenario practices
     unlockLevel: v.number(), // Min user level required (1-10)
-    estimatedDuration: v.number(), // Minutes to complete
     // ============ Metadata ============
     createdAt: v.number(),
   })

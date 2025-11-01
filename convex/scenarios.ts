@@ -47,7 +47,6 @@ You felt embarrassed and hurt that this was said in front of everyone. This is y
       "Make a clear request for future communication",
     ],
     unlockLevel: 1,
-    estimatedDuration: 8,
     createdAt: Date.now(),
   },
   {
@@ -80,7 +79,6 @@ Today, you notice the kitchen is messy again and Alex is relaxing on the couch. 
       "Request specific actions going forward",
     ],
     unlockLevel: 1,
-    estimatedDuration: 8,
     createdAt: Date.now(),
   },
   {
@@ -113,7 +111,6 @@ This is the third time in two months Sam has canceled. You're disappointed and h
       "Stay curious about their perspective",
     ],
     unlockLevel: 1,
-    estimatedDuration: 8,
     createdAt: Date.now(),
   },
 ];
@@ -155,7 +152,6 @@ Last night, you felt lonely despite being in the same room. You realize you have
       "Stay connected during a tense conversation",
     ],
     unlockLevel: 3,
-    estimatedDuration: 12,
     createdAt: Date.now(),
   },
   {
@@ -190,7 +186,6 @@ You decide you need to have this conversation. You want to express your limits c
       "Use observations instead of accusations",
     ],
     unlockLevel: 3,
-    estimatedDuration: 10,
     createdAt: Date.now(),
   },
   {
@@ -225,7 +220,6 @@ You value this friendship and don't think Taylor meant to be cruel, but you need
       "Maintain the friendship while setting expectations",
     ],
     unlockLevel: 3,
-    estimatedDuration: 10,
     createdAt: Date.now(),
   },
   {
@@ -260,7 +254,6 @@ You've heard variations of this criticism for months. You want them to understan
       "Maintain relationship boundaries across generations",
     ],
     unlockLevel: 3,
-    estimatedDuration: 12,
     createdAt: Date.now(),
   },
 ];
@@ -304,7 +297,6 @@ This is the third time this month. You're angry and feeling unseen, but you also
       "Use observations to counter denial tactics",
     ],
     unlockLevel: 5,
-    estimatedDuration: 15,
     createdAt: Date.now(),
   },
   {
@@ -342,7 +334,6 @@ You're tired of feeling like the "lenient" parent while Jordan gets the credit f
       "Work toward solutions that honor both people's needs",
     ],
     unlockLevel: 5,
-    estimatedDuration: 15,
     createdAt: Date.now(),
   },
 ];
@@ -449,7 +440,6 @@ export const create = mutation({
     aiOpeningMessage: v.string(),
     learningGoals: v.array(v.string()),
     unlockLevel: v.number(),
-    estimatedDuration: v.number(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("scenarios", {
