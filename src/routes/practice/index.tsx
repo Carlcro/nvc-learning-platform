@@ -65,22 +65,52 @@ function PracticeHub() {
         <BackButton to="/" label="Back to Home" />
       </section>
 
-      {/* Header */}
-      <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 py-12 px-4 sm:px-6 lg:px-8 border-b border-giraffe-300">
+      {/* Header with Giraffe Speaking */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-3">
-              Practice Scenarios
-            </h1>
-            <p className="text-lg text-giraffe-50 max-w-2xl mx-auto">
-              Practice Non-Violent Communication in realistic scenarios. Learn
-              by doing in a safe, judgment-free environment.
-            </p>
-          </div>
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
+            {/* Left side - Giraffe Mascot */}
+            <div className="flex flex-col items-center">
+              {/* Speech Bubble */}
+              <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
+                <p className="text-lg text-brown-800 text-center font-medium">
+                  Practice Non-Violent Communication in realistic scenarios.
+                  Learn by doing in a safe, judgment-free environment.
+                </p>
+                {/* Speech bubble tail */}
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+              </div>
 
-          {/* User Level Info */}
-          <div className="bg-giraffe-700 rounded-lg px-4 py-3 text-center text-giraffe-50">
-            <span className="font-semibold">Your Level:</span> {userLevel}/10
+              {/* Giraffe Image */}
+              <img
+                src="/giraff.png"
+                alt="Giraffe - Your NVC Guide"
+                className="mx-auto object-contain h-80 w-auto scale-x-[-1]"
+              />
+            </div>
+
+            {/* Right side - Title and Level */}
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
+                Practice <br />
+                <span className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+                  Your Skills
+                </span>
+              </h1>
+
+              <p className="text-lg text-brown-700 mb-8 leading-relaxed">
+                Engage in realistic conversations. Each scenario presents a
+                different communication challenge where you can apply what
+                you've learned.
+              </p>
+
+              <div className="bg-giraffe-100 rounded-lg px-6 py-4 border-2 border-giraffe-300 inline-block">
+                <span className="font-bold text-giraffe-900">Your Level: </span>
+                <span className="text-2xl font-bold text-giraffe-600">
+                  {userLevel}/10
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>

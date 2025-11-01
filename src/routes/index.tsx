@@ -188,7 +188,7 @@ function Home() {
             <StepCard
               step="2"
               title="Practice with Scenarios"
-              description="Engage in realistic conversations with AI characters. Each scenario presents a different communication challenge."
+              description="Engage in realistic conversations. Each scenario presents a different communication challenge."
             />
             <StepCard
               step="3"
