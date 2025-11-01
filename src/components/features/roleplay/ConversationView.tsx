@@ -98,9 +98,9 @@ export function ConversationView({
   }, [messages])
 
   return (
-    <div className="flex flex-col h-full bg-cream">
+    <div className="flex flex-col w-full h-full bg-cream">
       {/* Conversation Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 scrollbar-thin scrollbar-thumb-giraffe-400 scrollbar-track-cream">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-8 space-y-6 scrollbar-thin scrollbar-thumb-giraffe-400 scrollbar-track-cream">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center gap-4">
             <div>

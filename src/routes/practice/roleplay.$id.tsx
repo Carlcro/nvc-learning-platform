@@ -318,9 +318,9 @@ function RoleplayComponent() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="h-screen bg-cream flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 shadow-md">
+      <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 shadow-md flex-shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">{scenario.title}</h1>
@@ -339,7 +339,7 @@ function RoleplayComponent() {
 
       {/* Scenario Brief */}
       {messages.length === 0 && !conversationStarted && (
-        <div className="bg-gradient-to-b from-giraffe-100 to-cream px-6 py-8 border-b border-giraffe-200">
+        <div className="bg-gradient-to-b from-giraffe-100 to-cream px-6 py-8 border-b border-giraffe-200 flex-shrink-0 overflow-y-auto">
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6">
               <h2 className="text-lg font-bold text-brown-800 mb-3">
@@ -388,7 +388,7 @@ function RoleplayComponent() {
           {/* Conversation Column */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Scrollable Conversation Messages */}
-            <div className="flex-1 overflow-hidden p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               <ConversationView
                 messages={messages}
                 characterName={scenario.characterName}
@@ -397,7 +397,7 @@ function RoleplayComponent() {
             </div>
 
             {/* Fixed Bottom Area - Always Visible */}
-            <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3">
+            <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 flex-shrink-0">
               {/* End Conversation Button */}
               {messages.length > 3 && (
                 <Button
