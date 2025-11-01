@@ -58,11 +58,11 @@ export default defineSchema({
   /**
    * Roleplay scenarios for users to practice NVC
    * Each scenario has an AI character and learning goals
-   * See project-spec.md "Scenario Categories" section
+   * See AI_ROLEPLAY_FEATURE_SUMMARY.md "Scenario Structure" section
    */
   scenarios: defineTable({
-    title: v.string(),
-    description: v.string(),
+    title: v.string(), // Short, descriptive name
+    description: v.string(), // Brief description for scenario browser
     category: v.union(
       v.literal("workplace"),
       v.literal("family"),
@@ -74,12 +74,20 @@ export default defineSchema({
       v.literal("intermediate"),
       v.literal("advanced")
     ),
-    characterName: v.string(), // AI character name
-    characterPersonality: v.string(), // Personality & emotional state description
-    situation: v.string(), // Context/backstory for the conversation
-    learningGoals: v.array(v.string()), // What users should practice
+    // ============ Situation Context ============
+    situation: v.string(), // 2-3 sentences setting up the conflict
+    // ============ Character Profile ============
+    characterName: v.string(), // Name of the AI character
+    characterPersonality: v.string(), // Personality traits (e.g., "Stressed, defensive, values competence")
+    characterEmotionalState: v.string(), // Current emotional state (e.g., "Anxious, overwhelmed, guilty")
+    characterBackground: v.string(), // Background and motivation context
+    characterHiddenNeeds: v.array(v.string()), // Character's needs (hidden from user, used by AI)
+    aiOpeningMessage: v.string(), // The AI's opening statement to start conversation
+    // ============ Learning & Progression ============
+    learningGoals: v.array(v.string()), // What NVC skills this scenario practices
     unlockLevel: v.number(), // Min user level required (1-10)
     estimatedDuration: v.number(), // Minutes to complete
+    // ============ Metadata ============
     createdAt: v.number(),
   })
     .index("by_category", ["category"])

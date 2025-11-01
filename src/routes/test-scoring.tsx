@@ -45,6 +45,7 @@ function TestScoringPage() {
     try {
       const analysis = await analyzeNVC({
         userMessage: userInput,
+        conversationHistory: [],
       })
       setResult(analysis as ScoringResult)
     } catch (err) {

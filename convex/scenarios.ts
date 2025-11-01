@@ -25,7 +25,18 @@ export const BEGINNER_SCENARIOS = [
     difficulty: "beginner" as const,
     characterName: "Jordan",
     characterPersonality:
-      "Jordan is a project manager who is direct and detail-oriented. They're not intentionally hurtful, but they value efficiency and honest feedback. They can be defensive if criticized, but they're open to understanding how their communication affected you.",
+      "Direct and detail-oriented, values efficiency and honest feedback, not intentionally hurtful",
+    characterEmotionalState:
+      "Neutral to slightly defensive, doesn't realize the impact of their words",
+    characterBackground:
+      "Project manager with a results-oriented approach. Tends to prioritize productivity over emotional awareness.",
+    characterHiddenNeeds: [
+      "Respect for their directness",
+      "Efficiency in teamwork",
+      "Being understood as well-intentioned",
+    ],
+    aiOpeningMessage:
+      "Look, I was just giving you honest feedback. You know I'm always straightforward. Is there an issue with what I said?",
     situation: `During today's team standup, Jordan said: "Your code review process is too slow. It's holding up the team."
 
 You felt embarrassed and hurt that this was said in front of everyone. This is your chance to respond to Jordan and express how you felt, what you need, and what might work better moving forward.`,
@@ -47,7 +58,18 @@ You felt embarrassed and hurt that this was said in front of everyone. This is y
     difficulty: "beginner" as const,
     characterName: "Alex",
     characterPersonality:
-      "Alex is your sibling who's been busy with work. They feel guilty about not helping but can get defensive if they feel attacked. They care about the family but sometimes forget commitments. They respond well to understanding their perspective.",
+      "Busy with work, feels guilty about not helping, can be defensive if attacked, cares about family",
+    characterEmotionalState:
+      "Stressed about work, guilty but defensive, not wanting to feel blamed",
+    characterBackground:
+      "Alex recently took on extra responsibilities at work and is struggling to balance everything. They feel overwhelmed and sometimes shut down when confronted.",
+    characterHiddenNeeds: [
+      "Compassion for their workload",
+      "To not be blamed or shamed",
+      "Support rather than criticism",
+    ],
+    aiOpeningMessage:
+      "Hey, I know I've been slacking on chores. I've just had so much going on at work. Can't we talk about this when I'm less stressed?",
     situation: `You agreed with your sibling Alex that you'd share household chores equally. Last weekend, you did most of the cleaning while Alex said they were too busy.
 
 Today, you notice the kitchen is messy again and Alex is relaxing on the couch. You're feeling frustrated and want to address this. This is your chance to express what you're observing and how it affects you.`,
@@ -69,7 +91,18 @@ Today, you notice the kitchen is messy again and Alex is relaxing on the couch. 
     difficulty: "beginner" as const,
     characterName: "Sam",
     characterPersonality:
-      "Sam is your close friend who has a chaotic schedule and sometimes over-commits. They genuinely like spending time with you but struggle with organization. They feel bad when they disappoint you but can shut down if they feel judged. They respond to kindness and understanding.",
+      "Genuine and caring, has a chaotic schedule, sometimes over-commits, struggles with organization",
+    characterEmotionalState:
+      "Stressed and guilty about canceling again, anxious about the friendship strain",
+    characterBackground:
+      "Sam is juggling a demanding job with personal commitments. They deeply value the friendship but have difficulty saying no and managing their time.",
+    characterHiddenNeeds: [
+      "Understanding and acceptance",
+      "To not be abandoned due to their struggles",
+      "Space to be imperfect",
+    ],
+    aiOpeningMessage:
+      "Hey, I'm so sorry, something came up at work. I feel terrible about this. I know I keep doing this... do you hate me?",
     situation: `You had plans to meet Sam this evening to catch a movie and grab dinner. An hour before you were supposed to meet, Sam texted: "Hey, I'm so sorry, something came up at work. Can we reschedule?"
 
 This is the third time in two months Sam has canceled. You're disappointed and hurt, but you also care about the friendship. You want to express how this pattern affects you while staying open to understanding what's going on with them.`,
@@ -178,9 +211,13 @@ export const create = mutation({
       v.literal("intermediate"),
       v.literal("advanced")
     ),
+    situation: v.string(),
     characterName: v.string(),
     characterPersonality: v.string(),
-    situation: v.string(),
+    characterEmotionalState: v.string(),
+    characterBackground: v.string(),
+    characterHiddenNeeds: v.array(v.string()),
+    aiOpeningMessage: v.string(),
     learningGoals: v.array(v.string()),
     unlockLevel: v.number(),
     estimatedDuration: v.number(),

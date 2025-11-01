@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestScoringRouteImport } from './routes/test-scoring'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PracticeIndexRouteImport } from './routes/practice/index'
 import { Route as LearnIndexRouteImport } from './routes/learn/index'
 import { Route as LearnRequestRouteImport } from './routes/learn/request'
 import { Route as LearnObservationRouteImport } from './routes/learn/observation'
@@ -19,6 +20,8 @@ import { Route as LearnNeedRouteImport } from './routes/learn/need'
 import { Route as LearnIntroductionRouteImport } from './routes/learn/introduction'
 import { Route as LearnIntegrationRouteImport } from './routes/learn/integration'
 import { Route as LearnFeelingRouteImport } from './routes/learn/feeling'
+import { Route as AdminSeedScenariosRouteImport } from './routes/admin/seed-scenarios'
+import { Route as PracticeRoleplayIdRouteImport } from './routes/practice/roleplay.$id'
 
 const TestScoringRoute = TestScoringRouteImport.update({
   id: '/test-scoring',
@@ -33,6 +36,11 @@ const AnotherPageRoute = AnotherPageRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeIndexRoute = PracticeIndexRouteImport.update({
+  id: '/practice/',
+  path: '/practice/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearnIndexRoute = LearnIndexRouteImport.update({
@@ -70,11 +78,22 @@ const LearnFeelingRoute = LearnFeelingRouteImport.update({
   path: '/learn/feeling',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSeedScenariosRoute = AdminSeedScenariosRouteImport.update({
+  id: '/admin/seed-scenarios',
+  path: '/admin/seed-scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeRoleplayIdRoute = PracticeRoleplayIdRouteImport.update({
+  id: '/practice/roleplay/$id',
+  path: '/practice/roleplay/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-scoring': typeof TestScoringRoute
+  '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/learn/feeling': typeof LearnFeelingRoute
   '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
@@ -82,11 +101,14 @@ export interface FileRoutesByFullPath {
   '/learn/observation': typeof LearnObservationRoute
   '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
+  '/practice': typeof PracticeIndexRoute
+  '/practice/roleplay/$id': typeof PracticeRoleplayIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-scoring': typeof TestScoringRoute
+  '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/learn/feeling': typeof LearnFeelingRoute
   '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
@@ -94,12 +116,15 @@ export interface FileRoutesByTo {
   '/learn/observation': typeof LearnObservationRoute
   '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
+  '/practice': typeof PracticeIndexRoute
+  '/practice/roleplay/$id': typeof PracticeRoleplayIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-scoring': typeof TestScoringRoute
+  '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/learn/feeling': typeof LearnFeelingRoute
   '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
@@ -107,6 +132,8 @@ export interface FileRoutesById {
   '/learn/observation': typeof LearnObservationRoute
   '/learn/request': typeof LearnRequestRoute
   '/learn/': typeof LearnIndexRoute
+  '/practice/': typeof PracticeIndexRoute
+  '/practice/roleplay/$id': typeof PracticeRoleplayIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/anotherPage'
     | '/test-scoring'
+    | '/admin/seed-scenarios'
     | '/learn/feeling'
     | '/learn/integration'
     | '/learn/introduction'
@@ -121,11 +149,14 @@ export interface FileRouteTypes {
     | '/learn/observation'
     | '/learn/request'
     | '/learn'
+    | '/practice'
+    | '/practice/roleplay/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/anotherPage'
     | '/test-scoring'
+    | '/admin/seed-scenarios'
     | '/learn/feeling'
     | '/learn/integration'
     | '/learn/introduction'
@@ -133,11 +164,14 @@ export interface FileRouteTypes {
     | '/learn/observation'
     | '/learn/request'
     | '/learn'
+    | '/practice'
+    | '/practice/roleplay/$id'
   id:
     | '__root__'
     | '/'
     | '/anotherPage'
     | '/test-scoring'
+    | '/admin/seed-scenarios'
     | '/learn/feeling'
     | '/learn/integration'
     | '/learn/introduction'
@@ -145,12 +179,15 @@ export interface FileRouteTypes {
     | '/learn/observation'
     | '/learn/request'
     | '/learn/'
+    | '/practice/'
+    | '/practice/roleplay/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnotherPageRoute: typeof AnotherPageRoute
   TestScoringRoute: typeof TestScoringRoute
+  AdminSeedScenariosRoute: typeof AdminSeedScenariosRoute
   LearnFeelingRoute: typeof LearnFeelingRoute
   LearnIntegrationRoute: typeof LearnIntegrationRoute
   LearnIntroductionRoute: typeof LearnIntroductionRoute
@@ -158,6 +195,8 @@ export interface RootRouteChildren {
   LearnObservationRoute: typeof LearnObservationRoute
   LearnRequestRoute: typeof LearnRequestRoute
   LearnIndexRoute: typeof LearnIndexRoute
+  PracticeIndexRoute: typeof PracticeIndexRoute
+  PracticeRoleplayIdRoute: typeof PracticeRoleplayIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -181,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/': {
+      id: '/practice/'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn/': {
@@ -232,6 +278,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnFeelingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/seed-scenarios': {
+      id: '/admin/seed-scenarios'
+      path: '/admin/seed-scenarios'
+      fullPath: '/admin/seed-scenarios'
+      preLoaderRoute: typeof AdminSeedScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/roleplay/$id': {
+      id: '/practice/roleplay/$id'
+      path: '/practice/roleplay/$id'
+      fullPath: '/practice/roleplay/$id'
+      preLoaderRoute: typeof PracticeRoleplayIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -239,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
   TestScoringRoute: TestScoringRoute,
+  AdminSeedScenariosRoute: AdminSeedScenariosRoute,
   LearnFeelingRoute: LearnFeelingRoute,
   LearnIntegrationRoute: LearnIntegrationRoute,
   LearnIntroductionRoute: LearnIntroductionRoute,
@@ -246,6 +307,8 @@ const rootRouteChildren: RootRouteChildren = {
   LearnObservationRoute: LearnObservationRoute,
   LearnRequestRoute: LearnRequestRoute,
   LearnIndexRoute: LearnIndexRoute,
+  PracticeIndexRoute: PracticeIndexRoute,
+  PracticeRoleplayIdRoute: PracticeRoleplayIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

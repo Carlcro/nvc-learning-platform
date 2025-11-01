@@ -644,7 +644,49 @@ These values should be reflected in:
 - Code comments and documentation
 - The overall user experience
 
+When working on specific features, check the `/docs/features/` folder:
+- **AI Roleplay**: See `docs/features/AI_ROLEPLAY_CLAUDE.md`
+- **Lessons**: See `docs/features/LESSONS_CLAUDE.md` (coming soon)
+- **Daily Challenges**: See `docs/features/CHALLENGES_CLAUDE.md` (coming soon)
+```
+
 ---
+
+## Current Development Focus
+
+### Active Feature: AI Roleplay Scenarios
+
+**What**: Interactive AI conversations where users practice NVC
+**Status**: In Development
+**Full Specs**: `docs/AI_ROLEPLAY_FEATURE_SUMMARY.md`
+
+**Quick Reference for Claude Code:**
+
+When working on AI Roleplay features:
+
+1. **Read the full spec first**: 
+```
+   Please read docs/AI_ROLEPLAY_FEATURE_SUMMARY.md for complete 
+   context on the AI Roleplay feature before starting any work.
+```
+
+2. **Key Implementation Rules**:
+   - All AI calls MUST go through Convex Actions (never frontend)
+   - Scoring algorithm is in the spec - implement exactly as written
+   - Character responses must stay in character (never break roleplay)
+   - NVC scores: 0-25 per component, 0-100 total
+   - Use encouraging, non-judgmental feedback language
+
+3. **Tech Stack for This Feature**:
+   - Convex for: scenarios, conversations, user progress
+   - Convex Actions for: Claude API calls (both character & scoring)
+   - TanStack Router for: `/practice/` routes
+   - React components in: `app/components/features/roleplay/`
+
+4. **Start Here**:
+   - Phase 1: Scenario schema (`convex/schema.ts`)
+   - Phase 2: AI Actions (`convex/ai.ts`)
+   - Phase 3: Conversation UI (`app/routes/practice/roleplay.$id.tsx`)
 
 **Remember**: You're not just building an app - you're creating a tool that helps people communicate more compassionately. The code itself should reflect that compassion through thoughtful design, clear communication, and helpful guidance.
 
