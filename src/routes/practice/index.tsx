@@ -70,24 +70,6 @@ function PracticeHub() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
             {/* Left side - Giraffe Mascot */}
-            <div className="flex flex-col items-center">
-              {/* Speech Bubble */}
-              <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
-                <p className="text-lg text-brown-800 text-center font-medium">
-                  Practice Non-Violent Communication in realistic scenarios.
-                  Learn by doing in a safe, judgment-free environment.
-                </p>
-                {/* Speech bubble tail */}
-                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
-              </div>
-
-              {/* Giraffe Image */}
-              <img
-                src="/giraff.png"
-                alt="Giraffe - Your NVC Guide"
-                className="mx-auto object-contain h-80 w-auto scale-x-[-1]"
-              />
-            </div>
 
             {/* Right side - Title and Level */}
             <div className="text-center md:text-left">
@@ -117,49 +99,69 @@ function PracticeHub() {
 
       {/* Filters */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-4">
-          {/* Category Filter */}
-          <div>
-            <h2 className="text-sm font-semibold text-brown-800 mb-3">
-              By Category
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => setSelectedCategory(cat.value)}
-                  className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
-                    selectedCategory === cat.value
-                      ? 'bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
-                      : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+        <div className="flex relative">
+          <div className="space-y-4">
+            {/* Category Filter */}
+            <div>
+              <h2 className="text-sm font-semibold text-brown-800 mb-3">
+                By Category
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => setSelectedCategory(cat.value)}
+                    className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
+                      selectedCategory === cat.value
+                        ? 'bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
+                        : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Difficulty Filter */}
+            <div>
+              <h2 className="text-sm font-semibold text-brown-800 mb-3">
+                By Difficulty
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {difficulties.map((diff) => (
+                  <button
+                    key={diff.value}
+                    onClick={() => setSelectedDifficulty(diff.value)}
+                    className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
+                      selectedDifficulty === diff.value
+                        ? 'bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
+                        : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
+                    }`}
+                  >
+                    {diff.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-
-          {/* Difficulty Filter */}
-          <div>
-            <h2 className="text-sm font-semibold text-brown-800 mb-3">
-              By Difficulty
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {difficulties.map((diff) => (
-                <button
-                  key={diff.value}
-                  onClick={() => setSelectedDifficulty(diff.value)}
-                  className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
-                    selectedDifficulty === diff.value
-                      ? 'bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
-                      : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
-                  }`}
-                >
-                  {diff.label}
-                </button>
-              ))}
+          <div className="flex flex-col items-center absolute right-0 -top-[300px] hidden md:flex">
+            {/* Speech Bubble */}
+            <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
+              <p className="text-lg text-brown-800 text-center font-medium">
+                Practice Non-Violent Communication in realistic scenarios. Learn
+                by doing in a safe, judgment-free environment.
+              </p>
+              {/* Speech bubble tail */}
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
             </div>
+
+            {/* Giraffe Image */}
+            <img
+              src="/giraff.png"
+              alt="Giraffe - Your NVC Guide"
+              className="mx-auto object-contain h-80 w-auto"
+            />
           </div>
         </div>
       </section>
