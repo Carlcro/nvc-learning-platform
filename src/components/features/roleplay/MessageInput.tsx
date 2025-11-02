@@ -13,6 +13,8 @@ interface MessageInputProps {
   isLoading?: boolean
   disabled?: boolean
   placeholder?: string
+  onStartOver?: () => void
+  onViewContext?: () => void
 }
 
 const MAX_MESSAGE_LENGTH = 1000
@@ -22,6 +24,8 @@ export function MessageInput({
   isLoading = false,
   disabled = false,
   placeholder = 'Type your response here... Express your observations, feelings, needs, and requests.',
+  onStartOver,
+  onViewContext,
 }: MessageInputProps) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -119,22 +123,46 @@ export function MessageInput({
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-3 items-center justify-between">
-        <div className="flex gap-3">
+      <div className="flex gap-3 items-center flex-wrap">
+        <div className="flex gap-3 flex-1">
           <Button
             type="submit"
             variant="primary"
             disabled={disabled || isLoading || isSubmitting || !value.trim()}
             isLoading={isSubmitting}
-            className="flex-1 text-nowrap"
+            className="text-nowrap"
           >
             {'Send Response'}
           </Button>
+
+          {onViewContext && (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={disabled || isLoading || isSubmitting}
+              onClick={onViewContext}
+              className="text-nowrap"
+            >
+              View Scenario
+            </Button>
+          )}
+
+          {onStartOver && (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={disabled || isLoading || isSubmitting}
+              onClick={onStartOver}
+              className="text-nowrap"
+            >
+              Start Over
+            </Button>
+          )}
         </div>
 
         {/* Info Text */}
         {characterCount > 0 && (
-          <div className="text-xs text-brown-600">
+          <div className="text-xs text-brown-600 w-full">
             Remember: Express your observation, feeling, need, and request
           </div>
         )}

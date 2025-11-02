@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 /**
  * NVC Learning App Database Schema
@@ -9,28 +10,25 @@ import { v } from "convex/values";
  */
 
 export default defineSchema({
+  ...authTables,
   // ============================================================================
   // USERS & AUTHENTICATION
   // ============================================================================
 
   /**
-   * Core user profile data
-   * Stores authentication and progress information
+   * Extended user profile data
+   * Links to authTables.users and stores NVC-specific progress information
    */
-  users: defineTable({
-    clerkId: v.string(), // External auth provider ID
-    name: v.string(),
-    email: v.string(),
-    avatarUrl: v.optional(v.string()),
+  userProfiles: defineTable({
+    userId: v.id("users"), // Reference to Convex Auth user
     currentStreak: v.number(), // Current daily challenge streak
     longestStreak: v.number(), // Longest streak achieved
     totalPoints: v.number(), // Total points earned
     level: v.number(), // User skill level (1-10)
-    createdAt: v.number(), // Timestamp when user joined
+    createdAt: v.number(), // Timestamp when profile created
     updatedAt: v.number(), // Last profile update
   })
-    .index("by_clerk_id", ["clerkId"]) // Quick lookup by auth ID
-    .index("by_email", ["email"]),
+    .index("by_user_id", ["userId"]),
 
   // ============================================================================
   // PROGRESS TRACKING
@@ -41,7 +39,7 @@ export default defineSchema({
    * Tracks completion and scores for each lesson
    */
   userProgress: defineTable({
-    userId: v.id("users"),
+    userId: v.id("users"), // Reference to Convex Auth user
     lessonId: v.string(), // Matches lesson definition
     completed: v.boolean(),
     score: v.number(), // 0-100

@@ -4,10 +4,19 @@ import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { BackButton } from '~/components/ui/BackButton'
 import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
+import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/practice/')({
-  component: PracticeHub,
+  component: ProtectedPracticeHub,
 })
+
+function ProtectedPracticeHub() {
+  return (
+    <ProtectedRoute>
+      <PracticeHub />
+    </ProtectedRoute>
+  )
+}
 
 type Category = 'workplace' | 'family' | 'friendship' | 'self_expression'
 type Difficulty = 'beginner' | 'intermediate' | 'advanced'
@@ -24,8 +33,9 @@ function PracticeHub() {
   // Fetch scenarios
   const scenarios = useConvexQuery(api.scenarios.list) || []
 
-  // For now, use a mock user level (in real app, this would come from auth)
-  const userLevel = 5
+  // Fetch user profile for their level
+  const userProfile = useConvexQuery(api.users.getUserProfile)
+  const userLevel = userProfile?.profile?.level || 1
 
   // Filter scenarios
   const filteredScenarios = scenarios.filter((scenario) => {

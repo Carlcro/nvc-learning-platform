@@ -6,10 +6,19 @@ import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { BackButton } from '~/components/ui/BackButton'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
+import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/learn/')({
-  component: LearnHub,
+  component: ProtectedLearnHub,
 })
+
+function ProtectedLearnHub() {
+  return (
+    <ProtectedRoute>
+      <LearnHub />
+    </ProtectedRoute>
+  )
+}
 
 interface Lesson {
   lessonId: string

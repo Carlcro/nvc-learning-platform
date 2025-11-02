@@ -293,7 +293,6 @@ await ctx.db.insert('scenarios', {
   situation: 'Alex publicly criticized your proposal in the meeting...',
   learningGoals: ['Practice empathy under pressure', 'Address conflict directly'],
   unlockLevel: 3,
-  estimatedDuration: 10,
 })
 ```
 

@@ -9,7 +9,6 @@ import { FeedbackPanel } from '~/components/features/roleplay/FeedbackPanel'
 import { MessageInput } from '~/components/features/roleplay/MessageInput'
 import { ScenarioResults } from '~/components/features/roleplay/ScenarioResults'
 import { Button } from '~/components/ui/Button'
-import { useDevUser } from '~/hooks/useDevUser'
 
 export const Route = createFileRoute('/practice/roleplay/$id')({
   component: RoleplayComponent,
@@ -19,8 +18,7 @@ function RoleplayComponent() {
   const { id: scenarioId } = Route.useParams()
   const navigate = Route.useNavigate()
 
-  // Development user - will be replaced with real auth
-  const { userId, isLoading: userLoading } = useDevUser()
+  const currentUser = useQuery(api.users.getCurrentUser)
 
   // Queries and Mutations
   const scenario = useQuery(api.scenarios.getById, {
@@ -31,12 +29,12 @@ function RoleplayComponent() {
   // Use "skip" to skip the query when IDs and user are not ready
   const conversation = useQuery(
     api.conversations.getActive,
-    userId && scenarioId
+    currentUser && scenarioId
       ? {
-          userId: userId as any,
+          userId: currentUser._id,
           scenarioId: scenarioId as any,
         }
-      : 'skip'
+      : 'skip',
   )
 
   // Actions (for AI)
@@ -47,6 +45,7 @@ function RoleplayComponent() {
   const createConversation = useMutation(api.conversations.create)
   const addMessage = useMutation(api.conversations.addMessage)
   const completeConversation = useMutation(api.conversations.complete)
+  const abandonConversation = useMutation(api.conversations.abandon)
 
   // Local state
   const [messages, setMessages] = useState<Array<Message>>([])
@@ -58,40 +57,55 @@ function RoleplayComponent() {
   const [conversationId, setConversationId] = useState<any | null>(null)
   const [conversationStarted, setConversationStarted] = useState(false)
   const [mobileFeedbackExpanded, setMobileFeedbackExpanded] = useState(false)
+  const [showScenarioContext, setShowScenarioContext] = useState(false)
 
-  // Initialize conversation on mount
   useEffect(() => {
-    if (!scenario || !conversationStarted) return
+    if (!scenario || !currentUser) return
 
-    const initConversation = async () => {
-      try {
-        if (!userId) return
-        // Create conversation if it doesn't exist
-        let convId: any = conversation?._id
-        if (!convId) {
-          convId = await createConversation({
-            userId: userId as any,
-            scenarioId: scenarioId as any,
+    // If there's an existing in-progress conversation, load it and auto-start
+    if (conversation && conversation.status === 'in_progress') {
+      setConversationId(conversation._id)
+      setConversationStarted(true) // Auto-start the chat view
+
+      // Load messages if they exist
+      if (conversation.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
+        setMessages(conversation.messages)
+
+        // Restore feedback from the last user message that has feedback
+        const lastUserMessageWithFeedback = [...conversation.messages]
+          .reverse()
+          .find((msg) => msg.role === 'user' && msg.feedback)
+
+        if (lastUserMessageWithFeedback) {
+          setFeedback({
+            score: {
+              observation:
+                lastUserMessageWithFeedback.nvcScore?.observation || 0,
+              feeling: lastUserMessageWithFeedback.nvcScore?.feeling || 0,
+              need: lastUserMessageWithFeedback.nvcScore?.need || 0,
+              request: lastUserMessageWithFeedback.nvcScore?.request || 0,
+              total: lastUserMessageWithFeedback.nvcScore?.total || 0,
+            },
+            feedback: lastUserMessageWithFeedback.feedback || '',
+            whatWentWell: lastUserMessageWithFeedback.whatWentWell || '',
+            giraffeAlternative:
+              lastUserMessageWithFeedback.giraffeAlternative || '',
+            isJackalLanguage:
+              lastUserMessageWithFeedback.isJackalLanguage || false,
           })
         }
-
-        setConversationId(convId)
-
-        // Initialize with AI opening message
-        const initialMessage: Message = {
-          role: 'assistant',
-          content: scenario.aiOpeningMessage,
-          timestamp: Date.now(),
-        }
-
-        setMessages([initialMessage])
-      } catch (error) {
-        console.error('Failed to initialize conversation:', error)
+      } else {
+        // No messages yet - initialize with AI opening message
+        setMessages([
+          {
+            role: 'assistant',
+            content: scenario.aiOpeningMessage,
+            timestamp: Date.now(),
+          },
+        ])
       }
     }
-
-    initConversation()
-  }, [scenario, conversationStarted])
+  }, [scenario, currentUser, conversation])
 
   const handleSendMessage = useCallback(
     async (userMessage: string) => {
@@ -101,7 +115,6 @@ function RoleplayComponent() {
       setFeedback(null)
 
       try {
-        // Step 0: Add user message immediately (optimistic update)
         const userMsg: Message = {
           role: 'user',
           content: userMessage,
@@ -258,14 +271,41 @@ function RoleplayComponent() {
     }
   }
 
+  const handleStartNewConversation = async () => {
+    if (!currentUser || !scenario) return
+
+    try {
+      if (conversationId) {
+        await abandonConversation({ conversationId })
+      }
+
+      // Create a new conversation
+      const newConversationId = await createConversation({
+        userId: currentUser._id,
+        scenarioId: scenarioId as any,
+      })
+
+      setConversationId(newConversationId)
+
+      // Initialize with AI opening message
+      setMessages([
+        {
+          role: 'assistant',
+          content: scenario.aiOpeningMessage,
+          timestamp: Date.now(),
+        },
+      ])
+      setFeedback(null)
+      setIsCompleted(false)
+      setConversationStarted(true)
+    } catch (error) {
+      console.error('Error starting new conversation:', error)
+    }
+  }
+
   const handleRetry = async () => {
-    setMessages([])
-    setFeedback(null)
-    setIsCompleted(false)
-    setConversationStarted(false)
-    setConversationId(null)
-    // Slight delay to ensure state clears
-    setTimeout(() => setConversationStarted(true), 100)
+    // Retry after completing a scenario - same as start new
+    await handleStartNewConversation()
   }
 
   const handleNext = () => {
@@ -277,7 +317,7 @@ function RoleplayComponent() {
     console.log('View transcript')
   }
 
-  if (!scenario || userLoading) {
+  if (!scenario || currentUser === undefined) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="text-center">
@@ -297,7 +337,9 @@ function RoleplayComponent() {
             </svg>
           </div>
           <p className="text-brown-600">
-            {userLoading ? 'Initializing...' : 'Loading scenario...'}
+            {currentUser === undefined
+              ? 'Initializing...'
+              : 'Loading scenario...'}
           </p>
         </div>
       </div>
@@ -337,8 +379,8 @@ function RoleplayComponent() {
         </div>
       </div>
 
-      {/* Scenario Brief */}
-      {messages.length === 0 && !conversationStarted && (
+      {/* Scenario Brief - Show only if conversation hasn't started AND there's no existing conversation (but not while loading) */}
+      {!conversationStarted && conversation === null && (
         <div className="bg-gradient-to-b from-giraffe-100 to-cream px-6 py-8 border-b border-giraffe-200 flex-shrink-0 overflow-y-auto">
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6">
@@ -370,8 +412,9 @@ function RoleplayComponent() {
               </div>
             </div>
 
+            {/* Start button for new conversation */}
             <Button
-              onClick={() => setConversationStarted(true)}
+              onClick={handleStartNewConversation}
               variant="primary"
               size="lg"
               className="w-full"
@@ -397,7 +440,7 @@ function RoleplayComponent() {
             </div>
 
             {/* Fixed Bottom Area - Always Visible */}
-            <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 flex-shrink-0">
+            <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 shrink-0">
               {/* End Conversation Button */}
               {messages.length > 3 && (
                 <Button
@@ -414,6 +457,8 @@ function RoleplayComponent() {
                 onSubmit={handleSendMessage}
                 isLoading={isLoading}
                 disabled={isLoading}
+                onStartOver={handleStartNewConversation}
+                onViewContext={() => setShowScenarioContext(true)}
               />
             </div>
           </div>
@@ -461,7 +506,7 @@ function RoleplayComponent() {
           {mobileFeedbackExpanded && (
             <div className="lg:hidden fixed inset-0 bg-white z-50 flex flex-col">
               {/* Header */}
-              <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-4 py-4 flex items-center justify-between">
+              <div className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white px-4 py-4 flex items-center justify-between">
                 <h2 className="font-bold text-lg">Live Feedback</h2>
                 <button
                   onClick={() => setMobileFeedbackExpanded(false)}
@@ -489,7 +534,9 @@ function RoleplayComponent() {
                 <FeedbackPanel
                   feedback={feedback}
                   isLoading={isLoading}
-                  messageCount={messages.filter((m) => m.role === 'user').length}
+                  messageCount={
+                    messages.filter((m) => m.role === 'user').length
+                  }
                 />
               </div>
 
@@ -505,6 +552,81 @@ function RoleplayComponent() {
             </div>
           )}
         </>
+      )}
+
+      {/* Scenario Context Modal */}
+      {showScenarioContext && conversationStarted && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 sticky top-0 flex items-center justify-between">
+              <h2 className="text-xl font-bold">Scenario Context</h2>
+              <button
+                onClick={() => setShowScenarioContext(false)}
+                className="text-white hover:text-giraffe-100 transition-colors"
+                aria-label="Close scenario context"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-brown-800 mb-3">
+                  Situation
+                </h3>
+                <p className="text-brown-700 leading-relaxed">
+                  {scenario?.situation}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-giraffe-700 mb-3">
+                  What You'll Practice:
+                </h3>
+                <ul className="space-y-2">
+                  {scenario?.learningGoals.map((goal, idx) => (
+                    <li
+                      key={idx}
+                      className="text-sm text-brown-700 flex items-start gap-2"
+                    >
+                      <span className="text-giraffe-500 mt-0.5">•</span>
+                      <span>{goal}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 text-sm text-blue-800">
+                <strong>Tip:</strong> Remember to express your observations,
+                feelings, needs, and requests clearly.
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-giraffe-200 bg-cream px-6 py-4">
+              <button
+                onClick={() => setShowScenarioContext(false)}
+                className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white font-semibold py-3 rounded-lg transition-colors"
+              >
+                Continue Conversation
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

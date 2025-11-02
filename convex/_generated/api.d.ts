@@ -9,10 +9,13 @@
  */
 
 import type * as ai from "../ai.js";
+import type * as auth from "../auth.js";
 import type * as conversations from "../conversations.js";
 import type * as devHelpers from "../devHelpers.js";
+import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
 import type * as scenarios from "../scenarios.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -30,10 +33,13 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
+  auth: typeof auth;
   conversations: typeof conversations;
   devHelpers: typeof devHelpers;
+  http: typeof http;
   lessons: typeof lessons;
   scenarios: typeof scenarios;
+  users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
