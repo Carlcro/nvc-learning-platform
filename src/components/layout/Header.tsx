@@ -1,4 +1,5 @@
-import React, { type HTMLAttributes } from 'react'
+import React from 'react'
+import type { HTMLAttributes } from 'react'
 
 export interface HeaderProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
@@ -28,8 +29,8 @@ export function Header({
   return (
     <header
       className={`
-        w-full bg-brown-700 text-cream border-b border-brown-800 shadow-lg
-        ${sticky ? 'sticky top-0 z-50' : ''}
+        w-full bg-giraffe-50
+        ${sticky ? 'fixed top-0 z-50' : ''}
         ${sticky_class || ''}
         ${className || ''}
       `}
@@ -40,11 +41,7 @@ export function Header({
   )
 }
 
-export function HeaderNav({
-  children,
-  className,
-  ...props
-}: HeaderNavProps) {
+export function HeaderNav({ children, className, ...props }: HeaderNavProps) {
   return (
     <nav
       className={`
@@ -77,11 +74,7 @@ export function HeaderBrand({
   )
 }
 
-export function HeaderMenu({
-  children,
-  className,
-  ...props
-}: HeaderMenuProps) {
+export function HeaderMenu({ children, className, ...props }: HeaderMenuProps) {
   return (
     <div
       className={`

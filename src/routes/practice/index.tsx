@@ -70,11 +70,6 @@ function PracticeHub() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
-      {/* Back Button */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <BackButton to="/" label="Back to Home" />
-      </section>
-
       {/* Header with Giraffe Speaking */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">

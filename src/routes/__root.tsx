@@ -1,15 +1,16 @@
 import {
   HeadContent,
+  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
-  Link,
+  useLocation,
 } from '@tanstack/react-router'
 import * as React from 'react'
-import type { QueryClient } from '@tanstack/react-query'
 import { useConvexAuth } from 'convex/react'
+import type { QueryClient } from '@tanstack/react-query'
 import appCss from '~/styles/app.css?url'
-import { Header, HeaderNav, HeaderBrand, HeaderMenu } from '~/components/layout/Header'
+import { Header, HeaderMenu, HeaderNav } from '~/components/layout/Header'
 import { UserMenu } from '~/components/layout/UserMenu'
 
 export const Route = createRootRouteWithContext<{
@@ -65,6 +66,8 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth()
+  const location = useLocation()
+  const isHome = location.pathname === '/'
 
   if (isLoading) {
     return (
@@ -75,7 +78,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <body>
           <div className="flex items-center justify-center min-h-screen bg-giraffe-50">
             <div className="text-center">
-              <p className="text-lg text-brown-700">Loading your learning journey...</p>
+              <p className="text-lg text-brown-700">
+                Loading your learning journey...
+              </p>
             </div>
           </div>
           <Scripts />
@@ -89,15 +94,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className={isAuthenticated ? 'pt-16' : ''}>
         {isAuthenticated && (
           <Header sticky>
-            <HeaderNav className="py-4 flex items-center justify-between">
-              <Link to="/">
-                <HeaderBrand>
-                  Giraffe Communication
-                </HeaderBrand>
-              </Link>
+            <HeaderNav className="py-3 flex items-center">
+              <div className="flex-1">
+                {!isHome && (
+                  <Link
+                    to="/"
+                    className="text-sm font-medium text-brown-700 hover:text-brown-900 transition-colors"
+                  >
+                    Back to Home
+                  </Link>
+                )}
+              </div>
               <HeaderMenu>
                 <UserMenu />
               </HeaderMenu>
