@@ -89,7 +89,7 @@ function LearnHub() {
     currentLessonIndex >= 0 ? lessons[currentLessonIndex] : lessons[0]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
+    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream pt-20">
       {/* Progress Overview */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-giraffe-50rounded-lg p-6">
@@ -116,7 +116,7 @@ function LearnHub() {
         </div>
       </section>
       {/* Header with Current Lesson */}
-      <section className="bg-gradient-to-b from-giraffe-100 to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8">
+      <section className=" py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {
             <Link to={getLessonRoute(currentLesson.lessonId as ValidLessonId)}>

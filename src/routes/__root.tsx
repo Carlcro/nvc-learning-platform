@@ -1,17 +1,14 @@
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
-  useLocation,
 } from '@tanstack/react-router'
 import * as React from 'react'
 import { useConvexAuth } from 'convex/react'
 import type { QueryClient } from '@tanstack/react-query'
 import appCss from '~/styles/app.css?url'
-import { Header, HeaderMenu, HeaderNav } from '~/components/layout/Header'
-import { UserMenu } from '~/components/layout/UserMenu'
+import { FloatingNav } from '~/components/layout/FloatingNav'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -66,8 +63,6 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth()
-  const location = useLocation()
-  const isHome = location.pathname === '/'
 
   if (isLoading) {
     return (
@@ -94,27 +89,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className={isAuthenticated ? 'pt-16' : ''}>
-        {isAuthenticated && (
-          <Header sticky>
-            <HeaderNav className="py-3 flex items-center">
-              <div className="flex-1">
-                {!isHome && (
-                  <Link
-                    to="/"
-                    className="text-sm font-medium text-brown-700 hover:text-brown-900 transition-colors"
-                  >
-                    Back to Home
-                  </Link>
-                )}
-              </div>
-              <HeaderMenu>
-                <UserMenu />
-              </HeaderMenu>
-            </HeaderNav>
-          </Header>
-        )}
-        {children}
+      <body>
+        {isAuthenticated && <FloatingNav />}
+        <div>{children}</div>
         <Scripts />
       </body>
     </html>
