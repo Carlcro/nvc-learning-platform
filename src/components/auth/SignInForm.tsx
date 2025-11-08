@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { useState } from 'react'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Button } from '../ui/Button'
+import { Card } from '../ui/Card'
 
 interface SignInFormProps {
-  onSignInSuccess?: () => void;
-  redirectTo?: string;
+  onSignInSuccess?: () => void
+  redirectTo?: string
 }
 
 /**
@@ -14,65 +14,66 @@ interface SignInFormProps {
  * Styled with NVC principles - encouraging and welcoming
  */
 export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
-  const { signIn } = useAuthActions();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuthActions()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isSignup, setIsSignup] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Get redirect destination from search params or prop
-  const searchParams = useSearch({ strict: false });
-  const from = redirectTo || (searchParams as Record<string, unknown>)?.from || "/practice";
+  const searchParams = useSearch({ strict: false })
+  const from =
+    redirectTo || (searchParams as Record<string, unknown>)?.from || '/practice'
 
   const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
 
     try {
       if (isSignup) {
-        await signIn("password", { email, password, flow: "signUp" });
+        await signIn('password', { email, password, flow: 'signUp' })
       } else {
-        await signIn("password", { email, password, flow: "signIn" });
+        await signIn('password', { email, password, flow: 'signIn' })
       }
-      onSignInSuccess?.();
+      onSignInSuccess?.()
       // Add small delay to ensure auth state is updated
       setTimeout(() => {
-        navigate({ to: from as string });
-      }, 500);
+        navigate({ to: from as string })
+      }, 500)
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Authentication failed. Please try again."
-      );
+          : 'Authentication failed. Please try again.',
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleGitHub = async () => {
-    setError(null);
-    setIsLoading(true);
+    setError(null)
+    setIsLoading(true)
     try {
-      await signIn("github");
-      onSignInSuccess?.();
+      await signIn('github')
+      onSignInSuccess?.()
       // Add small delay to ensure auth state is updated
       setTimeout(() => {
-        navigate({ to: from as string });
-      }, 500);
+        navigate({ to: from as string })
+      }, 500)
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "GitHub sign-in failed. Please try again."
-      );
+          : 'GitHub sign-in failed. Please try again.',
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   // Uncomment when Google OAuth is configured
   // const handleGoogle = async () => {
@@ -93,139 +94,156 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
   // };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
-            <p className="text-slate-600">
-              {isSignup
-                ? "Join us on a journey toward compassionate communication"
-                : "Continue your practice in Non-Violent Communication"}
-            </p>
-          </div>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 p-4 py-12">
+      <div className="w-full max-w-5xl">
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          {/* Left side - Giraffe & Welcome Message */}
 
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">{error}</p>
+          <div className="flex flex-col items-center md:items-center space-y-10">
+            {/* Welcome Speech Bubble - Larger & More Spacious */}
+            <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-giraffe-200 relative w-full">
+              <p className="text-brown-800 text-center font-medium leading-relaxed text-lg">
+                {isSignup
+                  ? "Welcome! I'm excited to help you develop more compassionate communication skills. Let's get started on this meaningful journey together."
+                  : "Welcome back! I'm glad you're continuing your practice in compassionate communication. You're building something beautiful."}
+              </p>
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
             </div>
-          )}
-
-          {/* OAuth Buttons */}
-          <div className="space-y-3">
-            <Button
-              onClick={handleGitHub}
-              disabled={isLoading}
-              className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-medium transition-colors"
-            >
-              {isLoading ? "Connecting..." : "Continue with GitHub"}
-            </Button>
-
-            {/* Uncomment when Google OAuth is configured
-            <Button
-              onClick={handleGoogle}
-              disabled={isLoading}
-              className="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-2.5 rounded-lg font-medium transition-colors"
-            >
-              {isLoading ? "Connecting..." : "Continue with Google"}
-            </Button>
-            */}
-          </div>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-600">
-                or continue with email
-              </span>
-            </div>
-          </div>
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isLoading}
+            {/* Giraffe Image - Larger */}
+            <div className="w-full">
+              <img
+                src="/giraff.png"
+                alt="Your Compassionate Communication Guide"
+                className="h-80 w-auto object-contain mx-auto md:mx-0 scale-x-[-1]"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={isSignup ? "Create a password" : "Enter your password"}
-                required
-                minLength={isSignup ? 8 : 1}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-              {isSignup && (
-                <p className="text-xs text-slate-500 mt-1">
-                  Minimum 8 characters for security
-                </p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors"
-            >
-              {isLoading
-                ? "Please wait..."
-                : isSignup
-                  ? "Create Account"
-                  : "Sign In"}
-            </Button>
-          </form>
-
-          {/* Toggle Form */}
-          <div className="text-center">
-            <p className="text-slate-600 text-sm">
-              {isSignup ? "Already have an account?" : "New to NVC Learning?"}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignup(!isSignup);
-                  setError(null);
-                  setEmail("");
-                  setPassword("");
-                }}
-                className="ml-2 text-blue-600 hover:text-blue-700 font-medium"
-                disabled={isLoading}
-              >
-                {isSignup ? "Sign in" : "Create account"}
-              </button>
-            </p>
           </div>
 
-          {/* Info Message */}
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-700">
-              By signing in, you agree to practice compassionate communication.
-              This is a safe, judgment-free space to grow.
-            </p>
+          {/* Right side - Form */}
+          <div className="w-full">
+            <Card className="w-full shadow-2xl">
+              <div className="p-10 space-y-1">
+                {/* Header - Better Hierarchy */}
+                <div className="space-y-4 text-center md:text-left">
+                  <h1 className="text-4xl font-bold text-brown-800">
+                    {isSignup ? 'Create Your Account' : 'Sign in'}
+                  </h1>
+                  <p className="text-brown-600 text-lg leading-relaxed">
+                    {isSignup
+                      ? 'Join our community of compassionate communicators'
+                      : 'Continue practicing compassionate communication'}
+                  </p>
+                </div>
+
+                {/* Error Message - Better Visibility */}
+                {error && (
+                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                    <p className="text-red-700 font-medium">{error}</p>
+                  </div>
+                )}
+
+                {/* OAuth Buttons - Larger & More Spacious */}
+                <div className="space-y-4 pt-2">
+                  <Button
+                    onClick={handleGitHub}
+                    disabled={isLoading}
+                    className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white py-3.5 rounded-xl font-medium transition-colors text-base shadow-md"
+                  >
+                    {isLoading ? 'Connecting...' : 'Continue with GitHub'}
+                  </Button>
+                </div>
+
+                {/* Divider - More Spacious */}
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t-2 border-giraffe-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white text-brown-600 font-medium">
+                      or with email
+                    </span>
+                  </div>
+                </div>
+
+                {/* Email/Password Form - Larger Inputs */}
+                <form onSubmit={handleEmailAuth} className="space-y-6">
+                  <div>
+                    <label className="block text-base font-semibold text-brown-800 mb-3">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full px-5 py-3.5 border-2 border-giraffe-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-giraffe-500 focus:border-transparent bg-giraffe-50 text-base transition-all"
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-base font-semibold text-brown-800 mb-3">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={
+                        isSignup ? 'Create a password' : 'Enter your password'
+                      }
+                      required
+                      minLength={isSignup ? 8 : 1}
+                      className="w-full px-5 py-3.5 border-2 border-giraffe-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-giraffe-500 focus:border-transparent bg-giraffe-50 text-base transition-all"
+                      disabled={isLoading}
+                    />
+                    {isSignup && (
+                      <p className="text-sm text-brown-600 mt-3 font-medium">
+                        Minimum 8 characters for security
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white py-3.5 rounded-xl font-semibold transition-colors text-base shadow-md mt-8"
+                  >
+                    {isLoading
+                      ? 'Please wait...'
+                      : isSignup
+                        ? 'Create Account'
+                        : 'Sign In'}
+                  </Button>
+                </form>
+
+                {/* Toggle Form - Better Spacing */}
+                <div className="text-center pt-4">
+                  <p className="text-brown-700">
+                    {isSignup
+                      ? 'Already have an account? '
+                      : 'New to compassionate communication? '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSignup(!isSignup)
+                        setError(null)
+                        setEmail('')
+                        setPassword('')
+                      }}
+                      className="text-giraffe-600 hover:text-giraffe-700 font-bold text-base transition-colors underline-offset-2 hover:underline"
+                      disabled={isLoading}
+                    >
+                      {isSignup ? 'Sign in' : 'Create account'}
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
-  );
+  )
 }

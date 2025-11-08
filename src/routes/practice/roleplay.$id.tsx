@@ -68,7 +68,10 @@ function RoleplayComponent() {
       setConversationStarted(true) // Auto-start the chat view
 
       // Load messages if they exist
-      if (conversation.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
+      if (
+        Array.isArray(conversation.messages) &&
+        conversation.messages.length > 0
+      ) {
         setMessages(conversation.messages)
 
         // Restore feedback from the last user message that has feedback
@@ -360,22 +363,24 @@ function RoleplayComponent() {
   }
 
   return (
-    <div className="h-screen bg-cream flex flex-col">
+    <div className="h-screen bg-cream flex flex-col pt-24">
       {/* Header */}
-      <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 shadow-md flex-shrink-0">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
+      <div className="max-w-7xl mx-auto w-full gap-4 flex">
+        <div>
+          <div className="flex items-end gap-2">
             <h1 className="text-xl font-bold">{scenario.title}</h1>
-            <p className="text-giraffe-100 text-sm">
-              Practicing with <strong>{scenario.characterName}</strong>
-            </p>
+            {conversationStarted && (
+              <button
+                onClick={() => setShowScenarioContext(true)}
+                className="text-nowrap text-xl text-giraffe-600 underline cursor-pointer"
+              >
+                View Scenario
+              </button>
+            )}
           </div>
-          <button
-            onClick={() => navigate({ to: '/practice' })}
-            className="text-giraffe-100 hover:text-white transition-colors"
-          >
-            Close
-          </button>
+          <p className="text-giraffe-700 text-sm">
+            Practicing with <strong>{scenario.characterName}</strong>
+          </p>
         </div>
       </div>
 
@@ -458,7 +463,6 @@ function RoleplayComponent() {
                 isLoading={isLoading}
                 disabled={isLoading}
                 onStartOver={handleStartNewConversation}
-                onViewContext={() => setShowScenarioContext(true)}
               />
             </div>
           </div>
@@ -556,7 +560,7 @@ function RoleplayComponent() {
 
       {/* Scenario Context Modal */}
       {showScenarioContext && conversationStarted && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
             {/* Header */}
             <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 sticky top-0 flex items-center justify-between">
@@ -589,7 +593,7 @@ function RoleplayComponent() {
                   Situation
                 </h3>
                 <p className="text-brown-700 leading-relaxed">
-                  {scenario?.situation}
+                  {scenario.situation}
                 </p>
               </div>
 
@@ -598,7 +602,7 @@ function RoleplayComponent() {
                   What You'll Practice:
                 </h3>
                 <ul className="space-y-2">
-                  {scenario?.learningGoals.map((goal, idx) => (
+                  {scenario.learningGoals.map((goal, idx) => (
                     <li
                       key={idx}
                       className="text-sm text-brown-700 flex items-start gap-2"

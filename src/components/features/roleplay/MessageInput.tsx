@@ -14,7 +14,6 @@ interface MessageInputProps {
   disabled?: boolean
   placeholder?: string
   onStartOver?: () => void
-  onViewContext?: () => void
 }
 
 const MAX_MESSAGE_LENGTH = 1000
@@ -25,7 +24,6 @@ export function MessageInput({
   disabled = false,
   placeholder = 'Type your response here... Express your observations, feelings, needs, and requests.',
   onStartOver,
-  onViewContext,
 }: MessageInputProps) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -134,18 +132,6 @@ export function MessageInput({
           >
             {'Send Response'}
           </Button>
-
-          {onViewContext && (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={disabled || isLoading || isSubmitting}
-              onClick={onViewContext}
-              className="text-nowrap"
-            >
-              View Scenario
-            </Button>
-          )}
 
           {onStartOver && (
             <Button

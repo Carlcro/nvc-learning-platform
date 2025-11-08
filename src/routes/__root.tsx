@@ -71,11 +71,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body>
-          <div className="flex items-center justify-center min-h-screen bg-giraffe-50">
-            <div className="text-center">
-              <p className="text-lg text-brown-700">
-                Loading your learning journey...
-              </p>
+          <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50">
+            <div className="flex flex-col items-center gap-8">
+              {/* Speech Bubble */}
+              <div className="bg-white rounded-3xl p-8 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
+                <p className="text-lg text-brown-800 text-center font-medium">
+                  Getting ready to help you discover your authentic voice...
+                </p>
+                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+              </div>
+
+              {/* Giraffe Image */}
+              <img
+                src="/giraff.png"
+                alt="Your compassionate communication guide"
+                className="h-64 w-auto object-contain"
+              />
             </div>
           </div>
           <Scripts />

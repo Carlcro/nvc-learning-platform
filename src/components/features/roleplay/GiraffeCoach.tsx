@@ -120,7 +120,7 @@ export function GiraffeCoach({ feedback, messageCount }: GiraffeCoachProps) {
       )}
 
       {/* Developing Stage: Show NVC components and what went well */}
-      {stage === 'developing' && (
+      {stage === 'early' && (
         <>
           <div className="space-y-3">
             <h4 className="font-semibold text-brown-800 text-sm">

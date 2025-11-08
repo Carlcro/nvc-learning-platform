@@ -9,6 +9,15 @@ export const Route = createFileRoute('/')({
 function Home() {
   return (
     <main className="w-full">
+      {/* Sign In Button - Top Right */}
+      <div className="fixed top-6 right-6 z-50">
+        <Link to="/auth">
+          <Button size="md" variant="primary">
+            Sign In
+          </Button>
+        </Link>
+      </div>
+
       {/* Hero Section */}
       <section className="min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto py-20">

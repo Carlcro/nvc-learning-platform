@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestScoringRouteImport } from './routes/test-scoring'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice/index'
@@ -26,6 +27,11 @@ import { Route as PracticeRoleplayIdRouteImport } from './routes/practice/rolepl
 const TestScoringRoute = TestScoringRouteImport.update({
   id: '/test-scoring',
   path: '/test-scoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnotherPageRoute = AnotherPageRouteImport.update({
@@ -92,6 +98,7 @@ const PracticeRoleplayIdRoute = PracticeRoleplayIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/learn/feeling': typeof LearnFeelingRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/learn/feeling': typeof LearnFeelingRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/learn/feeling': typeof LearnFeelingRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/anotherPage'
+    | '/auth'
     | '/test-scoring'
     | '/admin/seed-scenarios'
     | '/learn/feeling'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/anotherPage'
+    | '/auth'
     | '/test-scoring'
     | '/admin/seed-scenarios'
     | '/learn/feeling'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/anotherPage'
+    | '/auth'
     | '/test-scoring'
     | '/admin/seed-scenarios'
     | '/learn/feeling'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnotherPageRoute: typeof AnotherPageRoute
+  AuthRoute: typeof AuthRoute
   TestScoringRoute: typeof TestScoringRoute
   AdminSeedScenariosRoute: typeof AdminSeedScenariosRoute
   LearnFeelingRoute: typeof LearnFeelingRoute
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/test-scoring'
       fullPath: '/test-scoring'
       preLoaderRoute: typeof TestScoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/anotherPage': {
@@ -298,6 +318,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
+  AuthRoute: AuthRoute,
   TestScoringRoute: TestScoringRoute,
   AdminSeedScenariosRoute: AdminSeedScenariosRoute,
   LearnFeelingRoute: LearnFeelingRoute,

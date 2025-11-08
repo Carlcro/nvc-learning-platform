@@ -53,11 +53,6 @@ function RequestLesson() {
         </div>
       )}
 
-      {/* Back Button */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <BackButton to="/learn" />
-      </section>
-
       {/* Header */}
       <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex items-center gap-8">

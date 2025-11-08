@@ -18,17 +18,12 @@ const navLinks: Array<NavLink> = [
   { to: '/profile', label: 'Profile', icon: 'U' },
 ]
 
-/**
- * Floating navigation pill component
- * Displays at top center of screen with navigation links
- * Shows user menu on the right for authenticated users
- * Mobile-first responsive design
- */
 export function FloatingNav() {
   const location = useLocation()
   const { signOut } = useAuthActions()
   const userProfile = useQuery(api.users.getUserProfile)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   // Determine if a route is active
   const isActive = (to: string): boolean => {
@@ -47,21 +42,9 @@ export function FloatingNav() {
   const profile = userProfile?.profile
 
   return (
-    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
-      <nav className="bg-white/80 backdrop-blur-md rounded-full border border-giraffe-200 shadow-lg px-2 py-2 flex items-center gap-1">
-        {/* Brand/Logo */}
-        <Link
-          to="/"
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-brown-700 font-bold text-sm hover:bg-giraffe-50 transition-colors whitespace-nowrap flex-shrink-0"
-        >
-          <span className="text-lg">G</span>
-          <span className="hidden sm:inline">NVC Learn</span>
-        </Link>
-
-        {/* Divider */}
-        <div className="h-6 w-px bg-giraffe-200 hidden sm:block" />
-
-        {/* Navigation Links */}
+    <div className="fixed top-6 right-6 z-50 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2">
+      <nav className="bg-white/80 backdrop-blur-md rounded-full border border-giraffe-200 shadow-lg px-2 py-2 flex items-center gap-1 sm:gap-2">
+        {/* Desktop Navigation Links */}
         <div className="flex items-center gap-1 hidden sm:flex">
           {navLinks.map((link) => (
             <Link
@@ -81,24 +64,55 @@ export function FloatingNav() {
           ))}
         </div>
 
-        {/* Mobile Navigation Icons */}
-        <div className="flex items-center gap-1 sm:hidden">
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`
-                w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors
-                ${
-                  isActive(link.to)
-                    ? 'bg-giraffe-400 text-brown-700'
-                    : 'text-slate-600 hover:bg-giraffe-50'
-                }
-              `}
-            >
-              {link.icon}
-            </Link>
-          ))}
+        {/* Mobile Burger Menu */}
+        <div className="flex items-center sm:hidden relative">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="flex flex-col gap-1.5 p-2 hover:bg-giraffe-50 rounded-full transition-colors"
+            aria-label="Toggle menu"
+          >
+            <span
+              className={`block h-0.5 w-5 bg-brown-700 transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}
+            />
+            <span
+              className={`block h-0.5 w-5 bg-brown-700 transition-all ${isMenuOpen ? 'opacity-0' : ''}`}
+            />
+            <span
+              className={`block h-0.5 w-5 bg-brown-700 transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}
+            />
+          </button>
+
+          {/* Mobile Menu Dropdown */}
+          {isMenuOpen && (
+            <>
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-giraffe-200 py-1 z-50">
+                {/* Navigation Links */}
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`
+                      block px-4 py-2 text-sm font-medium transition-colors
+                      ${
+                        isActive(link.to)
+                          ? 'bg-giraffe-400 text-brown-700'
+                          : 'text-slate-600 hover:bg-giraffe-50 hover:text-brown-700'
+                      }
+                    `}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Backdrop to close menu */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsMenuOpen(false)}
+              />
+            </>
+          )}
         </div>
 
         {/* Divider */}
@@ -108,7 +122,7 @@ export function FloatingNav() {
         {user ? (
           <div className="relative ml-2 flex-shrink-0">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-giraffe-50 transition-colors"
             >
               {/* Avatar */}
@@ -128,7 +142,7 @@ export function FloatingNav() {
             </button>
 
             {/* Dropdown Menu */}
-            {isMenuOpen && (
+            {isUserMenuOpen && (
               <>
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-giraffe-200 py-1 z-50">
                   {/* User Info */}
@@ -164,7 +178,7 @@ export function FloatingNav() {
                   {/* Sign Out */}
                   <button
                     onClick={async () => {
-                      setIsMenuOpen(false)
+                      setIsUserMenuOpen(false)
                       await signOut()
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-brown-700 hover:bg-giraffe-50 transition-colors font-medium border-t border-giraffe-100"
@@ -177,7 +191,7 @@ export function FloatingNav() {
                 {/* Backdrop to close menu */}
                 <div
                   className="fixed inset-0 z-40"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => setIsUserMenuOpen(false)}
                 />
               </>
             )}
