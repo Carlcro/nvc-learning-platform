@@ -38,7 +38,7 @@ export default defineSchema({
    * User progress for lessons (Phase 1 content)
    * Tracks completion and scores for each lesson
    */
-  userProgress: defineTable({
+  lessonProgress: defineTable({
     userId: v.id("users"), // Reference to Convex Auth user
     lessonId: v.string(), // Matches lesson definition
     completed: v.boolean(),
@@ -49,6 +49,48 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_lesson", ["userId", "lessonId"]),
 
+  /**
+   * User Overall Progress - Comprehensive tracking across all scenarios
+   * Tracks user level, points, achievements, and aggregate stats
+   */
+  userProgress: defineTable({
+    userId: v.id("users"),
+
+    // Level & Points
+    level: v.number(), // User skill level
+    totalPoints: v.number(), // Total points earned
+    pointsToNextLevel: v.number(), // Points needed to level up
+
+    // Scenarios
+    scenariosCompleted: v.number(), // Total scenarios completed
+    scenariosPassed: v.number(), // Scenarios with 60+ score
+    scenariosMastered: v.number(), // Scenarios with 85+ score
+    totalStars: v.number(), // Sum of all stars earned
+
+    // Streaks
+    currentStreak: v.number(), // Days in a row (practice streak)
+    longestStreak: v.number(), // Longest streak achieved
+    lastPracticeDate: v.string(), // ISO format: "2025-11-08"
+
+    // NVC Component Averages (across all conversations)
+    averageScores: v.object({
+      observation: v.number(), // 0-25
+      feeling: v.number(), // 0-25
+      need: v.number(), // 0-25
+      request: v.number(), // 0-25
+      overall: v.number(), // 0-100
+    }),
+
+    // Achievements
+    achievements: v.array(v.string()), // Achievement IDs
+    badges: v.array(v.string()), // Badge IDs
+
+    // Metadata
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
+
   // ============================================================================
   // SCENARIOS (AI Roleplay)
   // ============================================================================
@@ -56,9 +98,10 @@ export default defineSchema({
   /**
    * Roleplay scenarios for users to practice NVC
    * Each scenario has an AI character and learning goals
-   * See AI_ROLEPLAY_FEATURE_SUMMARY.md "Scenario Structure" section
+   * Users progress through scenarios linearly, unlocking based on performance
    */
   scenarios: defineTable({
+    // ============ Basic Info ============
     title: v.string(), // Short, descriptive name
     description: v.string(), // Brief description for scenario browser
     category: v.union(
@@ -72,24 +115,94 @@ export default defineSchema({
       v.literal("intermediate"),
       v.literal("advanced")
     ),
-    // ============ Situation Context ============
-    situation: v.string(), // 2-3 sentences setting up the conflict
-    // ============ Character Profile ============
+
+    // ============ Character Info ============
     characterName: v.string(), // Name of the AI character
     characterPersonality: v.string(), // Personality traits (e.g., "Stressed, defensive, values competence")
-    characterEmotionalState: v.string(), // Current emotional state (e.g., "Anxious, overwhelmed, guilty")
-    characterBackground: v.string(), // Background and motivation context
+    characterInitialMood: v.number(), // -10 (very closed) to +10 (very open)
+    characterBackground: v.optional(v.string()), // Background and motivation context
     characterHiddenNeeds: v.array(v.string()), // Character's needs (hidden from user, used by AI)
+    situation: v.string(), // 2-3 sentences setting up the conflict
     aiOpeningMessage: v.string(), // The AI's opening statement to start conversation
-    // ============ Learning & Progression ============
-    learningGoals: v.array(v.string()), // What NVC skills this scenario practices
-    unlockLevel: v.number(), // Min user level required (1-10)
+
+    // ============ Learning Goals ============
+    learningObjectives: v.array(v.string()), // Which NVC components ("observation", "feeling", "need", "request")
+    focusArea: v.string(), // e.g., "conflict_resolution", "boundary_setting"
+
+    // ============ Progression & Unlocking ============
+    orderIndex: v.number(), // For linear progression (0, 1, 2, ...)
+    unlockRequirements: v.object({
+      minLevel: v.number(), // Min user level required
+      requiredScenarios: v.array(v.id("scenarios")), // IDs of scenarios that must be completed first
+      minStarsTotal: v.optional(v.number()), // Total stars needed across all scenarios to unlock
+    }),
+
     // ============ Metadata ============
-    createdAt: v.number(),
+    estimatedDuration: v.number(), // Minutes to complete
+    tags: v.array(v.string()), // e.g., ["workplace", "conflict", "deadline"]
+    isActive: v.boolean(), // Whether scenario is available
+    createdAt: v.number(), // When created
+    updatedAt: v.optional(v.number()), // Last updated
   })
     .index("by_category", ["category"])
     .index("by_difficulty", ["difficulty"])
-    .index("by_level", ["unlockLevel"]),
+    .index("by_order", ["orderIndex"]),
+
+  /**
+   * Scenario Progress - Tracks user's completion status for each scenario
+   * Records attempts, scores, unlock status, and learning objectives progress
+   */
+  scenarioProgress: defineTable({
+    userId: v.id("users"),
+    scenarioId: v.id("scenarios"),
+
+    // ============ Status ============
+    status: v.union(
+      v.literal("locked"), // Not yet available
+      v.literal("available"), // Can start
+      v.literal("in_progress"), // Started but not completed
+      v.literal("passed"), // Completed with 60-84 score
+      v.literal("mastered") // Completed with 85+ score
+    ),
+
+    // ============ Performance Tracking ============
+    attempts: v.number(), // Total number of attempts
+    bestScore: v.number(), // Best score achieved (0-100)
+    bestStars: v.number(), // Stars from best score (0-3)
+    lastScore: v.optional(v.number()), // Most recent score
+    averageScore: v.optional(v.number()), // Average across all attempts
+
+    // ============ First Completion ============
+    firstCompletedAt: v.optional(v.number()), // Timestamp of first completion
+    firstCompletionScore: v.optional(v.number()), // Score on first completion
+    firstCompletionStars: v.optional(v.number()), // Stars on first completion
+
+    // ============ Current Activity ============
+    lastAttemptAt: v.number(), // Timestamp of most recent attempt
+    currentConversationId: v.optional(v.id("conversations")), // Active conversation (if in progress)
+
+    // ============ Learning Objectives ============
+    objectivesCompleted: v.array(v.string()), // Which learning objectives user demonstrated
+    objectiveScores: v.optional(
+      v.object({
+        observation: v.number(), // 0-25
+        feeling: v.number(), // 0-25
+        need: v.number(), // 0-25
+        request: v.number(), // 0-25
+      })
+    ),
+
+    // ============ Conversation History ============
+    conversationIds: v.array(v.id("conversations")), // All conversation attempts for this scenario
+
+    // ============ Metadata ============
+    createdAt: v.number(), // When user first started this scenario
+    updatedAt: v.number(), // Last update to progress
+  })
+    .index("by_user", ["userId"])
+    .index("by_scenario", ["scenarioId"])
+    .index("by_user_and_scenario", ["userId", "scenarioId"])
+    .index("by_status", ["userId", "status"]),
 
   // ============================================================================
   // CONVERSATIONS & MESSAGING
@@ -102,19 +215,22 @@ export default defineSchema({
   // Note: NVC scores are stored inline within messages array
 
   /**
-   * Conversations - Main chat history for AI roleplay
-   * Each conversation has multiple messages with NVC analysis
-   * See project-spec.md "NVC Scoring Algorithm" section
+   * Conversations - Main chat history for AI roleplay scenarios
+   * Records all messages, scores, character state, and feedback
+   * Updated in real-time as conversation progresses
    */
   conversations: defineTable({
     userId: v.id("users"),
     scenarioId: v.id("scenarios"),
+
+    // ============ Messages ============
     messages: v.array(
       v.object({
         role: v.union(v.literal("user"), v.literal("assistant")),
         content: v.string(),
         timestamp: v.number(),
-        // NVC scoring data (only for user messages)
+
+        // ============ NVC Analysis (for user messages) ============
         nvcScore: v.optional(
           v.object({
             observation: v.number(), // 0-25
@@ -124,26 +240,73 @@ export default defineSchema({
             total: v.number(), // 0-100
           })
         ),
-        feedback: v.optional(v.string()), // Coaching feedback
-        isJackalLanguage: v.optional(v.boolean()), // Jackal/giraffe classification
-        jackalPhrases: v.optional(v.array(v.string())), // Specific judgment phrases
-        giraffeAlternative: v.optional(v.string()), // Suggested rephrasing
-        whatWentWell: v.optional(v.string()), // Specific praise
+        feedback: v.optional(v.string()), // Real-time coaching feedback
+        isJackalLanguage: v.optional(v.boolean()), // True if mostly judgmental language
+        jackalPhrases: v.optional(v.array(v.string())), // Specific blame/judgment phrases
+        giraffeAlternative: v.optional(v.string()), // Suggested NVC rephrasing
+        whatWorked: v.optional(v.string()), // What was good about this message
+
+        // ============ Character State (for assistant messages) ============
+        characterMood: v.optional(v.number()), // -10 to +10, character's emotional state
       })
     ),
+
+    // ============ Conversation Status ============
     status: v.union(
       v.literal("in_progress"),
       v.literal("completed"),
       v.literal("abandoned")
     ),
-    finalScore: v.optional(v.number()), // Avg of all message scores
-    createdAt: v.number(),
-    completedAt: v.optional(v.number()),
+
+    // ============ Real-Time Tracking ============
+    messageCount: v.number(), // Total messages in conversation
+    averageNVCScore: v.number(), // Average score across all user messages
+    currentCharacterMood: v.number(), // Character's mood (-10 to +10)
+    giraffeStreakCount: v.number(), // Consecutive good NVC messages
+    jackalLanguageCount: v.number(), // Number of messages with jackal language
+
+    // ============ Objectives ============
+    objectivesMetInConversation: v.array(v.string()), // Learning objectives demonstrated
+
+    // ============ Final Results (when completed) ============
+    finalScore: v.optional(v.number()), // Average NVC score (0-100)
+    finalStars: v.optional(v.number()), // Stars earned (0-3)
+    completionStatus: v.optional(
+      v.union(
+        v.literal("excellent"), // 85+
+        v.literal("success"), // 70-84
+        v.literal("pass"), // 60-69
+        v.literal("incomplete") // <60
+      )
+    ),
+
+    // ============ Feedback (generated at completion) ============
+    whatWentWell: v.optional(v.array(v.string())), // 2-4 positive specific points
+    roomToGrow: v.optional(v.array(v.string())), // 1-3 areas for improvement
+    personalizedSuggestions: v.optional(
+      v.array(
+        v.object({
+          component: v.string(), // "observation", "feeling", "need", "request"
+          issue: v.string(), // Description of the issue
+          example: v.object({
+            whatYouSaid: v.string(), // Actual quote from conversation
+            betterApproach: v.string(), // Suggested NVC rephrasing
+            why: v.string(), // Explanation of why this is better
+          }),
+          practiceTip: v.string(), // Actionable tip for next time
+        })
+      )
+    ),
+
+    // ============ Timestamps ============
+    createdAt: v.number(), // When conversation started
+    completedAt: v.optional(v.number()), // When conversation ended
+    lastMessageAt: v.number(), // Timestamp of most recent message
   })
     .index("by_user", ["userId"])
     .index("by_scenario", ["scenarioId"])
     .index("by_user_and_scenario", ["userId", "scenarioId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["userId", "status"]),
 
   // ============================================================================
   // DAILY CHALLENGES & STREAKS
