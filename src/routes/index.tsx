@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { Unauthenticated } from 'convex/react'
 import { Button } from '~/components/ui/Button'
 import { Card, CardBody } from '~/components/ui/Card'
 
@@ -9,14 +10,16 @@ export const Route = createFileRoute('/')({
 function Home() {
   return (
     <main className="w-full">
-      {/* Sign In Button - Top Right */}
-      <div className="fixed top-6 right-6 z-50">
-        <Link to="/auth">
-          <Button size="md" variant="primary">
-            Sign In
-          </Button>
-        </Link>
-      </div>
+      {/* Sign In Button - Top Right (only show when logged out) */}
+      <Unauthenticated>
+        <div className="fixed top-6 right-6 z-50">
+          <Link to="/auth">
+            <Button size="md" variant="primary">
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      </Unauthenticated>
 
       {/* Hero Section */}
       <section className="min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">

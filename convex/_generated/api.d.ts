@@ -14,7 +14,9 @@ import type * as conversations from "../conversations.js";
 import type * as devHelpers from "../devHelpers.js";
 import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
+import type * as scenarioProgress from "../scenarioProgress.js";
 import type * as scenarios from "../scenarios.js";
+import type * as userProgress from "../userProgress.js";
 import type * as users from "../users.js";
 
 import type {
@@ -38,7 +40,9 @@ declare const fullApi: ApiFromModules<{
   devHelpers: typeof devHelpers;
   http: typeof http;
   lessons: typeof lessons;
+  scenarioProgress: typeof scenarioProgress;
   scenarios: typeof scenarios;
+  userProgress: typeof userProgress;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

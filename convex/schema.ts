@@ -245,6 +245,7 @@ export default defineSchema({
         jackalPhrases: v.optional(v.array(v.string())), // Specific blame/judgment phrases
         giraffeAlternative: v.optional(v.string()), // Suggested NVC rephrasing
         whatWorked: v.optional(v.string()), // What was good about this message
+        whatWentWell: v.optional(v.string()), // Feedback on what the user did well
 
         // ============ Character State (for assistant messages) ============
         characterMood: v.optional(v.number()), // -10 to +10, character's emotional state

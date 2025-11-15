@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery as useConvexQuery } from 'convex/react'
 import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
-import { BackButton } from '~/components/ui/BackButton'
 import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
@@ -30,12 +29,64 @@ function PracticeHub() {
     Difficulty | 'all'
   >('all')
 
-  // Fetch scenarios
-  const scenarios = useConvexQuery(api.scenarios.list) || []
+  // Fetch scenarios ordered by index
+  const scenarios = useConvexQuery(api.scenarios.listByOrder) || []
 
   // Fetch user profile for their level
   const userProfile = useConvexQuery(api.users.getUserProfile)
   const userLevel = userProfile?.profile?.level || 1
+
+  // Fetch user's scenario progress
+  const userProgress =
+    useConvexQuery(api.scenarioProgress.getUserProgress) || []
+
+  // Fetch user's overall progress stats
+  const overallProgress = useConvexQuery(api.userProgress.getStats)
+
+  // Helper function to check if scenario is unlocked
+  const isScenarioUnlocked = (scenario: any) => {
+    // Check minLevel requirement
+    if (userLevel < scenario.unlockRequirements.minLevel) {
+      return false
+    }
+
+    // Check required scenarios
+    if (scenario.unlockRequirements.requiredScenarios.length > 0) {
+      for (const requiredScenarioId of scenario.unlockRequirements
+        .requiredScenarios) {
+        const requiredProgress = userProgress.find(
+          (p: any) => p.scenarioId === requiredScenarioId,
+        )
+        if (!requiredProgress || requiredProgress.status === 'locked') {
+          return false
+        }
+      }
+    }
+
+    return true
+  }
+
+  // Helper function to get progress for a scenario
+  const getScenarioProgress = (scenarioId: string | { __id?: string }) => {
+    const id = typeof scenarioId === 'string' ? scenarioId : scenarioId.__id
+    return userProgress.find((p: any) => p.scenarioId === id) || null
+  }
+
+  // Helper function to get required scenario name
+  const getRequiredScenarioName = (scenario: any): string | undefined => {
+    if (scenario.unlockRequirements.requiredScenarios.length > 0) {
+      const requiredId = scenario.unlockRequirements.requiredScenarios[0]
+      const requiredScenario = scenarios.find((s: any) => s._id === requiredId)
+      return requiredScenario?.title
+    }
+    return undefined
+  }
+
+  // Calculate statistics from user progress or use defaults
+  const completedCount = overallProgress?.scenariosCompleted || 0
+  const totalScenarios = scenarios.length
+  const totalPoints = overallProgress?.totalPoints || 0
+  const userLevelForDisplay = overallProgress?.level || userLevel
 
   // Filter scenarios
   const filteredScenarios = scenarios.filter((scenario) => {
@@ -47,7 +98,7 @@ function PracticeHub() {
   })
 
   const handleStartScenario = (scenarioId: string | unknown) => {
-    navigate({ to: `/practice/roleplay/${scenarioId}` })
+    navigate({ to: `/practice/${scenarioId}/brief` })
   }
 
   const categories: Array<{
@@ -70,13 +121,35 @@ function PracticeHub() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream pt-20">
+      {/* Progress Header */}
+      <section className="bg-white border-b border-giraffe-200 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between gap-6 flex-wrap">
+            <div>
+              <h2 className="text-sm text-brown-600 font-semibold mb-1">
+                Your Progress
+              </h2>
+              <div className="flex items-center gap-4">
+                <span className="text-lg font-bold text-giraffe-700">
+                  Level {userLevelForDisplay}
+                </span>
+                <span className="text-brown-700">{totalPoints} points</span>
+                <span className="text-brown-700">
+                  {completedCount}/{totalScenarios} completed
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Header with Giraffe Speaking */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
             {/* Left side - Giraffe Mascot */}
 
-            {/* Right side - Title and Level */}
+            {/* Right side - Title and Description */}
             <div className="text-center md:text-left">
               <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
                 Practice <br />
@@ -90,13 +163,6 @@ function PracticeHub() {
                 different communication challenge where you can apply what
                 you've learned.
               </p>
-
-              <div className="bg-giraffe-100 rounded-lg px-6 py-4 border-2 border-giraffe-300 inline-block">
-                <span className="font-bold text-giraffe-900">Your Level: </span>
-                <span className="text-2xl font-bold text-giraffe-600">
-                  {userLevel}/10
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -181,20 +247,27 @@ function PracticeHub() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredScenarios.map((scenario) => (
-              <ScenarioCard
-                key={scenario._id}
-                id={scenario._id}
-                title={scenario.title}
-                description={scenario.description}
-                category={scenario.category}
-                difficulty={scenario.difficulty}
-                characterName={scenario.characterName}
-                unlockLevel={scenario.unlockLevel}
-                isLocked={userLevel < scenario.unlockLevel}
-                onStart={handleStartScenario}
-              />
-            ))}
+            {filteredScenarios.map((scenario) => {
+              const progress = getScenarioProgress(scenario._id)
+              const isUnlocked = isScenarioUnlocked(scenario)
+              const requiredScenarioName = getRequiredScenarioName(scenario)
+              return (
+                <ScenarioCard
+                  key={scenario._id}
+                  id={scenario._id}
+                  title={scenario.title}
+                  description={scenario.description}
+                  category={scenario.category}
+                  difficulty={scenario.difficulty}
+                  characterName={scenario.characterName}
+                  minLevel={scenario.unlockRequirements.minLevel}
+                  isLocked={!isUnlocked}
+                  progress={progress}
+                  onStart={handleStartScenario}
+                  requiredScenarioName={requiredScenarioName}
+                />
+              )
+            })}
           </div>
         )}
       </section>

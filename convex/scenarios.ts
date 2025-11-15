@@ -26,8 +26,7 @@ export const BEGINNER_SCENARIOS = [
     characterName: "Jordan",
     characterPersonality:
       "Direct and detail-oriented, values efficiency and honest feedback, not intentionally hurtful",
-    characterEmotionalState:
-      "Neutral to slightly defensive, doesn't realize the impact of their words",
+    characterInitialMood: -2,
     characterBackground:
       "Project manager with a results-oriented approach. Tends to prioritize productivity over emotional awareness.",
     characterHiddenNeeds: [
@@ -40,13 +39,21 @@ export const BEGINNER_SCENARIOS = [
     situation: `During today's team standup, Jordan said: "Your code review process is too slow. It's holding up the team."
 
 You felt embarrassed and hurt that this was said in front of everyone. This is your chance to respond to Jordan and express how you felt, what you need, and what might work better moving forward.`,
-    learningGoals: [
-      "Practice separating observation from judgment",
-      "Express feelings without blame",
-      "Identify what's important to you (a universal need)",
-      "Make a clear request for future communication",
+    learningObjectives: [
+      "observation",
+      "feeling",
+      "request",
     ],
-    unlockLevel: 1,
+    focusArea: "feedback_response",
+    orderIndex: 0,
+    unlockRequirements: {
+      minLevel: 1,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 10,
+    tags: ["workplace", "feedback", "emotions"],
+    isActive: true,
     createdAt: Date.now(),
   },
   {
@@ -58,8 +65,7 @@ You felt embarrassed and hurt that this was said in front of everyone. This is y
     characterName: "Alex",
     characterPersonality:
       "Busy with work, feels guilty about not helping, can be defensive if attacked, cares about family",
-    characterEmotionalState:
-      "Stressed about work, guilty but defensive, not wanting to feel blamed",
+    characterInitialMood: -3,
     characterBackground:
       "Alex recently took on extra responsibilities at work and is struggling to balance everything. They feel overwhelmed and sometimes shut down when confronted.",
     characterHiddenNeeds: [
@@ -72,13 +78,22 @@ You felt embarrassed and hurt that this was said in front of everyone. This is y
     situation: `You agreed with your sibling Alex that you'd share household chores equally. Last weekend, you did most of the cleaning while Alex said they were too busy.
 
 Today, you notice the kitchen is messy again and Alex is relaxing on the couch. You're feeling frustrated and want to address this. This is your chance to express what you're observing and how it affects you.`,
-    learningGoals: [
-      "Describe specific behaviors without blame",
-      "Name the feeling underneath your frustration",
-      "Connect to what matters to you (respect, fairness, cooperation)",
-      "Request specific actions going forward",
+    learningObjectives: [
+      "observation",
+      "feeling",
+      "need",
+      "request",
     ],
-    unlockLevel: 1,
+    focusArea: "responsibility_and_fairness",
+    orderIndex: 1,
+    unlockRequirements: {
+      minLevel: 1,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 10,
+    tags: ["family", "fairness", "cooperation"],
+    isActive: true,
     createdAt: Date.now(),
   },
   {
@@ -90,8 +105,7 @@ Today, you notice the kitchen is messy again and Alex is relaxing on the couch. 
     characterName: "Sam",
     characterPersonality:
       "Genuine and caring, has a chaotic schedule, sometimes over-commits, struggles with organization",
-    characterEmotionalState:
-      "Stressed and guilty about canceling again, anxious about the friendship strain",
+    characterInitialMood: -4,
     characterBackground:
       "Sam is juggling a demanding job with personal commitments. They deeply value the friendship but have difficulty saying no and managing their time.",
     characterHiddenNeeds: [
@@ -104,13 +118,21 @@ Today, you notice the kitchen is messy again and Alex is relaxing on the couch. 
     situation: `You had plans to meet Sam this evening to catch a movie and grab dinner. An hour before you were supposed to meet, Sam texted: "Hey, I'm so sorry, something came up at work. Can we reschedule?"
 
 This is the third time in two months Sam has canceled. You're disappointed and hurt, but you also care about the friendship. You want to express how this pattern affects you while staying open to understanding what's going on with them.`,
-    learningGoals: [
-      "Acknowledge your feelings without making Sam the villain",
-      "Express the impact of their actions on you",
-      "Share what you need from the friendship",
-      "Stay curious about their perspective",
+    learningObjectives: [
+      "feeling",
+      "need",
+      "request",
     ],
-    unlockLevel: 1,
+    focusArea: "friendship_and_reliability",
+    orderIndex: 2,
+    unlockRequirements: {
+      minLevel: 1,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 10,
+    tags: ["friendship", "reliability", "empathy"],
+    isActive: true,
     createdAt: Date.now(),
   },
 ];
@@ -129,8 +151,7 @@ export const INTERMEDIATE_SCENARIOS = [
     characterName: "Casey",
     characterPersonality:
       "Loving but avoidant, tends to withdraw when stressed, cares deeply but struggles with emotional expression",
-    characterEmotionalState:
-      "Withdrawn and defensive, carrying their own stress from work, guilt about distance, fear of abandonment",
+    characterInitialMood: -5,
     characterBackground:
       "Recently took on a demanding project at work. Has a history of shutting down when overwhelmed. Worried the relationship is failing but doesn't know how to fix it.",
     characterHiddenNeeds: [
@@ -144,14 +165,21 @@ export const INTERMEDIATE_SCENARIOS = [
     situation: `Over the past three weeks, your partner Casey has been emotionally withdrawn. They spend time on their phone, go to bed earlier than usual, and barely engage in conversations with you. When you try to talk about your day, they give short responses and seem distracted.
 
 Last night, you felt lonely despite being in the same room. You realize you haven't had a real conversation or physical affection in weeks. You want to express how this is affecting you while staying curious about what they're experiencing.`,
-    learningGoals: [
-      "Express vulnerability about the relationship impact",
-      "Balance your needs with curiosity about their experience",
-      "Navigate competing needs with empathy",
-      "Make a request that honors both people's needs",
-      "Stay connected during a tense conversation",
+    learningObjectives: [
+      "feeling",
+      "need",
+      "request",
     ],
-    unlockLevel: 3,
+    focusArea: "emotional_intimacy",
+    orderIndex: 3,
+    unlockRequirements: {
+      minLevel: 2,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 12,
+    tags: ["relationship", "intimacy", "empathy"],
+    isActive: true,
     createdAt: Date.now(),
   },
   {
@@ -163,8 +191,7 @@ Last night, you felt lonely despite being in the same room. You realize you have
     characterName: "Morgan",
     characterPersonality:
       "Ambitious and results-driven, doesn't intentionally disrespect boundaries but has unclear expectations, works constantly",
-    characterEmotionalState:
-      "Stressed about project deadlines, sees work as more important than personal time, surprised by pushback",
+    characterInitialMood: -2,
     characterBackground:
       "Senior manager who rose through the ranks by being always available. Unconsciously expects the same from their team. Good intentions but poor boundaries.",
     characterHiddenNeeds: [
@@ -178,14 +205,22 @@ Last night, you felt lonely despite being in the same room. You realize you have
     situation: `Your manager Morgan has asked you to work on Sunday to finish a presentation. This is the third weekend in a row you're expected to work. You love your job and want to do well, but you also value time for yourself and your family.
 
 You decide you need to have this conversation. You want to express your limits clearly while showing commitment to your work.`,
-    learningGoals: [
-      "Set a boundary without guilt or aggression",
-      "Acknowledge their needs while honoring your own",
-      "Propose creative solutions to the real problem",
-      "Build trust while maintaining limits",
-      "Use observations instead of accusations",
+    learningObjectives: [
+      "observation",
+      "feeling",
+      "need",
+      "request",
     ],
-    unlockLevel: 3,
+    focusArea: "boundary_setting",
+    orderIndex: 4,
+    unlockRequirements: {
+      minLevel: 2,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 12,
+    tags: ["workplace", "boundaries", "work-life"],
+    isActive: true,
     createdAt: Date.now(),
   },
   {
@@ -197,8 +232,7 @@ You decide you need to have this conversation. You want to express your limits c
     characterName: "Taylor",
     characterPersonality:
       "Blunt and authentic, doesn't filter much, cares about you but has poor social awareness, defensive about feedback",
-    characterEmotionalState:
-      "Confused about why this is a problem, defensive about their intent, unaware of the impact",
+    characterInitialMood: -1,
     characterBackground:
       "Has always said whatever comes to mind. Thinks honesty is always best. Doesn't realize how comments about appearance affect people.",
     characterHiddenNeeds: [
@@ -212,14 +246,21 @@ You decide you need to have this conversation. You want to express your limits c
     situation: `Yesterday, Taylor said in front of other friends: "You've put on some weight since I last saw you, huh?" You were hurt and embarrassed. They said it casually, as if making an observation about the weather, but it stuck with you.
 
 You value this friendship and don't think Taylor meant to be cruel, but you need them to understand why that comment affected you. You want to address it without either shutting down or attacking them.`,
-    learningGoals: [
-      "Express the impact of words without assuming bad intent",
-      "Help someone understand how comments land differently than intended",
-      "Balance authenticity with kindness in friendship",
-      "Request the kind of honesty and feedback you actually want",
-      "Maintain the friendship while setting expectations",
+    learningObjectives: [
+      "observation",
+      "feeling",
+      "request",
     ],
-    unlockLevel: 3,
+    focusArea: "feedback_and_sensitivity",
+    orderIndex: 5,
+    unlockRequirements: {
+      minLevel: 2,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 11,
+    tags: ["friendship", "boundaries", "sensitivity"],
+    isActive: true,
     createdAt: Date.now(),
   },
   {
@@ -231,8 +272,7 @@ You value this friendship and don't think Taylor meant to be cruel, but you need
     characterName: "Pat",
     characterPersonality:
       "Well-intentioned but controlling, worries excessively, comes from a place of love but struggles to respect independence",
-    characterEmotionalState:
-      "Anxious about your security, disappointed you didn't follow their advice, fearful you'll regret your choice",
+    characterInitialMood: -2,
     characterBackground:
       "Comes from a generation where career security was paramount. Has sacrificed their own dreams and wants better for you. Struggles to accept your different values.",
     characterHiddenNeeds: [
@@ -246,14 +286,21 @@ You value this friendship and don't think Taylor meant to be cruel, but you need
     situation: `Your parent Pat continues to question your decision to leave your corporate job for something more meaningful but less stable. In a recent conversation, they said: "I don't understand why you'd throw away security for some startup dream. I'm worried about your future."
 
 You've heard variations of this criticism for months. You want them to understand and respect your choice while addressing your own feelings about their lack of support.`,
-    learningGoals: [
-      "Stand firm in your choices while honoring their perspective",
-      "Express feelings without being defensive",
-      "Help a worried parent understand your values",
-      "Request support even if they disagree",
-      "Maintain relationship boundaries across generations",
+    learningObjectives: [
+      "feeling",
+      "need",
+      "request",
     ],
-    unlockLevel: 3,
+    focusArea: "parental_independence",
+    orderIndex: 6,
+    unlockRequirements: {
+      minLevel: 2,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 12,
+    tags: ["family", "autonomy", "values"],
+    isActive: true,
     createdAt: Date.now(),
   },
 ];
@@ -272,8 +319,7 @@ export const ADVANCED_SCENARIOS = [
     characterName: "Riley",
     characterPersonality:
       "Competitive and insecure, brilliant but threatened by smart colleagues, ambitious and willing to bend rules for advancement",
-    characterEmotionalState:
-      "Defensive and justifying their behavior, feels threatened by your competence, guilty but resistant to admitting it",
+    characterInitialMood: -3,
     characterBackground:
       "Came up from a difficult background and is determined to succeed. Uses others' ideas because they feel insecure about their own. Doesn't see it as wrong because they add to the ideas.",
     characterHiddenNeeds: [
@@ -288,15 +334,21 @@ export const ADVANCED_SCENARIOS = [
     situation: `In today's leadership meeting, you proposed an innovative feature for your product. Riley, your peer, presented it in the group chat moments later as if it was their idea, adding minor tweaks and presenting it as their own concept.
 
 This is the third time this month. You're angry and feeling unseen, but you also work together daily. You need to address this directly and clearly while maintaining the ability to work together.`,
-    learningGoals: [
-      "Express anger without aggression or accusation",
-      "Handle a confrontational person who denies the problem",
-      "Maintain professionalism in a tense situation",
-      "Set boundaries that actually stick",
-      "Request behavior change from a defensive peer",
-      "Use observations to counter denial tactics",
+    learningObjectives: [
+      "observation",
+      "feeling",
+      "request",
     ],
-    unlockLevel: 5,
+    focusArea: "workplace_conflict",
+    orderIndex: 7,
+    unlockRequirements: {
+      minLevel: 3,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 15,
+    tags: ["workplace", "conflict", "boundaries", "professionalism"],
+    isActive: true,
     createdAt: Date.now(),
   },
   {
@@ -308,8 +360,7 @@ This is the third time this month. You're angry and feeling unseen, but you also
     characterName: "Jordan",
     characterPersonality:
       "Authoritarian parenting style, believes in consequences and discipline, wants respect and obedience, defensive about parenting choices",
-    characterEmotionalState:
-      "Worried about child growing up too soft, frustrated with perceived leniency, defensive about criticism",
+    characterInitialMood: -4,
     characterBackground:
       "Raised in a strict household, believes it made them strong. Frustrated by their child's behavior and feels unsupported by co-parent. Sees gentleness as weakness.",
     characterHiddenNeeds: [
@@ -324,16 +375,21 @@ This is the third time this month. You're angry and feeling unseen, but you also
     situation: `You've noticed your child is anxious about making mistakes at school. When they mess up, they shut down emotionally. Your co-parent Jordan believes firm discipline is necessary, but you've learned that your child responds better to understanding and problem-solving.
 
 You're tired of feeling like the "lenient" parent while Jordan gets the credit for discipline. You need to have a real conversation about your differing values and find a way forward that works for both of you and your child.`,
-    learningGoals: [
-      "Express deep values without judgment of different approaches",
-      "Find common ground on differing parenting philosophies",
-      "Acknowledge valid points in opposing views",
-      "Present evidence and observations, not criticism",
-      "Request partnership rather than compliance",
-      "Handle high emotion (parenting involves kids) with NVC",
-      "Work toward solutions that honor both people's needs",
+    learningObjectives: [
+      "feeling",
+      "need",
+      "request",
     ],
-    unlockLevel: 5,
+    focusArea: "parenting_partnership",
+    orderIndex: 8,
+    unlockRequirements: {
+      minLevel: 3,
+      requiredScenarios: [],
+      minStarsTotal: undefined,
+    },
+    estimatedDuration: 15,
+    tags: ["family", "parenting", "values", "partnership"],
+    isActive: true,
     createdAt: Date.now(),
   },
 ];
@@ -401,14 +457,15 @@ export const listByDifficulty = query({
 });
 
 /**
- * Get scenarios available to a user based on their level
+ * Get scenarios sorted by orderIndex for a user
+ * Filtering by unlock requirements must be done in the component
  */
-export const listAvailableForUser = query({
-  args: { userLevel: v.number() },
-  handler: async (ctx, args) => {
+export const listByOrder = query({
+  handler: async (ctx) => {
     return await ctx.db
       .query("scenarios")
-      .withIndex("by_level", (q) => q.lte("unlockLevel", args.userLevel))
+      .withIndex("by_order", (q) => q.gt("orderIndex", -1))
+      .order("asc")
       .collect();
   },
 });
@@ -434,17 +491,27 @@ export const create = mutation({
     situation: v.string(),
     characterName: v.string(),
     characterPersonality: v.string(),
-    characterEmotionalState: v.string(),
+    characterInitialMood: v.number(),
     characterBackground: v.string(),
     characterHiddenNeeds: v.array(v.string()),
     aiOpeningMessage: v.string(),
-    learningGoals: v.array(v.string()),
-    unlockLevel: v.number(),
+    learningObjectives: v.array(v.string()),
+    focusArea: v.string(),
+    orderIndex: v.number(),
+    unlockRequirements: v.object({
+      minLevel: v.number(),
+      requiredScenarios: v.array(v.id("scenarios")),
+      minStarsTotal: v.optional(v.number()),
+    }),
+    estimatedDuration: v.number(),
+    tags: v.array(v.string()),
+    isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("scenarios", {
       ...args,
       createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
   },
 });

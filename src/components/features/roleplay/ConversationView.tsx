@@ -21,6 +21,10 @@ export interface Message {
   }
   feedback?: string
   whatWentWell?: string
+  isJackalLanguage?: boolean
+  jackalPhrases?: Array<string>
+  giraffeAlternative?: string
+  characterMood?: number
 }
 
 interface ConversationViewProps {

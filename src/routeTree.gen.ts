@@ -22,7 +22,8 @@ import { Route as LearnIntroductionRouteImport } from './routes/learn/introducti
 import { Route as LearnIntegrationRouteImport } from './routes/learn/integration'
 import { Route as LearnFeelingRouteImport } from './routes/learn/feeling'
 import { Route as AdminSeedScenariosRouteImport } from './routes/admin/seed-scenarios'
-import { Route as PracticeRoleplayIdRouteImport } from './routes/practice/roleplay.$id'
+import { Route as PracticeScenarioIdBriefRouteImport } from './routes/practice/$scenarioId/brief'
+import { Route as PracticeScenarioIdConversationConversationIdRouteImport } from './routes/practice/$scenarioId/conversation/$conversationId'
 
 const TestScoringRoute = TestScoringRouteImport.update({
   id: '/test-scoring',
@@ -89,11 +90,17 @@ const AdminSeedScenariosRoute = AdminSeedScenariosRouteImport.update({
   path: '/admin/seed-scenarios',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PracticeRoleplayIdRoute = PracticeRoleplayIdRouteImport.update({
-  id: '/practice/roleplay/$id',
-  path: '/practice/roleplay/$id',
+const PracticeScenarioIdBriefRoute = PracticeScenarioIdBriefRouteImport.update({
+  id: '/practice/$scenarioId/brief',
+  path: '/practice/$scenarioId/brief',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PracticeScenarioIdConversationConversationIdRoute =
+  PracticeScenarioIdConversationConversationIdRouteImport.update({
+    id: '/practice/$scenarioId/conversation/$conversationId',
+    path: '/practice/$scenarioId/conversation/$conversationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,7 +116,8 @@ export interface FileRoutesByFullPath {
   '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
   '/practice': typeof PracticeIndexRoute
-  '/practice/roleplay/$id': typeof PracticeRoleplayIdRoute
+  '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
+  '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,7 +133,8 @@ export interface FileRoutesByTo {
   '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
   '/practice': typeof PracticeIndexRoute
-  '/practice/roleplay/$id': typeof PracticeRoleplayIdRoute
+  '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
+  '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,7 +151,8 @@ export interface FileRoutesById {
   '/learn/request': typeof LearnRequestRoute
   '/learn/': typeof LearnIndexRoute
   '/practice/': typeof PracticeIndexRoute
-  '/practice/roleplay/$id': typeof PracticeRoleplayIdRoute
+  '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
+  '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,7 +170,8 @@ export interface FileRouteTypes {
     | '/learn/request'
     | '/learn'
     | '/practice'
-    | '/practice/roleplay/$id'
+    | '/practice/$scenarioId/brief'
+    | '/practice/$scenarioId/conversation/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -176,7 +187,8 @@ export interface FileRouteTypes {
     | '/learn/request'
     | '/learn'
     | '/practice'
-    | '/practice/roleplay/$id'
+    | '/practice/$scenarioId/brief'
+    | '/practice/$scenarioId/conversation/$conversationId'
   id:
     | '__root__'
     | '/'
@@ -192,7 +204,8 @@ export interface FileRouteTypes {
     | '/learn/request'
     | '/learn/'
     | '/practice/'
-    | '/practice/roleplay/$id'
+    | '/practice/$scenarioId/brief'
+    | '/practice/$scenarioId/conversation/$conversationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -209,7 +222,8 @@ export interface RootRouteChildren {
   LearnRequestRoute: typeof LearnRequestRoute
   LearnIndexRoute: typeof LearnIndexRoute
   PracticeIndexRoute: typeof PracticeIndexRoute
-  PracticeRoleplayIdRoute: typeof PracticeRoleplayIdRoute
+  PracticeScenarioIdBriefRoute: typeof PracticeScenarioIdBriefRoute
+  PracticeScenarioIdConversationConversationIdRoute: typeof PracticeScenarioIdConversationConversationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,11 +319,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeedScenariosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/practice/roleplay/$id': {
-      id: '/practice/roleplay/$id'
-      path: '/practice/roleplay/$id'
-      fullPath: '/practice/roleplay/$id'
-      preLoaderRoute: typeof PracticeRoleplayIdRouteImport
+    '/practice/$scenarioId/brief': {
+      id: '/practice/$scenarioId/brief'
+      path: '/practice/$scenarioId/brief'
+      fullPath: '/practice/$scenarioId/brief'
+      preLoaderRoute: typeof PracticeScenarioIdBriefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice/$scenarioId/conversation/$conversationId': {
+      id: '/practice/$scenarioId/conversation/$conversationId'
+      path: '/practice/$scenarioId/conversation/$conversationId'
+      fullPath: '/practice/$scenarioId/conversation/$conversationId'
+      preLoaderRoute: typeof PracticeScenarioIdConversationConversationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -329,7 +350,9 @@ const rootRouteChildren: RootRouteChildren = {
   LearnRequestRoute: LearnRequestRoute,
   LearnIndexRoute: LearnIndexRoute,
   PracticeIndexRoute: PracticeIndexRoute,
-  PracticeRoleplayIdRoute: PracticeRoleplayIdRoute,
+  PracticeScenarioIdBriefRoute: PracticeScenarioIdBriefRoute,
+  PracticeScenarioIdConversationConversationIdRoute:
+    PracticeScenarioIdConversationConversationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

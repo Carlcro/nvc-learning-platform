@@ -110,12 +110,25 @@ export const create = mutation({
     scenarioId: v.id("scenarios"),
   },
   handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Get scenario to get initial character mood
+    const scenario = await ctx.db.get(args.scenarioId);
+    const initialCharacterMood = scenario?.characterInitialMood || 0;
+
     return await ctx.db.insert("conversations", {
       userId: args.userId,
       scenarioId: args.scenarioId,
       messages: [],
       status: "in_progress",
-      createdAt: Date.now(),
+      messageCount: 0,
+      averageNVCScore: 0,
+      currentCharacterMood: initialCharacterMood,
+      giraffeStreakCount: 0,
+      jackalLanguageCount: 0,
+      objectivesMetInConversation: [],
+      createdAt: now,
+      lastMessageAt: now,
     });
   },
 });

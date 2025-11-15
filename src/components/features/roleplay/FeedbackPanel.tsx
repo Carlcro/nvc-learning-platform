@@ -1,7 +1,7 @@
 /**
  * FeedbackPanel Component
  *
- * Right-side panel showing NVC analysis, empathy meter, and coaching tips
+ * Right-side panel showing NVC analysis, empathy meter, learning objectives, character mood, and coaching tips
  * Provides real-time feedback during conversation with Giraffe mascot coaching
  */
 
@@ -15,12 +15,92 @@ interface FeedbackPanelProps {
   feedback: FeedbackData | null
   isLoading?: boolean
   messageCount?: number
+  learningObjectives?: Array<string>
+  characterMood?: number
+}
+
+function CharacterMoodIndicator({ mood }: { mood: number }) {
+  const moodScore = Math.max(-10, Math.min(10, mood))
+  const moodPercentage = ((moodScore + 10) / 20) * 100
+
+  let moodLabel = 'Neutral'
+
+  if (moodScore >= 6) {
+    moodLabel = 'Open & Warm'
+  } else if (moodScore >= 3) {
+    moodLabel = 'Warming up'
+  } else if (moodScore >= 0) {
+    moodLabel = 'Neutral'
+  } else if (moodScore >= -6) {
+    moodLabel = 'Guarded'
+  } else {
+    moodLabel = 'Defensive'
+  }
+
+  return (
+    <div className="bg-brown-50 border border-brown-200 rounded-lg p-4 space-y-3">
+      <h3 className="font-semibold text-brown-800 text-sm">Character Mood</h3>
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-brown-800">{moodLabel}</p>
+        <div className="h-2 bg-brown-200 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-300 ${
+              moodScore >= 3
+                ? 'bg-emerald-400'
+                : moodScore >= 0
+                  ? 'bg-giraffe-400'
+                  : 'bg-orange-400'
+            }`}
+            style={{ width: `${moodPercentage}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LearningObjectivesChecklist({
+  objectives,
+}: {
+  objectives: Array<string>
+}) {
+  const objectiveLabels: Record<string, string> = {
+    observation: 'Express Observation',
+    feeling: 'Express Feeling',
+    need: 'Identify Need',
+    request: 'Make Request',
+  }
+
+  return (
+    <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg p-4 space-y-3">
+      <h3 className="font-semibold text-giraffe-900 text-sm">
+        Learning Objectives
+      </h3>
+      <ul className="space-y-2">
+        {objectives.map((obj, idx) => (
+          <li key={idx} className="flex items-start gap-2 text-sm">
+            <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-giraffe-400 flex items-center justify-center mt-0.5 bg-giraffe-100">
+              <span className="text-giraffe-600 text-xs">•</span>
+            </div>
+            <span className="text-giraffe-900">
+              {objectiveLabels[obj] || obj}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-giraffe-700 italic">
+        Practice these in your conversation
+      </p>
+    </div>
+  )
 }
 
 export function FeedbackPanel({
   feedback,
   isLoading = false,
   messageCount = 0,
+  learningObjectives = [],
+  characterMood = 0,
 }: FeedbackPanelProps) {
   return (
     <div className="bg-gradient-to-b from-giraffe-50 to-cream border-l border-giraffe-200 flex flex-col h-full overflow-y-auto">
@@ -54,6 +134,14 @@ export function FeedbackPanel({
           <>
             {/* Empathy Meter */}
             <EmpathyMeter score={feedback.score.total} size="lg" />
+
+            {/* Character Mood */}
+            <CharacterMoodIndicator mood={characterMood} />
+
+            {/* Learning Objectives */}
+            {learningObjectives.length > 0 && (
+              <LearningObjectivesChecklist objectives={learningObjectives} />
+            )}
 
             {/* Giraffe Coach with Progressive Feedback */}
             <GiraffeCoach feedback={feedback} messageCount={messageCount} />

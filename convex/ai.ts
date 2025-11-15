@@ -239,7 +239,7 @@ export const generateCharacterResponse = action({
       title: v.string(),
       characterName: v.string(),
       characterPersonality: v.string(),
-      characterEmotionalState: v.string(),
+      characterInitialMood: v.number(),
       characterBackground: v.string(),
       characterHiddenNeeds: v.array(v.string()),
     }),
@@ -285,7 +285,7 @@ export const generateCharacterResponse = action({
 CHARACTER PROFILE:
 - Name: ${args.scenario.characterName}
 - Personality: ${args.scenario.characterPersonality}
-- Current Emotional State: ${args.scenario.characterEmotionalState}
+- Current Emotional State: ${args.scenario.characterInitialMood > 0 ? "Somewhat open" : args.scenario.characterInitialMood < 0 ? "Defensive" : "Neutral"}
 - Background: ${args.scenario.characterBackground}
 - Your Hidden Needs: ${args.scenario.characterHiddenNeeds.join(", ")}
 
