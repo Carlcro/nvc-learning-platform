@@ -101,6 +101,13 @@ function PracticeHub() {
     navigate({ to: `/practice/${scenarioId}/brief` })
   }
 
+  const handleViewBest = (scenarioId: string | unknown, conversationId: string) => {
+    navigate({
+      to: `/practice/${scenarioId}/conversation/${conversationId}`,
+      search: { view: 'archive' },
+    })
+  }
+
   const categories: Array<{
     value: Category | 'all'
     label: string
@@ -264,6 +271,7 @@ function PracticeHub() {
                   isLocked={!isUnlocked}
                   progress={progress}
                   onStart={handleStartScenario}
+                  onViewBest={handleViewBest}
                   requiredScenarioName={requiredScenarioName}
                 />
               )

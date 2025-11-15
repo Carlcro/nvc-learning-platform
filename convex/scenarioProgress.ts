@@ -99,6 +99,7 @@ export const updateScenarioProgress = mutation({
       v.literal("locked"),
       v.literal("available"),
       v.literal("in_progress"),
+      v.literal("attempted"),
       v.literal("passed"),
       v.literal("mastered")
     ),
@@ -125,6 +126,7 @@ export const updateScenarioProgress = mutation({
     // Update best score and stars
     const newBestScore = Math.max(progress.bestScore, args.score)
     const newBestStars = Math.max(progress.bestStars, args.stars)
+    const isNewBestScore = args.score > progress.bestScore
 
     // Update first completion if needed
     const isFirstCompletion =
@@ -142,6 +144,11 @@ export const updateScenarioProgress = mutation({
       ],
       conversationIds: [...progress.conversationIds, args.conversationId],
       updatedAt: Date.now(),
+    }
+
+    // Update bestConversationId if this is a new best score
+    if (isNewBestScore) {
+      update.bestConversationId = args.conversationId
     }
 
     if (isFirstCompletion) {

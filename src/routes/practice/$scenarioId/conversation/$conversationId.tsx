@@ -21,6 +21,8 @@ export const Route = createFileRoute(
 function ConversationComponent() {
   const { scenarioId, conversationId } = Route.useParams()
   const navigate = Route.useNavigate()
+  const search = Route.useSearch()
+  const isArchiveMode = search?.view === 'archive'
 
   const currentUser = useQuery(api.users.getCurrentUser)
 
@@ -299,18 +301,22 @@ function ConversationComponent() {
             }
           : undefined
 
-      // Determine if this is the first completion
+      // Determine if this is the first completion (with at least 1 star)
       // It's first completion if:
       // 1. No scenarioProgress exists yet, OR
-      // 2. scenarioProgress.status is 'available' or 'in_progress' (not passed/mastered)
+      // 2. scenarioProgress.status is 'available', 'in_progress', or 'attempted'
+      //    (not 'passed' or 'mastered' - which means at least 1 star earned)
       const isFirstCompletion =
         !scenarioProgress ||
         (scenarioProgress.status !== 'passed' &&
           scenarioProgress.status !== 'mastered')
 
       // Determine scenario progress status
-      let scenarioStatus: 'passed' | 'mastered' = 'passed'
+      // Only mark as 'passed' or 'mastered' if score >= 60 (at least 1 star)
+      // Otherwise mark as 'attempted'
+      let scenarioStatus: 'attempted' | 'passed' | 'mastered' = 'attempted'
       if (result.finalScore >= 85) scenarioStatus = 'mastered'
+      else if (result.finalScore >= 60) scenarioStatus = 'passed'
 
       // Update scenario progress (for displaying on practice page)
       await updateScenarioProgress({
@@ -431,6 +437,19 @@ function ConversationComponent() {
 
   return (
     <div className="h-screen bg-cream flex flex-col pt-24">
+      {isArchiveMode && (
+        <div className="bg-blue-50 border-b-2 border-blue-300 px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center gap-3">
+            <div className="text-blue-700 font-semibold">
+              Viewing Completed Conversation
+            </div>
+            <p className="text-blue-600 text-sm">
+              This conversation has been completed. You can review it but cannot
+              make changes.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto w-full gap-4 flex">
         <div>
           <div className="flex items-end gap-2">
@@ -508,7 +527,7 @@ function ConversationComponent() {
             </div>
 
             <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 shrink-0">
-              {messages.length > 3 && (
+              {messages.length > 3 && !isArchiveMode && (
                 <Button
                   onClick={handleCompleteScenario}
                   variant="secondary"
@@ -521,7 +540,7 @@ function ConversationComponent() {
               <MessageInput
                 onSubmit={handleSendMessage}
                 isLoading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || isArchiveMode}
                 onStartOver={handleStartNewConversation}
               />
             </div>

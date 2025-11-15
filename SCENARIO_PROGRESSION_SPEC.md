@@ -134,14 +134,15 @@ export default defineSchema({
   scenarioProgress: defineTable({
     userId: v.id("users"),
     scenarioId: v.id("scenarios"),
-    
+
     // Status
     status: v.union(
       v.literal("locked"),      // Not yet available
       v.literal("available"),   // Can start
       v.literal("in_progress"), // Started but not completed
-      v.literal("passed"),      // Completed with 60-84 score
-      v.literal("mastered")     // Completed with 85+ score
+      v.literal("attempted"),   // Attempted but scored <60 (no stars earned)
+      v.literal("passed"),      // Completed with 60-84 score (1-2 stars)
+      v.literal("mastered")     // Completed with 85+ score (3 stars)
     ),
     
     // Performance
@@ -319,11 +320,13 @@ export default defineSchema({
 
 ### Completion Criteria
 
-A scenario is considered **completed** when all of the following are met:
+A scenario is considered **completed** (with at least 1 star) when all of the following are met:
 
 1. **Minimum Messages**: At least 5 user messages sent
-2. **Minimum Score**: Average NVC score ≥ 60
+2. **Minimum Score**: Average NVC score ≥ 60 (REQUIRED to earn a star)
 3. **Character De-escalation**: Character mood improved by at least +3 from start
+
+**Important**: If a scenario is attempted but scores below 60, the scenario is marked as **"Attempted"** (no stars earned) and the user must try again to unlock progression.
 
 ### Star Rating System
 
@@ -331,10 +334,10 @@ Stars are awarded based on final average NVC score:
 
 | Stars | Score Range | Status | Description |
 |-------|-------------|--------|-------------|
-| ⭐ | 60-69 | Passed | Basic NVC demonstrated |
+| ⭐ | 60-69 | Passed | Basic NVC demonstrated, scenario can progress |
 | ⭐⭐ | 70-84 | Success | Good NVC with minor improvements |
 | ⭐⭐⭐ | 85-100 | Excellent | Mastery of NVC principles |
-| (none) | 0-59 | Incomplete | More practice needed |
+| (none) | 0-59 | Attempted | More practice needed, no progression yet |
 
 ### Points System
 
@@ -375,7 +378,7 @@ function calculateLevel(totalPoints: number): number {
 
 ### Scenario Unlocking (Linear Path - MVP)
 
-**Rule**: Scenarios unlock sequentially by `orderIndex`
+**Rule**: Scenarios unlock sequentially by `orderIndex`. Previous scenario MUST be completed with at least 1 star to unlock the next.
 
 ```typescript
 function isScenarioUnlocked(
@@ -387,30 +390,32 @@ function isScenarioUnlocked(
   if (userLevel < scenario.unlockRequirements.minLevel) {
     return false
   }
-  
-  // Check if previous scenario is completed
+
+  // Check if previous scenario is completed with at least 1 star
   if (scenario.orderIndex > 0) {
     const previousScenario = findScenarioByOrder(scenario.orderIndex - 1)
     const previousProgress = userProgress.find(
       p => p.scenarioId === previousScenario._id
     )
-    
-    // Previous scenario must be at least passed (60+)
-    if (!previousProgress || previousProgress.status === "locked") {
+
+    // Previous scenario must be at least "passed" or "mastered" (not "attempted")
+    // "attempted" means <60 score (no stars) - doesn't count as completion
+    if (!previousProgress || previousProgress.status === "locked" || previousProgress.status === "attempted" || previousProgress.status === "in_progress" || previousProgress.status === "available") {
       return false
     }
   }
-  
+
   // Check required scenarios (if any)
   if (scenario.unlockRequirements.requiredScenarios.length > 0) {
     for (const requiredId of scenario.unlockRequirements.requiredScenarios) {
       const requiredProgress = userProgress.find(p => p.scenarioId === requiredId)
-      if (!requiredProgress || requiredProgress.status === "locked") {
+      // Required scenarios must also be completed (passed or mastered)
+      if (!requiredProgress || (requiredProgress.status !== "passed" && requiredProgress.status !== "mastered")) {
         return false
       }
     }
   }
-  
+
   return true
 }
 ```
@@ -1126,38 +1131,42 @@ Return JSON array of suggestions.`
 
 ### Completion Scenarios
 
-**Scenario A: Success (70+ score)**
+**Scenario A: Mastered (85+ score)**
 ```
 Results Screen:
-- ⭐⭐ Success! message
+- ⭐⭐⭐ Excellent! message
 - Detailed score breakdown
 - What went well (2-3 points)
-- Room to grow (1-2 points)
+- Character mood progression shown
+- Unlock notification: "Next scenario available!"
+- Options: [Next Scenario] [View Transcript]
+```
+
+**Scenario B: Passed (60-84 score)**
+```
+Results Screen:
+- ⭐ or ⭐⭐ message (Passed or Success)
+- Score breakdown
+- Encouraging feedback
+- Specific suggestions for improvement
 - Unlock notification: "Next scenario available!"
 - Options: [Next Scenario] [Try for 3 stars] [View Transcript]
 ```
 
-**Scenario B: Pass (60-69 score)**
-```
-Results Screen:
-- ⭐ Passed! message
-- Score breakdown
-- Encouraging feedback
-- Specific suggestions for improvement
-- Options: [Next Scenario] [Try Again] [Review Lessons]
-```
-
-**Scenario C: Incomplete (< 60 score)**
+**Scenario C: Attempted (< 60 score - NO STARS)**
 ```
 Results Screen:
 - "Keep Practicing!" message
 - Clear explanation of what needs improvement
 - Show specific examples from their conversation
 - Personalized practice tips
+- IMPORTANT NOTE: "You need at least 1 star (60+ score) to move forward."
 - Options: [Try Again] [Review Lessons] [Get Hints]
 
 After 3 attempts:
-- Additional option: [Skip to Next] (with warning)
+- Show progress tracking: "Attempts: 1, 2, 3..."
+- Provide more detailed guidance and examples
+- Encourage: "You're getting closer! Try focusing on [specific component]"
 ```
 
 ---

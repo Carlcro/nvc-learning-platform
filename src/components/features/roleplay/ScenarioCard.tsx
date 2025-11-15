@@ -12,6 +12,7 @@ export interface ScenarioCardProps {
   isLocked: boolean
   progress: any | null
   onStart: (scenarioId: string | unknown) => void
+  onViewBest?: (scenarioId: string | unknown, conversationId: string) => void
   requiredScenarioName?: string
 }
 
@@ -52,6 +53,7 @@ function renderStars(stars: number) {
 function getStatusLabel(
   isLocked: boolean,
   isCompleted: boolean,
+  isAttempted: boolean,
   isInProgress: boolean,
   bestStars: number,
 ): string {
@@ -67,6 +69,9 @@ function getStatusLabel(
     }
     return 'COMPLETED'
   }
+  if (isAttempted) {
+    return 'ATTEMPTED'
+  }
   if (isInProgress) {
     return 'IN PROGRESS'
   }
@@ -76,6 +81,7 @@ function getStatusLabel(
 function getStatusBgColor(
   isLocked: boolean,
   isCompleted: boolean,
+  isAttempted: boolean,
   bestStars: number,
 ): string {
   if (isLocked) {
@@ -85,7 +91,10 @@ function getStatusBgColor(
     if (bestStars === 3) {
       return 'bg-emerald-600'
     }
-    return 'bg-blue-600'
+    return 'bg-emerald-600'
+  }
+  if (isAttempted) {
+    return 'bg-amber-600'
   }
   return 'bg-giraffe-600'
 }
@@ -101,20 +110,29 @@ export function ScenarioCard({
   isLocked,
   progress,
   onStart,
+  onViewBest,
   requiredScenarioName,
 }: ScenarioCardProps) {
   const isCompleted =
     progress && (progress.status === 'passed' || progress.status === 'mastered')
+  const isAttempted = progress && progress.status === 'attempted'
   const isInProgress = progress && progress.status === 'in_progress'
   const bestStars = progress?.bestStars || 0
+
+  const handleViewBest = () => {
+    if (progress?.bestConversationId && onViewBest) {
+      onViewBest(id, progress.bestConversationId)
+    }
+  }
 
   const statusLabel = getStatusLabel(
     isLocked,
     isCompleted,
+    isAttempted,
     isInProgress,
     bestStars,
   )
-  const statusBgColor = getStatusBgColor(isLocked, isCompleted, bestStars)
+  const statusBgColor = getStatusBgColor(isLocked, isCompleted, isAttempted, bestStars)
 
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-all duration-200">
@@ -165,29 +183,6 @@ export function ScenarioCard({
           <div className="font-semibold text-brown-800">{characterName}</div>
         </div>
 
-        {/* Progress info if completed */}
-        {isCompleted && (
-          <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-sm">
-            <div className="text-xs font-semibold text-green-700 mb-1">
-              Best Performance
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between">
-                <span className="text-brown-700">Attempts:</span>
-                <span className="font-semibold text-brown-800">
-                  {progress.attempts}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-brown-700">Best Score:</span>
-                <span className="font-semibold text-brown-800">
-                  {progress.bestScore}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Unlock requirement */}
         {isLocked && (
           <div className="pt-2 border-t border-giraffe-100">
@@ -226,10 +221,22 @@ export function ScenarioCard({
             >
               {bestStars < 3 ? 'Improve' : 'Try Again'}
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button
+              onClick={handleViewBest}
+              variant="outline"
+              className="flex-1"
+            >
               View Best
             </Button>
           </>
+        ) : isAttempted ? (
+          <Button
+            onClick={() => onStart(id)}
+            className="w-full"
+            variant="primary"
+          >
+            Try Again
+          </Button>
         ) : (
           <Button
             onClick={() => onStart(id)}

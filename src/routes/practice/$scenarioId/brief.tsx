@@ -209,7 +209,7 @@ function ScenarioBrief() {
                   {scenario.title}
                 </h1>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-white bg-opacity-20 text-white rounded-full text-sm font-semibold">
+                  <span className="px-3 py-1 bg-emerald-500 bg-opacity-20 text-white rounded-full text-sm font-semibold">
                     {categoryLabels[
                       scenario.category as keyof typeof categoryLabels
                     ] || scenario.category}
@@ -218,9 +218,6 @@ function ScenarioBrief() {
                     className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${colors.badge}`}
                   >
                     {scenario.difficulty}
-                  </span>
-                  <span className="px-3 py-1 bg-white bg-opacity-20 text-white rounded-full text-sm font-semibold">
-                    {scenario.estimatedDuration} min
                   </span>
                 </div>
               </div>
@@ -232,7 +229,6 @@ function ScenarioBrief() {
             {/* Situation Section */}
             <div>
               <h2 className="text-xl font-bold text-brown-800 mb-4 flex items-center gap-2">
-                <span className="text-2xl">📋</span>
                 Situation
               </h2>
               <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
@@ -243,7 +239,6 @@ function ScenarioBrief() {
             {/* Character Info Section */}
             <div>
               <h2 className="text-xl font-bold text-brown-800 mb-4 flex items-center gap-2">
-                <span className="text-2xl">👤</span>
                 About {scenario.characterName}
               </h2>
               <div className="space-y-4">
@@ -296,26 +291,24 @@ function ScenarioBrief() {
             {/* Learning Objectives Section */}
             <div>
               <h2 className="text-xl font-bold text-brown-800 mb-4 flex items-center gap-2">
-                <span className="text-2xl">🎯</span>
                 What You'll Practice
               </h2>
               <ul className="space-y-2">
-                {scenario.learningObjectives &&
-                  scenario.learningObjectives.map(
-                    (objective: string, idx: number) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-3 bg-giraffe-50 rounded-lg p-3 border border-giraffe-100"
-                      >
-                        <span className="text-giraffe-600 font-bold mt-0.5">
-                          {idx + 1}.
-                        </span>
-                        <span className="text-brown-700 capitalize">
-                          {objective}
-                        </span>
-                      </li>
-                    ),
-                  )}
+                {scenario.learningObjectives.map(
+                  (objective: string, idx: number) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-3 bg-giraffe-50 rounded-lg p-3 border border-giraffe-100"
+                    >
+                      <span className="text-giraffe-600 font-bold mt-0.5">
+                        {idx + 1}.
+                      </span>
+                      <span className="text-brown-700 capitalize">
+                        {objective}
+                      </span>
+                    </li>
+                  ),
+                )}
               </ul>
 
               {scenario.focusArea && (

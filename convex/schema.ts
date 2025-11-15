@@ -161,14 +161,16 @@ export default defineSchema({
       v.literal("locked"), // Not yet available
       v.literal("available"), // Can start
       v.literal("in_progress"), // Started but not completed
-      v.literal("passed"), // Completed with 60-84 score
-      v.literal("mastered") // Completed with 85+ score
+      v.literal("attempted"), // Attempted but scored <60 (no stars)
+      v.literal("passed"), // Completed with 60-84 score (1-2 stars)
+      v.literal("mastered") // Completed with 85+ score (3 stars)
     ),
 
     // ============ Performance Tracking ============
     attempts: v.number(), // Total number of attempts
     bestScore: v.number(), // Best score achieved (0-100)
     bestStars: v.number(), // Stars from best score (0-3)
+    bestConversationId: v.optional(v.id("conversations")), // Conversation with best score
     lastScore: v.optional(v.number()), // Most recent score
     averageScore: v.optional(v.number()), // Average across all attempts
 
