@@ -54,7 +54,7 @@ export function ScenarioResults({
   const grade = getGrade(finalScore)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream p-6">
+    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream p-6">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -66,7 +66,7 @@ export function ScenarioResults({
 
         {/* Score Card */}
         <Card className="overflow-hidden">
-          <div className={`bg-gradient-to-r ${grade.color} text-white p-8`}>
+          <div className={`bg-linear-to-r ${grade.color} text-white p-8`}>
             <div className="text-center">
               <p className="text-giraffe-50 text-sm font-semibold mb-2">
                 FINAL SCORE

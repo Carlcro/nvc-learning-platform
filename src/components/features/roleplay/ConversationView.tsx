@@ -48,8 +48,8 @@ function MessageBubble({
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
           isUser
-            ? 'bg-gradient-to-br from-giraffe-400 to-giraffe-500'
-            : 'bg-gradient-to-br from-brown-600 to-brown-700'
+            ? 'bg-linear-to-br from-giraffe-400 to-giraffe-500'
+            : 'bg-linear-to-br from-brown-600 to-brown-700'
         }`}
       >
         {isUser ? 'You' : characterName.charAt(0)}
@@ -68,7 +68,7 @@ function MessageBubble({
         <div
           className={`px-4 py-3 rounded-lg leading-relaxed ${
             isUser
-              ? 'bg-gradient-to-br from-giraffe-300 to-giraffe-400 text-brown-900 rounded-br-none'
+              ? 'bg-linear-to-br from-giraffe-300 to-giraffe-400 text-brown-900 rounded-br-none'
               : 'bg-white border-2 border-giraffe-200 text-brown-800 rounded-bl-none'
           }`}
         >
@@ -131,7 +131,7 @@ export function ConversationView({
             {/* Loading Indicator */}
             {isLoading && (
               <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-brown-600 to-brown-700 flex items-center justify-center text-white font-bold text-sm">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-brown-600 to-brown-700 flex items-center justify-center text-white font-bold text-sm">
                   {characterName.charAt(0)}
                 </div>
                 <div className="flex flex-col gap-2 items-start flex-1">

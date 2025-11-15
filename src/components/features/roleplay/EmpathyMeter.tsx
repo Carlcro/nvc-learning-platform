@@ -33,7 +33,11 @@ function getScoreDescription(score: number): string {
   return 'Mostly jackal language'
 }
 
-export function EmpathyMeter({ score, showLabel = true, size = 'md' }: EmpathyMeterProps) {
+export function EmpathyMeter({
+  score,
+  showLabel = true,
+  size = 'md',
+}: EmpathyMeterProps) {
   const sizeClasses = {
     sm: 'h-2',
     md: 'h-3',
@@ -55,26 +59,40 @@ export function EmpathyMeter({ score, showLabel = true, size = 'md' }: EmpathyMe
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-brown-800">Empathy Meter</h3>
           <div className="text-right">
-            <div className={`font-bold text-brown-900 ${textSizes[size]}`}>{clampedScore}/100</div>
-            <div className={`text-giraffe-700 font-semibold ${textSizes[size]}`}>{getScoreLabel(clampedScore)}</div>
+            <div className={`font-bold text-brown-900 ${textSizes[size]}`}>
+              {clampedScore}/100
+            </div>
+            <div
+              className={`text-giraffe-700 font-semibold ${textSizes[size]}`}
+            >
+              {getScoreLabel(clampedScore)}
+            </div>
           </div>
         </div>
       )}
 
       {/* Meter Bar */}
-      <div className={`w-full bg-brown-200 rounded-full overflow-hidden ${sizeClasses[size]}`}>
+      <div
+        className={`w-full bg-brown-200 rounded-full overflow-hidden ${sizeClasses[size]}`}
+      >
         <div
-          className={`h-full bg-gradient-to-r ${getScoreColor(clampedScore)} transition-all duration-500 flex items-center justify-end pr-1`}
+          className={`h-full bg-linear-to-r ${getScoreColor(clampedScore)} transition-all duration-500 flex items-center justify-end pr-1`}
           style={{ width: `${clampedScore}%` }}
         >
           {clampedScore > 15 && size !== 'sm' && (
-            <div className="text-white font-bold text-xs hidden sm:block">{clampedScore}</div>
+            <div className="text-white font-bold text-xs hidden sm:block">
+              {clampedScore}
+            </div>
           )}
         </div>
       </div>
 
       {/* Description */}
-      {showLabel && <p className="text-xs text-brown-600">{getScoreDescription(clampedScore)}</p>}
+      {showLabel && (
+        <p className="text-xs text-brown-600">
+          {getScoreDescription(clampedScore)}
+        </p>
+      )}
     </div>
   )
 }

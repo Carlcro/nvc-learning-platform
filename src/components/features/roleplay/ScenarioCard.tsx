@@ -132,7 +132,12 @@ export function ScenarioCard({
     isInProgress,
     bestStars,
   )
-  const statusBgColor = getStatusBgColor(isLocked, isCompleted, isAttempted, bestStars)
+  const statusBgColor = getStatusBgColor(
+    isLocked,
+    isCompleted,
+    isAttempted,
+    bestStars,
+  )
 
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-all duration-200">
@@ -147,7 +152,7 @@ export function ScenarioCard({
       </div>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-giraffe-500 to-giraffe-400 px-6 py-4 text-white">
+      <div className="bg-linear-to-r from-giraffe-500 to-giraffe-400 px-6 py-4 text-white">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div>
             <div className="text-sm font-semibold text-giraffe-50 mb-1">

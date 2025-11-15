@@ -94,7 +94,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
   // };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 p-4 py-12">
+    <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50 p-4 py-12">
       <div className="w-full max-w-5xl">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           {/* Left side - Giraffe & Welcome Message */}

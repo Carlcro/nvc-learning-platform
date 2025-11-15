@@ -470,7 +470,7 @@ function ConversationComponent() {
       </div>
 
       {!conversationStarted && conversation === null && (
-        <div className="bg-gradient-to-b from-giraffe-100 to-cream px-6 py-8 border-b border-giraffe-200 flex-shrink-0 overflow-y-auto">
+        <div className="bg-linear-to-b from-giraffe-100 to-cream px-6 py-8 border-b border-giraffe-200 flex-shrink-0 overflow-y-auto">
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6">
               <h2 className="text-lg font-bold text-brown-800 mb-3">
@@ -650,7 +650,7 @@ function ConversationComponent() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 sticky top-0 flex items-center justify-between">
+              <div className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 sticky top-0 flex items-center justify-between">
                 <h2 className="text-xl font-bold">Scenario Context</h2>
                 <Dialog.Close asChild>
                   <button

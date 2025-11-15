@@ -127,7 +127,7 @@ function ScenarioBrief() {
 
   if (isUnlocked === false) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream pt-20 px-4">
+      <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20 px-4">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={handleBack}
@@ -146,7 +146,6 @@ function ScenarioBrief() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Practice
           </button>
 
           <div className="bg-white rounded-lg border-2 border-giraffe-200 p-8 text-center">
@@ -162,9 +161,6 @@ function ScenarioBrief() {
               <p className="font-semibold mb-2">Requirements:</p>
               <p>Required Level: {scenario.unlockRequirements.minLevel}</p>
             </div>
-            <Button onClick={handleBack} variant="primary" className="w-full">
-              Back to Practice
-            </Button>
           </div>
         </div>
       </div>
@@ -172,37 +168,15 @@ function ScenarioBrief() {
   }
 
   const colors =
-    difficultyColors[scenario.difficulty as keyof typeof difficultyColors] ||
-    difficultyColors.beginner
+    difficultyColors[scenario.difficulty as keyof typeof difficultyColors]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream pt-20 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={handleBack}
-          className="mb-8 text-giraffe-600 hover:text-giraffe-700 font-semibold flex items-center gap-2 transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to Practice
-        </button>
-
         {/* Main Content Card */}
         <div className="bg-white rounded-lg border-2 border-giraffe-200 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 px-6 sm:px-8 py-8">
+          <div className="bg-linear-to-r from-giraffe-600 to-giraffe-500 px-6 sm:px-8 py-8">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex-1">
                 <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
@@ -264,27 +238,26 @@ function ScenarioBrief() {
                   </div>
                 )}
 
-                {scenario.characterHiddenNeeds &&
-                  scenario.characterHiddenNeeds.length > 0 && (
-                    <div className="bg-cream rounded-lg p-4 border border-giraffe-100">
-                      <p className="text-sm font-semibold text-giraffe-700 mb-2">
-                        What They Need
-                      </p>
-                      <ul className="space-y-1">
-                        {scenario.characterHiddenNeeds.map(
-                          (need: string, idx: number) => (
-                            <li
-                              key={idx}
-                              className="text-sm text-brown-700 flex items-start gap-2"
-                            >
-                              <span className="text-giraffe-500 mt-1">•</span>
-                              <span>{need}</span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                  )}
+                {scenario.characterHiddenNeeds.length > 0 && (
+                  <div className="bg-cream rounded-lg p-4 border border-giraffe-100">
+                    <p className="text-sm font-semibold text-giraffe-700 mb-2">
+                      What They Need
+                    </p>
+                    <ul className="space-y-1">
+                      {scenario.characterHiddenNeeds.map(
+                        (need: string, idx: number) => (
+                          <li
+                            key={idx}
+                            className="text-sm text-brown-700 flex items-start gap-2"
+                          >
+                            <span className="text-giraffe-500 mt-1">•</span>
+                            <span>{need}</span>
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -324,7 +297,7 @@ function ScenarioBrief() {
             </div>
 
             {/* Tips Section */}
-            <div className="bg-gradient-to-r from-giraffe-50 to-cream rounded-lg p-6 border-2 border-giraffe-200">
+            <div className="bg-linear-to-r from-giraffe-50 to-cream rounded-lg p-6 border-2 border-giraffe-200">
               <h3 className="text-lg font-bold text-giraffe-900 mb-4 flex items-center gap-2">
                 <span className="text-xl">💡</span>
                 Tips for Success

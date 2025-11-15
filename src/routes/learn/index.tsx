@@ -89,7 +89,7 @@ function LearnHub() {
     currentLessonIndex >= 0 ? lessons[currentLessonIndex] : lessons[0]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream pt-20">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
       {/* Progress Overview */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-giraffe-50rounded-lg p-6">
@@ -123,7 +123,7 @@ function LearnHub() {
               <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-giraffe-300">
                 <div className="flex flex-col md:flex-row">
                   {/* Left side - Content */}
-                  <div className="flex-1 bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white p-8">
+                  <div className="flex-1 bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white p-8">
                     <div className="mb-4">
                       <div className="text-sm font-semibold text-giraffe-50 mb-2">
                         NEXT LESSON
@@ -157,7 +157,7 @@ function LearnHub() {
                   </div>
 
                   {/* Right side - Image */}
-                  <div className="flex flex-1 p-8 items-center justify-center bg-gradient-to-b from-white to-giraffe-50">
+                  <div className="flex flex-1 p-8 items-center justify-center bg-linear-to-b from-white to-giraffe-50">
                     <div className="bg-transparent w-full max-w-xs max-h-48 flex items-center justify-center">
                       <img
                         src={getLessonImagePath(currentLesson.order)}
@@ -183,7 +183,7 @@ function LearnHub() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200">
+      <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Practice?
@@ -225,7 +225,7 @@ function LessonCard({ lesson }: LessonCardProps) {
     <Link to={href}>
       <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden flex flex-col">
         {/* Lesson Image Header */}
-        <div className="relative bg-gradient-to-r from-giraffe-600 to-giraffe-500 h-40 overflow-hidden flex items-center justify-center md:flex">
+        <div className="relative bg-linear-to-r from-giraffe-600 to-giraffe-500 h-40 overflow-hidden flex items-center justify-center md:flex">
           <img
             src={imagePath}
             alt={lesson.title}
@@ -274,7 +274,7 @@ function LessonCard({ lesson }: LessonCardProps) {
               <div
                 className={`text-sm font-semibold px-3 py-1.5 rounded-full ${
                   isCompleted
-                    ? 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-300'
+                    ? 'bg-linear-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-300'
                     : 'bg-giraffe-100 text-giraffe-800'
                 }`}
               >

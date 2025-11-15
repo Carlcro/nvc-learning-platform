@@ -103,9 +103,9 @@ export function FeedbackPanel({
   characterMood = 0,
 }: FeedbackPanelProps) {
   return (
-    <div className="bg-gradient-to-b from-giraffe-50 to-cream border-l border-giraffe-200 flex flex-col h-full overflow-y-auto">
+    <div className="bg-linear-to-b from-giraffe-50 to-cream border-l border-giraffe-200 flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-giraffe-200 bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white sticky top-0">
+      <div className="px-6 py-4 border-b border-giraffe-200 bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white sticky top-0">
         <h2 className="font-bold text-lg">Live Feedback</h2>
       </div>
 

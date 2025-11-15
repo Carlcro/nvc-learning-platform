@@ -34,10 +34,10 @@ function FeelingLesson() {
   const currentExample = lesson.examples[selectedExample]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
       {/* Completion Banner */}
       {lessonCompleted && (
-        <div className="bg-gradient-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
           <div className="max-w-4xl mx-auto flex items-center gap-3">
             <div className="flex gap-1 text-giraffe-600">
               <CheckIcon className="w-6 h-6" />
@@ -54,7 +54,7 @@ function FeelingLesson() {
       )}
 
       {/* Header */}
-      <section className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 text-white pt-28 pb-8 px-4 sm:px-6 lg:px-8">
+      <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white pt-28 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex items-center gap-8">
           {/* Left side - content */}
           <div className="flex-1">
@@ -347,7 +347,7 @@ const colorMap = {
 
 function ConceptCard({ title, description, color }: ConceptCardProps) {
   return (
-    <Card className={`bg-gradient-to-br ${colorMap[color]} border-2`}>
+    <Card className={`bg-linear-to-br ${colorMap[color]} border-2`}>
       <CardBody className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-bold text-brown-800">{title}</h3>

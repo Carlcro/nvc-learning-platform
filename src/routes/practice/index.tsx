@@ -41,7 +41,6 @@ function PracticeHub() {
     useConvexQuery(api.scenarioProgress.getUserProgress) || []
 
   // Fetch user's overall progress stats
-  const overallProgress = useConvexQuery(api.userProgress.getStats)
 
   // Helper function to check if scenario is unlocked
   const isScenarioUnlocked = (scenario: any) => {
@@ -82,12 +81,6 @@ function PracticeHub() {
     return undefined
   }
 
-  // Calculate statistics from user progress or use defaults
-  const completedCount = overallProgress?.scenariosCompleted || 0
-  const totalScenarios = scenarios.length
-  const totalPoints = overallProgress?.totalPoints || 0
-  const userLevelForDisplay = overallProgress?.level || userLevel
-
   // Filter scenarios
   const filteredScenarios = scenarios.filter((scenario) => {
     const categoryMatch =
@@ -101,7 +94,10 @@ function PracticeHub() {
     navigate({ to: `/practice/${scenarioId}/brief` })
   }
 
-  const handleViewBest = (scenarioId: string | unknown, conversationId: string) => {
+  const handleViewBest = (
+    scenarioId: string | unknown,
+    conversationId: string,
+  ) => {
     navigate({
       to: `/practice/${scenarioId}/conversation/${conversationId}`,
       search: { view: 'archive' },
@@ -127,29 +123,7 @@ function PracticeHub() {
   ]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream pt-20">
-      {/* Progress Header */}
-      <section className="bg-white border-b border-giraffe-200 px-4 sm:px-6 lg:px-8 py-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between gap-6 flex-wrap">
-            <div>
-              <h2 className="text-sm text-brown-600 font-semibold mb-1">
-                Your Progress
-              </h2>
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-bold text-giraffe-700">
-                  Level {userLevelForDisplay}
-                </span>
-                <span className="text-brown-700">{totalPoints} points</span>
-                <span className="text-brown-700">
-                  {completedCount}/{totalScenarios} completed
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
       {/* Header with Giraffe Speaking */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">
@@ -160,7 +134,7 @@ function PracticeHub() {
             <div className="text-center md:text-left">
               <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
                 Practice <br />
-                <span className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
                   Your Skills
                 </span>
               </h1>
@@ -191,7 +165,7 @@ function PracticeHub() {
                     onClick={() => setSelectedCategory(cat.value)}
                     className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
                       selectedCategory === cat.value
-                        ? 'bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
+                        ? 'bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
                         : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
                     }`}
                   >
@@ -213,7 +187,7 @@ function PracticeHub() {
                     onClick={() => setSelectedDifficulty(diff.value)}
                     className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
                       selectedDifficulty === diff.value
-                        ? 'bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
+                        ? 'bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
                         : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
                     }`}
                   >
@@ -223,7 +197,7 @@ function PracticeHub() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center absolute right-0 -top-[300px] hidden md:flex">
+          <div className="flex-col items-center absolute right-0 -top-[300px] hidden md:flex">
             {/* Speech Bubble */}
             <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
               <p className="text-lg text-brown-800 text-center font-medium">
@@ -281,7 +255,7 @@ function PracticeHub() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-b from-cream to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 mt-12">
+      <section className="bg-linear-to-b from-cream to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 mt-12">
         <div className="max-w-3xl mx-auto text-center space-y-4">
           <h2 className="text-2xl font-bold text-brown-800">
             Tips for Success

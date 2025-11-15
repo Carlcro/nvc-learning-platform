@@ -71,7 +71,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <HeadContent />
         </head>
         <body>
-          <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50">
+          <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50">
             <div className="flex flex-col items-center gap-8">
               {/* Speech Bubble */}
               <div className="bg-white rounded-3xl p-8 shadow-lg border-2 border-giraffe-200 relative max-w-sm">

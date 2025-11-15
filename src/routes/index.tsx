@@ -22,7 +22,7 @@ function Home() {
       </Unauthenticated>
 
       {/* Hero Section */}
-      <section className="min-h-screen bg-gradient-to-b from-giraffe-100 to-giraffe-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <section className="min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto py-20">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Giraffe Mascot */}
@@ -51,7 +51,7 @@ function Home() {
               <h1 className="text-5xl sm:text-6xl font-bold text-brown-800 mb-6">
                 Learn to Communicate
                 <br />
-                <span className="bg-gradient-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
                   with Compassion
                 </span>
               </h1>
@@ -313,7 +313,7 @@ function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-giraffe-600 to-giraffe-500">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-giraffe-600 to-giraffe-500">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Transform Your Communication?
