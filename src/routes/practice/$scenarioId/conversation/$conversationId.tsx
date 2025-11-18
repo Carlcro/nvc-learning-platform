@@ -21,8 +21,8 @@ export const Route = createFileRoute(
 function ConversationComponent() {
   const { scenarioId, conversationId } = Route.useParams()
   const navigate = Route.useNavigate()
-  const search = Route.useSearch()
-  const isArchiveMode = search?.view === 'archive'
+  // const search = Route.useSearch()
+  const isArchiveMode = false // search?.view === 'archive'
 
   const currentUser = useQuery(api.users.getCurrentUser)
 
