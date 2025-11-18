@@ -4,7 +4,6 @@ import { convexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
-import { BackButton } from '~/components/ui/BackButton'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
