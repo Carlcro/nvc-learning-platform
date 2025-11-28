@@ -62,6 +62,8 @@ export function ScoreComponent({
 
 export function GiraffeCoach({ feedback, messageCount }: GiraffeCoachProps) {
   const stage = getCoachingStage(messageCount)
+  const score = feedback.score.total
+  const showAdvancedFeedback = stage === 'advanced' || score < 60
 
   return (
     <div className="space-y-6">
@@ -82,8 +84,8 @@ export function GiraffeCoach({ feedback, messageCount }: GiraffeCoachProps) {
         />
       </div>
 
-      {/* Early Stage: Just show encouragement and the score */}
-      {stage === 'early' && (
+      {/* Early Stage (High Score): Simple Grid View */}
+      {stage === 'early' && score >= 60 ? (
         <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg p-4">
           <div className="space-y-3">
             <h4 className="font-semibold text-giraffe-900 text-sm">
@@ -117,64 +119,35 @@ export function GiraffeCoach({ feedback, messageCount }: GiraffeCoachProps) {
             </div>
           </div>
         </div>
+      ) : (
+        /* Developing/Advanced OR Low Score: Detailed Bar View */
+        <div className="space-y-3">
+          <h4 className="font-semibold text-brown-800 text-sm">
+            NVC Components
+          </h4>
+          <ScoreComponent
+            label="Observation"
+            value={feedback.score.observation}
+          />
+          <ScoreComponent label="Feeling" value={feedback.score.feeling} />
+          <ScoreComponent label="Need" value={feedback.score.need} />
+          <ScoreComponent label="Request" value={feedback.score.request} />
+        </div>
       )}
 
-      {/* Developing Stage: Show NVC components and what went well */}
-      {stage === 'early' && (
-        <>
-          <div className="space-y-3">
-            <h4 className="font-semibold text-brown-800 text-sm">
-              NVC Components
-            </h4>
-            <ScoreComponent
-              label="Observation"
-              value={feedback.score.observation}
-            />
-            <ScoreComponent label="Feeling" value={feedback.score.feeling} />
-            <ScoreComponent label="Need" value={feedback.score.need} />
-            <ScoreComponent label="Request" value={feedback.score.request} />
-          </div>
-
-          {feedback.whatWentWell && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
-              <h4 className="font-semibold text-emerald-900 text-sm">
-                What Went Well
-              </h4>
-              <p className="text-sm text-emerald-800">
-                {feedback.whatWentWell}
-              </p>
-            </div>
-          )}
-        </>
+      {/* Always show What Went Well if present */}
+      {feedback.whatWentWell && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
+          <h4 className="font-semibold text-emerald-900 text-sm">
+            What Went Well
+          </h4>
+          <p className="text-sm text-emerald-800">{feedback.whatWentWell}</p>
+        </div>
       )}
 
-      {/* Advanced Stage: Show full feedback with coaching tips */}
-      {stage === 'advanced' && (
+      {/* Show Tips & Alternatives if Advanced OR Low Score */}
+      {showAdvancedFeedback && (
         <>
-          <div className="space-y-3">
-            <h4 className="font-semibold text-brown-800 text-sm">
-              NVC Components
-            </h4>
-            <ScoreComponent
-              label="Observation"
-              value={feedback.score.observation}
-            />
-            <ScoreComponent label="Feeling" value={feedback.score.feeling} />
-            <ScoreComponent label="Need" value={feedback.score.need} />
-            <ScoreComponent label="Request" value={feedback.score.request} />
-          </div>
-
-          {feedback.whatWentWell && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
-              <h4 className="font-semibold text-emerald-900 text-sm">
-                What Went Well
-              </h4>
-              <p className="text-sm text-emerald-800">
-                {feedback.whatWentWell}
-              </p>
-            </div>
-          )}
-
           {feedback.feedback && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
               <h4 className="font-semibold text-blue-900 text-sm">

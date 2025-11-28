@@ -11,6 +11,9 @@
 import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as conversations from "../conversations.js";
+import type * as crons from "../crons.js";
+import type * as dailyChallenges from "../dailyChallenges.js";
+import type * as dailyChallengesGeneration from "../dailyChallengesGeneration.js";
 import type * as devHelpers from "../devHelpers.js";
 import type * as feelings_seed from "../feelings/seed.js";
 import type * as feelings from "../feelings.js";
@@ -42,6 +45,9 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   auth: typeof auth;
   conversations: typeof conversations;
+  crons: typeof crons;
+  dailyChallenges: typeof dailyChallenges;
+  dailyChallengesGeneration: typeof dailyChallengesGeneration;
   devHelpers: typeof devHelpers;
   "feelings/seed": typeof feelings_seed;
   feelings: typeof feelings;

@@ -1,10 +1,18 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
 
 export const Route = createFileRoute('/learn/feelings/')({
   component: FeelingHub,
 })
 
 function FeelingHub() {
+  const currentUser = useQuery(api.users.getCurrentUser)
+  const stats = useQuery(
+    api.feelingsProgress.getStats,
+    currentUser ? { userId: currentUser._id } : 'skip',
+  )
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
       {/* Header */}
@@ -22,12 +30,66 @@ function FeelingHub() {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Progress Stats Banner */}
+        {stats && (
+          <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6 mb-12 shadow-sm flex flex-wrap gap-8 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-giraffe-100 p-3 rounded-full text-2xl">🔥</div>
+              <div>
+                <div className="text-sm text-giraffe-600 font-bold uppercase tracking-wide">
+                  Current Streak
+                </div>
+                <div className="text-2xl font-bold text-giraffe-900">
+                  {stats.currentStreak} Days
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-full text-2xl">🧠</div>
+              <div>
+                <div className="text-sm text-blue-600 font-bold uppercase tracking-wide">
+                  Feelings Learned
+                </div>
+                <div className="text-2xl font-bold text-giraffe-900">
+                  {stats.totalFeelingsExplored}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="bg-purple-100 p-3 rounded-full text-2xl">🎯</div>
+              <div>
+                <div className="text-sm text-purple-600 font-bold uppercase tracking-wide">
+                  Quiz Level
+                </div>
+                <div className="text-2xl font-bold text-giraffe-900">
+                  {stats.quizLevel}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="bg-green-100 p-3 rounded-full text-2xl">📝</div>
+              <div>
+                <div className="text-sm text-green-600 font-bold uppercase tracking-wide">
+                  Total Check-Ins
+                </div>
+                <div className="text-2xl font-bold text-giraffe-900">
+                  {stats.totalCheckIns}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {/* Feelings Wheel Card */}
           <Link to="/learn/feelings/wheel">
-            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer">
-              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center">
+            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer group">
+              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center group-hover:from-giraffe-100 group-hover:to-giraffe-200 transition-colors">
+                <div className="text-5xl mb-4">🎨</div>
                 <h2 className="text-2xl font-bold text-giraffe-900 mb-3">
                   Feelings Wheel
                 </h2>
@@ -46,8 +108,9 @@ function FeelingHub() {
 
           {/* Quiz Game Card */}
           <Link to="/learn/feelings/quiz">
-            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer">
-              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center">
+            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer group">
+              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center group-hover:from-giraffe-100 group-hover:to-giraffe-200 transition-colors">
+                <div className="text-5xl mb-4">🎮</div>
                 <h2 className="text-2xl font-bold text-giraffe-900 mb-3">
                   Quiz Game
                 </h2>
@@ -67,8 +130,9 @@ function FeelingHub() {
 
           {/* Daily Check-In Card */}
           <Link to="/learn/feelings/check-in">
-            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer">
-              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center">
+            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer group">
+              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center group-hover:from-giraffe-100 group-hover:to-giraffe-200 transition-colors">
+                <div className="text-5xl mb-4">📅</div>
                 <h2 className="text-2xl font-bold text-giraffe-900 mb-3">
                   Daily Check-In
                 </h2>
@@ -87,8 +151,9 @@ function FeelingHub() {
 
           {/* Personal Library Card */}
           <Link to="/learn/feelings/library">
-            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer">
-              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center">
+            <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md hover:shadow-lg hover:border-giraffe-400 transition-all overflow-hidden h-full cursor-pointer group">
+              <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 p-8 text-center group-hover:from-giraffe-100 group-hover:to-giraffe-200 transition-colors">
+                <div className="text-5xl mb-4">📚</div>
                 <h2 className="text-2xl font-bold text-giraffe-900 mb-3">
                   My Library
                 </h2>

@@ -1,9 +1,9 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { api } from '../../../convex/_generated/api'
 
 interface NavLink {
   to: string
@@ -15,6 +15,8 @@ const navLinks: Array<NavLink> = [
   { to: '/', label: 'Home', icon: 'H' },
   { to: '/learn', label: 'Lessons', icon: 'L' },
   { to: '/practice', label: 'Practice', icon: 'P' },
+  { to: '/challenges/daily', label: 'Daily', icon: 'D' },
+  { to: '/learn/feelings', label: 'Feelings', icon: 'F' },
   { to: '/progress', label: 'Progress', icon: 'G' },
   { to: '/profile', label: 'Profile', icon: 'U' },
 ]
@@ -134,7 +136,10 @@ export function FloatingNav() {
 
         {/* User Menu - Radix UI Dropdown */}
         {user ? (
-          <DropdownMenu.Root open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+          <DropdownMenu.Root
+            open={isDropdownOpen}
+            onOpenChange={setIsDropdownOpen}
+          >
             <DropdownMenu.Trigger asChild>
               <button
                 className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-giraffe-50 transition-colors ml-2 flex-shrink-0"

@@ -15,6 +15,11 @@ import { Button } from '~/components/ui/Button'
 export const Route = createFileRoute(
   '/practice/$scenarioId/conversation/$conversationId',
 )({
+  validateSearch: (search: Record<string, unknown>) => ({
+    view: (search.view as string | undefined) ?? undefined,
+    dailyChallengeId:
+      (search.dailyChallengeId as string | undefined) ?? undefined,
+  }),
   component: ConversationComponent,
 })
 
@@ -22,7 +27,7 @@ function ConversationComponent() {
   const { scenarioId, conversationId } = Route.useParams()
   const navigate = Route.useNavigate()
   const search = Route.useSearch()
-  const isArchiveMode = search?.view === 'archive'
+  const isArchiveMode = search.view === 'archive'
 
   const currentUser = useQuery(api.users.getCurrentUser)
 
@@ -356,14 +361,12 @@ function ConversationComponent() {
         scenarioId: scenarioId as any,
       })
 
-      await addMessage({
-        conversationId: newConversationId as any,
-        role: 'assistant',
-        content: scenario.aiOpeningMessage,
-      })
-
       navigate({
         to: `/practice/${scenarioId}/conversation/${newConversationId}`,
+        search: {
+          view: undefined,
+          dailyChallengeId: undefined,
+        },
       })
 
       setMessages([
@@ -527,15 +530,27 @@ function ConversationComponent() {
             </div>
 
             <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 shrink-0">
-              {messages.length > 3 && !isArchiveMode && (
-                <Button
-                  onClick={handleCompleteScenario}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  End & Get Results
-                </Button>
-              )}
+              {(() => {
+                const userMessages = messages.filter((m) => m.role === 'user')
+                const lastUserMessage = userMessages[userMessages.length - 1]
+                const lastScore = lastUserMessage.nvcScore?.total || 0
+                const canEndConversation =
+                  messages.length > 3 &&
+                  !isArchiveMode &&
+                  (lastScore >= 70 || messages.length >= 10)
+
+                return (
+                  canEndConversation && (
+                    <Button
+                      onClick={handleCompleteScenario}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      End & Get Results
+                    </Button>
+                  )
+                )
+              })()}
 
               <MessageInput
                 onSubmit={handleSendMessage}
@@ -554,7 +569,7 @@ function ConversationComponent() {
               learningObjectives={scenario.learningObjectives}
               characterMood={
                 conversation?.currentCharacterMood ||
-                scenario?.characterInitialMood ||
+                scenario.characterInitialMood ||
                 0
               }
             />
@@ -620,10 +635,10 @@ function ConversationComponent() {
                   messageCount={
                     messages.filter((m) => m.role === 'user').length
                   }
-                  learningObjectives={scenario?.learningObjectives || []}
+                  learningObjectives={scenario.learningObjectives}
                   characterMood={
                     conversation?.currentCharacterMood ||
-                    scenario?.characterInitialMood ||
+                    scenario.characterInitialMood ||
                     0
                   }
                 />

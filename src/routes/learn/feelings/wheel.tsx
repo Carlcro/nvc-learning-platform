@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
@@ -23,6 +23,7 @@ function FeelingsWheel() {
   const [selectedFamily, setSelectedFamily] = useState('joyful')
   const [showCategory, setShowCategory] = useState<Category>('all')
   const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Queries
   const families = useQuery(api.feelings.getFamilies)
@@ -42,12 +43,17 @@ function FeelingsWheel() {
   const filteredFeelings = useMemo(() => {
     if (!allFeelings) return []
     return allFeelings.filter((f) => {
-      const familyMatch = f.family === selectedFamily
+      const familyMatch = searchTerm ? true : f.family === selectedFamily
       const categoryMatch =
         showCategory === 'all' || f.category === showCategory
-      return familyMatch && categoryMatch
+      const searchMatch = searchTerm
+        ? f.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          f.definition.toLowerCase().includes(searchTerm.toLowerCase())
+        : true
+
+      return familyMatch && categoryMatch && searchMatch
     })
-  }, [allFeelings, selectedFamily, showCategory])
+  }, [allFeelings, selectedFamily, showCategory, searchTerm])
 
   // Get detail of selected feeling
   const selectedFeelingDetail = useMemo(
@@ -116,6 +122,24 @@ function FeelingsWheel() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6 sticky top-4">
               <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 mb-4 border-b border-giraffe-200 pb-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search feelings..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-giraffe-200 focus:border-giraffe-400 focus:ring-0"
+                    />
+                  </div>
+                  <Link
+                    to="/learn/feelings/intensity"
+                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span>⚡</span> Intensity Explorer
+                  </Link>
+                </div>
+
                 <div className="flex flex-wrap gap-2 pb-4 border-b border-giraffe-200">
                   {(['all', 'pleasant', 'unpleasant'] as const).map(
                     (option) => (
@@ -132,7 +156,7 @@ function FeelingsWheel() {
                       `}
                       >
                         {option === 'all'
-                          ? 'All Feelings'
+                          ? 'All'
                           : option === 'pleasant'
                             ? 'Pleasant'
                             : 'Unpleasant'}

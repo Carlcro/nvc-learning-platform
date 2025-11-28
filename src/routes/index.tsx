@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { Unauthenticated } from 'convex/react'
 import { Button } from '~/components/ui/Button'
 import { Card, CardBody } from '~/components/ui/Card'
+import { DailyChallengeCard } from '~/components/features/dashboard/DailyChallengeCard'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -77,6 +78,13 @@ function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Daily Challenge Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white border-b border-giraffe-100">
+        <div className="max-w-3xl mx-auto">
+          <DailyChallengeCard />
         </div>
       </section>
 
