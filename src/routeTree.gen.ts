@@ -13,6 +13,7 @@ import { Route as TestScoringRouteImport } from './routes/test-scoring'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice/index'
 import { Route as LearnIndexRouteImport } from './routes/learn/index'
 import { Route as LearnRequestRouteImport } from './routes/learn/request'
@@ -20,9 +21,17 @@ import { Route as LearnObservationRouteImport } from './routes/learn/observation
 import { Route as LearnNeedRouteImport } from './routes/learn/need'
 import { Route as LearnIntroductionRouteImport } from './routes/learn/introduction'
 import { Route as LearnIntegrationRouteImport } from './routes/learn/integration'
+import { Route as LearnFeelingsRouteImport } from './routes/learn/feelings'
 import { Route as LearnFeelingRouteImport } from './routes/learn/feeling'
+import { Route as ChallengesDailyRouteImport } from './routes/challenges/daily'
 import { Route as AdminSeedScenariosRouteImport } from './routes/admin/seed-scenarios'
+import { Route as LearnFeelingsIndexRouteImport } from './routes/learn/feelings/index'
 import { Route as PracticeScenarioIdBriefRouteImport } from './routes/practice/$scenarioId/brief'
+import { Route as LearnFeelingsWheelRouteImport } from './routes/learn/feelings/wheel'
+import { Route as LearnFeelingsQuizRouteImport } from './routes/learn/feelings/quiz'
+import { Route as LearnFeelingsLibraryRouteImport } from './routes/learn/feelings/library'
+import { Route as LearnFeelingsIntensityRouteImport } from './routes/learn/feelings/intensity'
+import { Route as LearnFeelingsCheckInRouteImport } from './routes/learn/feelings/check-in'
 import { Route as PracticeScenarioIdConversationConversationIdRouteImport } from './routes/practice/$scenarioId/conversation/$conversationId'
 
 const TestScoringRoute = TestScoringRouteImport.update({
@@ -43,6 +52,11 @@ const AnotherPageRoute = AnotherPageRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeIndexRoute = PracticeIndexRouteImport.update({
@@ -80,9 +94,19 @@ const LearnIntegrationRoute = LearnIntegrationRouteImport.update({
   path: '/learn/integration',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnFeelingsRoute = LearnFeelingsRouteImport.update({
+  id: '/learn/feelings',
+  path: '/learn/feelings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LearnFeelingRoute = LearnFeelingRouteImport.update({
   id: '/learn/feeling',
   path: '/learn/feeling',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChallengesDailyRoute = ChallengesDailyRouteImport.update({
+  id: '/challenges/daily',
+  path: '/challenges/daily',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSeedScenariosRoute = AdminSeedScenariosRouteImport.update({
@@ -90,10 +114,40 @@ const AdminSeedScenariosRoute = AdminSeedScenariosRouteImport.update({
   path: '/admin/seed-scenarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LearnFeelingsIndexRoute = LearnFeelingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LearnFeelingsRoute,
+} as any)
 const PracticeScenarioIdBriefRoute = PracticeScenarioIdBriefRouteImport.update({
   id: '/practice/$scenarioId/brief',
   path: '/practice/$scenarioId/brief',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LearnFeelingsWheelRoute = LearnFeelingsWheelRouteImport.update({
+  id: '/wheel',
+  path: '/wheel',
+  getParentRoute: () => LearnFeelingsRoute,
+} as any)
+const LearnFeelingsQuizRoute = LearnFeelingsQuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => LearnFeelingsRoute,
+} as any)
+const LearnFeelingsLibraryRoute = LearnFeelingsLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => LearnFeelingsRoute,
+} as any)
+const LearnFeelingsIntensityRoute = LearnFeelingsIntensityRouteImport.update({
+  id: '/intensity',
+  path: '/intensity',
+  getParentRoute: () => LearnFeelingsRoute,
+} as any)
+const LearnFeelingsCheckInRoute = LearnFeelingsCheckInRouteImport.update({
+  id: '/check-in',
+  path: '/check-in',
+  getParentRoute: () => LearnFeelingsRoute,
 } as any)
 const PracticeScenarioIdConversationConversationIdRoute =
   PracticeScenarioIdConversationConversationIdRouteImport.update({
@@ -108,7 +162,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
+  '/challenges/daily': typeof ChallengesDailyRoute
   '/learn/feeling': typeof LearnFeelingRoute
+  '/learn/feelings': typeof LearnFeelingsRouteWithChildren
   '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
   '/learn/need': typeof LearnNeedRoute
@@ -116,7 +172,14 @@ export interface FileRoutesByFullPath {
   '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
   '/practice': typeof PracticeIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/learn/feelings/check-in': typeof LearnFeelingsCheckInRoute
+  '/learn/feelings/intensity': typeof LearnFeelingsIntensityRoute
+  '/learn/feelings/library': typeof LearnFeelingsLibraryRoute
+  '/learn/feelings/quiz': typeof LearnFeelingsQuizRoute
+  '/learn/feelings/wheel': typeof LearnFeelingsWheelRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
+  '/learn/feelings/': typeof LearnFeelingsIndexRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +188,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
+  '/challenges/daily': typeof ChallengesDailyRoute
   '/learn/feeling': typeof LearnFeelingRoute
   '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
@@ -133,7 +197,14 @@ export interface FileRoutesByTo {
   '/learn/request': typeof LearnRequestRoute
   '/learn': typeof LearnIndexRoute
   '/practice': typeof PracticeIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/learn/feelings/check-in': typeof LearnFeelingsCheckInRoute
+  '/learn/feelings/intensity': typeof LearnFeelingsIntensityRoute
+  '/learn/feelings/library': typeof LearnFeelingsLibraryRoute
+  '/learn/feelings/quiz': typeof LearnFeelingsQuizRoute
+  '/learn/feelings/wheel': typeof LearnFeelingsWheelRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
+  '/learn/feelings': typeof LearnFeelingsIndexRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
 }
 export interface FileRoutesById {
@@ -143,7 +214,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
+  '/challenges/daily': typeof ChallengesDailyRoute
   '/learn/feeling': typeof LearnFeelingRoute
+  '/learn/feelings': typeof LearnFeelingsRouteWithChildren
   '/learn/integration': typeof LearnIntegrationRoute
   '/learn/introduction': typeof LearnIntroductionRoute
   '/learn/need': typeof LearnNeedRoute
@@ -151,7 +224,14 @@ export interface FileRoutesById {
   '/learn/request': typeof LearnRequestRoute
   '/learn/': typeof LearnIndexRoute
   '/practice/': typeof PracticeIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/learn/feelings/check-in': typeof LearnFeelingsCheckInRoute
+  '/learn/feelings/intensity': typeof LearnFeelingsIntensityRoute
+  '/learn/feelings/library': typeof LearnFeelingsLibraryRoute
+  '/learn/feelings/quiz': typeof LearnFeelingsQuizRoute
+  '/learn/feelings/wheel': typeof LearnFeelingsWheelRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
+  '/learn/feelings/': typeof LearnFeelingsIndexRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
 }
 export interface FileRouteTypes {
@@ -162,7 +242,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/test-scoring'
     | '/admin/seed-scenarios'
+    | '/challenges/daily'
     | '/learn/feeling'
+    | '/learn/feelings'
     | '/learn/integration'
     | '/learn/introduction'
     | '/learn/need'
@@ -170,7 +252,14 @@ export interface FileRouteTypes {
     | '/learn/request'
     | '/learn'
     | '/practice'
+    | '/profile'
+    | '/learn/feelings/check-in'
+    | '/learn/feelings/intensity'
+    | '/learn/feelings/library'
+    | '/learn/feelings/quiz'
+    | '/learn/feelings/wheel'
     | '/practice/$scenarioId/brief'
+    | '/learn/feelings/'
     | '/practice/$scenarioId/conversation/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -179,6 +268,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/test-scoring'
     | '/admin/seed-scenarios'
+    | '/challenges/daily'
     | '/learn/feeling'
     | '/learn/integration'
     | '/learn/introduction'
@@ -187,7 +277,14 @@ export interface FileRouteTypes {
     | '/learn/request'
     | '/learn'
     | '/practice'
+    | '/profile'
+    | '/learn/feelings/check-in'
+    | '/learn/feelings/intensity'
+    | '/learn/feelings/library'
+    | '/learn/feelings/quiz'
+    | '/learn/feelings/wheel'
     | '/practice/$scenarioId/brief'
+    | '/learn/feelings'
     | '/practice/$scenarioId/conversation/$conversationId'
   id:
     | '__root__'
@@ -196,7 +293,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/test-scoring'
     | '/admin/seed-scenarios'
+    | '/challenges/daily'
     | '/learn/feeling'
+    | '/learn/feelings'
     | '/learn/integration'
     | '/learn/introduction'
     | '/learn/need'
@@ -204,7 +303,14 @@ export interface FileRouteTypes {
     | '/learn/request'
     | '/learn/'
     | '/practice/'
+    | '/profile/'
+    | '/learn/feelings/check-in'
+    | '/learn/feelings/intensity'
+    | '/learn/feelings/library'
+    | '/learn/feelings/quiz'
+    | '/learn/feelings/wheel'
     | '/practice/$scenarioId/brief'
+    | '/learn/feelings/'
     | '/practice/$scenarioId/conversation/$conversationId'
   fileRoutesById: FileRoutesById
 }
@@ -214,7 +320,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   TestScoringRoute: typeof TestScoringRoute
   AdminSeedScenariosRoute: typeof AdminSeedScenariosRoute
+  ChallengesDailyRoute: typeof ChallengesDailyRoute
   LearnFeelingRoute: typeof LearnFeelingRoute
+  LearnFeelingsRoute: typeof LearnFeelingsRouteWithChildren
   LearnIntegrationRoute: typeof LearnIntegrationRoute
   LearnIntroductionRoute: typeof LearnIntroductionRoute
   LearnNeedRoute: typeof LearnNeedRoute
@@ -222,6 +330,7 @@ export interface RootRouteChildren {
   LearnRequestRoute: typeof LearnRequestRoute
   LearnIndexRoute: typeof LearnIndexRoute
   PracticeIndexRoute: typeof PracticeIndexRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
   PracticeScenarioIdBriefRoute: typeof PracticeScenarioIdBriefRoute
   PracticeScenarioIdConversationConversationIdRoute: typeof PracticeScenarioIdConversationConversationIdRoute
 }
@@ -254,6 +363,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice/': {
@@ -305,11 +421,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnIntegrationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/feelings': {
+      id: '/learn/feelings'
+      path: '/learn/feelings'
+      fullPath: '/learn/feelings'
+      preLoaderRoute: typeof LearnFeelingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/feeling': {
       id: '/learn/feeling'
       path: '/learn/feeling'
       fullPath: '/learn/feeling'
       preLoaderRoute: typeof LearnFeelingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/challenges/daily': {
+      id: '/challenges/daily'
+      path: '/challenges/daily'
+      fullPath: '/challenges/daily'
+      preLoaderRoute: typeof ChallengesDailyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/seed-scenarios': {
@@ -319,12 +449,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeedScenariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/learn/feelings/': {
+      id: '/learn/feelings/'
+      path: '/'
+      fullPath: '/learn/feelings/'
+      preLoaderRoute: typeof LearnFeelingsIndexRouteImport
+      parentRoute: typeof LearnFeelingsRoute
+    }
     '/practice/$scenarioId/brief': {
       id: '/practice/$scenarioId/brief'
       path: '/practice/$scenarioId/brief'
       fullPath: '/practice/$scenarioId/brief'
       preLoaderRoute: typeof PracticeScenarioIdBriefRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/learn/feelings/wheel': {
+      id: '/learn/feelings/wheel'
+      path: '/wheel'
+      fullPath: '/learn/feelings/wheel'
+      preLoaderRoute: typeof LearnFeelingsWheelRouteImport
+      parentRoute: typeof LearnFeelingsRoute
+    }
+    '/learn/feelings/quiz': {
+      id: '/learn/feelings/quiz'
+      path: '/quiz'
+      fullPath: '/learn/feelings/quiz'
+      preLoaderRoute: typeof LearnFeelingsQuizRouteImport
+      parentRoute: typeof LearnFeelingsRoute
+    }
+    '/learn/feelings/library': {
+      id: '/learn/feelings/library'
+      path: '/library'
+      fullPath: '/learn/feelings/library'
+      preLoaderRoute: typeof LearnFeelingsLibraryRouteImport
+      parentRoute: typeof LearnFeelingsRoute
+    }
+    '/learn/feelings/intensity': {
+      id: '/learn/feelings/intensity'
+      path: '/intensity'
+      fullPath: '/learn/feelings/intensity'
+      preLoaderRoute: typeof LearnFeelingsIntensityRouteImport
+      parentRoute: typeof LearnFeelingsRoute
+    }
+    '/learn/feelings/check-in': {
+      id: '/learn/feelings/check-in'
+      path: '/check-in'
+      fullPath: '/learn/feelings/check-in'
+      preLoaderRoute: typeof LearnFeelingsCheckInRouteImport
+      parentRoute: typeof LearnFeelingsRoute
     }
     '/practice/$scenarioId/conversation/$conversationId': {
       id: '/practice/$scenarioId/conversation/$conversationId'
@@ -336,13 +508,37 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LearnFeelingsRouteChildren {
+  LearnFeelingsCheckInRoute: typeof LearnFeelingsCheckInRoute
+  LearnFeelingsIntensityRoute: typeof LearnFeelingsIntensityRoute
+  LearnFeelingsLibraryRoute: typeof LearnFeelingsLibraryRoute
+  LearnFeelingsQuizRoute: typeof LearnFeelingsQuizRoute
+  LearnFeelingsWheelRoute: typeof LearnFeelingsWheelRoute
+  LearnFeelingsIndexRoute: typeof LearnFeelingsIndexRoute
+}
+
+const LearnFeelingsRouteChildren: LearnFeelingsRouteChildren = {
+  LearnFeelingsCheckInRoute: LearnFeelingsCheckInRoute,
+  LearnFeelingsIntensityRoute: LearnFeelingsIntensityRoute,
+  LearnFeelingsLibraryRoute: LearnFeelingsLibraryRoute,
+  LearnFeelingsQuizRoute: LearnFeelingsQuizRoute,
+  LearnFeelingsWheelRoute: LearnFeelingsWheelRoute,
+  LearnFeelingsIndexRoute: LearnFeelingsIndexRoute,
+}
+
+const LearnFeelingsRouteWithChildren = LearnFeelingsRoute._addFileChildren(
+  LearnFeelingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
   AuthRoute: AuthRoute,
   TestScoringRoute: TestScoringRoute,
   AdminSeedScenariosRoute: AdminSeedScenariosRoute,
+  ChallengesDailyRoute: ChallengesDailyRoute,
   LearnFeelingRoute: LearnFeelingRoute,
+  LearnFeelingsRoute: LearnFeelingsRouteWithChildren,
   LearnIntegrationRoute: LearnIntegrationRoute,
   LearnIntroductionRoute: LearnIntroductionRoute,
   LearnNeedRoute: LearnNeedRoute,
@@ -350,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   LearnRequestRoute: LearnRequestRoute,
   LearnIndexRoute: LearnIndexRoute,
   PracticeIndexRoute: PracticeIndexRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
   PracticeScenarioIdBriefRoute: PracticeScenarioIdBriefRoute,
   PracticeScenarioIdConversationConversationIdRoute:
     PracticeScenarioIdConversationConversationIdRoute,
