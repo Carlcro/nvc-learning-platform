@@ -1,4 +1,3 @@
-import { v } from 'convex/values'
 import type { MutationCtx } from '../_generated/server'
 
 /**

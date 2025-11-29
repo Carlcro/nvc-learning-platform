@@ -97,7 +97,7 @@ export function DailyChallengeCard() {
             </Button>
           ) : (
             <Link
-              to="/practice/$scenarioId"
+              to="/practice/$scenarioId/brief"
               params={{ scenarioId: challenge.scenarioId }}
             >
               <Button

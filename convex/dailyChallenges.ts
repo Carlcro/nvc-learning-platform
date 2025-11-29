@@ -15,20 +15,6 @@ import { internal } from './_generated/api'
  * AI scenario generation is handled in dailyChallengesGeneration.ts
  */
 
-interface GeneratedScenario {
-  title: string
-  description: string
-  category: string
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
-  characterName: string
-  characterPersonality: string
-  characterInitialMood: number
-  situation: string
-  aiOpeningMessage: string
-  learningObjectives: Array<string>
-  focusArea: string
-}
-
 // ============================================================================
 // QUERIES
 // ============================================================================
