@@ -104,6 +104,47 @@ export const clearAllQuizQuestions = internalMutation({
 })
 
 /**
+ * Public seed all feelings and quiz questions
+ */
+export const seedAllFeelingsPublic = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Check if already seeded
+    const existingFeelings = await ctx.db.query('feelings').first()
+    const existingQuestions = await ctx.db
+      .query('feelingsQuizQuestions')
+      .first()
+
+    if (existingFeelings && existingQuestions) {
+      return { message: 'Feelings already seeded' }
+    }
+
+    await seedFeelings(ctx)
+    await seedFeelingsQuizQuestions(ctx)
+
+    return { message: 'Feelings seeded successfully' }
+  },
+})
+
+/**
+ * Public seed only quiz questions
+ */
+export const seedQuizQuestionsOnlyPublic = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query('feelingsQuizQuestions').first()
+
+    if (existing) {
+      return { message: 'Quiz questions already seeded' }
+    }
+
+    await seedFeelingsQuizQuestions(ctx)
+
+    return { message: 'Quiz questions seeded successfully' }
+  },
+})
+
+/**
  * Get seed statistics
  */
 export const getSeedStats = mutation({

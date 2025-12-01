@@ -25,6 +25,7 @@ import { Route as LearnFeelingsRouteImport } from './routes/learn/feelings'
 import { Route as LearnFeelingRouteImport } from './routes/learn/feeling'
 import { Route as ChallengesDailyRouteImport } from './routes/challenges/daily'
 import { Route as AdminSeedScenariosRouteImport } from './routes/admin/seed-scenarios'
+import { Route as AdminSeedRouteImport } from './routes/admin/seed'
 import { Route as LearnFeelingsIndexRouteImport } from './routes/learn/feelings/index'
 import { Route as PracticeScenarioIdBriefRouteImport } from './routes/practice/$scenarioId/brief'
 import { Route as LearnFeelingsWheelRouteImport } from './routes/learn/feelings/wheel'
@@ -114,6 +115,11 @@ const AdminSeedScenariosRoute = AdminSeedScenariosRouteImport.update({
   path: '/admin/seed-scenarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSeedRoute = AdminSeedRouteImport.update({
+  id: '/admin/seed',
+  path: '/admin/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LearnFeelingsIndexRoute = LearnFeelingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/anotherPage': typeof AnotherPageRoute
   '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
+  '/admin/seed': typeof AdminSeedRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/learn/feeling': typeof LearnFeelingRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/anotherPage': typeof AnotherPageRoute
   '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
+  '/admin/seed': typeof AdminSeedRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/learn/feeling': typeof LearnFeelingRoute
@@ -213,6 +221,7 @@ export interface FileRoutesById {
   '/anotherPage': typeof AnotherPageRoute
   '/auth': typeof AuthRoute
   '/test-scoring': typeof TestScoringRoute
+  '/admin/seed': typeof AdminSeedRoute
   '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/learn/feeling': typeof LearnFeelingRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/anotherPage'
     | '/auth'
     | '/test-scoring'
+    | '/admin/seed'
     | '/admin/seed-scenarios'
     | '/challenges/daily'
     | '/learn/feeling'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/anotherPage'
     | '/auth'
     | '/test-scoring'
+    | '/admin/seed'
     | '/admin/seed-scenarios'
     | '/challenges/daily'
     | '/learn/feeling'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/anotherPage'
     | '/auth'
     | '/test-scoring'
+    | '/admin/seed'
     | '/admin/seed-scenarios'
     | '/challenges/daily'
     | '/learn/feeling'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   AnotherPageRoute: typeof AnotherPageRoute
   AuthRoute: typeof AuthRoute
   TestScoringRoute: typeof TestScoringRoute
+  AdminSeedRoute: typeof AdminSeedRoute
   AdminSeedScenariosRoute: typeof AdminSeedScenariosRoute
   ChallengesDailyRoute: typeof ChallengesDailyRoute
   LearnFeelingRoute: typeof LearnFeelingRoute
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeedScenariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/seed': {
+      id: '/admin/seed'
+      path: '/admin/seed'
+      fullPath: '/admin/seed'
+      preLoaderRoute: typeof AdminSeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/feelings/': {
       id: '/learn/feelings/'
       path: '/'
@@ -535,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnotherPageRoute: AnotherPageRoute,
   AuthRoute: AuthRoute,
   TestScoringRoute: TestScoringRoute,
+  AdminSeedRoute: AdminSeedRoute,
   AdminSeedScenariosRoute: AdminSeedScenariosRoute,
   ChallengesDailyRoute: ChallengesDailyRoute,
   LearnFeelingRoute: LearnFeelingRoute,

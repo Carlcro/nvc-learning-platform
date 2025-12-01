@@ -1,8 +1,8 @@
-import { useQuery, useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
+import { Link } from '@tanstack/react-router'
 import { api } from '../../../../convex/_generated/api'
 import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
-import { Link } from '@tanstack/react-router'
 
 export function DailyChallengeCard() {
   const challenge = useQuery(api.dailyChallenges.getDailyChallenge)
