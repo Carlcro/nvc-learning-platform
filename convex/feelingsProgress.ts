@@ -329,7 +329,7 @@ export const getWeeklyPatterns = query({
       .slice(0, 3)
 
     // Map feelings to related needs (simplified mapping)
-    const feelingToNeeds: Record<string, string[]> = {
+    const feelingToNeeds: Record<string, Array<string>> = {
       anxious: ['safety', 'clarity', 'predictability'],
       worried: ['safety', 'clarity', 'predictability'],
       frustrated: ['ease', 'efficiency', 'progress'],

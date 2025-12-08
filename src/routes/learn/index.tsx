@@ -3,7 +3,6 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody } from '~/components/ui/Card'
-import { Button } from '~/components/ui/Button'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
@@ -76,9 +75,7 @@ function LearnHub() {
     convexQuery(api.lessons.getAllLessons, {}),
   )
 
-  const { getProgressPercentage, isLessonCompleted } = useLessonProgress()
-
-  const progressPercentage = getProgressPercentage(lessons.length)
+  const { isLessonCompleted } = useLessonProgress()
 
   // Find the current lesson (first incomplete, or first if all complete)
   const currentLessonIndex = lessons.findIndex(
