@@ -89,31 +89,6 @@ function LearnHub() {
 
   return (
     <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
-      {/* Progress Overview */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-giraffe-50rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-giraffe-900 mb-2">
-            Your Learning Path
-          </h2>
-          <p className="text-giraffe-800 mb-4">
-            Complete these 6 foundational lessons to build your NVC skills.
-            You'll progress from basics to real-world application, and then move
-            on to practical roleplay scenarios.
-          </p>
-          {/* Progress Bar */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1 bg-giraffe-200 rounded-full h-3 overflow-hidden">
-              <div
-                className="bg-giraffe-500 h-full transition-all duration-500"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <span className="text-sm font-semibold text-giraffe-900 whitespace-nowrap">
-              {progressPercentage}% Complete
-            </span>
-          </div>
-        </div>
-      </section>
       {/* Header with Current Lesson */}
       <section className=" py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
@@ -178,30 +153,6 @@ function LearnHub() {
           {lessons.map((lesson) => (
             <LessonCard key={lesson.lessonId} lesson={lesson} />
           ))}
-        </div>
-      </section>
-
-      {/* Bottom CTA */}
-      <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Practice?
-          </h2>
-          <p className="text-giraffe-50 mb-8 text-lg">
-            After completing the lessons, you'll practice NVC in conversations
-            with different characters.
-          </p>
-          <Button
-            size="lg"
-            variant="primary"
-            disabled
-            className="opacity-50 cursor-not-allowed bg-white text-giraffe-600"
-          >
-            Roleplay Scenarios (Coming Soon)
-          </Button>
-          <p className="text-sm text-giraffe-100 mt-4">
-            Complete lessons to unlock scenario practice
-          </p>
         </div>
       </section>
     </main>

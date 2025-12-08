@@ -25,13 +25,8 @@ export function ChallengeStats({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
         {/* Current Streak */}
         <div className="bg-white rounded-lg p-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-2xl">
-              {showStreakFire ? '🔥' : '📅'}
-            </span>
-            <span className="text-3xl font-bold text-giraffe-600">
-              {currentStreak}
-            </span>
+          <div className="text-3xl font-bold text-giraffe-600 mb-1">
+            {currentStreak}
           </div>
           <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
             Current Streak
@@ -92,16 +87,7 @@ export function ChallengeStats({
           <p className="text-xs font-medium text-slate-600 uppercase tracking-wide mb-1">
             Level
           </p>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-brown-800">{level}</span>
-            <div className="flex items-center gap-1">
-              {[...Array(Math.min(5, Math.ceil(level / 2)))].map((_, i) => (
-                <span key={i} className="text-lg">
-
-                </span>
-              ))}
-            </div>
-          </div>
+          <span className="text-2xl font-bold text-brown-800">{level}</span>
         </div>
       </div>
 
@@ -111,7 +97,7 @@ export function ChallengeStats({
         currentStreak === 100) && (
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
           <p className="text-sm font-bold text-yellow-800">
-            🏆 Milestone Achievement Unlocked!
+            Milestone Achievement Unlocked!
           </p>
           <p className="text-xs text-yellow-700 mt-1">
             {currentStreak === 7 && 'You are on a 7-day streak!'}

@@ -285,3 +285,110 @@ export const getTodayCheckIn = query({
     return progress.dailyCheckIns.find((c) => c.date === today) || null
   },
 })
+
+/**
+ * Get weekly patterns and insights
+ */
+export const getWeeklyPatterns = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    const progress = await ctx.db
+      .query('userFeelingsProgress')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .first()
+
+    if (!progress || progress.dailyCheckIns.length === 0) {
+      return null
+    }
+
+    // Get check-ins from the last 7 days
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const oneWeekAgoStr = oneWeekAgo.toISOString().split('T')[0]
+
+    const weeklyCheckIns = progress.dailyCheckIns.filter(
+      (c) => c.date >= oneWeekAgoStr,
+    )
+
+    if (weeklyCheckIns.length === 0) {
+      return null
+    }
+
+    // Calculate feeling frequency this week
+    const weeklyFrequency: Record<string, number> = {}
+    for (const checkIn of weeklyCheckIns) {
+      for (const feeling of checkIn.feelings) {
+        weeklyFrequency[feeling] = (weeklyFrequency[feeling] || 0) + 1
+      }
+    }
+
+    // Get feelings that appeared 3+ times
+    const frequentFeelings = Object.entries(weeklyFrequency)
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+
+    // Map feelings to related needs (simplified mapping)
+    const feelingToNeeds: Record<string, string[]> = {
+      anxious: ['safety', 'clarity', 'predictability'],
+      worried: ['safety', 'clarity', 'predictability'],
+      frustrated: ['ease', 'efficiency', 'progress'],
+      angry: ['respect', 'fairness', 'autonomy'],
+      sad: ['comfort', 'connection', 'understanding'],
+      lonely: ['connection', 'belonging', 'companionship'],
+      grateful: ['appreciation', 'connection', 'abundance'],
+      happy: ['fulfillment', 'celebration', 'joy'],
+      excited: ['stimulation', 'growth', 'adventure'],
+      tired: ['rest', 'ease', 'balance'],
+      confused: ['clarity', 'understanding', 'direction'],
+      hopeful: ['meaning', 'growth', 'possibility'],
+      content: ['peace', 'satisfaction', 'harmony'],
+      scared: ['safety', 'protection', 'support'],
+    }
+
+    // Generate insights
+    const insights = frequentFeelings.map(([feeling, count]) => ({
+      feeling,
+      count,
+      relatedNeeds: feelingToNeeds[feeling.toLowerCase()] || [
+        'understanding',
+        'connection',
+      ],
+    }))
+
+    // Count pleasant vs unpleasant
+    const pleasantFeelings = [
+      'happy',
+      'grateful',
+      'excited',
+      'content',
+      'hopeful',
+      'peaceful',
+      'joyful',
+      'calm',
+      'relieved',
+    ]
+    let pleasantCount = 0
+    let unpleasantCount = 0
+
+    for (const [feeling, count] of Object.entries(weeklyFrequency)) {
+      if (pleasantFeelings.includes(feeling.toLowerCase())) {
+        pleasantCount += count
+      } else {
+        unpleasantCount += count
+      }
+    }
+
+    const totalFeelings = pleasantCount + unpleasantCount
+    const pleasantPercent =
+      totalFeelings > 0 ? Math.round((pleasantCount / totalFeelings) * 100) : 0
+
+    return {
+      checkInCount: weeklyCheckIns.length,
+      frequentFeelings: insights,
+      pleasantPercent,
+      unpleasantPercent: 100 - pleasantPercent,
+      uniqueFeelings: Object.keys(weeklyFrequency).length,
+    }
+  },
+})

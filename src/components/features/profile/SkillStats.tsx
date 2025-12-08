@@ -10,29 +10,36 @@ export function SkillStats({ stats }: SkillStatsProps) {
     {
       label: 'Observation',
       score: stats.averageScores.observation,
-      color: 'bg-blue-400',
+      color: 'from-blue-400 to-blue-500',
     },
     {
       label: 'Feeling',
       score: stats.averageScores.feeling,
-      color: 'bg-red-400',
+      color: 'from-rose-400 to-rose-500',
     },
-    { label: 'Need', score: stats.averageScores.need, color: 'bg-green-400' },
+    {
+      label: 'Need',
+      score: stats.averageScores.need,
+      color: 'from-emerald-400 to-emerald-500',
+    },
     {
       label: 'Request',
       score: stats.averageScores.request,
-      color: 'bg-purple-400',
+      color: 'from-purple-400 to-purple-500',
     },
   ]
 
   return (
-    <Card className="border-2 border-giraffe-200">
-      <CardBody>
-        <h3 className="text-lg font-bold text-brown-800 mb-6">
+    <Card className="overflow-hidden h-full">
+      {/* Header */}
+      <div className="bg-linear-to-r from-giraffe-500 to-giraffe-400 px-6 py-3 text-white">
+        <div className="text-sm font-semibold uppercase tracking-wider">
           Skill Breakdown
-        </h3>
+        </div>
+      </div>
 
-        <div className="space-y-6">
+      <CardBody>
+        <div className="space-y-5">
           {skills.map((skill) => (
             <div key={skill.label}>
               <div className="flex justify-between text-sm mb-2">
@@ -43,9 +50,9 @@ export function SkillStats({ stats }: SkillStatsProps) {
                   {Math.round(skill.score)}/25
                 </span>
               </div>
-              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-3 bg-giraffe-100 rounded-full overflow-hidden border border-giraffe-200">
                 <div
-                  className={`h-full rounded-full transition-all duration-1000 ${skill.color}`}
+                  className={`h-full rounded-full transition-all duration-1000 bg-linear-to-r ${skill.color}`}
                   style={{ width: `${(skill.score / 25) * 100}%` }}
                 />
               </div>
@@ -53,12 +60,14 @@ export function SkillStats({ stats }: SkillStatsProps) {
           ))}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <div className="flex justify-between items-center">
-            <span className="font-bold text-brown-800">Overall Average</span>
-            <span className="text-2xl font-bold text-giraffe-600">
-              {Math.round(stats.averageScores.overall)}
-            </span>
+        <div className="mt-6 pt-4 border-t border-giraffe-100">
+          <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-brown-700">Overall Average</span>
+              <span className="text-2xl font-bold text-giraffe-600">
+                {Math.round(stats.averageScores.overall)}/100
+              </span>
+            </div>
           </div>
         </div>
       </CardBody>

@@ -1,14 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
-import { useState } from 'react'
-import { api } from '../../../../convex/_generated/api'
+import { useEffect, useState } from 'react'
+import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
-export const Route = createFileRoute('/learn/feelings/quiz')({
+export const Route = createFileRoute('/feelings/quiz')({
   component: ProtectedQuiz,
 })
 
-type QuizState = 'level-select' | 'question' | 'feedback' | 'complete'
+type QuizState = 'level-select' | 'loading' | 'question' | 'feedback' | 'complete'
+
+interface QuizQuestion {
+  _id: string
+  sentence: string
+  isRealFeeling: boolean
+  explanation: string
+  correctFeelings?: string[]
+  level: number
+  category: string
+}
 
 function ProtectedQuiz() {
   return (
@@ -25,15 +35,23 @@ function QuizGame() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
   const [feedbackIsCorrect, setFeedbackIsCorrect] = useState(false)
+  const [questions, setQuestions] = useState<QuizQuestion[]>([])
 
-  // Queries - only fetch when in question state
-  const quizBatch =
-    quizState === 'question'
-      ? useQuery(api.feelingsQuiz.getRandomQuizBatch, {
-          level: selectedLevel,
-          count: 10,
-        })
-      : undefined
+  // Queries - only fetch when in loading state
+  const quizBatch = useQuery(
+    api.feelingsQuiz.getRandomQuizBatch,
+    quizState === 'loading'
+      ? { level: selectedLevel, count: 10 }
+      : 'skip',
+  )
+
+  // When quiz data loads, store it and transition to question state
+  useEffect(() => {
+    if (quizState === 'loading' && quizBatch !== undefined) {
+      setQuestions(quizBatch as QuizQuestion[])
+      setQuizState('question')
+    }
+  }, [quizBatch, quizState])
 
   // Mutations
   const updateProgressMutation = useMutation(
@@ -41,15 +59,16 @@ function QuizGame() {
   )
 
   const currentQuestionData =
-    quizBatch && currentQuestion < quizBatch.length
-      ? quizBatch[currentQuestion]
+    questions.length > 0 && currentQuestion < questions.length
+      ? questions[currentQuestion]
       : null
 
   const handleStartQuiz = (level: number) => {
     setSelectedLevel(level)
     setCurrentQuestion(0)
     setCorrectCount(0)
-    setQuizState('question')
+    setQuestions([])
+    setQuizState('loading')
   }
 
   const handleAnswer = async (userAnswer: boolean) => {
@@ -73,7 +92,7 @@ function QuizGame() {
   }
 
   const handleNextQuestion = () => {
-    if (quizBatch && currentQuestion < quizBatch.length - 1) {
+    if (questions.length > 0 && currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1)
       setQuizState('question')
     } else {
@@ -84,7 +103,8 @@ function QuizGame() {
   const handleRetryLevel = () => {
     setCurrentQuestion(0)
     setCorrectCount(0)
-    setQuizState('question')
+    setQuestions([])
+    setQuizState('loading')
   }
 
   const handleReturnToHome = () => {
@@ -135,7 +155,7 @@ function QuizGame() {
           </div>
         )}
 
-        {quizState === 'question' && !quizBatch && (
+        {quizState === 'loading' && (
           <div className="flex items-center justify-center min-h-80">
             <div className="text-center space-y-4">
               <div className="animate-spin h-8 w-8 border-4 border-giraffe-200 border-t-giraffe-600 rounded-full mx-auto" />
@@ -144,7 +164,7 @@ function QuizGame() {
           </div>
         )}
 
-        {quizState === 'question' && quizBatch && quizBatch.length === 0 && (
+        {quizState === 'question' && questions.length === 0 && (
           <div className="bg-white rounded-lg border-2 border-giraffe-200 p-8 text-center max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-giraffe-900 mb-4">
               No questions available
@@ -166,10 +186,10 @@ function QuizGame() {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-semibold text-giraffe-600 uppercase tracking-wide">
-                  Question {currentQuestion + 1} of {quizBatch?.length}
+                  Question {currentQuestion + 1} of {questions.length}
                 </span>
                 <div className="flex gap-1">
-                  {Array.from({ length: quizBatch?.length || 10 }).map(
+                  {Array.from({ length: questions.length || 10 }).map(
                     (_, idx) => (
                       <div
                         key={idx}
@@ -278,12 +298,12 @@ function QuizGame() {
           </div>
         )}
 
-        {quizState === 'complete' && quizBatch && (
+        {quizState === 'complete' && questions.length > 0 && (
           <div className="bg-white rounded-lg border-2 border-giraffe-200 p-8 text-center max-w-2xl mx-auto">
             <div className="text-6xl mb-4">
-              {correctCount === quizBatch.length
+              {correctCount === questions.length
                 ? 'Perfect!'
-                : correctCount > quizBatch.length / 2
+                : correctCount > questions.length / 2
                   ? 'Great Job!'
                   : 'Good Effort!'}
             </div>
@@ -291,9 +311,9 @@ function QuizGame() {
               Quiz Complete
             </h2>
             <p className="text-2xl text-giraffe-600 font-semibold mb-6">
-              {correctCount} out of {quizBatch.length} correct
+              {correctCount} out of {questions.length} correct
               <br />
-              {Math.round((correctCount / quizBatch.length) * 100)}% Accuracy
+              {Math.round((correctCount / questions.length) * 100)}% Accuracy
             </p>
 
             <div className="flex gap-4 justify-center">

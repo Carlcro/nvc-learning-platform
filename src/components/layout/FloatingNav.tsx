@@ -16,7 +16,7 @@ const navLinks: Array<NavLink> = [
   { to: '/learn', label: 'Lessons', icon: 'L' },
   { to: '/practice', label: 'Practice', icon: 'P' },
   { to: '/challenges/daily', label: 'Daily', icon: 'D' },
-  { to: '/learn/feelings', label: 'Feelings', icon: 'F' },
+  { to: '/feelings', label: 'Feelings', icon: 'F' },
   { to: '/profile', label: 'Profile', icon: 'U' },
 ]
 

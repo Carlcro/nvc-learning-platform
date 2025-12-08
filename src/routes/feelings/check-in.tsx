@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
-export const Route = createFileRoute('/learn/feelings/check-in')({
+export const Route = createFileRoute('/feelings/check-in')({
   component: ProtectedDailyCheckIn,
 })
 
@@ -37,6 +37,10 @@ function DailyCheckIn() {
   const history = useQuery(
     api.feelingsProgress.getCheckInHistory,
     currentUser ? { userId: currentUser._id, limit: 7 } : 'skip',
+  )
+  const weeklyPatterns = useQuery(
+    api.feelingsProgress.getWeeklyPatterns,
+    currentUser ? { userId: currentUser._id } : 'skip',
   )
 
   // Mutations
@@ -134,7 +138,12 @@ function DailyCheckIn() {
           </div>
           {stats && (
             <div className="bg-giraffe-100 px-4 py-2 rounded-lg border border-giraffe-200 flex items-center gap-2">
-              <span className="text-2xl">🔥</span>
+              <div className="bg-giraffe-200 p-2 rounded-full">
+                <svg className="w-5 h-5 text-giraffe-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                </svg>
+              </div>
               <div>
                 <div className="text-xs text-giraffe-600 font-bold uppercase">
                   Streak
@@ -257,7 +266,7 @@ function DailyCheckIn() {
 
               {showSuccess && (
                 <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg text-center font-medium animate-in fade-in slide-in-from-top-2">
-                  Check-in saved successfully! 🦒
+                  Check-in saved successfully!
                 </div>
               )}
             </div>
@@ -308,6 +317,71 @@ function DailyCheckIn() {
                 </p>
               )}
             </div>
+
+            {/* Weekly Patterns Insights */}
+            {weeklyPatterns &&
+              weeklyPatterns.frequentFeelings &&
+              weeklyPatterns.frequentFeelings.length > 0 && (
+                <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6">
+                  <h3 className="text-lg font-bold text-giraffe-900 mb-4">
+                    Weekly Patterns
+                  </h3>
+                  <div className="space-y-4">
+                    {weeklyPatterns.frequentFeelings.map((insight) => (
+                      <div
+                        key={insight.feeling}
+                        className="border-l-4 border-giraffe-400 pl-4 py-2"
+                      >
+                        <p className="text-giraffe-900 font-medium">
+                          You've felt{' '}
+                          <span className="font-bold">{insight.feeling}</span>{' '}
+                          {insight.count} times this week.
+                        </p>
+                        <p className="text-sm text-giraffe-700 mt-1">
+                          This often connects to needs for:
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {insight.relatedNeeds.map((need) => (
+                            <span
+                              key={need}
+                              className="text-xs px-2 py-1 bg-giraffe-50 text-giraffe-800 rounded-full border border-giraffe-200 capitalize"
+                            >
+                              {need}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Pleasant vs Unpleasant ratio */}
+                    <div className="pt-4 border-t border-giraffe-100">
+                      <p className="text-sm text-giraffe-700 mb-2">
+                        Emotional balance this week:
+                      </p>
+                      <div className="flex h-3 rounded-full overflow-hidden bg-gray-100">
+                        <div
+                          className="bg-green-400 transition-all"
+                          style={{
+                            width: `${weeklyPatterns.pleasantPercent}%`,
+                          }}
+                        />
+                        <div
+                          className="bg-blue-400 transition-all"
+                          style={{
+                            width: `${weeklyPatterns.unpleasantPercent}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-giraffe-600 mt-1">
+                        <span>Pleasant {weeklyPatterns.pleasantPercent}%</span>
+                        <span>
+                          Unpleasant {weeklyPatterns.unpleasantPercent}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             <div className="bg-linear-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-100 p-6">
               <h3 className="text-lg font-bold text-purple-900 mb-2">

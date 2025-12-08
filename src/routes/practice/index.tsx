@@ -123,7 +123,7 @@ function PracticeHub() {
   ]
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
       {/* Header with Giraffe Speaking */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">

@@ -1,86 +1,90 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useQuery } from 'convex/react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { DailyChallengeCard } from '../../components/features/challenges/DailyChallengeCard'
-import { ChallengeStats } from '../../components/features/challenges/ChallengeStats'
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/challenges/daily')({
   component: DailyChallengePage,
 })
 
 function DailyChallengePage() {
-  const router = useRouter()
-  const myChallenge = useQuery(api.dailyChallenges.getMyChallenge)
-  const stats = useQuery(api.dailyChallenges.getUserChallengeStats)
+  return (
+    <ProtectedRoute>
+      <DailyChallengeContent />
+    </ProtectedRoute>
+  )
+}
 
-  // Only fetch scenario if we have a scenarioId
-  let scenario = undefined
-  if (myChallenge?.scenarioId) {
-    scenario = useQuery(api.scenarios.getById, {
-      scenarioId: myChallenge.scenarioId,
-    })
-  }
+function DailyChallengeContent() {
+  const myChallenge = useQuery(api.dailyChallenges.getMyChallenge)
+  const getOrCreateProgress = useMutation(api.userProgress.getOrCreate)
+
+  // Ensure userProgress exists
+  useEffect(() => {
+    if (myChallenge === null) {
+      // User is authenticated but has no progress - initialize it
+      getOrCreateProgress().catch(console.error)
+    }
+  }, [myChallenge, getOrCreateProgress])
+
+  // Always call the hook, but skip if no scenarioId
+  const scenario = useQuery(
+    api.scenarios.getById,
+    myChallenge?.scenarioId ? { scenarioId: myChallenge.scenarioId } : 'skip',
+  )
 
   // Handle loading state
-  if (myChallenge === undefined || stats === undefined) {
+  if (myChallenge === undefined) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-white p-6 md:p-12">
-        <div className="max-w-4xl mx-auto">
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-giraffe-600 mb-4" />
-            <p className="text-slate-600 font-medium">
+            <p className="text-brown-700 font-medium">
               Loading your daily challenge...
             </p>
           </div>
         </div>
-      </div>
+      </main>
     )
   }
 
-  // Not authenticated
+  // No challenge generated yet (user is authenticated but no daily challenge exists)
   if (myChallenge === null) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-white p-6 md:p-12">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-brown-900 mb-4">
-            Daily Challenges
-          </h1>
-          <p className="text-lg text-slate-600 mb-6">
-            Sign in to access daily challenges and track your progress.
-          </p>
-          <button
-            onClick={() => router.navigate({ to: '/auth' })}
-            className="px-6 py-3 bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-bold rounded-lg transition-colors"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // No challenge generated yet
-  if (!myChallenge) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-white p-6 md:p-12">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-brown-900 mb-6">
-            Daily Challenges
-          </h1>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <h2 className="text-lg font-bold text-yellow-900 mb-2">
-              No Challenge Today
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
+        <section className="py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-8">
+            <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
+              Daily{' '}
+              <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+                Challenge
+              </span>
+            </h1>
+          </div>
+        </section>
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl border-2 border-giraffe-200 p-8 text-center">
+            <h2 className="text-xl font-bold text-brown-800 mb-3">
+              No Challenge Available
             </h2>
-            <p className="text-yellow-800 mb-4">
-              A new challenge will be generated at midnight UTC. Check back
-              later!
+            <p className="text-brown-700 mb-4">
+              Daily challenges are generated automatically. Check back soon!
             </p>
-            <p className="text-sm text-yellow-700">
+            <p className="text-sm text-brown-600 mb-6">
               In the meantime, you can explore other practice scenarios.
             </p>
+            <Link
+              to="/practice"
+              className="px-6 py-3 bg-linear-to-r from-giraffe-500 to-giraffe-400 hover:from-giraffe-600 hover:to-giraffe-500 text-white font-bold rounded-full transition-all shadow-lg inline-block"
+            >
+              Browse Practice Scenarios
+            </Link>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     )
   }
 
@@ -93,51 +97,45 @@ function DailyChallengePage() {
   const characterName = scenario?.characterName || 'Character'
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-white p-6 md:p-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-brown-900 mb-2">
-            Daily Challenge
-          </h1>
-          <p className="text-lg text-slate-600">
-            Complete today's challenge to earn 2x points and maintain your
-            streak!
-          </p>
-        </div>
-
-        {/* Stats Section */}
-        {stats && (
-          <div className="mb-8">
-            <ChallengeStats
-              currentStreak={stats.currentStreak}
-              longestStreak={stats.longestStreak}
-              completedCount={stats.completedCount}
-              averageScore={stats.averageScore}
-              totalPoints={stats.totalPoints}
-              level={stats.level}
-            />
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+      {/* Header */}
+      <section className="py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left side - Title and Description */}
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
+                Daily{' '}
+                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+                  Challenge
+                </span>
+              </h1>
+              <p className="text-lg text-brown-700 leading-relaxed">
+                Complete today's challenge to earn 2x points and maintain your
+                streak!
+              </p>
+            </div>
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* Recommended Challenge Card */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-brown-900 mb-4">
+      {/* Recommended Challenge Card */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div>
+          <h2 className="text-sm font-semibold text-brown-800 mb-3">
             Recommended for You
           </h2>
-          {myChallenge.recommendedDifficulty && (
-            <p className="text-sm text-slate-600 mb-3">
-              Based on your level ({myChallenge.userLevel}), we recommend the{' '}
-              <span className="font-semibold">
-                {myChallenge.recommendedDifficulty === 'easy'
-                  ? 'Beginner'
-                  : myChallenge.recommendedDifficulty === 'medium'
-                    ? 'Intermediate'
-                    : 'Advanced'}
-              </span>{' '}
-              challenge.
-            </p>
-          )}
+          <p className="text-sm text-brown-600 mb-4">
+            Based on your level ({myChallenge.userLevel}), we recommend the{' '}
+            <span className="font-semibold">
+              {myChallenge.recommendedDifficulty === 'easy'
+                ? 'Beginner'
+                : myChallenge.recommendedDifficulty === 'medium'
+                  ? 'Intermediate'
+                  : 'Advanced'}
+            </span>{' '}
+            challenge.
+          </p>
           <DailyChallengeCard
             title={title}
             description={myChallenge.description}
@@ -149,34 +147,7 @@ function DailyChallengePage() {
             challengeId={myChallenge._id}
           />
         </div>
-
-        {/* Tips Section */}
-        <div className="bg-giraffe-100 border border-giraffe-300 rounded-lg p-6 mt-8">
-          <h3 className="text-lg font-bold text-brown-900 mb-4">
-            Tips for Success
-          </h3>
-          <ul className="space-y-3 text-slate-700">
-            <li className="flex gap-3">
-              <span className="text-xl flex-shrink-0">1</span>
-              <span>
-                Start by making a clear observation without judgment or blame
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-xl flex-shrink-0">2</span>
-              <span>Express your feelings using actual emotion words</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-xl flex-shrink-0">3</span>
-              <span>Connect your feelings to universal human needs</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-xl flex-shrink-0">4</span>
-              <span>Make a clear, doable request (not a demand)</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

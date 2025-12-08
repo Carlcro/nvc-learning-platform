@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
+import { Card, CardBody } from '~/components/ui/Card'
+import { Button } from '~/components/ui/Button'
 
 interface DailyChallengeCardProps {
   title: string
@@ -16,26 +18,23 @@ interface DailyChallengeCardProps {
 const difficultyConfig = {
   easy: {
     label: 'Beginner',
-    color: 'bg-green-50 border-green-200',
-    badge: 'text-green-700 bg-green-100',
+    badge: 'bg-emerald-100 text-emerald-800',
   },
   medium: {
     label: 'Intermediate',
-    color: 'bg-amber-50 border-amber-200',
-    badge: 'text-amber-700 bg-amber-100',
+    badge: 'bg-giraffe-100 text-giraffe-800',
   },
   hard: {
     label: 'Advanced',
-    color: 'bg-red-50 border-red-200',
-    badge: 'text-red-700 bg-red-100',
+    badge: 'bg-empathy-low text-white',
   },
 }
 
-const componentEmojis: Record<string, string> = {
-  observation: 'O',
-  feeling: 'F',
-  need: 'N',
-  request: 'R',
+const objectiveLabels: Record<string, string> = {
+  observation: 'Observation',
+  feeling: 'Feeling',
+  need: 'Need',
+  request: 'Request',
 }
 
 export function DailyChallengeCard({
@@ -52,7 +51,6 @@ export function DailyChallengeCard({
   const [hoursRemaining, setHoursRemaining] = useState(0)
 
   useEffect(() => {
-    // Calculate hours remaining until midnight UTC
     const now = new Date()
     const midnight = new Date(now)
     midnight.setUTCHours(24, 0, 0, 0)
@@ -65,120 +63,101 @@ export function DailyChallengeCard({
     }
 
     updateHours()
-    const interval = setInterval(updateHours, 60000) // Update every minute
+    const interval = setInterval(updateHours, 60000)
 
     return () => clearInterval(interval)
   }, [])
 
   const config = difficultyConfig[difficulty]
-  const scorePercentage =
-    completedScore !== undefined ? Math.round((completedScore / 100) * 100) : 0
 
   return (
-    <div
-      className={`${config.color} border rounded-lg p-6 transition-all hover:shadow-md`}
-    >
-      {/* Header with title and difficulty */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h2 className="text-xl font-bold text-brown-900 mb-1">{title}</h2>
-          <p className="text-sm text-slate-600">{description}</p>
+    <Card className="flex flex-col hover:shadow-lg transition-all duration-200">
+      {/* Status Badge */}
+      <div
+        className={`${completed ? 'bg-emerald-600' : 'bg-giraffe-600'} px-6 py-2 text-white`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold">
+            {completed ? 'COMPLETED' : 'DAILY CHALLENGE'}
+          </span>
+          <span className="text-sm font-semibold">2x Points</span>
         </div>
-        <span className={`${config.badge} px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap ml-4`}>
-          {config.label}
-        </span>
       </div>
 
-      {/* Character and objectives */}
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-brown-700">Character:</span>
-          <span className="text-sm text-slate-600">{characterName}</span>
+      {/* Header */}
+      <div className="bg-linear-to-r from-giraffe-500 to-giraffe-400 px-6 py-4 text-white">
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div>
+            <div className="text-sm font-semibold text-giraffe-50 mb-1">
+              Today's Focus
+            </div>
+            <h3 className="text-xl font-bold text-white">{title}</h3>
+          </div>
+          <div
+            className={`px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${config.badge}`}
+          >
+            {config.label}
+          </div>
         </div>
 
-        {/* Learning objectives */}
+        {completed && completedScore !== undefined && (
+          <div className="text-sm font-semibold text-white mt-2">
+            Score: {completedScore}/100
+          </div>
+        )}
+      </div>
+
+      {/* Body */}
+      <CardBody className="flex-grow flex flex-col gap-4">
+        <p className="text-brown-700 text-sm leading-relaxed">{description}</p>
+
+        {/* Character Info */}
+        <div className="bg-giraffe-50 rounded-lg p-3 border border-giraffe-100">
+          <div className="text-xs font-semibold text-giraffe-700 mb-1">
+            Character
+          </div>
+          <div className="font-semibold text-brown-800">{characterName}</div>
+        </div>
+
+        {/* Learning Objectives */}
         {learningObjectives.length > 0 && (
-          <div className="flex items-start gap-2">
-            <span className="text-sm font-medium text-brown-700 pt-0.5">
-              Practice:
-            </span>
+          <div>
+            <div className="text-xs font-semibold text-giraffe-700 mb-2">
+              Practice Areas
+            </div>
             <div className="flex flex-wrap gap-2">
               {learningObjectives.map((obj) => (
                 <span
                   key={obj}
-                  className="inline-block px-2 py-1 bg-white/60 text-brown-700 text-xs font-medium rounded capitalize border border-brown-200"
+                  className="inline-block px-2 py-1 bg-giraffe-50 text-giraffe-800 text-xs font-medium rounded border border-giraffe-200"
                 >
-                  {componentEmojis[obj as keyof typeof componentEmojis] ||
-                    obj.charAt(0).toUpperCase()}{' '}
-                  {obj}
+                  {objectiveLabels[obj] || obj}
                 </span>
               ))}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Bonus indicator */}
-      <div className="flex items-center gap-2 mb-4 p-2 bg-white/70 rounded">
-        <span className="text-sm font-semibold text-giraffe-600">2x Bonus</span>
-        <span className="text-xs text-slate-600">Double points for daily challenges!</span>
-      </div>
-
-      {/* Completion status and action */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1">
-          {completed ? (
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-green-700">
-                  Completed
-                </span>
-                {completedScore !== undefined && (
-                  <span className="text-sm text-green-600 font-semibold">
-                    {scorePercentage}%
-                  </span>
-                )}
-              </div>
-              {completedScore !== undefined && (
-                <div className="w-full bg-white rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full transition-all"
-                    style={{ width: `${scorePercentage}%` }}
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                {hoursRemaining} hours remaining
-              </span>
-              <span className="text-xs text-slate-500">Expires at midnight UTC</span>
-            </div>
-          )}
-        </div>
-
-        {/* Action button */}
-        {completed ? (
-          <Link
-            to="/practice/$scenarioId/brief"
-            params={{ scenarioId }}
-            search={{ dailyChallengeId: challengeId }}
-            className="px-4 py-2 bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold rounded-lg transition-colors whitespace-nowrap text-sm"
-          >
-            Try Again
-          </Link>
-        ) : (
-          <Link
-            to="/practice/$scenarioId/brief"
-            params={{ scenarioId }}
-            search={{ dailyChallengeId: challengeId }}
-            className="px-4 py-2 bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold rounded-lg transition-colors whitespace-nowrap text-sm"
-          >
-            Start
-          </Link>
+        {/* Time remaining */}
+        {!completed && (
+          <div className="text-xs text-brown-500 mt-auto">
+            {hoursRemaining} hours remaining - Expires at midnight UTC
+          </div>
         )}
+      </CardBody>
+
+      {/* Footer */}
+      <div className="px-6 py-4 border-t border-giraffe-100 bg-giraffe-50">
+        <Link
+          to="/practice/$scenarioId/brief"
+          params={{ scenarioId }}
+          search={{ dailyChallengeId: challengeId }}
+        >
+          <Button variant="primary" className="w-full">
+            {completed ? 'Try Again' : 'Start Challenge'}
+          </Button>
+        </Link>
       </div>
-    </div>
+    </Card>
   )
 }

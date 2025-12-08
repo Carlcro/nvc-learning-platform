@@ -1,10 +1,10 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
-export const Route = createFileRoute('/learn/feelings/intensity')({
+export const Route = createFileRoute('/feelings/intensity')({
   component: ProtectedIntensityExplorer,
 })
 
@@ -68,7 +68,7 @@ function IntensityExplorer() {
             </p>
           </div>
           <Link
-            to="/learn/feelings/wheel"
+            to="/feelings/wheel"
             className="px-4 py-2 bg-giraffe-100 text-giraffe-900 rounded-lg font-semibold hover:bg-giraffe-200 transition-colors"
           >
             ← Back to Wheel

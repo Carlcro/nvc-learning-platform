@@ -7,25 +7,30 @@ interface StreakBadgeProps {
 
 export function StreakBadge({ stats }: StreakBadgeProps) {
   return (
-    <Card className="bg-linear-to-br from-orange-50 to-white border-2 border-orange-200">
-      <CardBody className="flex items-center gap-4">
-        <div className="flex-shrink-0 w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center border-2 border-orange-200">
-          <span className="text-3xl">🔥</span>
+    <Card className="overflow-hidden h-full">
+      {/* Header */}
+      <div className="bg-linear-to-r from-amber-500 to-amber-400 px-6 py-3 text-white">
+        <div className="text-sm font-semibold uppercase tracking-wider">
+          Daily Streak
         </div>
+      </div>
 
-        <div>
-          <h3 className="text-sm font-bold text-orange-800 uppercase tracking-wider mb-1">
-            Daily Streak
-          </h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-brown-800">
+      <CardBody className="flex flex-col justify-center">
+        <div className="text-center">
+          <div className="flex items-baseline justify-center gap-2 mb-2">
+            <span className="text-5xl font-bold text-brown-800">
               {stats.currentStreak}
             </span>
-            <span className="text-brown-600">days</span>
+            <span className="text-lg text-brown-600 font-medium">days</span>
           </div>
-          <p className="text-xs text-brown-500 mt-1">
-            Best: {stats.longestStreak} days
-          </p>
+          <div className="bg-giraffe-50 rounded-lg p-3 border border-giraffe-100">
+            <div className="text-xs font-semibold text-giraffe-700 mb-1">
+              Best Streak
+            </div>
+            <div className="font-bold text-brown-800">
+              {stats.longestStreak} days
+            </div>
+          </div>
         </div>
       </CardBody>
     </Card>

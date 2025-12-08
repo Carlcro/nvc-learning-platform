@@ -171,7 +171,7 @@ function ScenarioBrief() {
     difficultyColors[scenario.difficulty as keyof typeof difficultyColors]
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Main Content Card */}
         <div className="bg-white rounded-lg border-2 border-giraffe-200 overflow-hidden">

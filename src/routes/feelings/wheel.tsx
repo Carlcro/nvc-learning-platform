@@ -1,10 +1,10 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
-import { api } from '../../../../convex/_generated/api'
+import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
-export const Route = createFileRoute('/learn/feelings/wheel')({
+export const Route = createFileRoute('/feelings/wheel')({
   component: ProtectedFeelingsWheel,
 })
 
@@ -133,10 +133,13 @@ function FeelingsWheel() {
                     />
                   </div>
                   <Link
-                    to="/learn/feelings/intensity"
+                    to="/feelings/intensity"
                     className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center gap-2"
                   >
-                    <span>⚡</span> Intensity Explorer
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Intensity Explorer
                   </Link>
                 </div>
 
