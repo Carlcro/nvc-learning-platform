@@ -387,7 +387,7 @@ export function FeedbackPanel({
   milestones,
 }: FeedbackPanelProps) {
   return (
-    <div className="w-full rounded overflow-hidden bg-white shadow-lg border border-giraffe-100 flex flex-col h-full">
+    <div className="w-full rounded overflow-hidden bg-giraffe-50 shadow-lg border border-giraffe-100 flex flex-col h-full">
       {/* Header */}
       <div className="bg-gradient-to-r from-giraffe-400 to-giraffe-500 px-5 py-4">
         <div className="flex items-center gap-2">
@@ -431,7 +431,7 @@ export function FeedbackPanel({
             <FeedbackNotes feedback={feedback} />
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-3 py-6 flex-1">
+          <div className="flex flex-col items-center justify-center gap-3 py-6 flex-1 ">
             <img
               src="/giraff.png"
               alt="Giraffe - Your NVC Guide"

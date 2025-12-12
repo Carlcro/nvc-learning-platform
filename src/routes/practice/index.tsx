@@ -242,7 +242,7 @@ function PracticeHub() {
                   difficulty={scenario.difficulty}
                   characterName={scenario.characterName}
                   minLevel={scenario.unlockRequirements.minLevel}
-                  isLocked={!isUnlocked}
+                  isLocked={false}
                   progress={progress}
                   onStart={handleStartScenario}
                   onViewBest={handleViewBest}

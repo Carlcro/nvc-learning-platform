@@ -61,10 +61,6 @@ function ScenarioBrief() {
     scenarioId: scenarioId as Id<'scenarios'>,
   })
 
-  // Check if scenario is unlocked
-  const isUnlocked = useQuery(api.scenarioProgress.isScenarioUnlocked, {
-    scenarioId: scenarioId as Id<'scenarios'>,
-  })
 
   const createConversation = useMutation(api.conversations.create)
   const initializeScenarioProgress = useMutation(
@@ -125,47 +121,6 @@ function ScenarioBrief() {
     )
   }
 
-  if (isUnlocked === false) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20 px-4">
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={handleBack}
-            className="mb-6 text-giraffe-600 hover:text-giraffe-700 font-semibold flex items-center gap-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-
-          <div className="bg-white rounded-lg border-2 border-giraffe-200 p-8 text-center">
-            <div className="text-5xl mb-4">🔒</div>
-            <h1 className="text-2xl font-bold text-brown-800 mb-4">
-              Scenario Locked
-            </h1>
-            <p className="text-brown-700 mb-6">
-              Complete earlier scenarios and reach the required level to unlock
-              this one.
-            </p>
-            <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 text-sm text-blue-800 mb-6">
-              <p className="font-semibold mb-2">Requirements:</p>
-              <p>Required Level: {scenario.unlockRequirements.minLevel}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const colors =
     difficultyColors[scenario.difficulty as keyof typeof difficultyColors]
