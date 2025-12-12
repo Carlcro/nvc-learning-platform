@@ -43,7 +43,7 @@ function PracticeHub() {
   // Fetch user's overall progress stats
 
   // Helper function to check if scenario is unlocked
-  const isScenarioUnlocked = (scenario: any) => {
+  /*   const isScenarioUnlocked = (scenario: any) => {
     // Check minLevel requirement
     if (userLevel < scenario.unlockRequirements.minLevel) {
       return false
@@ -63,7 +63,7 @@ function PracticeHub() {
     }
 
     return true
-  }
+  } */
 
   // Helper function to get progress for a scenario
   const getScenarioProgress = (scenarioId: string | { __id?: string }) => {
