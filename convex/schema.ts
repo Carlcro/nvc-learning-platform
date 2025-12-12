@@ -266,6 +266,19 @@ export default defineSchema({
     giraffeStreakCount: v.number(), // Consecutive good NVC messages
     jackalLanguageCount: v.number(), // Number of messages with jackal language
 
+    // ============ Milestone Tracking ============
+    milestonesAchieved: v.object({
+      conversationStarted: v.boolean(), // Always true once started
+      feelingExpressed: v.boolean(), // feeling >= 15
+      needIdentified: v.boolean(), // need >= 15
+      requestMade: v.boolean(), // request >= 15
+      resolutionReached: v.boolean(), // characterMood >= 5 AND total >= 70
+    }),
+
+    // ============ Rewind Feature ============
+    rewindsUsed: v.number(), // 0-2, tracks rewinds used
+    maxRewinds: v.number(), // Default 2
+
     // ============ Objectives ============
     objectivesMetInConversation: v.array(v.string()), // Learning objectives demonstrated
 

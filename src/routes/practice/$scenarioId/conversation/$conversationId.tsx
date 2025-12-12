@@ -9,6 +9,7 @@ import type { Id } from 'convex/_generated/dataModel'
 import { ConversationView } from '~/components/features/roleplay/ConversationView'
 import { FeedbackPanel } from '~/components/features/roleplay/FeedbackPanel'
 import { MessageInput } from '~/components/features/roleplay/MessageInput'
+import { RewindButton } from '~/components/features/roleplay/RewindButton'
 import { ScenarioResults } from '~/components/features/roleplay/ScenarioResults'
 import { Button } from '~/components/ui/Button'
 
@@ -56,6 +57,7 @@ function ConversationComponent() {
   const completeConversation = useMutation(api.conversations.complete)
   const abandonConversation = useMutation(api.conversations.abandon)
   const createConversation = useMutation(api.conversations.create)
+  const rewindMessages = useMutation(api.conversations.rewindLastMessages)
   const updateUserProgress = useMutation(api.userProgress.updateProgress)
   const updateScenarioProgress = useMutation(
     api.scenarioProgress.updateScenarioProgress,
@@ -393,7 +395,24 @@ function ConversationComponent() {
   }
 
   const handleViewTranscript = () => {
-    // TODO: Implement transcript viewing functionality
+    window.location.href = `/practice/${scenarioId}/transcript/${conversationId}`
+  }
+
+  const handleRewind = async () => {
+    if (!conversationId) return
+
+    try {
+      const result = await rewindMessages({
+        conversationId: conversationId as Id<'conversations'>,
+      })
+
+      if (result.success) {
+        setMessages(result.messages)
+        setFeedback(null)
+      }
+    } catch (error) {
+      // Error is handled by the UI
+    }
   }
 
   if (!scenario || currentUser === undefined) {
@@ -559,10 +578,25 @@ function ConversationComponent() {
                 disabled={isLoading || isArchiveMode}
                 onStartOver={handleStartNewConversation}
               />
+
+              {/* Rewind Button - show after at least one user message */}
+              {messages.filter((m) => m.role === 'user').length > 0 &&
+                !isArchiveMode && (
+                  <div className="flex justify-center pt-1">
+                    <RewindButton
+                      rewindsRemaining={
+                        (conversation?.maxRewinds ?? 2) -
+                        (conversation?.rewindsUsed ?? 0)
+                      }
+                      onRewind={handleRewind}
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
             </div>
           </div>
 
-          <div className="w-80 hidden lg:flex flex-col min-w-0 p-6 overflow-hidden">
+          <div className="w-[420px] hidden lg:flex flex-col min-w-0 px-6 overflow-hidden">
             <FeedbackPanel
               feedback={feedback}
               isLoading={isLoading}
@@ -573,6 +607,7 @@ function ConversationComponent() {
                 scenario.characterInitialMood ||
                 0
               }
+              milestones={conversation?.milestonesAchieved}
             />
           </div>
         </div>
@@ -642,6 +677,7 @@ function ConversationComponent() {
                     scenario.characterInitialMood ||
                     0
                   }
+                  milestones={conversation?.milestonesAchieved}
                 />
               </div>
 

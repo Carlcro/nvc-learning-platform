@@ -33,6 +33,7 @@ import { Route as ChallengesDailyRouteImport } from './routes/challenges/daily'
 import { Route as AdminSeedScenariosRouteImport } from './routes/admin/seed-scenarios'
 import { Route as AdminSeedRouteImport } from './routes/admin/seed'
 import { Route as PracticeScenarioIdBriefRouteImport } from './routes/practice/$scenarioId/brief'
+import { Route as PracticeScenarioIdTranscriptConversationIdRouteImport } from './routes/practice/$scenarioId/transcript/$conversationId'
 import { Route as PracticeScenarioIdConversationConversationIdRouteImport } from './routes/practice/$scenarioId/conversation/$conversationId'
 
 const TestScoringRoute = TestScoringRouteImport.update({
@@ -155,6 +156,12 @@ const PracticeScenarioIdBriefRoute = PracticeScenarioIdBriefRouteImport.update({
   path: '/practice/$scenarioId/brief',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PracticeScenarioIdTranscriptConversationIdRoute =
+  PracticeScenarioIdTranscriptConversationIdRouteImport.update({
+    id: '/practice/$scenarioId/transcript/$conversationId',
+    path: '/practice/$scenarioId/transcript/$conversationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PracticeScenarioIdConversationConversationIdRoute =
   PracticeScenarioIdConversationConversationIdRouteImport.update({
     id: '/practice/$scenarioId/conversation/$conversationId',
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileIndexRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
+  '/practice/$scenarioId/transcript/$conversationId': typeof PracticeScenarioIdTranscriptConversationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileIndexRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
+  '/practice/$scenarioId/transcript/$conversationId': typeof PracticeScenarioIdTranscriptConversationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -242,6 +251,7 @@ export interface FileRoutesById {
   '/profile/': typeof ProfileIndexRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
+  '/practice/$scenarioId/transcript/$conversationId': typeof PracticeScenarioIdTranscriptConversationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/practice/$scenarioId/brief'
     | '/practice/$scenarioId/conversation/$conversationId'
+    | '/practice/$scenarioId/transcript/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/practice/$scenarioId/brief'
     | '/practice/$scenarioId/conversation/$conversationId'
+    | '/practice/$scenarioId/transcript/$conversationId'
   id:
     | '__root__'
     | '/'
@@ -324,6 +336,7 @@ export interface FileRouteTypes {
     | '/profile/'
     | '/practice/$scenarioId/brief'
     | '/practice/$scenarioId/conversation/$conversationId'
+    | '/practice/$scenarioId/transcript/$conversationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -346,6 +359,7 @@ export interface RootRouteChildren {
   ProfileIndexRoute: typeof ProfileIndexRoute
   PracticeScenarioIdBriefRoute: typeof PracticeScenarioIdBriefRoute
   PracticeScenarioIdConversationConversationIdRoute: typeof PracticeScenarioIdConversationConversationIdRoute
+  PracticeScenarioIdTranscriptConversationIdRoute: typeof PracticeScenarioIdTranscriptConversationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -518,6 +532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeScenarioIdBriefRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/practice/$scenarioId/transcript/$conversationId': {
+      id: '/practice/$scenarioId/transcript/$conversationId'
+      path: '/practice/$scenarioId/transcript/$conversationId'
+      fullPath: '/practice/$scenarioId/transcript/$conversationId'
+      preLoaderRoute: typeof PracticeScenarioIdTranscriptConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice/$scenarioId/conversation/$conversationId': {
       id: '/practice/$scenarioId/conversation/$conversationId'
       path: '/practice/$scenarioId/conversation/$conversationId'
@@ -571,6 +592,8 @@ const rootRouteChildren: RootRouteChildren = {
   PracticeScenarioIdBriefRoute: PracticeScenarioIdBriefRoute,
   PracticeScenarioIdConversationConversationIdRoute:
     PracticeScenarioIdConversationConversationIdRoute,
+  PracticeScenarioIdTranscriptConversationIdRoute:
+    PracticeScenarioIdTranscriptConversationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -132,6 +132,15 @@ export const create = mutation({
       currentCharacterMood: initialCharacterMood,
       giraffeStreakCount: 0,
       jackalLanguageCount: 0,
+      milestonesAchieved: {
+        conversationStarted: true,
+        feelingExpressed: false,
+        needIdentified: false,
+        requestMade: false,
+        resolutionReached: false,
+      },
+      rewindsUsed: 0,
+      maxRewinds: 2,
       objectivesMetInConversation: [],
       createdAt: now,
       lastMessageAt: now,
@@ -182,9 +191,47 @@ export const addMessage = mutation({
       },
     ]
 
-    await ctx.db.patch(conversationId, {
+    // Update milestones if this is a user message with NVC scores
+    const updates: Record<string, unknown> = {
       messages: updatedMessages,
-    })
+      lastMessageAt: Date.now(),
+      messageCount: updatedMessages.length,
+    }
+
+    if (role === 'user' && scoreData.nvcScore) {
+      const currentMilestones = conversation.milestonesAchieved || {
+        conversationStarted: true,
+        feelingExpressed: false,
+        needIdentified: false,
+        requestMade: false,
+        resolutionReached: false,
+      }
+
+      // Check milestone thresholds (15/25 = 60% of max score)
+      const MILESTONE_THRESHOLD = 15
+
+      const updatedMilestones = {
+        conversationStarted: true,
+        feelingExpressed:
+          currentMilestones.feelingExpressed ||
+          scoreData.nvcScore.feeling >= MILESTONE_THRESHOLD,
+        needIdentified:
+          currentMilestones.needIdentified ||
+          scoreData.nvcScore.need >= MILESTONE_THRESHOLD,
+        requestMade:
+          currentMilestones.requestMade ||
+          scoreData.nvcScore.request >= MILESTONE_THRESHOLD,
+        // Resolution requires good mood (>= 5) AND high score (>= 70)
+        resolutionReached:
+          currentMilestones.resolutionReached ||
+          (conversation.currentCharacterMood >= 5 &&
+            scoreData.nvcScore.total >= 70),
+      }
+
+      updates.milestonesAchieved = updatedMilestones
+    }
+
+    await ctx.db.patch(conversationId, updates)
 
     return { success: true }
   },
@@ -363,5 +410,79 @@ export const deleteConversation = mutation({
   handler: async (ctx, args) => {
     await ctx.db.delete(args.conversationId)
     return { success: true }
+  },
+})
+
+/**
+ * Rewind the last user message and AI response
+ * Allows users to try a different approach (limited to 2 rewinds per conversation)
+ */
+export const rewindLastMessages = mutation({
+  args: {
+    conversationId: v.id('conversations'),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId)
+    if (!conversation) {
+      throw new Error('Conversation not found')
+    }
+
+    if (conversation.status !== 'in_progress') {
+      throw new Error('Cannot rewind a completed conversation')
+    }
+
+    const maxRewinds = conversation.maxRewinds ?? 2
+    const rewindsUsed = conversation.rewindsUsed ?? 0
+
+    if (rewindsUsed >= maxRewinds) {
+      throw new Error('No rewinds remaining')
+    }
+
+    // Need at least 3 messages (opening + user + assistant) to rewind
+    if (conversation.messages.length < 3) {
+      throw new Error('Not enough messages to rewind')
+    }
+
+    // Remove last 2 messages (user message + AI response)
+    const updatedMessages = conversation.messages.slice(0, -2)
+
+    // Recalculate milestones from remaining messages
+    const MILESTONE_THRESHOLD = 15
+    let feelingExpressed = false
+    let needIdentified = false
+    let requestMade = false
+    let resolutionReached = false
+
+    for (const msg of updatedMessages) {
+      if (msg.role === 'user' && msg.nvcScore) {
+        if (msg.nvcScore.feeling >= MILESTONE_THRESHOLD) feelingExpressed = true
+        if (msg.nvcScore.need >= MILESTONE_THRESHOLD) needIdentified = true
+        if (msg.nvcScore.request >= MILESTONE_THRESHOLD) requestMade = true
+        // Note: resolution check needs mood at that point, simplified here
+        if (msg.nvcScore.total >= 70) resolutionReached = true
+      }
+    }
+
+    const updatedMilestones = {
+      conversationStarted: true,
+      feelingExpressed,
+      needIdentified,
+      requestMade,
+      resolutionReached,
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      messages: updatedMessages,
+      messageCount: updatedMessages.length,
+      rewindsUsed: rewindsUsed + 1,
+      milestonesAchieved: updatedMilestones,
+      lastMessageAt: Date.now(),
+    })
+
+    return {
+      success: true,
+      rewindsRemaining: maxRewinds - (rewindsUsed + 1),
+      messages: updatedMessages,
+    }
   },
 })

@@ -1,4 +1,4 @@
-"use node";
+'use node'
 
 /**
  * AI Integration Module for NVC Analysis
@@ -11,14 +11,14 @@
  * See AI_ROLEPLAY_FEATURE_SUMMARY.md for feature details
  */
 
-import { v } from "convex/values";
-import OpenAI from "openai";
-import { action } from "./_generated/server";
+import { v } from 'convex/values'
+import OpenAI from 'openai'
+import { action } from './_generated/server'
 
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
-});
+})
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -79,14 +79,20 @@ export const analyzeNVCResponse = action({
   handler: async (_ctx, args): Promise<NVCAnalysisResult> => {
     // Build conversation context for analysis
     const conversationContext =
-      args.conversationHistory && args.conversationHistory.length > 0
+      args.conversationHistory.length > 0
         ? args.conversationHistory
-            .map((msg) => `${msg.role === "user" ? "User" : "Character"}: ${msg.content}`)
-            .join("\n")
-        : "This is the start of a new conversation.";
+            .map(
+              (msg) =>
+                `${msg.role === 'user' ? 'User' : 'Character'}: ${msg.content}`,
+            )
+            .join('\n')
+        : 'This is the start of a new conversation.'
 
     // Adjust feedback style based on user level
-    const feedbackStyle = (args.userLevel || 1) >= 5 ? "concise and focused" : "detailed and educational";
+    const feedbackStyle =
+      (args.userLevel || 1) >= 5
+        ? 'concise and focused'
+        : 'detailed and educational'
 
     // Construct the analysis prompt
     const analysisPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing a user's response in a roleplay conversation.
@@ -247,36 +253,36 @@ export const generateCharacterResponse = action({
     userLevel: v.optional(v.number()), // 1-10, affects difficulty
   },
   handler: async (_ctx, args): Promise<string> => {
-    const userLevel = args.userLevel || 1;
-    const nvcScore = args.userNVCScore || 0;
+    const userLevel = args.userLevel || 1
+    const nvcScore = args.userNVCScore || 0
 
     // Determine character's emotional response based on NVC score and user level
-    let characterReactionGuidance = "";
+    let characterReactionGuidance = ''
 
     if (userLevel <= 2) {
       // Beginners: forgiving character
       characterReactionGuidance =
         nvcScore >= 40
-          ? "The character feels heard and becomes noticeably more open, warm, and cooperative."
-          : "The character remains patient and doesn't escalate. They stay engaged despite imperfect communication.";
+          ? 'The character feels heard and becomes noticeably more open, warm, and cooperative.'
+          : "The character remains patient and doesn't escalate. They stay engaged despite imperfect communication."
     } else if (userLevel <= 5) {
       // Intermediate: realistic reactions
       characterReactionGuidance =
         nvcScore >= 70
-          ? "The character feels genuinely understood. They become more open, vulnerable, and willing to cooperate."
+          ? 'The character feels genuinely understood. They become more open, vulnerable, and willing to cooperate.'
           : nvcScore >= 50
-            ? "The character appreciates some effort but remains somewhat guarded. They show mixed emotions."
-            : "The character feels judged or unheard. They become defensive or withdrawn.";
+            ? 'The character appreciates some effort but remains somewhat guarded. They show mixed emotions.'
+            : 'The character feels judged or unheard. They become defensive or withdrawn.'
     } else {
       // Advanced: challenging character
       characterReactionGuidance =
         nvcScore >= 85
-          ? "The character experiences a significant emotional shift - they feel truly seen and become collaborative."
+          ? 'The character experiences a significant emotional shift - they feel truly seen and become collaborative.'
           : nvcScore >= 70
-            ? "The character feels respected. They open up more but maintain some boundaries."
+            ? 'The character feels respected. They open up more but maintain some boundaries.'
             : nvcScore >= 50
-              ? "The character is conflicted. Part of them wants to connect but they remain guarded."
-              : "The character feels misunderstood or blamed. They become notably defensive or argumentative.";
+              ? 'The character is conflicted. Part of them wants to connect but they remain guarded.'
+              : 'The character feels misunderstood or blamed. They become notably defensive or argumentative.'
     }
 
     // Build system prompt with full character context
@@ -285,9 +291,9 @@ export const generateCharacterResponse = action({
 CHARACTER PROFILE:
 - Name: ${args.scenario.characterName}
 - Personality: ${args.scenario.characterPersonality}
-- Current Emotional State: ${args.scenario.characterInitialMood > 0 ? "Somewhat open" : args.scenario.characterInitialMood < 0 ? "Defensive" : "Neutral"}
+- Current Emotional State: ${args.scenario.characterInitialMood > 0 ? 'Somewhat open' : args.scenario.characterInitialMood < 0 ? 'Defensive' : 'Neutral'}
 - Background: ${args.scenario.characterBackground}
-- Your Hidden Needs: ${args.scenario.characterHiddenNeeds.join(", ")}
+- Your Hidden Needs: ${args.scenario.characterHiddenNeeds.join(', ')}
 
 BEHAVIORAL RULES:
 1. STAY IN CHARACTER - Never break character, never mention NVC, never explain yourself
@@ -304,37 +310,37 @@ IMPORTANT REMINDERS:
 - Never teach NVC explicitly
 - Never acknowledge the scoring system
 - Show character growth through openness, not through explaining yourself
-- React to both what they say AND how they say it`;
+- React to both what they say AND how they say it`
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         max_tokens: 300,
         temperature: 0.8,
         messages: [
           {
-            role: "system",
+            role: 'system',
             content: systemPrompt,
           },
           ...args.conversationHistory,
           {
-            role: "user",
+            role: 'user',
             content: args.userMessage,
           },
         ],
-      });
+      })
 
-      const textContent = response.choices[0]?.message?.content;
+      const textContent = response.choices[0]?.message?.content
       if (!textContent) {
-        throw new Error("No response from OpenAI");
+        throw new Error('No response from OpenAI')
       }
 
-      return textContent;
+      return textContent
     } catch (error) {
-      console.error("Error generating character response:", error);
+      console.error('Error generating character response:', error)
       throw new Error(
-        `Failed to generate character response: ${error instanceof Error ? error.message : String(error)}`
-      );
+        `Failed to generate character response: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   },
-});
+})
