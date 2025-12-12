@@ -33,8 +33,6 @@ function PracticeHub() {
   const scenarios = useConvexQuery(api.scenarios.listByOrder) || []
 
   // Fetch user profile for their level
-  const userProfile = useConvexQuery(api.users.getUserProfile)
-  const userLevel = userProfile?.profile?.level || 1
 
   // Fetch user's scenario progress
   const userProgress =
