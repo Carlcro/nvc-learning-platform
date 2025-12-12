@@ -230,7 +230,6 @@ function PracticeHub() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredScenarios.map((scenario) => {
               const progress = getScenarioProgress(scenario._id)
-              const isUnlocked = isScenarioUnlocked(scenario)
               const requiredScenarioName = getRequiredScenarioName(scenario)
               return (
                 <ScenarioCard
