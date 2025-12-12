@@ -533,8 +533,9 @@ function ConversationComponent() {
               {(() => {
                 const userMessages = messages.filter((m) => m.role === 'user')
                 const lastUserMessage = userMessages[userMessages.length - 1]
-                const lastScore = lastUserMessage.nvcScore?.total || 0
+                const lastScore = lastUserMessage?.nvcScore?.total || 0
                 const canEndConversation =
+                  userMessages.length > 0 &&
                   messages.length > 3 &&
                   !isArchiveMode &&
                   (lastScore >= 70 || messages.length >= 10)
