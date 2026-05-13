@@ -27,8 +27,8 @@
     "@tanstack/react-start": "^1.132.2",
     "convex": "^1.28.0",
     "jose": "^6.1.0",
+    "@anthropic-ai/sdk": "^0.95.2",
     "lucide-react": "^0.561.0",
-    "openai": "^6.7.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

@@ -3,22 +3,22 @@
 /**
  * AI Integration Module for NVC Analysis
  *
- * This module handles all interactions with the OpenAI API for:
- * - Analyzing user messages for NVC components
- * - Generating AI character responses in roleplay scenarios
- * - Providing coaching feedback
+ * Handles:
+ * - Analyzing user messages for NVC components (structured JSON output)
+ * - Generating character responses in roleplay scenarios
  *
- * See AI_ROLEPLAY_FEATURE_SUMMARY.md for feature details
+ * See AI_ROLEPLAY_FEATURE_SUMMARY.md for feature details.
  */
 
+import Anthropic from '@anthropic-ai/sdk'
 import { v } from 'convex/values'
-import OpenAI from 'openai'
 import { action } from './_generated/server'
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
 })
+
+const MODEL = 'claude-sonnet-4-6'
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -50,25 +50,45 @@ export interface ConversationMessage {
   content: string
 }
 
+// JSON schema used to constrain the analysis response.
+const nvcAnalysisSchema = {
+  type: 'object',
+  properties: {
+    observation: { type: 'integer' },
+    feeling: { type: 'integer' },
+    need: { type: 'integer' },
+    request: { type: 'integer' },
+    total: { type: 'integer' },
+    feedback: { type: 'string' },
+    isJackalLanguage: { type: 'boolean' },
+    jackalPhrases: { type: 'array', items: { type: 'string' } },
+    giraffeAlternative: { type: 'string' },
+    whatWentWell: { type: 'string' },
+  },
+  required: [
+    'observation',
+    'feeling',
+    'need',
+    'request',
+    'total',
+    'feedback',
+    'isJackalLanguage',
+    'jackalPhrases',
+    'giraffeAlternative',
+    'whatWentWell',
+  ],
+  additionalProperties: false,
+} as const
+
 // ============================================================================
 // NVC ANALYSIS ACTION
 // ============================================================================
 
 /**
- * Analyze a user's message for NVC components
+ * Analyze a user's message for NVC components.
  *
- * Uses OpenAI to evaluate the message against the 4 NVC components:
- * 1. Observation - Facts without judgment (0-25 points)
- * 2. Feeling - Actual emotions expressed (0-25 points)
- * 3. Need - Universal human need identified (0-25 points)
- * 4. Request - Clear, positive, doable request (0-25 points)
- *
- * Returns a structured analysis with scores, feedback, and suggestions.
- *
- * @param userMessage - The user's response to analyze
- * @param conversationHistory - Previous messages for context
- * @param userLevel - User's skill level (1-10) to adjust feedback style
- * @returns NVC analysis with scores and feedback
+ * Returns a structured analysis with scores (0-25 per component, 0-100 total),
+ * feedback, and suggested alternatives.
  */
 export const analyzeNVCResponse = action({
   args: {
@@ -77,7 +97,6 @@ export const analyzeNVCResponse = action({
     userLevel: v.optional(v.number()), // 1-10, affects feedback depth
   },
   handler: async (_ctx, args): Promise<NVCAnalysisResult> => {
-    // Build conversation context for analysis
     const conversationContext =
       args.conversationHistory.length > 0
         ? args.conversationHistory
@@ -88,25 +107,14 @@ export const analyzeNVCResponse = action({
             .join('\n')
         : 'This is the start of a new conversation.'
 
-    // Adjust feedback style based on user level
     const feedbackStyle =
       (args.userLevel || 1) >= 5
         ? 'concise and focused'
         : 'detailed and educational'
 
-    // Construct the analysis prompt
-    const analysisPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing a user's response in a roleplay conversation.
+    const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing a user's response in a roleplay conversation.
 
-## Conversation Context:
-${conversationContext}
-
-## User's Response to Analyze:
-"${args.userMessage}"
-
-## Your Task:
-Analyze this response for the 4 NVC components and return a JSON analysis. Feedback style: ${feedbackStyle}.
-
-### Scoring Guidelines:
+### Scoring Guidelines
 
 **OBSERVATION SCORE (0-25 points):**
 - Free from judgments, no "always", "never", "should"
@@ -134,80 +142,51 @@ Analyze this response for the 4 NVC components and return a JSON analysis. Feedb
 - Reasonable and realistic
 - Deductions: -10 vague, -10 negative, -15 demands, -20 no request
 
-### Modifiers:
+### Modifiers
 - Empathy bonus: +5-10 for curiosity about other's needs
 - Defense penalty: -10-15 for defensive tone
 - Blame penalty: -10-20 for blame/shame
 
-### Success Thresholds:
+### Success Thresholds
 - 90-100: Excellent NVC (pure giraffe language)
 - 70-89: Good NVC with minor improvements
 - 50-69: Partial NVC, significant improvements needed
 - 0-49: Mostly jackal language, needs practice
 
-## Return Format:
-Return a valid JSON object (no markdown):
-{
-  "observation": <0-25>,
-  "feeling": <0-25>,
-  "need": <0-25>,
-  "request": <0-25>,
-  "total": <0-100>,
-  "feedback": "<${feedbackStyle} feedback>",
-  "isJackalLanguage": <boolean>,
-  "jackalPhrases": ["phrase1", "phrase2"],
-  "giraffeAlternative": "<suggested rephrase or strengthening>",
-  "whatWentWell": "<specific strength>"
-}
+### Field Requirements
+- total = sum of the four component scores (max 100)
+- feedback: be encouraging and constructive; embody NVC principles (non-judgmental, specific)
+- jackalPhrases: short verbatim excerpts from the user's response that read as judgmental or blaming; empty array if none
+- giraffeAlternative: a single rephrased sentence demonstrating stronger NVC
+- whatWentWell: a specific strength to acknowledge`
 
-Important:
-- Total = sum of 4 components (max 100)
-- Be encouraging and constructive
-- Be specific about what works and what could improve
-- Embody NVC principles in your feedback (non-judgmental, encouraging)`
+    const userPrompt = `## Conversation Context
+${conversationContext}
+
+## User's Response to Analyze
+"${args.userMessage}"
+
+Analyze this response against the four NVC components. Use a ${feedbackStyle} feedback style.`
 
     try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'user',
-            content: analysisPrompt,
+      const response = await anthropic.messages.parse({
+        model: MODEL,
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        output_config: {
+          format: {
+            type: 'json_schema',
+            schema: nvcAnalysisSchema,
           },
-        ],
+        },
       })
 
-      // Extract the text response
-      const textContent = response.choices[0]?.message?.content
-      if (!textContent) {
-        throw new Error('No text response from OpenAI')
+      if (!response.parsed_output) {
+        throw new Error('Empty structured response from Claude')
       }
 
-      // Parse JSON response
-      const analysisText = textContent
-
-      // Try to extract JSON from the response (in case it includes markdown)
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        console.error('Could not find JSON in response:', analysisText)
-        throw new Error('Invalid response format from OpenAI')
-      }
-
-      const analysis = JSON.parse(jsonMatch[0]) as NVCAnalysisResult
-
-      // Validate response structure
-      if (
-        !('observation' in analysis) ||
-        !('feeling' in analysis) ||
-        !('need' in analysis) ||
-        !('request' in analysis) ||
-        !('total' in analysis)
-      ) {
-        throw new Error('Missing required fields in analysis response')
-      }
-
-      return analysis
+      return response.parsed_output as NVCAnalysisResult
     } catch (error) {
       console.error('Error analyzing NVC response:', error)
       throw new Error(
@@ -222,20 +201,11 @@ Important:
 // ============================================================================
 
 /**
- * Generate an AI character response for a roleplay scenario
+ * Generate a character response for a roleplay scenario.
  *
- * The AI character responds to the user's message while:
- * - Staying in character
- * - Reacting authentically to the user's communication style
- * - De-escalating if user uses NVC, escalating slightly if they use jackal language
- * - Never explicitly teaching NVC
- * - Keeping responses conversational (2-4 sentences)
- *
- * @param userMessage - The user's message in the conversation
- * @param conversationHistory - Previous messages in this conversation
- * @param scenario - Full scenario object with character details
- * @param userNVCScore - User's NVC score (0-100) to adjust character reactivity
- * @returns The AI character's response
+ * The character responds in character, reacting authentically to the user's
+ * communication style. Higher NVC scores produce more open, cooperative
+ * reactions; lower scores produce more defensive reactions, scaled by user level.
  */
 export const generateCharacterResponse = action({
   args: {
@@ -249,24 +219,21 @@ export const generateCharacterResponse = action({
       characterBackground: v.string(),
       characterHiddenNeeds: v.array(v.string()),
     }),
-    userNVCScore: v.optional(v.number()), // 0-100 score
-    userLevel: v.optional(v.number()), // 1-10, affects difficulty
+    userNVCScore: v.optional(v.number()),
+    userLevel: v.optional(v.number()),
   },
   handler: async (_ctx, args): Promise<string> => {
     const userLevel = args.userLevel || 1
     const nvcScore = args.userNVCScore || 0
 
-    // Determine character's emotional response based on NVC score and user level
     let characterReactionGuidance = ''
 
     if (userLevel <= 2) {
-      // Beginners: forgiving character
       characterReactionGuidance =
         nvcScore >= 40
           ? 'The character feels heard and becomes noticeably more open, warm, and cooperative.'
           : "The character remains patient and doesn't escalate. They stay engaged despite imperfect communication."
     } else if (userLevel <= 5) {
-      // Intermediate: realistic reactions
       characterReactionGuidance =
         nvcScore >= 70
           ? 'The character feels genuinely understood. They become more open, vulnerable, and willing to cooperate.'
@@ -274,7 +241,6 @@ export const generateCharacterResponse = action({
             ? 'The character appreciates some effort but remains somewhat guarded. They show mixed emotions.'
             : 'The character feels judged or unheard. They become defensive or withdrawn.'
     } else {
-      // Advanced: challenging character
       characterReactionGuidance =
         nvcScore >= 85
           ? 'The character experiences a significant emotional shift - they feel truly seen and become collaborative.'
@@ -285,13 +251,19 @@ export const generateCharacterResponse = action({
               : 'The character feels misunderstood or blamed. They become notably defensive or argumentative.'
     }
 
-    // Build system prompt with full character context
+    const moodLabel =
+      args.scenario.characterInitialMood > 0
+        ? 'Somewhat open'
+        : args.scenario.characterInitialMood < 0
+          ? 'Defensive'
+          : 'Neutral'
+
     const systemPrompt = `You are roleplaying as ${args.scenario.characterName} in a realistic conflict resolution conversation.
 
 CHARACTER PROFILE:
 - Name: ${args.scenario.characterName}
 - Personality: ${args.scenario.characterPersonality}
-- Current Emotional State: ${args.scenario.characterInitialMood > 0 ? 'Somewhat open' : args.scenario.characterInitialMood < 0 ? 'Defensive' : 'Neutral'}
+- Current Emotional State: ${moodLabel}
 - Background: ${args.scenario.characterBackground}
 - Your Hidden Needs: ${args.scenario.characterHiddenNeeds.join(', ')}
 
@@ -312,30 +284,31 @@ IMPORTANT REMINDERS:
 - Show character growth through openness, not through explaining yourself
 - React to both what they say AND how they say it`
 
+    const history: Array<Anthropic.MessageParam> = args.conversationHistory.map(
+      (msg) => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: String(msg.content ?? ''),
+      }),
+    )
+
     try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const response = await anthropic.messages.create({
+        model: MODEL,
         max_tokens: 300,
         temperature: 0.8,
+        system: systemPrompt,
         messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          ...args.conversationHistory,
-          {
-            role: 'user',
-            content: args.userMessage,
-          },
+          ...history,
+          { role: 'user', content: args.userMessage },
         ],
       })
 
-      const textContent = response.choices[0]?.message?.content
-      if (!textContent) {
-        throw new Error('No response from OpenAI')
+      const textBlock = response.content.find((block) => block.type === 'text')
+      if (!textBlock || textBlock.type !== 'text') {
+        throw new Error('No text response from Claude')
       }
 
-      return textContent
+      return textBlock.text
     } catch (error) {
       console.error('Error generating character response:', error)
       throw new Error(

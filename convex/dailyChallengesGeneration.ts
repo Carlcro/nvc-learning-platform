@@ -1,18 +1,20 @@
 'use node'
 
+import Anthropic from '@anthropic-ai/sdk'
 import { internalAction } from './_generated/server'
-import OpenAI from 'openai'
 
 /**
  * Daily Challenge Scenario Generation
  *
- * Handles AI-based scenario generation using OpenAI
- * This file uses Node.js for API calls
+ * Generates fresh scenario variations via Claude.
+ * Runs in a Node.js Convex action.
  */
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
 })
+
+const MODEL = 'claude-sonnet-4-6'
 
 interface GeneratedScenario {
   title: string
@@ -79,41 +81,33 @@ For each scenario, return a JSON object with:
 - learningObjectives: Array of 2-3 NVC components to practice [observation, feeling, need, request]
 - focusArea: One of [conflict_resolution, boundary_setting, feedback_response, appreciation, apology, request_making, empathy]
 
-Return ONLY a valid JSON array with 3 objects, no markdown or explanation:
-[
-  { beginner scenario object },
-  { intermediate scenario object },
-  { advanced scenario object }
-]`
+Return the scenarios in the required structured format. Produce exactly 3 scenarios, one per difficulty level, in order: beginner, intermediate, advanced.`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const response = await anthropic.messages.parse({
+      model: MODEL,
       max_tokens: 2000,
       temperature: 1, // Encourage creativity and variety
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
+      messages: [{ role: 'user', content: prompt }],
+      output_config: {
+        format: {
+          type: 'json_schema',
+          schema: scenarioBatchSchema,
         },
-      ],
+      },
     })
 
-    const content = response.choices[0]?.message?.content
-    if (!content) {
-      throw new Error('No response from AI')
+    const parsed = response.parsed_output as
+      | { scenarios: GeneratedScenario[] }
+      | null
+
+    if (!parsed || !Array.isArray(parsed.scenarios)) {
+      throw new Error('Empty structured response from Claude')
     }
 
-    // Parse JSON response
-    const scenarios = JSON.parse(content) as GeneratedScenario[]
-
-    // Validate the response
-    if (
-      !Array.isArray(scenarios) ||
-      scenarios.length !== 3 ||
-      !validateScenarios(scenarios)
-    ) {
-      throw new Error('Invalid scenario format from AI')
+    const scenarios = parsed.scenarios
+    if (scenarios.length !== 3 || !validateScenarios(scenarios)) {
+      throw new Error('Invalid scenario format from Claude')
     }
 
     return scenarios
@@ -123,6 +117,72 @@ Return ONLY a valid JSON array with 3 objects, no markdown or explanation:
     return generateFallbackScenarios()
   }
 }
+
+const scenarioSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    description: { type: 'string' },
+    category: {
+      type: 'string',
+      enum: ['workplace', 'family', 'friendship', 'self_expression'],
+    },
+    difficulty: {
+      type: 'string',
+      enum: ['beginner', 'intermediate', 'advanced'],
+    },
+    characterName: { type: 'string' },
+    characterPersonality: { type: 'string' },
+    characterInitialMood: { type: 'integer' },
+    situation: { type: 'string' },
+    aiOpeningMessage: { type: 'string' },
+    learningObjectives: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: ['observation', 'feeling', 'need', 'request'],
+      },
+    },
+    focusArea: {
+      type: 'string',
+      enum: [
+        'conflict_resolution',
+        'boundary_setting',
+        'feedback_response',
+        'appreciation',
+        'apology',
+        'request_making',
+        'empathy',
+      ],
+    },
+  },
+  required: [
+    'title',
+    'description',
+    'category',
+    'difficulty',
+    'characterName',
+    'characterPersonality',
+    'characterInitialMood',
+    'situation',
+    'aiOpeningMessage',
+    'learningObjectives',
+    'focusArea',
+  ],
+  additionalProperties: false,
+} as const
+
+const scenarioBatchSchema = {
+  type: 'object',
+  properties: {
+    scenarios: {
+      type: 'array',
+      items: scenarioSchema,
+    },
+  },
+  required: ['scenarios'],
+  additionalProperties: false,
+} as const
 
 /**
  * Validate that generated scenarios have required fields
