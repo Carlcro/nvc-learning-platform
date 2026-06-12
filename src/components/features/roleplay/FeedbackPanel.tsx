@@ -16,6 +16,7 @@ interface FeedbackPanelProps {
   messageCount?: number
   learningObjectives?: Array<string>
   characterMood?: number
+  characterName?: string
   milestones?: Milestones
 }
 
@@ -151,6 +152,61 @@ function getMoodLabel(mood: number): { label: string; color: string } {
   return { label: 'Defensive', color: 'bg-red-100 text-red-700 border-red-200' }
 }
 
+function getMoodFill(mood: number): string {
+  if (mood >= 6) return 'from-emerald-400 to-emerald-500'
+  if (mood >= 3) return 'from-giraffe-300 to-giraffe-400'
+  if (mood >= 0) return 'from-blue-300 to-blue-400'
+  if (mood >= -6) return 'from-orange-300 to-orange-400'
+  return 'from-red-400 to-red-500'
+}
+
+/**
+ * Live "connection" meter that reflects how open or guarded the character
+ * currently feels. Mood ranges from -10 (very closed) to +10 (very open);
+ * we map it onto a 0-100% bar that animates as the character reacts.
+ */
+function MoodMeter({
+  mood,
+  characterName,
+}: {
+  mood: number
+  characterName?: string
+}) {
+  const clampedMood = Math.max(-10, Math.min(10, mood))
+  const percent = ((clampedMood + 10) / 20) * 100
+  const moodInfo = getMoodLabel(clampedMood)
+  const who = characterName || 'They'
+
+  return (
+    <div className="bg-white rounded-lg p-4 border border-giraffe-100 space-y-2.5">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-brown-800">
+          How {who} feels
+        </span>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium border ${moodInfo.color}`}
+        >
+          {moodInfo.label}
+        </span>
+      </div>
+
+      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getMoodFill(
+            clampedMood,
+          )} rounded-full transition-all duration-700 ease-out`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+
+      <div className="flex items-center justify-between text-[10px] font-medium text-brown-400">
+        <span>Guarded</span>
+        <span>Open</span>
+      </div>
+    </div>
+  )
+}
+
 function getScoreMessage(score: number): string {
   if (score < 30) return 'Keep Going'
   if (score < 60) return 'Good Progress'
@@ -241,14 +297,7 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
   )
 }
 
-function ScoreSection({
-  score,
-  characterMood,
-}: {
-  score: NVCScore
-  characterMood: number
-}) {
-  const moodInfo = getMoodLabel(characterMood)
+function ScoreSection({ score }: { score: NVCScore }) {
   const scorePercentage = score.total
 
   const metrics = [
@@ -260,23 +309,19 @@ function ScoreSection({
 
   return (
     <div className="bg-giraffe-50/50 rounded p-4 space-y-4 border border-giraffe-100">
-      <div className="flex items-start justify-between">
+      <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-bold text-brown-800">
-              {score.total}
-            </span>
-            <span className="text-brown-400 text-sm">/100</span>
-          </div>
-          <p className="text-sm font-medium text-giraffe-600 mt-1">
+          <p className="text-lg font-bold text-giraffe-700">
             {getScoreMessage(score.total)}
           </p>
+          <p className="text-xs text-brown-500 mt-0.5">
+            How this message landed
+          </p>
         </div>
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium border ${moodInfo.color}`}
-        >
-          {moodInfo.label}
-        </span>
+        <div className="flex items-baseline gap-0.5 text-brown-500">
+          <span className="text-2xl font-semibold">{score.total}</span>
+          <span className="text-xs">/100</span>
+        </div>
       </div>
 
       {/* Score Progress Bar */}
@@ -365,6 +410,7 @@ export function FeedbackPanel({
   messageCount: _messageCount = 0,
   learningObjectives: _learningObjectives = [],
   characterMood = 0,
+  characterName,
   milestones,
 }: FeedbackPanelProps) {
   return (
@@ -378,6 +424,10 @@ export function FeedbackPanel({
 
       {/* Content */}
       <div className="flex-1 p-5 space-y-5 overflow-y-auto">
+        {/* Live connection meter - always visible so the user can watch the
+            character open up or close off as the conversation unfolds */}
+        <MoodMeter mood={characterMood} characterName={characterName} />
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12">
             <div className="animate-spin">
@@ -400,10 +450,7 @@ export function FeedbackPanel({
         ) : feedback ? (
           <>
             {/* Score Section */}
-            <ScoreSection
-              score={feedback.score}
-              characterMood={characterMood}
-            />
+            <ScoreSection score={feedback.score} />
 
             {/* Progress Steps */}
             {milestones && <ProgressSteps milestones={milestones} />}

@@ -199,6 +199,15 @@ export const addMessage = mutation({
     }
 
     if (role === 'user' && scoreData.nvcScore) {
+      // Move the character's mood based on how empathetic this message was.
+      // The NVC total (0-100) is centered at 50: above 50 the character warms
+      // up, below 50 they cool down. The shift is gradual (max +/-4 per turn)
+      // so a single message never fully transforms them.
+      const prevMood = conversation.currentCharacterMood ?? 0
+      const moodDelta = Math.round((scoreData.nvcScore.total - 50) / 12.5)
+      const newMood = Math.max(-10, Math.min(10, prevMood + moodDelta))
+      updates.currentCharacterMood = newMood
+
       const currentMilestones = conversation.milestonesAchieved || {
         conversationStarted: true,
         feelingExpressed: false,
@@ -221,11 +230,11 @@ export const addMessage = mutation({
         requestMade:
           currentMilestones.requestMade ||
           scoreData.nvcScore.request >= MILESTONE_THRESHOLD,
-        // Resolution requires good mood (>= 5) AND high score (>= 70)
+        // Resolution requires the character to have opened up (mood >= 5)
+        // AND a strong NVC message (>= 70). Uses the freshly updated mood.
         resolutionReached:
           currentMilestones.resolutionReached ||
-          (conversation.currentCharacterMood >= 5 &&
-            scoreData.nvcScore.total >= 70),
+          (newMood >= 5 && scoreData.nvcScore.total >= 70),
       }
 
       updates.milestonesAchieved = updatedMilestones

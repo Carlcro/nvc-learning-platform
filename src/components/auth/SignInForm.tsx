@@ -10,6 +10,31 @@ interface SignInFormProps {
 }
 
 /**
+ * Maps raw Convex Auth errors to encouraging, human-friendly messages.
+ * The server surfaces internal codes like "InvalidSecret" / "InvalidAccountId"
+ * which should never be shown to the person practicing communication.
+ */
+function friendlyAuthError(err: unknown, isSignup: boolean): string {
+  const raw = err instanceof Error ? err.message : String(err ?? '')
+
+  if (/InvalidSecret|InvalidAccountId|Invalid credentials/i.test(raw)) {
+    return 'That email and password don\'t match an account. Please double-check them, or create a new account below.'
+  }
+  if (/TooManyFailedAttempts/i.test(raw)) {
+    return 'Too many attempts for now. Please wait a moment and try again.'
+  }
+  if (/Invalid password/i.test(raw)) {
+    return 'Please choose a password with at least 8 characters.'
+  }
+  if (/already.*exist|account.*exist/i.test(raw)) {
+    return 'An account with this email already exists. Try signing in instead.'
+  }
+  return isSignup
+    ? 'We couldn\'t create your account just now. Please try again.'
+    : 'We couldn\'t sign you in just now. Please try again.'
+}
+
+/**
  * Sign in form with GitHub, Google, and email/password authentication
  * Styled with NVC principles - encouraging and welcoming
  */
@@ -44,11 +69,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
         navigate({ to: from as string })
       }, 500)
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Authentication failed. Please try again.',
-      )
+      setError(friendlyAuthError(err, isSignup))
     } finally {
       setIsLoading(false)
     }
@@ -65,11 +86,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
         navigate({ to: from as string })
       }, 500)
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'GitHub sign-in failed. Please try again.',
-      )
+      setError(friendlyAuthError(err, isSignup))
     } finally {
       setIsLoading(false)
     }

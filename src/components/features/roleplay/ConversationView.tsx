@@ -33,6 +33,33 @@ interface ConversationViewProps {
   isLoading?: boolean
 }
 
+/**
+ * A gentle qualitative read on a message instead of a bare grade. The precise
+ * 0-100 breakdown still lives in the feedback panel; here we keep the chat
+ * feeling like a conversation, not a test.
+ */
+function getReactionTag(score: number): { label: string; className: string } {
+  if (score >= 80)
+    return {
+      label: 'Heartfelt',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    }
+  if (score >= 60)
+    return {
+      label: 'Connecting',
+      className: 'bg-giraffe-50 text-giraffe-700 border-giraffe-200',
+    }
+  if (score >= 40)
+    return {
+      label: 'Developing',
+      className: 'bg-blue-50 text-blue-700 border-blue-200',
+    }
+  return {
+    label: 'Keep going',
+    className: 'bg-orange-50 text-orange-700 border-orange-200',
+  }
+}
+
 function MessageBubble({
   message,
   characterName,
@@ -75,15 +102,19 @@ function MessageBubble({
           {message.content}
         </div>
 
-        {/* NVC Score (for user messages) */}
-        {isUser && message.nvcScore && (
-          <div className="text-xs text-brown-600 mt-1">
-            Score:{' '}
-            <span className="font-bold text-giraffe-700">
-              {message.nvcScore.total}/100
-            </span>
-          </div>
-        )}
+        {/* Qualitative read for user messages (full breakdown is in the panel) */}
+        {isUser &&
+          message.nvcScore &&
+          (() => {
+            const tag = getReactionTag(message.nvcScore.total)
+            return (
+              <span
+                className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${tag.className}`}
+              >
+                {tag.label}
+              </span>
+            )
+          })()}
       </div>
     </div>
   )

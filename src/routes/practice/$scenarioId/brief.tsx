@@ -193,26 +193,6 @@ function ScenarioBrief() {
                   </div>
                 )}
 
-                {scenario.characterHiddenNeeds.length > 0 && (
-                  <div className="bg-cream rounded-lg p-4 border border-giraffe-100">
-                    <p className="text-sm font-semibold text-giraffe-700 mb-2">
-                      What They Need
-                    </p>
-                    <ul className="space-y-1">
-                      {scenario.characterHiddenNeeds.map(
-                        (need: string, idx: number) => (
-                          <li
-                            key={idx}
-                            className="text-sm text-brown-700 flex items-start gap-2"
-                          >
-                            <span className="text-giraffe-500 mt-1">•</span>
-                            <span>{need}</span>
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
               </div>
             </div>
 

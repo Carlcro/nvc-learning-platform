@@ -45,6 +45,83 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Celebration animations (milestone pings, star reveals, confetti)
+   Kept as plain global utilities so they work anywhere without extra deps.
+--------------------------------------------------------------------------- */
+@keyframes celebrate-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes celebrate-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes star-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-35deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.25) rotate(8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, -10px, 0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 0), 140px, 0) rotate(var(--rot, 360deg));
+  }
+}
+
+.animate-celebrate-in {
+  animation: celebrate-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-celebrate-out {
+  animation: celebrate-out 0.4s ease-in forwards;
+}
+
+.animate-star-pop {
+  animation: star-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-confetti {
+  animation: confetti-fall var(--dur, 1.6s) ease-in var(--delay, 0s) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-celebrate-in,
+  .animate-celebrate-out,
+  .animate-star-pop,
+  .animate-confetti {
+    animation: none !important;
+  }
+}
+
 @layer components {
   /* Warm scrollbar styling */
   ::-webkit-scrollbar {
