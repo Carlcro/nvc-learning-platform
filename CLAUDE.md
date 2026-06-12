@@ -70,6 +70,7 @@ NVC has **4 components** that users learn and practice:
 6. **Convex functions are typed** - Use the generated types from `convex/_generated`
 7. ***Never use emojis** - Never use emojies and if you see emojies used remove them. You dont need to replaced them with something else
 8. **Never mention to the user the word AI** - I the ui never mention AI, I dont want to user to think about artificial intelligence when using the app
+9. **Never mention AI in commit messages or PR messages** - Do not reference AI, artificial intelligence, or any AI assistant/tool in commit messages, PR titles, PR descriptions, or anywhere of that nature
 
 ### Code Style Preferences
 
