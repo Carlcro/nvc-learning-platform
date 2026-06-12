@@ -103,7 +103,7 @@ function ConversationComponent() {
             <p className="text-brown-800 text-sm font-medium">{error}</p>
             <button
               onClick={dismissError}
-              className="text-brown-700 hover:text-brown-900 text-sm font-semibold cursor-pointer"
+              className="text-brown-700 hover:text-brown-900 text-sm font-semibold cursor-pointer rounded px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
             >
               Dismiss
             </button>
@@ -132,7 +132,7 @@ function ConversationComponent() {
             {conversationStarted && (
               <button
                 onClick={() => setShowScenarioContext(true)}
-                className="text-nowrap text-sm font-semibold text-brown-700 hover:text-brown-900 underline cursor-pointer"
+                className="text-nowrap text-sm font-semibold text-brown-700 hover:text-brown-900 underline cursor-pointer rounded px-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
               >
                 View Scenario
               </button>
@@ -209,7 +209,7 @@ function ConversationComponent() {
             <div className="lg:hidden border-t border-giraffe-200 bg-white px-4 py-3">
               <button
                 onClick={() => setMobileFeedbackExpanded(true)}
-                className="w-full flex items-center justify-between gap-2 text-brown-700 hover:text-brown-900 font-semibold text-sm cursor-pointer"
+                className="w-full min-h-11 flex items-center justify-between gap-2 text-brown-700 hover:text-brown-900 font-semibold text-sm cursor-pointer rounded-lg px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
               >
                 <span>View Feedback</span>
                 <svg
@@ -235,7 +235,7 @@ function ConversationComponent() {
                 <h2 className="font-bold text-lg">Live Feedback</h2>
                 <button
                   onClick={() => setMobileFeedbackExpanded(false)}
-                  className="text-brown-700 hover:text-brown-900 transition-colors cursor-pointer"
+                  className="grid place-items-center w-11 h-11 -mr-2 rounded-full text-brown-700 hover:text-brown-900 hover:bg-giraffe-300/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2 focus-visible:ring-offset-giraffe-400"
                   aria-label="Close feedback panel"
                 >
                   <svg
@@ -269,7 +269,7 @@ function ConversationComponent() {
               <div className="border-t border-giraffe-200 bg-white px-4 py-3">
                 <button
                   onClick={() => setMobileFeedbackExpanded(false)}
-                  className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer"
+                  className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2"
                 >
                   Continue Conversation
                 </button>
@@ -291,7 +291,7 @@ function ConversationComponent() {
                 <h2 className="text-xl font-bold">Scenario Context</h2>
                 <Dialog.Close asChild>
                   <button
-                    className="text-brown-700 hover:text-brown-900 transition-colors p-1 cursor-pointer"
+                    className="grid place-items-center w-11 h-11 -mr-2 rounded-full text-brown-700 hover:text-brown-900 hover:bg-giraffe-300/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2 focus-visible:ring-offset-giraffe-400"
                     aria-label="Close scenario context"
                   >
                     <svg
@@ -349,7 +349,7 @@ function ConversationComponent() {
 
               <div className="border-t border-giraffe-200 bg-cream px-6 py-4">
                 <Dialog.Close asChild>
-                  <button className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer">
+                  <button className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2">
                     Continue Conversation
                   </button>
                 </Dialog.Close>
