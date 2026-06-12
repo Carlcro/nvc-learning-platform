@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-12T00:00:00.000Z",
+  "title": "Design System: NVC Learning Platform",
+  "extensions": {
+    "colorMeta": {
+      "giraffe-gold": {
+        "role": "primary",
+        "displayName": "Giraffe Gold",
+        "canonical": "#F5B841",
+        "tonalRamp": ["#63430D", "#855B12", "#A67218", "#C88A20", "#E0A030", "#F5B841", "#FFD96D", "#FFE390", "#FFEDB3", "#FFF4D6"]
+      },
+      "bark-brown": {
+        "role": "secondary",
+        "displayName": "Bark Brown",
+        "canonical": "#2D1E11",
+        "tonalRamp": ["#1A110A", "#2D1E11", "#3D2817", "#573619", "#6B4423", "#8B6F47", "#B5996D", "#D4C2A0", "#E8DCC8", "#F5F0E8"]
+      },
+      "soft-cream": {
+        "role": "neutral",
+        "displayName": "Soft Cream",
+        "canonical": "#F5F3E8",
+        "tonalRamp": ["#3D2817", "#573619", "#8B6F47", "#B5996D", "#D4C2A0", "#E8DCC8", "#F5F0E8", "#F5F3E8", "#FAF8F0", "#FFFFFF"]
+      },
+      "gentle-coral": {
+        "role": "tertiary",
+        "displayName": "Gentle Coral",
+        "canonical": "#E07856",
+        "tonalRamp": ["#5C2A18", "#7A3A22", "#9C4E30", "#BD6042", "#E07856", "#E88E70", "#EFA88F", "#F4C2B1", "#F9DCD2", "#FCEEE8"]
+      },
+      "growth-green": {
+        "role": "tertiary",
+        "displayName": "Growth Green",
+        "canonical": "#7FB069",
+        "tonalRamp": ["#2F4622", "#3F5D2E", "#52753C", "#65904B", "#7FB069", "#96C083", "#ADD09E", "#C5E0BA", "#DCEFD5", "#EEF7EA"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing hero and the largest page titles only." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings; the most common large type in the product." },
+      "title": { "displayName": "Title", "purpose": "Card titles, panel headings, the EmpathyMeter label." },
+      "body": { "displayName": "Body", "purpose": "All prose and conversation text, in Bark Brown, capped at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Badges, nav links, stat rows, captions; medium weight, sentence case." }
+    },
+    "shadows": [
+      { "name": "rest-lift", "value": "0 1px 2px rgba(45,30,17,0.06)", "purpose": "Maximum elevation for an at-rest card or button. Barely-there separation from the cream ground." },
+      { "name": "hover-lift", "value": "0 4px 6px rgba(45,30,17,0.08)", "purpose": "Gentle response to hover on interactive cards; pairs with a border deepening to tint-200." },
+      { "name": "floating", "value": "0 10px 25px rgba(45,30,17,0.12)", "purpose": "Reserved for genuinely floating elements: the nav pill, speech bubbles, dropdown menus." }
+    ],
+    "motion": [
+      { "name": "ease-out-soft", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default warm ease-out for celebrations, star pops, and gentle reveals." },
+      { "name": "color-transition", "value": "200ms", "purpose": "Standard duration for button and link color-state changes." },
+      { "name": "meter-fill", "value": "500ms", "purpose": "EmpathyMeter width animation; honors prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action per screen. Gold fill, bark-brown text.",
+      "html": "<button class=\"ds-btn-primary\">Start Learning</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #F5B841; color: #2D1E11; font-weight: 600; font-size: 1rem; padding: 8px 16px; border: none; border-radius: 0.5rem; box-shadow: 0 1px 2px rgba(45,30,17,0.06); cursor: pointer; transition: background 200ms ease; } .ds-btn-primary:hover { background: #E0A030; } .ds-btn-primary:focus-visible { outline: 2px solid #FFD96D; outline-offset: 2px; } .ds-btn-primary:disabled { background: #FFE390; opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The second action beside a primary. Brown fill, cream text.",
+      "html": "<button class=\"ds-btn-secondary\">Start Practicing</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; background: #573619; color: #F5F3E8; font-weight: 600; font-size: 1rem; padding: 8px 16px; border: none; border-radius: 0.5rem; box-shadow: 0 1px 2px rgba(45,30,17,0.06); cursor: pointer; transition: background 200ms ease; } .ds-btn-secondary:hover { background: #3D2817; } .ds-btn-secondary:focus-visible { outline: 2px solid #8B6F47; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis inline action. Gold text, fills tint on hover.",
+      "html": "<button class=\"ds-btn-ghost\">Skip for now</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #A67218; font-weight: 500; font-size: 1rem; padding: 8px 16px; border: none; border-radius: 0.5rem; cursor: pointer; transition: background 200ms ease; } .ds-btn-ghost:hover { background: #FFEDB3; } .ds-btn-ghost:focus-visible { outline: 2px solid #FFD96D; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Content surface: white on cream, warm tinted border, flat at rest.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">Today's Challenge</div><div class=\"ds-card-body\">Describe what you observed without judgment.</div></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 2px solid #FFEDB3; border-radius: 0.5rem; box-shadow: 0 1px 2px rgba(45,30,17,0.06); color: #2D1E11; overflow: hidden; transition: box-shadow 200ms ease, border-color 200ms ease; } .ds-card:hover { box-shadow: 0 4px 6px rgba(45,30,17,0.08); border-color: #FFE390; } .ds-card-header { padding: 16px 24px; background: #FFF4D6; border-bottom: 1px solid #FFEDB3; font-weight: 700; font-size: 1.25rem; } .ds-card-body { padding: 16px 24px; line-height: 1.6; }"
+    },
+    {
+      "name": "Default Badge",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Pill label with a warm tinted border; never a borderless fill.",
+      "html": "<span class=\"ds-badge\">Level 3</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; background: #FFEDB3; color: #2D1E11; border: 1px solid #FFE390; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; padding: 4px 12px; }"
+    },
+    {
+      "name": "Success Badge",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Positive signal using gentle Growth Green at low opacity.",
+      "html": "<span class=\"ds-badge-success\">Giraffe language</span>",
+      "css": ".ds-badge-success { display: inline-flex; align-items: center; background: rgba(127,176,105,0.20); color: #52753C; border: 1px solid rgba(127,176,105,0.40); border-radius: 9999px; font-size: 0.875rem; font-weight: 500; padding: 4px 12px; }"
+    },
+    {
+      "name": "EmpathyMeter",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Signature 0-100 quality bar; band-colored fill on a brown track, framed as a journey not a grade.",
+      "html": "<div class=\"ds-meter\"><div class=\"ds-meter-head\"><span class=\"ds-meter-label\">Empathy Meter</span><span class=\"ds-meter-score\">72/100 &middot; Good</span></div><div class=\"ds-meter-track\"><div class=\"ds-meter-fill\"></div></div><p class=\"ds-meter-desc\">Minor improvements</p></div>",
+      "css": ".ds-meter { display: flex; flex-direction: column; gap: 8px; color: #2D1E11; } .ds-meter-head { display: flex; align-items: center; justify-content: space-between; } .ds-meter-label { font-weight: 600; } .ds-meter-score { font-size: 0.875rem; font-weight: 700; color: #A67218; } .ds-meter-track { width: 100%; height: 0.75rem; background: #D4C2A0; border-radius: 9999px; overflow: hidden; } .ds-meter-fill { width: 72%; height: 100%; background: linear-gradient(to right, #FFD96D, #F5B841); border-radius: 9999px; transition: width 500ms cubic-bezier(0.22,1,0.36,1); } .ds-meter-desc { font-size: 0.75rem; color: #573619; } @media (prefers-reduced-motion: reduce) { .ds-meter-fill { transition: none; } }"
+    },
+    {
+      "name": "Floating Nav Pill",
+      "kind": "nav",
+      "refersTo": "card",
+      "description": "Signature glass pill; the one sanctioned glassmorphism surface. Active link is a gold pill.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link ds-nav-active\">Lessons</a><a class=\"ds-nav-link\">Practice</a><a class=\"ds-nav-link\">Feelings</a></nav>",
+      "css": ".ds-nav { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.80); backdrop-filter: blur(12px); border: 1px solid #FFE390; border-radius: 9999px; box-shadow: 0 10px 25px rgba(45,30,17,0.12); padding: 8px; } .ds-nav-link { padding: 8px 12px; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; color: #8B6F47; text-decoration: none; white-space: nowrap; cursor: pointer; transition: background 200ms ease, color 200ms ease; } .ds-nav-link:hover { background: #FFF4D6; color: #3D2817; } .ds-nav-active { background: #F5B841; color: #3D2817; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Patient Mentor",
+    "overview": "This is the interface of a kind guide who has all the time in the world for you. Everything about it is warm, unhurried, and wise. The palette is honeyed gold and soft earth-brown over a calm cream ground - the colors of a giraffe's world at low sun, never literal safari cartoon. The user arrives to practice something they are not yet good at, often after a hard conversation, frequently a little raw. The system's entire job is to make that feel safe: generous space, soft edges, gentle motion, and feedback that names what is working before what to improve. The defining discipline is restraint in the service of calm - surfaces are mostly flat, depth comes from warm tonal layering and quiet borders, and one sans family carries the whole hierarchy.",
+    "keyCharacteristics": [
+      "Warm earth palette: giraffe gold, bark brown, soft cream - zero cool grays in the core system.",
+      "Flat by default; depth via tonal tint layering and 1-2px borders, not shadows.",
+      "One sans family across the entire hierarchy; weight and size carry contrast.",
+      "Gentle, fixed-radius geometry (8px on cards and buttons, pills on badges and nav).",
+      "Feedback is growth-framed: movement from jackal toward giraffe, never a verdict.",
+      "Emotional safety leads every decision - calm pacing, soft signals, reduced-motion honored."
+    ],
+    "rules": [
+      { "name": "The One Gold Rule", "body": "Giraffe Gold is the only color that initiates action. If a surface is gold, it is the primary thing to do, the current selection, or a positive signal - never decoration. Two gold buttons competing on one screen means one is wrong.", "section": "colors" },
+      { "name": "The No-Alarm Rule", "body": "Feedback colors are warm and gentle by mandate. Gentle Coral (#E07856), never red-500/red-600, carries every low, error, and needs-work state. The product teaches non-judgment; its colors may not flinch.", "section": "colors" },
+      { "name": "The Warm-Only Rule", "body": "The core system contains no cool grays. Borders, text, and dividers are brown or gold tints. Stray slate-*, gray-*, and off-palette blue-* are bugs, not choices.", "section": "colors" },
+      { "name": "The One Voice Rule", "body": "One family, full stop. Hierarchy is built from weight (400 body, 500 label, 700 heading) and size on a calm ~1.2 scale - never from a second typeface.", "section": "typography" },
+      { "name": "The Sentence-Case Rule", "body": "Headings and labels are sentence case. No all-caps tracked eyebrows above sections; that scaffolding reads as corporate and breaks the gentle voice.", "section": "typography" },
+      { "name": "The Tonal-First Rule", "body": "Reach for a tint before a shadow. If two surfaces need separating, layer cream to white to tint-50 or add a tint border. A shadow is the last resort, allowed only when the element truly floats.", "section": "elevation" },
+      { "name": "The Flat-Rest Rule", "body": "Surfaces are flat at rest (at most shadow-sm). Elevation is a response to state (hover, open, float), never the resting condition of an ordinary card.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Giraffe Gold (#F5B841) only for primary action, current selection, and positive signal - one primary gold button per screen.",
+      "Do put Bark Brown text on gold buttons and gold on light grounds via Giraffe Gold Text (#A67218). Verify body text hits >=4.5:1 on cream.",
+      "Do convey depth with tonal tint layering (cream to white to tint-50) and warm borders before reaching for any shadow.",
+      "Do keep every low-score, error, and needs-work state in Gentle Coral (#E07856) - warm, never alarming.",
+      "Do frame all feedback as growth (jackal to giraffe), naming what works before what to improve.",
+      "Do use one sans family; build hierarchy from weight and size. Sentence case for headings and labels.",
+      "Do give every interactive element the same 8px geometry and the same 2px gold focus ring.",
+      "Do provide a prefers-reduced-motion alternative for every animation."
+    ],
+    "donts": [
+      "Don't introduce cool neutrals or off-palette colors. No slate-*, gray-*, or blue-* - replace with brown/gold tints.",
+      "Don't use red-500/red-600 or any saturated red for errors or low scores. Gentle Coral only.",
+      "Don't use side-stripe borders - border-left/border-right greater than 1px as a colored accent. Rewrite with a full tinted border, a tint background, or a leading number.",
+      "Don't use gradient text (background-clip: text over a gradient). Use a single solid color; emphasize with weight or size.",
+      "Don't look clinical, childish, corporate, or preachy - the four PRODUCT.md anti-references.",
+      "Don't add a second typeface or a tracked all-caps eyebrow above sections.",
+      "Don't apply shadows to ordinary at-rest cards. Elevation is a response to state or true floating only.",
+      "Don't use glassmorphism decoratively. The FloatingNav pill is the single sanctioned glass surface."
+    ]
+  }
+}
