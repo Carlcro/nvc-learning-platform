@@ -27,12 +27,12 @@ interface Message {
   whatWentWell?: string
   giraffeAlternative?: string
   isJackalLanguage?: boolean
-  jackalPhrases?: string[]
+  jackalPhrases?: Array<string>
   characterMood?: number
 }
 
 interface TranscriptViewProps {
-  messages: Message[]
+  messages: Array<Message>
   scenarioTitle: string
   characterName: string
   finalScore: number
@@ -63,7 +63,7 @@ function MoodJourney({
   messages,
   initialMood,
 }: {
-  messages: Message[]
+  messages: Array<Message>
   initialMood: number
 }) {
   const moodPoints = [
@@ -82,18 +82,18 @@ function MoodJourney({
   const range = maxMood - minMood
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">Mood Journey</h3>
+    <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
+      <h3 className="text-sm font-semibold text-brown-700 mb-3">Mood Journey</h3>
       <div className="relative h-24">
         {/* Grid lines */}
         <div className="absolute inset-0 flex flex-col justify-between">
-          <div className="border-b border-gray-200 text-xs text-gray-400 text-right pr-2">
+          <div className="border-b border-giraffe-200 text-xs text-brown-500 text-right pr-2">
             +10
           </div>
-          <div className="border-b border-gray-300 text-xs text-gray-400 text-right pr-2">
+          <div className="border-b border-giraffe-200 text-xs text-brown-500 text-right pr-2">
             0
           </div>
-          <div className="text-xs text-gray-400 text-right pr-2">-10</div>
+          <div className="text-xs text-brown-500 text-right pr-2">-10</div>
         </div>
 
         {/* Mood line */}
@@ -117,9 +117,9 @@ function MoodJourney({
           />
           <defs>
             <linearGradient id="moodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="50%" stopColor="#eab308" />
-              <stop offset="100%" stopColor="#10b981" />
+              <stop offset="0%" stopColor="#E07856" />
+              <stop offset="50%" stopColor="#F5B841" />
+              <stop offset="100%" stopColor="#7FB069" />
             </linearGradient>
           </defs>
           {moodPoints.map((point, idx) => {
@@ -127,10 +127,10 @@ function MoodJourney({
             const y = ((maxMood - point.mood) / range) * 100
             const color =
               point.mood >= 3
-                ? '#10b981'
+                ? '#7FB069'
                 : point.mood >= 0
-                  ? '#eab308'
-                  : '#f97316'
+                  ? '#F5B841'
+                  : '#E07856'
             return (
               <circle
                 key={idx}
@@ -147,7 +147,7 @@ function MoodJourney({
       </div>
 
       {/* Legend */}
-      <div className="flex justify-between mt-2 text-xs text-gray-500">
+      <div className="flex justify-between mt-2 text-xs text-brown-600">
         <span>Conversation Start</span>
         <span>Conversation End</span>
       </div>
@@ -159,7 +159,7 @@ function SummaryStats({
   messages,
   finalScore,
 }: {
-  messages: Message[]
+  messages: Array<Message>
   finalScore: number
 }) {
   const userMessages = messages.filter((m) => m.role === 'user')
@@ -194,39 +194,39 @@ function SummaryStats({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
-        <div className="text-2xl font-bold text-giraffe-600">{finalScore}</div>
-        <div className="text-xs text-gray-500">Final Score</div>
+      <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
+        <div className="text-2xl font-bold text-giraffe-700">{finalScore}</div>
+        <div className="text-xs text-brown-600">Final Score</div>
       </div>
-      <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
+      <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-brown-700">
           {messages.length}
         </div>
-        <div className="text-xs text-gray-500">Total Messages</div>
+        <div className="text-xs text-brown-600">Total Messages</div>
       </div>
-      <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
-        <div className="text-2xl font-bold text-emerald-600">
+      <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
+        <div className="text-2xl font-bold text-brown-800">
           {userMessages.length - jackalCount}
         </div>
-        <div className="text-xs text-gray-500">Giraffe Responses</div>
+        <div className="text-xs text-brown-600">Giraffe Responses</div>
       </div>
-      <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
-        <div className="text-2xl font-bold text-orange-600">{jackalCount}</div>
-        <div className="text-xs text-gray-500">Jackal Responses</div>
+      <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
+        <div className="text-2xl font-bold text-brown-800">{jackalCount}</div>
+        <div className="text-xs text-brown-600">Jackal Responses</div>
       </div>
 
       {avgComponents && (
-        <div className="col-span-2 md:col-span-4 bg-white rounded-lg p-4 border border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+        <div className="col-span-2 md:col-span-4 bg-white rounded-lg p-4 border border-giraffe-100">
+          <h4 className="text-sm font-semibold text-brown-700 mb-3">
             Average Component Scores
           </h4>
           <div className="grid grid-cols-4 gap-3">
             {Object.entries(avgComponents).map(([key, value]) => (
               <div key={key} className="text-center">
-                <div className="text-lg font-bold text-giraffe-600">
+                <div className="text-lg font-bold text-giraffe-700">
                   {Math.round(value)}
                 </div>
-                <div className="text-xs text-gray-500 capitalize">{key}</div>
+                <div className="text-xs text-brown-600 capitalize">{key}</div>
               </div>
             ))}
           </div>
@@ -305,7 +305,7 @@ ${transcript}
           <div className="flex items-center justify-between">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-giraffe-600 hover:text-giraffe-700 transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-brown-700 hover:text-brown-900 transition-colors cursor-pointer"
             >
               <svg
                 className="w-5 h-5"
@@ -343,14 +343,14 @@ ${transcript}
             Conversation Transcript
           </h1>
           <p className="text-lg text-giraffe-700">{scenarioTitle}</p>
-          <p className="text-sm text-gray-500">{completedDate}</p>
+          <p className="text-sm text-brown-600">{completedDate}</p>
         </div>
 
         {/* Final Score */}
         <div className="bg-white rounded-xl p-6 border-2 border-giraffe-200">
           <div className="text-center mb-4">
-            <span className="text-sm text-gray-500">Final Score</span>
-            <div className="text-4xl font-bold text-giraffe-600">
+            <span className="text-sm text-brown-600">Final Score</span>
+            <div className="text-4xl font-bold text-giraffe-700">
               {finalScore}/100
             </div>
           </div>

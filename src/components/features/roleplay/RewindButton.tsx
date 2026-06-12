@@ -59,13 +59,13 @@ export function RewindButton({
           disabled={!canRewind}
           className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-all ${
             canRewind
-              ? 'border-giraffe-300 text-giraffe-700 hover:bg-giraffe-100 hover:border-giraffe-400 hover:text-giraffe-800 cursor-pointer'
-              : 'border-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'border-giraffe-300 text-brown-700 hover:bg-giraffe-100 hover:border-giraffe-400 hover:text-brown-900 cursor-pointer'
+              : 'border-giraffe-200 text-brown-400 cursor-not-allowed'
           }`}
         >
           <RewindIcon />
           <span>Rewind</span>
-          <span className="text-xs bg-giraffe-100 text-giraffe-700 px-1.5 py-0.5 rounded-full">
+          <span className="text-xs bg-giraffe-100 text-brown-800 px-1.5 py-0.5 rounded-full">
             {rewindsRemaining}
           </span>
         </button>
@@ -75,7 +75,7 @@ export function RewindButton({
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
         <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-giraffe-500 to-giraffe-400 text-white px-6 py-4">
+            <div className="bg-giraffe-400 text-brown-800 px-6 py-4">
               <Dialog.Title className="text-lg font-bold">
                 Rewind Last Message?
               </Dialog.Title>
@@ -90,29 +90,29 @@ export function RewindButton({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-giraffe-700">
+              <div className="flex items-center gap-2 text-sm text-brown-700">
                 <span className="font-semibold">Rewinds remaining:</span>
                 <span className="bg-giraffe-100 px-2 py-0.5 rounded-full">
                   {rewindsRemaining}
                 </span>
               </div>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-brown-600">
                 Using a rewind won't affect your final score - it's here to help
                 you learn!
               </p>
             </div>
 
-            <div className="border-t border-gray-200 px-6 py-4 flex gap-3 justify-end bg-gray-50">
+            <div className="border-t border-giraffe-100 px-6 py-4 flex gap-3 justify-end bg-giraffe-50">
               <Dialog.Close asChild>
-                <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                <button className="px-4 py-2 text-sm font-medium text-brown-700 hover:bg-giraffe-100 rounded-lg transition-colors cursor-pointer">
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 onClick={handleRewind}
                 disabled={isRewinding}
-                className="px-4 py-2 text-sm font-medium text-white bg-giraffe-600 hover:bg-giraffe-700 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 text-sm font-medium text-brown-800 bg-giraffe-400 hover:bg-giraffe-500 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isRewinding ? 'Rewinding...' : 'Rewind'}
               </button>

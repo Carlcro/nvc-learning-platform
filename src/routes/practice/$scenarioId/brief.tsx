@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
 import { Button } from '~/components/ui/Button'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
@@ -90,28 +91,7 @@ function ScenarioBrief() {
   }
 
   if (!scenario) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin motion-reduce:animate-none mb-4 inline-block">
-            <svg
-              className="w-12 h-12 text-giraffe-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <p className="text-brown-600">Loading scenario...</p>
-        </div>
-      </div>
-    )
+    return <GiraffeLoader message="Setting the scene for your conversation…" />
   }
 
   return (

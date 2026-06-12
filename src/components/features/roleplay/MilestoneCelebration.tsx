@@ -68,7 +68,7 @@ export function MilestoneCelebration({
           leaving ? 'animate-celebrate-out' : 'animate-celebrate-in'
         }`}
       >
-        <span className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-giraffe-400 to-giraffe-500 text-white flex items-center justify-center">
+        <span className="flex-shrink-0 w-9 h-9 rounded-full bg-giraffe-400 text-brown-800 flex items-center justify-center">
           <SparkIcon />
         </span>
         <div className="text-left">

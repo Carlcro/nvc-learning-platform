@@ -12,11 +12,11 @@ interface EmpathyMeterProps {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 90) return 'from-emerald-400 to-emerald-500'
+  if (score >= 90) return 'from-empathy-high to-empathy-high'
   if (score >= 70) return 'from-giraffe-300 to-giraffe-400'
-  if (score >= 50) return 'from-yellow-300 to-yellow-400'
-  if (score >= 30) return 'from-orange-300 to-orange-400'
-  return 'from-empathy-low to-red-500'
+  if (score >= 50) return 'from-giraffe-200 to-giraffe-300'
+  if (score >= 30) return 'from-empathy-low/70 to-empathy-low'
+  return 'from-empathy-low to-empathy-low'
 }
 
 function getScoreLabel(score: number): string {
@@ -80,7 +80,7 @@ export function EmpathyMeter({
           style={{ width: `${clampedScore}%` }}
         >
           {clampedScore > 15 && size !== 'sm' && (
-            <div className="text-white font-bold text-xs hidden sm:block">
+            <div className="text-brown-800 font-bold text-xs hidden sm:block">
               {clampedScore}
             </div>
           )}

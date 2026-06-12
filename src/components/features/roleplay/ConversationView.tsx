@@ -42,21 +42,21 @@ function getReactionTag(score: number): { label: string; className: string } {
   if (score >= 80)
     return {
       label: 'Heartfelt',
-      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      className: 'bg-empathy-high/15 text-brown-800 border-empathy-high/40',
     }
   if (score >= 60)
     return {
       label: 'Connecting',
-      className: 'bg-giraffe-50 text-giraffe-700 border-giraffe-200',
+      className: 'bg-giraffe-100 text-brown-800 border-giraffe-300',
     }
   if (score >= 40)
     return {
       label: 'Developing',
-      className: 'bg-blue-50 text-blue-700 border-blue-200',
+      className: 'bg-cream text-brown-700 border-giraffe-200',
     }
   return {
     label: 'Keep going',
-    className: 'bg-orange-50 text-orange-700 border-orange-200',
+    className: 'bg-empathy-low/15 text-brown-800 border-empathy-low/30',
   }
 }
 
@@ -73,10 +73,10 @@ function MessageBubble({
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar */}
       <div
-        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
           isUser
-            ? 'bg-linear-to-br from-giraffe-400 to-giraffe-500'
-            : 'bg-linear-to-br from-brown-600 to-brown-700'
+            ? 'bg-linear-to-br from-giraffe-400 to-giraffe-500 text-brown-800'
+            : 'bg-linear-to-br from-brown-600 to-brown-700 text-white'
         }`}
       >
         {isUser ? 'You' : characterName.charAt(0)}
@@ -171,15 +171,15 @@ export function ConversationView({
                   </div>
                   <div className="bg-white border-2 border-giraffe-200 rounded-lg rounded-bl-none px-4 py-3 flex gap-2">
                     <div
-                      className="w-2 h-2 bg-giraffe-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-giraffe-400 rounded-full animate-typing-dot"
                       style={{ animationDelay: '0ms' }}
                     />
                     <div
-                      className="w-2 h-2 bg-giraffe-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-giraffe-400 rounded-full animate-typing-dot"
                       style={{ animationDelay: '150ms' }}
                     />
                     <div
-                      className="w-2 h-2 bg-giraffe-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-giraffe-400 rounded-full animate-typing-dot"
                       style={{ animationDelay: '300ms' }}
                     />
                   </div>

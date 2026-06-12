@@ -112,6 +112,23 @@
   animation: float-soft 5s ease-in-out infinite;
 }
 
+/* Typing indicator dots: a calm fade, never a bounce. */
+@keyframes typing-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+.animate-typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
 .animate-celebrate-in {
   animation: celebrate-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -133,7 +150,8 @@
   .animate-celebrate-out,
   .animate-star-pop,
   .animate-confetti,
-  .animate-float-soft {
+  .animate-float-soft,
+  .animate-typing-dot {
     animation: none !important;
   }
 }

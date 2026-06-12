@@ -132,32 +132,37 @@ function getMoodLabel(mood: number): { label: string; color: string } {
   if (mood >= 6)
     return {
       label: 'Open',
-      color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      color: 'bg-empathy-high/20 text-brown-800 border-empathy-high/40',
     }
   if (mood >= 3)
     return {
       label: 'Warming',
-      color: 'bg-giraffe-100 text-giraffe-700 border-giraffe-200',
+      color: 'bg-giraffe-100 text-brown-800 border-giraffe-300',
     }
   if (mood >= 0)
     return {
       label: 'Neutral',
-      color: 'bg-blue-100 text-blue-700 border-blue-200',
+      color: 'bg-cream text-brown-700 border-giraffe-200',
     }
   if (mood >= -6)
     return {
       label: 'Guarded',
-      color: 'bg-orange-100 text-orange-700 border-orange-200',
+      color: 'bg-empathy-low/15 text-brown-800 border-empathy-low/30',
     }
-  return { label: 'Defensive', color: 'bg-red-100 text-red-700 border-red-200' }
+  return {
+    label: 'Defensive',
+    color: 'bg-empathy-low/25 text-brown-900 border-empathy-low/50',
+  }
 }
 
+// Mood bar fill, warm and gentle: green when open, gold while warming, soft
+// coral when guarded - never an alarming red.
 function getMoodFill(mood: number): string {
-  if (mood >= 6) return 'from-emerald-400 to-emerald-500'
-  if (mood >= 3) return 'from-giraffe-300 to-giraffe-400'
-  if (mood >= 0) return 'from-blue-300 to-blue-400'
-  if (mood >= -6) return 'from-orange-300 to-orange-400'
-  return 'from-red-400 to-red-500'
+  if (mood >= 6) return 'bg-empathy-high'
+  if (mood >= 3) return 'bg-giraffe-400'
+  if (mood >= 0) return 'bg-giraffe-300'
+  if (mood >= -6) return 'bg-empathy-low/70'
+  return 'bg-empathy-low'
 }
 
 /**
@@ -190,16 +195,16 @@ function MoodMeter({
         </span>
       </div>
 
-      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="relative h-3 bg-giraffe-100 rounded-full overflow-hidden">
         <div
-          className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getMoodFill(
+          className={`absolute inset-y-0 left-0 ${getMoodFill(
             clampedMood,
           )} rounded-full transition-all duration-700 ease-out`}
           style={{ width: `${percent}%` }}
         />
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-medium text-brown-400">
+      <div className="flex items-center justify-between text-[10px] font-medium text-brown-600">
         <span>Guarded</span>
         <span>Open</span>
       </div>
@@ -241,10 +246,10 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
 
       <div className="flex items-center justify-between relative">
         {/* Background Progress Line */}
-        <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 mx-6" />
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-giraffe-100 mx-6" />
         {/* Active Progress Line */}
         <div
-          className="absolute top-5 left-6 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+          className="absolute top-5 left-6 h-0.5 bg-empathy-high transition-all duration-500"
           style={{
             width:
               currentStepIndex > 0
@@ -266,10 +271,10 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted
-                    ? 'bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-md'
+                    ? 'bg-empathy-high text-brown-900 shadow-sm'
                     : isCurrent
-                      ? 'bg-giraffe-100 text-giraffe-600 border-2 border-giraffe-400'
-                      : 'bg-gray-100 text-gray-400'
+                      ? 'bg-giraffe-100 text-brown-800 border-2 border-giraffe-400'
+                      : 'bg-giraffe-50 text-brown-400'
                 }`}
               >
                 {isCompleted ? (
@@ -281,10 +286,10 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
               <span
                 className={`text-[10px] font-medium ${
                   isCompleted
-                    ? 'text-emerald-600'
+                    ? 'text-brown-700'
                     : isCurrent
-                      ? 'text-giraffe-600'
-                      : 'text-gray-400'
+                      ? 'text-brown-700'
+                      : 'text-brown-500'
                 }`}
               >
                 {step.label}
@@ -358,8 +363,8 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
 
   if (!hasPositive && !hasImprovement) {
     return (
-      <div className="flex gap-3 p-3 bg-gray-50 rounded border border-gray-200">
-        <p className="text-sm text-gray-600 text-center w-full">
+      <div className="flex gap-3 p-3 bg-giraffe-50 rounded border border-giraffe-100">
+        <p className="text-sm text-brown-600 text-center w-full">
           Keep practicing! Focus on expressing feelings and needs.
         </p>
       </div>
@@ -369,9 +374,9 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
   return (
     <div className="space-y-3">
       {feedback.whatWentWell && (
-        <div className="flex gap-3 p-3 bg-emerald-50 rounded border border-emerald-200">
-          <div className="shrink-0 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center mt-0.5">
-            <span className="text-white text-xs font-bold">+</span>
+        <div className="flex gap-3 p-3 bg-empathy-high/15 rounded border border-empathy-high/40">
+          <div className="shrink-0 w-5 h-5 rounded-full bg-empathy-high flex items-center justify-center mt-0.5">
+            <span className="text-brown-900 text-xs font-bold">+</span>
           </div>
           <p className="text-sm text-brown-700 leading-relaxed">
             {feedback.whatWentWell}
@@ -381,8 +386,8 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
 
       {feedback.feedback && (
         <div className="flex gap-3 p-3 bg-giraffe-50 rounded border border-giraffe-200">
-          <div className="shrink-0 w-5 h-5 rounded-full bg-giraffe-500 flex items-center justify-center mt-0.5">
-            <span className="text-white text-xs font-bold">*</span>
+          <div className="shrink-0 w-5 h-5 rounded-full bg-giraffe-400 flex items-center justify-center mt-0.5">
+            <span className="text-brown-800 text-xs font-bold">*</span>
           </div>
           <p className="text-sm text-brown-700 leading-relaxed">
             {feedback.feedback}
@@ -391,9 +396,9 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
       )}
 
       {feedback.isJackalLanguage && feedback.giraffeAlternative && (
-        <div className="flex gap-3 p-3 bg-blue-50 rounded border border-blue-200">
-          <div className="shrink-0 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center mt-0.5">
-            <span className="text-white text-xs font-bold">~</span>
+        <div className="flex gap-3 p-3 bg-cream rounded border border-giraffe-200">
+          <div className="shrink-0 w-5 h-5 rounded-full bg-brown-600 flex items-center justify-center mt-0.5">
+            <span className="text-cream text-xs font-bold">~</span>
           </div>
           <p className="text-sm text-brown-700 leading-relaxed italic">
             "{feedback.giraffeAlternative}"
@@ -416,9 +421,9 @@ export function FeedbackPanel({
   return (
     <div className="w-full rounded overflow-hidden bg-giraffe-50 shadow-lg border border-giraffe-100 flex flex-col h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-giraffe-400 to-giraffe-500 px-5 py-4">
+      <div className="bg-giraffe-400 px-5 py-4">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-giraffe-900">Feedback</h2>
+          <h2 className="font-semibold text-brown-800">Feedback</h2>
         </div>
       </div>
 

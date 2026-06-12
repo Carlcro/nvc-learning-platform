@@ -40,9 +40,9 @@ export function MilestoneProgress({ milestones }: MilestoneProgressProps) {
       </div>
 
       {/* Progress Bar */}
-      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
+      <div className="h-1.5 bg-giraffe-100 rounded-full overflow-hidden mb-3">
         <div
-          className="h-full bg-gradient-to-r from-giraffe-400 to-emerald-400 transition-all duration-500 ease-out"
+          className="h-full bg-gradient-to-r from-giraffe-400 to-empathy-high transition-all duration-500 ease-out"
           style={{ width: `${progressPercentage}%` }}
         />
       </div>
@@ -64,10 +64,10 @@ export function MilestoneProgress({ milestones }: MilestoneProgressProps) {
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   isCompleted
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-empathy-high text-brown-900'
                     : isNext
-                      ? 'bg-giraffe-200 text-giraffe-700 ring-2 ring-giraffe-400'
-                      : 'bg-gray-100 text-gray-400'
+                      ? 'bg-giraffe-200 text-brown-800 ring-2 ring-giraffe-400'
+                      : 'bg-giraffe-50 text-brown-400'
                 }`}
               >
                 {isCompleted ? (
@@ -85,10 +85,10 @@ export function MilestoneProgress({ milestones }: MilestoneProgressProps) {
               <span
                 className={`text-[10px] ${
                   isCompleted
-                    ? 'text-emerald-600 font-medium'
+                    ? 'text-brown-700 font-medium'
                     : isNext
-                      ? 'text-giraffe-600'
-                      : 'text-gray-400'
+                      ? 'text-brown-700'
+                      : 'text-brown-500'
                 }`}
               >
                 {milestone.label}

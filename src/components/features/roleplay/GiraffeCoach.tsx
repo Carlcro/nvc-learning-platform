@@ -43,7 +43,7 @@ export function ScoreComponent({
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-brown-700">{label}</span>
         <span
-          className={`text-sm font-bold ${isGood ? 'text-emerald-600' : 'text-orange-600'}`}
+          className={`text-sm font-bold ${isGood ? 'text-brown-800' : 'text-brown-700'}`}
         >
           {value}/{max}
         </span>
@@ -51,7 +51,7 @@ export function ScoreComponent({
       <div className="h-2 bg-brown-200 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-300 ${
-            isGood ? 'bg-emerald-400' : 'bg-giraffe-400'
+            isGood ? 'bg-empathy-high' : 'bg-giraffe-400'
           }`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
@@ -137,11 +137,11 @@ export function GiraffeCoach({ feedback, messageCount }: GiraffeCoachProps) {
 
       {/* Always show What Went Well if present */}
       {feedback.whatWentWell && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
-          <h4 className="font-semibold text-emerald-900 text-sm">
+        <div className="bg-empathy-high/15 border border-empathy-high/40 rounded-lg p-3 space-y-2">
+          <h4 className="font-semibold text-brown-800 text-sm">
             What Went Well
           </h4>
-          <p className="text-sm text-emerald-800">{feedback.whatWentWell}</p>
+          <p className="text-sm text-brown-700">{feedback.whatWentWell}</p>
         </div>
       )}
 
@@ -149,11 +149,11 @@ export function GiraffeCoach({ feedback, messageCount }: GiraffeCoachProps) {
       {showAdvancedFeedback && (
         <>
           {feedback.feedback && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-              <h4 className="font-semibold text-blue-900 text-sm">
+            <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg p-3 space-y-2">
+              <h4 className="font-semibold text-brown-800 text-sm">
                 Coaching Tip
               </h4>
-              <p className="text-sm text-blue-800">{feedback.feedback}</p>
+              <p className="text-sm text-brown-700">{feedback.feedback}</p>
             </div>
           )}
 

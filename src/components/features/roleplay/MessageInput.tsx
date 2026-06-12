@@ -79,7 +79,7 @@ export function MessageInput({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-300 text-red-800 text-sm px-4 py-2 rounded-lg">
+        <div className="bg-empathy-low/15 border border-empathy-low/40 text-brown-800 text-sm px-4 py-2 rounded-lg">
           {error}
         </div>
       )}
@@ -105,7 +105,7 @@ export function MessageInput({
             resize-none
             border-giraffe-200 focus:border-giraffe-400
             ${value.length > 0 ? 'border-giraffe-300' : 'border-giraffe-200'}
-            ${error ? 'border-red-300' : ''}
+            ${error ? 'border-empathy-low/50' : ''}
             min-h-24
           `}
         />

@@ -8,6 +8,7 @@ import { MilestoneCelebration } from '~/components/features/roleplay/MilestoneCe
 import { RewindButton } from '~/components/features/roleplay/RewindButton'
 import { ScenarioResults } from '~/components/features/roleplay/ScenarioResults'
 import { Button } from '~/components/ui/Button'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { useConversation } from '~/hooks/useConversation'
 
 export const Route = createFileRoute(
@@ -22,28 +23,10 @@ export const Route = createFileRoute(
 })
 
 function LoadingScreen({ label }: { label: string }) {
-  return (
-    <div className="min-h-screen bg-cream flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin mb-4">
-          <svg
-            className="w-12 h-12 text-giraffe-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <p className="text-brown-600">{label}</p>
-      </div>
-    </div>
-  )
+  const message = label.toLowerCase().includes('scenario')
+    ? 'Setting the scene for your conversation…'
+    : 'Getting things ready for you…'
+  return <GiraffeLoader message={message} />
 }
 
 function ConversationComponent() {
@@ -115,12 +98,12 @@ function ConversationComponent() {
       />
 
       {error && (
-        <div className="bg-red-50 border-b-2 border-red-300 px-6 py-3">
+        <div className="bg-empathy-low/15 border-b-2 border-empathy-low/40 px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-            <p className="text-red-700 text-sm font-medium">{error}</p>
+            <p className="text-brown-800 text-sm font-medium">{error}</p>
             <button
               onClick={dismissError}
-              className="text-red-600 hover:text-red-800 text-sm font-semibold"
+              className="text-brown-700 hover:text-brown-900 text-sm font-semibold cursor-pointer"
             >
               Dismiss
             </button>
@@ -129,12 +112,12 @@ function ConversationComponent() {
       )}
 
       {isArchiveMode && (
-        <div className="bg-blue-50 border-b-2 border-blue-300 px-6 py-3">
+        <div className="bg-giraffe-50 border-b-2 border-giraffe-200 px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-3">
-            <div className="text-blue-700 font-semibold">
+            <div className="text-brown-800 font-semibold">
               Viewing Completed Conversation
             </div>
-            <p className="text-blue-600 text-sm">
+            <p className="text-brown-700 text-sm">
               This conversation has been completed. You can review it but cannot
               make changes.
             </p>
@@ -149,13 +132,13 @@ function ConversationComponent() {
             {conversationStarted && (
               <button
                 onClick={() => setShowScenarioContext(true)}
-                className="text-nowrap text-xl text-giraffe-600 underline cursor-pointer"
+                className="text-nowrap text-sm font-semibold text-brown-700 hover:text-brown-900 underline cursor-pointer"
               >
                 View Scenario
               </button>
             )}
           </div>
-          <p className="text-giraffe-700 text-sm">
+          <p className="text-brown-700 text-sm">
             Practicing with <strong>{scenario.characterName}</strong>
           </p>
         </div>
@@ -226,7 +209,7 @@ function ConversationComponent() {
             <div className="lg:hidden border-t border-giraffe-200 bg-white px-4 py-3">
               <button
                 onClick={() => setMobileFeedbackExpanded(true)}
-                className="w-full flex items-center justify-between gap-2 text-giraffe-700 hover:text-giraffe-800 font-semibold text-sm"
+                className="w-full flex items-center justify-between gap-2 text-brown-700 hover:text-brown-900 font-semibold text-sm cursor-pointer"
               >
                 <span>View Feedback</span>
                 <svg
@@ -248,11 +231,11 @@ function ConversationComponent() {
 
           {mobileFeedbackExpanded && (
             <div className="lg:hidden fixed inset-0 bg-white z-50 flex flex-col">
-              <div className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white px-4 py-4 flex items-center justify-between">
+              <div className="bg-giraffe-400 text-brown-800 px-4 py-4 flex items-center justify-between">
                 <h2 className="font-bold text-lg">Live Feedback</h2>
                 <button
                   onClick={() => setMobileFeedbackExpanded(false)}
-                  className="text-white hover:text-giraffe-100 transition-colors"
+                  className="text-brown-700 hover:text-brown-900 transition-colors cursor-pointer"
                   aria-label="Close feedback panel"
                 >
                   <svg
@@ -286,7 +269,7 @@ function ConversationComponent() {
               <div className="border-t border-giraffe-200 bg-white px-4 py-3">
                 <button
                   onClick={() => setMobileFeedbackExpanded(false)}
-                  className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white font-semibold py-3 rounded-lg transition-colors"
+                  className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer"
                 >
                   Continue Conversation
                 </button>
@@ -304,11 +287,11 @@ function ConversationComponent() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white px-6 py-4 sticky top-0 flex items-center justify-between">
+              <div className="bg-giraffe-400 text-brown-800 px-6 py-4 sticky top-0 flex items-center justify-between">
                 <h2 className="text-xl font-bold">Scenario Context</h2>
                 <Dialog.Close asChild>
                   <button
-                    className="text-white hover:text-giraffe-100 transition-colors p-1"
+                    className="text-brown-700 hover:text-brown-900 transition-colors p-1 cursor-pointer"
                     aria-label="Close scenario context"
                   >
                     <svg
@@ -339,7 +322,7 @@ function ConversationComponent() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-bold text-giraffe-700 mb-3">
+                  <h3 className="text-sm font-bold text-brown-700 mb-3">
                     What You'll Practice:
                   </h3>
                   <ul className="space-y-2">
@@ -349,7 +332,7 @@ function ConversationComponent() {
                           key={idx}
                           className="text-sm text-brown-700 flex items-start gap-2"
                         >
-                          <span className="text-giraffe-500 mt-0.5">•</span>
+                          <span className="text-giraffe-700 mt-0.5">•</span>
                           <span>{goal}</span>
                         </li>
                       ),
@@ -357,15 +340,16 @@ function ConversationComponent() {
                   </ul>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 text-sm text-blue-800">
-                  <strong>Tip:</strong> Remember to express your observations,
-                  feelings, needs, and requests clearly.
+                <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg p-4 text-sm text-brown-700">
+                  <strong className="text-brown-800">Tip:</strong> Remember to
+                  express your observations, feelings, needs, and requests
+                  clearly.
                 </div>
               </div>
 
               <div className="border-t border-giraffe-200 bg-cream px-6 py-4">
                 <Dialog.Close asChild>
-                  <button className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white font-semibold py-3 rounded-lg transition-colors cursor-pointer">
+                  <button className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer">
                     Continue Conversation
                   </button>
                 </Dialog.Close>

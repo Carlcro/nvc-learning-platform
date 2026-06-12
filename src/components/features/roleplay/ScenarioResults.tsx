@@ -22,10 +22,10 @@ interface ScenarioResultsProps {
 
 const CONFETTI_COLORS = [
   'bg-giraffe-400',
+  'bg-giraffe-300',
+  'bg-empathy-high',
+  'bg-empathy-low',
   'bg-giraffe-500',
-  'bg-emerald-400',
-  'bg-emerald-300',
-  'bg-orange-300',
 ]
 
 /**
@@ -79,7 +79,7 @@ function StarsReveal({ stars }: { stars: number }) {
           <svg
             key={i}
             className={`w-10 h-10 animate-star-pop ${
-              earned ? 'text-yellow-300' : 'text-white/30'
+              earned ? 'text-brown-900' : 'text-brown-900/25'
             }`}
             style={{ animationDelay: `${0.15 + i * 0.18}s` }}
             fill="currentColor"
@@ -100,21 +100,21 @@ function getGrade(score: number): {
   if (score >= 90)
     return {
       label: 'Excellent',
-      color: 'from-emerald-400 to-emerald-500',
+      color: 'from-empathy-high to-giraffe-400',
     }
   if (score >= 70)
     return {
       label: 'Good',
-      color: 'from-giraffe-400 to-giraffe-500',
+      color: 'from-giraffe-300 to-giraffe-400',
     }
   if (score >= 50)
     return {
       label: 'Partial',
-      color: 'from-yellow-400 to-orange-400',
+      color: 'from-giraffe-400 to-empathy-low',
     }
   return {
     label: 'Needs Practice',
-    color: 'from-red-400 to-orange-400',
+    color: 'from-empathy-low/80 to-empathy-low',
   }
 }
 
@@ -143,13 +143,15 @@ export function ScenarioResults({
 
         {/* Score Card */}
         <Card className="overflow-hidden">
-          <div className={`bg-linear-to-r ${grade.color} text-white p-8`}>
+          <div className={`bg-linear-to-r ${grade.color} text-brown-900 p-8`}>
             <div className="text-center">
-              <p className="text-giraffe-50 text-sm font-semibold mb-2">
-                FINAL SCORE
+              <p className="text-brown-800 text-sm font-semibold mb-2">
+                Final score
               </p>
               <h2 className="text-6xl font-bold mb-2">{finalScore}</h2>
-              <p className="text-2xl font-bold text-white">{grade.label} NVC</p>
+              <p className="text-2xl font-bold text-brown-900">
+                {grade.label} NVC
+              </p>
               <StarsReveal stars={stars} />
             </div>
           </div>
@@ -183,12 +185,12 @@ export function ScenarioResults({
         </Card>
 
         {/* Feedback Box */}
-        <Card className="bg-blue-50 border-2 border-blue-300">
+        <Card className="bg-giraffe-50 border-2 border-giraffe-200">
           <CardBody className="space-y-3">
             <div className="flex items-start gap-3">
               <div>
-                <h3 className="font-bold text-blue-900 mb-2">Key Takeaway</h3>
-                <p className="text-blue-800 text-sm leading-relaxed">
+                <h3 className="font-bold text-brown-800 mb-2">Key Takeaway</h3>
+                <p className="text-brown-700 text-sm leading-relaxed">
                   {finalScore >= 90
                     ? 'Excellent work! You demonstrated strong NVC skills. Your messages showed clear observations, feelings, needs, and requests. Keep practicing to maintain this level of empathetic communication.'
                     : finalScore >= 70
