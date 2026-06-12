@@ -9,11 +9,10 @@ export interface ScenarioCardProps {
   difficulty: 'beginner' | 'intermediate' | 'advanced'
   characterName: string
   minLevel: number
-  isLocked: boolean
+  userLevel: number
   progress: any | null
   onStart: (scenarioId: string | unknown) => void
   onViewBest?: (scenarioId: string | unknown, conversationId: string) => void
-  requiredScenarioName?: string
 }
 
 const categoryLabels: Record<string, string> = {
@@ -50,53 +49,28 @@ function renderStars(stars: number) {
   )
 }
 
-function getStatusLabel(
-  isLocked: boolean,
-  isCompleted: boolean,
-  isAttempted: boolean,
-  isInProgress: boolean,
-  bestStars: number,
-): string {
-  if (isLocked) {
-    return 'LOCKED'
+type ScenarioStatus = 'start' | 'in_progress' | 'attempted' | 'completed'
+
+function getStatus(progress: any | null): {
+  status: ScenarioStatus
+  bestStars: number
+} {
+  const bestStars = progress?.bestStars || 0
+  if (progress?.status === 'passed' || progress?.status === 'mastered') {
+    return { status: 'completed', bestStars }
   }
-  if (isCompleted) {
-    if (bestStars === 3) {
-      return 'MASTERED'
-    }
-    if (bestStars === 2) {
-      return 'COMPLETED'
-    }
-    return 'COMPLETED'
+  if (progress?.status === 'attempted') return { status: 'attempted', bestStars }
+  if (progress?.status === 'in_progress') {
+    return { status: 'in_progress', bestStars }
   }
-  if (isAttempted) {
-    return 'ATTEMPTED'
-  }
-  if (isInProgress) {
-    return 'IN PROGRESS'
-  }
-  return 'START'
+  return { status: 'start', bestStars }
 }
 
-function getStatusBgColor(
-  isLocked: boolean,
-  isCompleted: boolean,
-  isAttempted: boolean,
-  bestStars: number,
-): string {
-  if (isLocked) {
-    return 'bg-gray-400'
-  }
-  if (isCompleted) {
-    if (bestStars === 3) {
-      return 'bg-emerald-600'
-    }
-    return 'bg-emerald-600'
-  }
-  if (isAttempted) {
-    return 'bg-amber-600'
-  }
-  return 'bg-giraffe-600'
+const statusBadge: Record<ScenarioStatus, { label: string; bg: string }> = {
+  start: { label: 'START', bg: 'bg-giraffe-600' },
+  in_progress: { label: 'IN PROGRESS', bg: 'bg-giraffe-600' },
+  attempted: { label: 'ATTEMPTED', bg: 'bg-amber-600' },
+  completed: { label: 'COMPLETED', bg: 'bg-emerald-600' },
 }
 
 export function ScenarioCard({
@@ -107,17 +81,19 @@ export function ScenarioCard({
   difficulty,
   characterName,
   minLevel,
-  isLocked,
+  userLevel,
   progress,
   onStart,
   onViewBest,
-  requiredScenarioName,
 }: ScenarioCardProps) {
-  const isCompleted =
-    progress && (progress.status === 'passed' || progress.status === 'mastered')
-  const isAttempted = progress && progress.status === 'attempted'
-  const isInProgress = progress && progress.status === 'in_progress'
-  const bestStars = progress?.bestStars || 0
+  const { status, bestStars } = getStatus(progress)
+  const isCompleted = status === 'completed'
+  // Scenarios are never blocked - we simply suggest a level so users know what
+  // to expect. They can always jump in.
+  const isAboveLevel = userLevel < minLevel
+
+  const badge = statusBadge[status]
+  const label = isCompleted && bestStars === 3 ? 'MASTERED' : badge.label
 
   const handleViewBest = () => {
     if (progress?.bestConversationId && onViewBest) {
@@ -125,26 +101,12 @@ export function ScenarioCard({
     }
   }
 
-  const statusLabel = getStatusLabel(
-    isLocked,
-    isCompleted,
-    isAttempted,
-    isInProgress,
-    bestStars,
-  )
-  const statusBgColor = getStatusBgColor(
-    isLocked,
-    isCompleted,
-    isAttempted,
-    bestStars,
-  )
-
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-all duration-200">
       {/* Status Badge */}
-      <div className={`${statusBgColor} px-6 py-2 text-white`}>
+      <div className={`${badge.bg} px-6 py-2 text-white`}>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold">{statusLabel}</span>
+          <span className="text-sm font-bold">{label}</span>
           {isCompleted && (
             <div className="flex gap-0.5">{renderStars(bestStars)}</div>
           )}
@@ -177,6 +139,16 @@ export function ScenarioCard({
 
       {/* Body */}
       <CardBody className="flex-grow flex flex-col gap-4 justify-between">
+        {/* Recommended-level note (non-blocking) */}
+        {isAboveLevel && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <p className="text-xs text-amber-800">
+              <span className="font-semibold">Recommended at Level {minLevel}.</span>{' '}
+              You can still try it now - it may be more of a stretch.
+            </p>
+          </div>
+        )}
+
         {/* Description */}
         <p className="text-brown-700 text-sm leading-relaxed">{description}</p>
 
@@ -187,34 +159,12 @@ export function ScenarioCard({
           </div>
           <div className="font-semibold text-brown-800">{characterName}</div>
         </div>
-
-        {/* Unlock requirement */}
-        {isLocked && (
-          <div className="pt-2 border-t border-giraffe-100">
-            <div className="text-xs font-semibold text-empathy-low mb-1">
-              Unlock Requirements
-            </div>
-            <p className="text-xs text-brown-700">
-              {requiredScenarioName
-                ? `Complete "${requiredScenarioName}" to unlock`
-                : `Reach Level ${minLevel} to unlock`}
-            </p>
-          </div>
-        )}
       </CardBody>
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-giraffe-100 bg-giraffe-50 flex gap-2">
-        {isLocked ? (
-          <Button disabled className="w-full" variant="outline">
-            Unlock at Level {minLevel}
-          </Button>
-        ) : isInProgress ? (
-          <Button
-            onClick={() => onStart(id)}
-            className="w-full"
-            variant="primary"
-          >
+        {status === 'in_progress' ? (
+          <Button onClick={() => onStart(id)} className="w-full" variant="primary">
             Continue
           </Button>
         ) : isCompleted ? (
@@ -226,28 +176,16 @@ export function ScenarioCard({
             >
               {bestStars < 3 ? 'Improve' : 'Try Again'}
             </Button>
-            <Button
-              onClick={handleViewBest}
-              variant="outline"
-              className="flex-1"
-            >
+            <Button onClick={handleViewBest} variant="outline" className="flex-1">
               View Best
             </Button>
           </>
-        ) : isAttempted ? (
-          <Button
-            onClick={() => onStart(id)}
-            className="w-full"
-            variant="primary"
-          >
+        ) : status === 'attempted' ? (
+          <Button onClick={() => onStart(id)} className="w-full" variant="primary">
             Try Again
           </Button>
         ) : (
-          <Button
-            onClick={() => onStart(id)}
-            className="w-full"
-            variant="primary"
-          >
+          <Button onClick={() => onStart(id)} className="w-full" variant="primary">
             Start
           </Button>
         )}
