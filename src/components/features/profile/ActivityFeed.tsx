@@ -1,5 +1,5 @@
-import { Card, CardBody } from '~/components/ui/Card'
 import { Link } from '@tanstack/react-router'
+import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 
 interface ActivityFeedProps {
@@ -9,12 +9,18 @@ interface ActivityFeedProps {
 }
 
 function renderStars(count: number) {
+  const filled = Math.min(count, 3)
   return (
-    <div className="flex gap-0.5 justify-center">
+    <div
+      className="flex gap-0.5 justify-center"
+      role="img"
+      aria-label={`${filled} of 3 stars`}
+    >
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className={i < Math.min(count, 3) ? 'text-yellow-400' : 'text-gray-300'}
+          aria-hidden="true"
+          className={i < filled ? 'text-giraffe-400' : 'text-brown-200'}
         >
           ★
         </span>
@@ -31,10 +37,10 @@ export function ActivityFeed({
   return (
     <Card className="overflow-hidden h-full flex flex-col">
       {/* Header */}
-      <div className="bg-linear-to-r from-emerald-500 to-emerald-400 px-6 py-3 text-white">
-        <div className="text-sm font-semibold uppercase tracking-wider">
-          Your Journey
-        </div>
+      <div className="bg-giraffe-50 px-6 py-3 border-b border-giraffe-100">
+        <h2 className="text-sm font-semibold text-brown-700">
+          Your journey
+        </h2>
       </div>
 
       <CardBody className="flex-grow flex flex-col">
@@ -43,7 +49,7 @@ export function ActivityFeed({
             <div className="text-2xl font-bold text-brown-800">
               {completedScenarios}
             </div>
-            <div className="text-xs text-brown-600 uppercase font-medium">
+            <div className="text-xs text-brown-600 font-medium">
               Completed
             </div>
           </div>
@@ -51,7 +57,7 @@ export function ActivityFeed({
             <div className="text-2xl font-bold text-brown-800">
               {masteredScenarios}
             </div>
-            <div className="text-xs text-brown-600 uppercase font-medium">
+            <div className="text-xs text-brown-600 font-medium">
               Mastered
             </div>
           </div>
@@ -60,8 +66,8 @@ export function ActivityFeed({
               {totalStars}
             </div>
             {renderStars(totalStars)}
-            <div className="text-xs text-brown-600 uppercase font-medium mt-1">
-              Total Stars Earned
+            <div className="text-xs text-brown-600 font-medium mt-1">
+              Total stars earned
             </div>
           </div>
         </div>

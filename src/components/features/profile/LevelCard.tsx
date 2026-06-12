@@ -18,28 +18,28 @@ export function LevelCard({ stats }: LevelCardProps) {
 
   return (
     <Card className="overflow-hidden h-full">
-      {/* Header */}
-      <div className="bg-linear-to-r from-giraffe-500 to-giraffe-400 px-6 py-4 text-white">
+      {/* Header — the one gold surface: brown-on-gold signature */}
+      <div className="bg-giraffe-400 px-6 py-4">
         <div className="flex justify-between items-start">
           <div>
-            <div className="text-sm font-semibold text-giraffe-50 mb-1">
-              Current Level
-            </div>
+            <h2 className="text-sm font-semibold text-brown-700 mb-1">
+              Current level
+            </h2>
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-white">
+              <span className="text-4xl font-bold text-brown-900">
                 {stats.level}
               </span>
-              <span className="text-giraffe-100 font-medium">
+              <span className="text-brown-800 font-medium">
                 {getLevelTitle(stats.level)}
               </span>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-brown-900">
               {stats.totalPoints}
             </div>
-            <div className="text-xs text-giraffe-100 font-medium uppercase">
-              Total Points
+            <div className="text-xs text-brown-700 font-medium">
+              Total points
             </div>
           </div>
         </div>
@@ -48,12 +48,19 @@ export function LevelCard({ stats }: LevelCardProps) {
       <CardBody>
         <div className="space-y-3">
           <div className="flex justify-between text-sm text-brown-700">
-            <span className="font-medium">Progress to Level {stats.level + 1}</span>
+            <span className="font-medium">Progress to level {stats.level + 1}</span>
             <span className="font-semibold">{stats.pointsToNextLevel} points to go</span>
           </div>
-          <div className="h-4 bg-giraffe-100 rounded-full overflow-hidden border border-giraffe-200">
+          <div
+            className="h-4 bg-giraffe-100 rounded-full overflow-hidden border border-giraffe-200"
+            role="progressbar"
+            aria-valuenow={Math.round(percentage)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Progress to level ${stats.level + 1}`}
+          >
             <div
-              className="h-full bg-linear-to-r from-giraffe-400 to-giraffe-500 rounded-full transition-all duration-1000 ease-out"
+              className="h-full bg-giraffe-400 rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
               style={{ width: `${percentage}%` }}
             />
           </div>

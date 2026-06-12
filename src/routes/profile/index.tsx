@@ -31,8 +31,9 @@ function ProfileContent() {
   if (!stats) {
     return (
       <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
-        <div className="flex items-center justify-center py-24">
+        <div className="flex items-center justify-center py-24" role="status">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-giraffe-600"></div>
+          <span className="sr-only">Loading your progress</span>
         </div>
       </main>
     )
@@ -47,16 +48,13 @@ function ProfileContent() {
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-giraffe-200 shadow-md">
               <img
                 src="/giraff.png"
-                alt="Profile"
+                alt=""
                 className="w-12 h-12 object-contain"
               />
             </div>
             <div>
               <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-2">
-                Your{' '}
-                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
-                  Progress
-                </span>
+                Your progress
               </h1>
               <p className="text-lg text-brown-700">
                 Keep growing your compassionate communication skills
