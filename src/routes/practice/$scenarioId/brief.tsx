@@ -234,7 +234,6 @@ function ScenarioBrief() {
             {/* Tips Section */}
             <div className="bg-linear-to-r from-giraffe-50 to-cream rounded-lg p-6 border-2 border-giraffe-200">
               <h3 className="text-lg font-bold text-giraffe-900 mb-4 flex items-center gap-2">
-                <span className="text-xl">💡</span>
                 Tips for Success
               </h3>
               <ul className="space-y-2 text-brown-700">
