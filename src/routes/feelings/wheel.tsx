@@ -134,7 +134,7 @@ function FeelingsWheel() {
                   </div>
                   <Link
                     to="/feelings/intensity"
-                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center gap-2"
+                    className="px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -153,8 +153,8 @@ function FeelingsWheel() {
                         px-4 py-2 rounded-lg font-medium transition-all
                         ${
                           showCategory === option
-                            ? 'bg-giraffe-500 text-white shadow-md'
-                            : 'bg-giraffe-50 text-giraffe-800 hover:bg-giraffe-100'
+                            ? 'bg-giraffe-400 text-brown-800 shadow-sm'
+                            : 'bg-giraffe-50 text-brown-700 hover:bg-giraffe-100'
                         }
                       `}
                       >
@@ -212,7 +212,7 @@ function FeelingsWheel() {
                         ${
                           feeling.category === 'pleasant'
                             ? 'border-giraffe-200 hover:bg-giraffe-50'
-                            : 'border-slate-300 hover:bg-slate-100'
+                            : 'border-empathy-low/30 hover:bg-empathy-low/10'
                         }
                         ${selectedFeeling === feeling.word ? 'ring-2 ring-giraffe-400 bg-giraffe-50' : ''}
                       `}
@@ -220,7 +220,7 @@ function FeelingsWheel() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm capitalize text-slate-900">
+                          <p className="font-semibold text-sm capitalize text-brown-800">
                             {feeling.word}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
@@ -229,10 +229,10 @@ function FeelingsWheel() {
                                 text-xs px-2 py-0.5 rounded-full font-medium
                                 ${
                                   feeling.intensity <= 2
-                                    ? 'bg-blue-100 text-blue-900'
+                                    ? 'bg-giraffe-100 text-brown-800'
                                     : feeling.intensity === 3
-                                      ? 'bg-purple-100 text-purple-900'
-                                      : 'bg-red-100 text-red-900'
+                                      ? 'bg-giraffe-300 text-brown-900'
+                                      : 'bg-empathy-low/25 text-brown-900'
                                 }
                               `}
                             >
@@ -249,7 +249,7 @@ function FeelingsWheel() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-slate-500 py-8">
+                <p className="text-center text-brown-600 py-8">
                   No feelings found with this combination of filters.
                 </p>
               )}
@@ -260,10 +260,10 @@ function FeelingsWheel() {
               <div className="bg-white rounded-lg border-2 border-giraffe-300 p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900 capitalize">
+                    <h2 className="text-2xl font-bold text-brown-800 capitalize">
                       {selectedFeelingDetail.word}
                     </h2>
-                    <p className="text-sm text-slate-600 mt-1">
+                    <p className="text-sm text-brown-600 mt-1">
                       {
                         ['', 'Mild', 'Light', 'Moderate', 'Strong', 'Intense'][
                           selectedFeelingDetail.intensity
@@ -277,7 +277,7 @@ function FeelingsWheel() {
                   </div>
                   <button
                     onClick={() => setSelectedFeeling(null)}
-                    className="text-slate-500 hover:text-slate-700 text-xl font-bold"
+                    className="text-brown-600 hover:text-brown-900 text-xl font-bold cursor-pointer"
                   >
                     ×
                   </button>
@@ -285,21 +285,21 @@ function FeelingsWheel() {
 
                 <div className="space-y-6">
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">
+                    <h3 className="font-semibold text-brown-800 mb-2">
                       Definition
                     </h3>
-                    <p className="text-slate-700">
+                    <p className="text-brown-700">
                       {selectedFeelingDetail.definition}
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">
+                    <h3 className="font-semibold text-brown-800 mb-2">
                       Examples
                     </h3>
                     <ul className="space-y-2">
                       {selectedFeelingDetail.examples.map((example, idx) => (
-                        <li key={idx} className="text-slate-700 flex gap-3">
+                        <li key={idx} className="text-brown-700 flex gap-3">
                           <span className="text-giraffe-600 font-semibold shrink-0">
                             •
                           </span>
@@ -310,7 +310,7 @@ function FeelingsWheel() {
                   </div>
 
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">
+                    <h3 className="font-semibold text-brown-800 mb-2">
                       Synonyms
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -326,14 +326,14 @@ function FeelingsWheel() {
                   </div>
 
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">
+                    <h3 className="font-semibold text-brown-800 mb-2">
                       Related Feelings
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedFeelingDetail.relatedFeelings.map((related) => (
                         <span
                           key={related}
-                          className="inline-block bg-slate-200 text-slate-900 px-3 py-1 rounded-full text-sm"
+                          className="inline-block bg-brown-100 text-brown-800 px-3 py-1 rounded-full text-sm"
                         >
                           {related}
                         </span>
@@ -342,16 +342,16 @@ function FeelingsWheel() {
                   </div>
                 </div>
 
-                <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+                <div className="flex gap-3 mt-6 pt-6 border-t border-giraffe-100">
                   <button
                     onClick={handleSave}
-                    className="flex-1 px-4 py-2 bg-giraffe-500 text-white rounded-lg font-semibold hover:bg-giraffe-600 transition-colors"
+                    className="flex-1 px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors"
                   >
                     Save to Library
                   </button>
                   <button
                     onClick={handleRemove}
-                    className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-semibold hover:bg-red-200 transition-colors"
+                    className="flex-1 px-4 py-2 bg-empathy-low/20 text-brown-800 rounded-lg font-semibold hover:bg-empathy-low/30 transition-colors"
                   >
                     Remove
                   </button>

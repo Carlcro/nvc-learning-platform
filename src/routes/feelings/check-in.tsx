@@ -256,8 +256,8 @@ function DailyCheckIn() {
                   w-full py-4 rounded-lg font-bold text-lg transition-all
                   ${
                     selectedFeelings.length === 0
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-giraffe-500 text-white hover:bg-giraffe-600 shadow-md hover:shadow-lg'
+                      ? 'bg-giraffe-100 text-brown-400 cursor-not-allowed'
+                      : 'bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 shadow-sm hover:shadow-md'
                   }
                 `}
               >
@@ -265,7 +265,7 @@ function DailyCheckIn() {
               </button>
 
               {showSuccess && (
-                <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg text-center font-medium animate-in fade-in slide-in-from-top-2">
+                <div className="mt-4 p-4 bg-empathy-high/20 text-brown-800 rounded-lg text-center font-medium animate-in fade-in slide-in-from-top-2">
                   Check-in saved successfully!
                 </div>
               )}
@@ -286,7 +286,7 @@ function DailyCheckIn() {
                       className="relative pl-6 border-l-2 border-giraffe-200"
                     >
                       <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-giraffe-200 border-2 border-white" />
-                      <div className="text-sm text-giraffe-500 font-medium mb-1">
+                      <div className="text-sm text-brown-600 font-medium mb-1">
                         {new Date(checkIn.date).toLocaleDateString(undefined, {
                           weekday: 'short',
                           month: 'short',
@@ -304,7 +304,7 @@ function DailyCheckIn() {
                         ))}
                       </div>
                       {checkIn.note && (
-                        <p className="text-sm text-gray-600 italic">
+                        <p className="text-sm text-brown-600 italic">
                           "{checkIn.note}"
                         </p>
                       )}
@@ -320,7 +320,6 @@ function DailyCheckIn() {
 
             {/* Weekly Patterns Insights */}
             {weeklyPatterns &&
-              weeklyPatterns.frequentFeelings &&
               weeklyPatterns.frequentFeelings.length > 0 && (
                 <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6">
                   <h3 className="text-lg font-bold text-giraffe-900 mb-4">
@@ -358,15 +357,15 @@ function DailyCheckIn() {
                       <p className="text-sm text-giraffe-700 mb-2">
                         Emotional balance this week:
                       </p>
-                      <div className="flex h-3 rounded-full overflow-hidden bg-gray-100">
+                      <div className="flex h-3 rounded-full overflow-hidden bg-giraffe-100">
                         <div
-                          className="bg-green-400 transition-all"
+                          className="bg-empathy-high transition-all"
                           style={{
                             width: `${weeklyPatterns.pleasantPercent}%`,
                           }}
                         />
                         <div
-                          className="bg-blue-400 transition-all"
+                          className="bg-empathy-low transition-all"
                           style={{
                             width: `${weeklyPatterns.unpleasantPercent}%`,
                           }}
@@ -383,11 +382,11 @@ function DailyCheckIn() {
                 </div>
               )}
 
-            <div className="bg-linear-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-100 p-6">
-              <h3 className="text-lg font-bold text-purple-900 mb-2">
+            <div className="bg-giraffe-50 rounded-xl border-2 border-giraffe-200 p-6">
+              <h3 className="text-lg font-bold text-brown-800 mb-2">
                 Did you know?
               </h3>
-              <p className="text-purple-800 text-sm">
+              <p className="text-brown-700 text-sm">
                 Naming your feelings ("affect labeling") can reduce their
                 intensity and help your brain process emotions more effectively.
               </p>
