@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { DailyChallengeCard } from '../../components/features/challenges/DailyChallengeCard'
+import { GiraffeLoader } from '../../components/ui/GiraffeLoader'
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/challenges/daily')({
@@ -37,18 +38,7 @@ function DailyChallengeContent() {
 
   // Handle loading state
   if (myChallenge === undefined) {
-    return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-giraffe-600 mb-4" />
-            <p className="text-brown-700 font-medium">
-              Loading your daily challenge...
-            </p>
-          </div>
-        </div>
-      </main>
-    )
+    return <GiraffeLoader message="Finding today's challenge for you…" />
   }
 
   // No challenge generated yet (user is authenticated but no daily challenge exists)
@@ -59,7 +49,7 @@ function DailyChallengeContent() {
           <div className="max-w-6xl mx-auto px-8">
             <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
               Daily{' '}
-              <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+              <span className="text-giraffe-700">
                 Challenge
               </span>
             </h1>
@@ -78,7 +68,7 @@ function DailyChallengeContent() {
             </p>
             <Link
               to="/practice"
-              className="px-6 py-3 bg-linear-to-r from-giraffe-500 to-giraffe-400 hover:from-giraffe-600 hover:to-giraffe-500 text-white font-bold rounded-full transition-all shadow-lg inline-block"
+              className="px-6 py-3 bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 font-bold rounded-full transition-colors shadow-sm inline-block"
             >
               Browse Practice Scenarios
             </Link>
@@ -104,11 +94,8 @@ function DailyChallengeContent() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left side - Title and Description */}
             <div className="text-center md:text-left">
-              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
-                Daily{' '}
-                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
-                  Challenge
-                </span>
+              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6 text-balance tracking-tight">
+                Daily <span className="text-giraffe-700">Challenge</span>
               </h1>
               <p className="text-lg text-brown-700 leading-relaxed">
                 Complete today's challenge to earn 2x points and maintain your

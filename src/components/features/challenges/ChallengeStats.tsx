@@ -28,7 +28,7 @@ export function ChallengeStats({
           <div className="text-3xl font-bold text-giraffe-600 mb-1">
             {currentStreak}
           </div>
-          <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
             Current Streak
           </p>
           {showStreakFire && (
@@ -43,27 +43,27 @@ export function ChallengeStats({
           <div className="text-3xl font-bold text-brown-700 mb-1">
             {longestStreak}
           </div>
-          <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
             Best Streak
           </p>
         </div>
 
         {/* Completed */}
         <div className="bg-white rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-green-600 mb-1">
+          <div className="text-3xl font-bold text-giraffe-700 mb-1">
             {completedCount}
           </div>
-          <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
             Completed
           </p>
         </div>
 
         {/* Average Score */}
         <div className="bg-white rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-1">
+          <div className="text-3xl font-bold text-giraffe-700 mb-1">
             {averageScore}%
           </div>
-          <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
             Avg Score
           </p>
         </div>
@@ -76,7 +76,7 @@ export function ChallengeStats({
       <div className="grid grid-cols-2 gap-4">
         {/* Total Points */}
         <div className="bg-white rounded-lg p-4">
-          <p className="text-xs font-medium text-slate-600 uppercase tracking-wide mb-1">
+          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide mb-1">
             Total Points
           </p>
           <p className="text-2xl font-bold text-giraffe-600">{totalPoints}</p>
@@ -84,7 +84,7 @@ export function ChallengeStats({
 
         {/* Level */}
         <div className="bg-white rounded-lg p-4">
-          <p className="text-xs font-medium text-slate-600 uppercase tracking-wide mb-1">
+          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide mb-1">
             Level
           </p>
           <span className="text-2xl font-bold text-brown-800">{level}</span>
@@ -95,11 +95,11 @@ export function ChallengeStats({
       {(currentStreak === 7 ||
         currentStreak === 30 ||
         currentStreak === 100) && (
-        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-          <p className="text-sm font-bold text-yellow-800">
+        <div className="mt-4 p-4 bg-giraffe-50 border border-giraffe-200 rounded-lg text-center">
+          <p className="text-sm font-bold text-brown-800">
             Milestone Achievement Unlocked!
           </p>
-          <p className="text-xs text-yellow-700 mt-1">
+          <p className="text-xs text-brown-700 mt-1">
             {currentStreak === 7 && 'You are on a 7-day streak!'}
             {currentStreak === 30 && 'You have maintained a 30-day streak!'}
             {currentStreak === 100 && 'You have an incredible 100-day streak!'}

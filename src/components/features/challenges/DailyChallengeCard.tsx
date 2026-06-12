@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
@@ -8,7 +8,7 @@ interface DailyChallengeCardProps {
   description: string
   difficulty: 'easy' | 'medium' | 'hard'
   characterName: string
-  learningObjectives: string[]
+  learningObjectives: Array<string>
   completed?: boolean
   completedScore?: number
   scenarioId: string
@@ -18,7 +18,7 @@ interface DailyChallengeCardProps {
 const difficultyConfig = {
   easy: {
     label: 'Beginner',
-    badge: 'bg-emerald-100 text-emerald-800',
+    badge: "bg-empathy-high/25 text-brown-800",
   },
   medium: {
     label: 'Intermediate',
@@ -74,7 +74,7 @@ export function DailyChallengeCard({
     <Card className="flex flex-col hover:shadow-lg transition-all duration-200">
       {/* Status Badge */}
       <div
-        className={`${completed ? 'bg-emerald-600' : 'bg-giraffe-600'} px-6 py-2 text-white`}
+        className={`${completed ? "bg-empathy-high text-brown-900" : "bg-giraffe-400 text-brown-800"} px-6 py-2`}
       >
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold">
