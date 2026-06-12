@@ -41,7 +41,7 @@ function Home() {
               <img
                 src="/giraff.png"
                 alt="Your compassionate communication guide"
-                className="mx-auto object-contain h-80 w-auto scale-x-[-1] drop-shadow-xl animate-float-soft"
+                className="mx-auto object-contain h-80 w-auto scale-x-[-1] drop-shadow-xl"
               />
             </div>
 
