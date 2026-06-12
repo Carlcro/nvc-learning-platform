@@ -112,7 +112,7 @@ function RequestLesson() {
             <p className="text-brown-700 text-lg leading-relaxed">
               {lesson.content}
             </p>
-            <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-600 rounded">
+            <div className="mt-6 p-4 bg-giraffe-50 border border-giraffe-300 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-brown-700 font-semibold">Key Point</p>
               </div>
@@ -338,10 +338,10 @@ interface ConceptCardProps {
 }
 
 const colorMap = {
-  emerald: 'from-emerald-50 to-emerald-100 border-giraffe-200',
-  blue: 'from-blue-50 to-blue-100 border-giraffe-200',
-  amber: 'from-amber-50 to-amber-100 border-amber-200',
-  purple: 'from-purple-50 to-purple-100 border-giraffe-200',
+  emerald: 'from-empathy-high/15 to-empathy-high/25 border-empathy-high/40',
+  blue: 'from-giraffe-50 to-giraffe-100 border-giraffe-200',
+  amber: 'from-giraffe-100 to-giraffe-200 border-giraffe-300',
+  purple: 'from-cream to-giraffe-50 border-giraffe-200',
 }
 
 function ConceptCard({ title, description, color }: ConceptCardProps) {

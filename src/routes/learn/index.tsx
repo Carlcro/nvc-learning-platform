@@ -221,7 +221,7 @@ function LessonCard({ lesson }: LessonCardProps) {
               <div
                 className={`text-sm font-semibold px-3 py-1.5 rounded-full ${
                   isCompleted
-                    ? 'bg-linear-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-300'
+                    ? 'bg-empathy-high/20 text-brown-800 border border-empathy-high/40'
                     : 'bg-giraffe-100 text-giraffe-800'
                 }`}
               >
