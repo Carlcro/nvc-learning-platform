@@ -39,7 +39,7 @@ function LevelIndicator({
     <div className="inline-flex items-center gap-4 bg-white rounded-xl border-2 border-giraffe-200 px-5 py-3 shadow-sm">
       <div className="flex items-center gap-2">
         <span className="text-sm font-semibold text-brown-600">Your Level</span>
-        <span className="text-2xl font-bold text-giraffe-600">{level}</span>
+        <span className="text-2xl font-bold text-giraffe-700">{level}</span>
       </div>
       {pointsToNext !== undefined && pointsToNext > 0 && (
         <div className="border-l border-giraffe-200 pl-4 text-sm text-brown-600">
