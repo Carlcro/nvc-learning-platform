@@ -18,26 +18,6 @@ function ProtectedBrief() {
   )
 }
 
-interface DifficultyColor {
-  badge: string
-  text: string
-}
-
-const difficultyColors: Record<string, DifficultyColor> = {
-  beginner: {
-    badge: 'bg-green-100 text-green-800',
-    text: 'text-green-700',
-  },
-  intermediate: {
-    badge: 'bg-yellow-100 text-yellow-800',
-    text: 'text-yellow-700',
-  },
-  advanced: {
-    badge: 'bg-red-100 text-red-800',
-    text: 'text-red-700',
-  },
-}
-
 const categoryLabels: Record<string, string> = {
   workplace: 'Workplace',
   family: 'Family',
@@ -45,22 +25,35 @@ const categoryLabels: Record<string, string> = {
   self_expression: 'Self-Expression',
 }
 
+// Difficulty reads as a warm ramp: calm green (easy) -> gold -> coral
+// (intense). Dark text keeps every chip legible on its fill.
+const difficultyChip: Record<string, string> = {
+  beginner: 'bg-empathy-high text-brown-900',
+  intermediate: 'bg-giraffe-300 text-brown-900',
+  advanced: 'bg-empathy-low text-brown-900',
+}
+
+const TIPS = [
+  'Start with observations - describe what you saw or heard, without judgment.',
+  'Express feelings as emotions, not thoughts or blame.',
+  'Connect those feelings to the needs underneath them - what matters to you?',
+  'Make specific, doable requests that invite collaboration, not demands.',
+]
+
 function ScenarioBrief() {
   const navigate = useNavigate()
   const { scenarioId } = Route.useParams()
   const currentUser = useQuery(api.users.getCurrentUser)
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
 
-  // Get scenario
   const scenario = useQuery(api.scenarios.getById, {
     scenarioId: scenarioId as Id<'scenarios'>,
   })
 
-  // Get user progress
   const userProgress = useQuery(api.scenarioProgress.getScenarioProgress, {
     scenarioId: scenarioId as Id<'scenarios'>,
   })
-
 
   const createConversation = useMutation(api.conversations.create)
   const initializeScenarioProgress = useMutation(
@@ -71,9 +64,9 @@ function ScenarioBrief() {
     if (!currentUser) return
 
     try {
+      setStartError(null)
       setIsCreatingConversation(true)
 
-      // Initialize scenario progress first if it doesn't exist
       await initializeScenarioProgress({
         scenarioId: scenarioId as Id<'scenarios'>,
       })
@@ -86,8 +79,8 @@ function ScenarioBrief() {
       navigate({
         to: `/practice/${scenarioId}/conversation/${conversationId}`,
       })
-    } catch (error) {
-    } finally {
+    } catch {
+      setStartError("That didn't go through. Take a breath and try again.")
       setIsCreatingConversation(false)
     }
   }
@@ -100,7 +93,7 @@ function ScenarioBrief() {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin mb-4">
+          <div className="animate-spin motion-reduce:animate-none mb-4 inline-block">
             <svg
               className="w-12 h-12 text-giraffe-500"
               fill="none"
@@ -121,197 +114,214 @@ function ScenarioBrief() {
     )
   }
 
-
-  const colors =
-    difficultyColors[scenario.difficulty as keyof typeof difficultyColors]
-
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 sm:pt-36 pb-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        {/* Main Content Card */}
-        <div className="bg-white rounded-lg border-2 border-giraffe-200 overflow-hidden">
-          {/* Header */}
-          <div className="bg-linear-to-r from-giraffe-600 to-giraffe-500 px-6 sm:px-8 py-8">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex-1">
-                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                  {scenario.title}
-                </h1>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-emerald-500 bg-opacity-20 text-white rounded-full text-sm font-semibold">
-                    {categoryLabels[
-                      scenario.category as keyof typeof categoryLabels
-                    ] || scenario.category}
-                  </span>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${colors.badge}`}
-                  >
-                    {scenario.difficulty}
-                  </span>
-                </div>
-              </div>
+        {/* Back link - breathing room under the nav, plus wayfinding */}
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-brown-700 hover:text-brown-900 mb-6 rounded cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path
+              fillRule="evenodd"
+              d="M12.7 4.3a1 1 0 0 1 0 1.4L8.42 10l4.3 4.3a1 1 0 0 1-1.42 1.4l-5-5a1 1 0 0 1 0-1.4l5-5a1 1 0 0 1 1.4 0Z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Back to scenarios
+        </button>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl border-2 border-giraffe-200 overflow-hidden shadow-sm">
+          {/* Compact header */}
+          <header className="bg-giraffe-400 px-6 sm:px-8 py-5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-brown-800 text-balance">
+              {scenario.title}
+            </h1>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brown-700 text-cream">
+                {categoryLabels[
+                  scenario.category as keyof typeof categoryLabels
+                ] || scenario.category}
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                  difficultyChip[
+                    scenario.difficulty as keyof typeof difficultyChip
+                  ] ?? 'bg-giraffe-100 text-brown-900'
+                }`}
+              >
+                {scenario.difficulty}
+              </span>
             </div>
-          </div>
+          </header>
 
           {/* Body */}
-          <div className="px-6 sm:px-8 py-8 space-y-8">
-            {/* Situation Section */}
-            <div>
-              <h2 className="text-xl font-bold text-brown-800 mb-4 flex items-center gap-2">
+          <div className="px-6 sm:px-8 py-6 space-y-6">
+            {/* Situation - the setup the user needs first */}
+            <section>
+              <h2 className="text-lg font-bold text-brown-800 mb-2">
                 Situation
               </h2>
-              <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
+              <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-xl p-4 border border-giraffe-100 text-pretty">
                 {scenario.situation}
               </p>
-            </div>
+            </section>
 
-            {/* Character Info Section */}
-            <div>
-              <h2 className="text-xl font-bold text-brown-800 mb-4 flex items-center gap-2">
-                About {scenario.characterName}
-              </h2>
-              <div className="space-y-4">
-                {scenario.characterPersonality && (
-                  <div className="bg-cream rounded-lg p-4 border border-giraffe-100">
-                    <p className="text-sm font-semibold text-giraffe-700 mb-1">
-                      Personality
-                    </p>
-                    <p className="text-brown-700">
-                      {scenario.characterPersonality}
-                    </p>
-                  </div>
-                )}
+            {/* Two columns keep the brief short on desktop */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* About the character */}
+              <section>
+                <h2 className="text-lg font-bold text-brown-800 mb-2">
+                  About {scenario.characterName}
+                </h2>
+                <div className="space-y-3">
+                  {scenario.characterPersonality && (
+                    <div className="bg-giraffe-50 rounded-xl p-4 border border-giraffe-100">
+                      <p className="text-xs font-semibold text-brown-700 mb-1">
+                        Personality
+                      </p>
+                      <p className="text-brown-700 text-sm leading-relaxed">
+                        {scenario.characterPersonality}
+                      </p>
+                    </div>
+                  )}
+                  {scenario.characterBackground && (
+                    <div className="bg-giraffe-50 rounded-xl p-4 border border-giraffe-100">
+                      <p className="text-xs font-semibold text-brown-700 mb-1">
+                        Background
+                      </p>
+                      <p className="text-brown-700 text-sm leading-relaxed">
+                        {scenario.characterBackground}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
 
-                {scenario.characterBackground && (
-                  <div className="bg-cream rounded-lg p-4 border border-giraffe-100">
-                    <p className="text-sm font-semibold text-giraffe-700 mb-1">
-                      Background
-                    </p>
-                    <p className="text-brown-700">
-                      {scenario.characterBackground}
-                    </p>
-                  </div>
-                )}
+              {/* What you'll practice */}
+              <section>
+                <h2 className="text-lg font-bold text-brown-800 mb-2">
+                  What you'll practice
+                </h2>
+                <ol className="space-y-2">
+                  {scenario.learningObjectives.map(
+                    (objective: string, idx: number) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-3 bg-giraffe-50 rounded-xl p-3 border border-giraffe-100"
+                      >
+                        <span className="flex-shrink-0 grid place-items-center w-6 h-6 rounded-full bg-giraffe-400 text-brown-800 text-xs font-bold">
+                          {idx + 1}
+                        </span>
+                        <span className="text-brown-700 text-sm capitalize">
+                          {objective}
+                        </span>
+                      </li>
+                    ),
+                  )}
+                </ol>
 
-              </div>
-            </div>
-
-            {/* Learning Objectives Section */}
-            <div>
-              <h2 className="text-xl font-bold text-brown-800 mb-4 flex items-center gap-2">
-                What You'll Practice
-              </h2>
-              <ul className="space-y-2">
-                {scenario.learningObjectives.map(
-                  (objective: string, idx: number) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-3 bg-giraffe-50 rounded-lg p-3 border border-giraffe-100"
-                    >
-                      <span className="text-giraffe-600 font-bold mt-0.5">
-                        {idx + 1}.
-                      </span>
-                      <span className="text-brown-700 capitalize">
-                        {objective}
-                      </span>
-                    </li>
-                  ),
-                )}
-              </ul>
-
-              {scenario.focusArea && (
-                <div className="mt-4 bg-blue-50 border border-blue-300 rounded-lg p-4">
-                  <p className="text-sm">
-                    <span className="font-semibold text-blue-900">Focus: </span>
-                    <span className="text-blue-800 capitalize">
+                {scenario.focusArea && (
+                  <p className="mt-3 text-sm text-brown-700">
+                    <span className="font-semibold text-brown-800">
+                      Focus:{' '}
+                    </span>
+                    <span className="capitalize">
                       {scenario.focusArea.replace(/_/g, ' ')}
                     </span>
                   </p>
-                </div>
-              )}
+                )}
+              </section>
             </div>
 
-            {/* Tips Section */}
-            <div className="bg-linear-to-r from-giraffe-50 to-cream rounded-lg p-6 border-2 border-giraffe-200">
-              <h3 className="text-lg font-bold text-giraffe-900 mb-4 flex items-center gap-2">
-                Tips for Success
-              </h3>
-              <ul className="space-y-2 text-brown-700">
+            {/* Tips - collapsed by default to keep the page short */}
+            <details className="group rounded-xl border border-giraffe-200 bg-giraffe-50/70">
+              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-4 py-3 font-bold text-brown-800 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2">
+                Tips for success
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="w-5 h-5 text-brown-600 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.42Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </summary>
+              <ul className="px-4 pb-4 space-y-2 text-sm text-brown-700">
+                {TIPS.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span aria-hidden="true" className="text-giraffe-700 mt-0.5">
+                      •
+                    </span>
+                    <span className="text-pretty">{tip}</span>
+                  </li>
+                ))}
                 <li className="flex items-start gap-2">
-                  <span className="text-giraffe-600 font-bold">•</span>
-                  <span>
-                    Focus on observations first - describe what you see and hear
-                    without judgment
+                  <span aria-hidden="true" className="text-giraffe-700 mt-0.5">
+                    •
                   </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-giraffe-600 font-bold">•</span>
-                  <span>
-                    Express your feelings as emotions, not thoughts or blame
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-giraffe-600 font-bold">•</span>
-                  <span>
-                    Connect your feelings to your underlying needs - what
-                    matters to you?
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-giraffe-600 font-bold">•</span>
-                  <span>
-                    Make specific, doable requests that invite collaboration,
-                    not demands
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-giraffe-600 font-bold">•</span>
-                  <span>
-                    Stay curious about {scenario.characterName}'s perspective
-                    and needs too
+                  <span className="text-pretty">
+                    Stay curious about {scenario.characterName}'s perspective and
+                    needs, too.
                   </span>
                 </li>
               </ul>
-            </div>
+            </details>
 
-            {/* Progress Indicator */}
-            {userProgress && (
-              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-900">
-                  <span className="font-semibold">Your Best Score:</span>{' '}
-                  {userProgress.bestScore}/100
-                  {userProgress.bestStars > 0 && (
-                    <span className="ml-2">
-                      {'⭐'.repeat(userProgress.bestStars)}
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-green-800 mt-1">
-                  Attempts: {userProgress.attempts}
-                </p>
+            {/* Personal best, if any */}
+            {userProgress && userProgress.bestScore > 0 && (
+              <div className="flex items-center gap-2 rounded-xl border border-empathy-high/40 bg-empathy-high/15 px-4 py-3 text-sm">
+                <span className="font-semibold text-brown-800">
+                  Your best: {userProgress.bestScore}/100
+                </span>
+                {userProgress.bestStars > 0 && (
+                  <span
+                    role="img"
+                    aria-label={`${userProgress.bestStars} of 3 stars`}
+                    className="text-giraffe-700"
+                  >
+                    {'★'.repeat(userProgress.bestStars)}
+                  </span>
+                )}
+                <span className="text-brown-600">
+                  · {userProgress.attempts}{' '}
+                  {userProgress.attempts === 1 ? 'attempt' : 'attempts'}
+                </span>
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Footer with Buttons */}
-          <div className="border-t border-giraffe-200 bg-cream px-6 sm:px-8 py-6 flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={handleBack}
-              variant="secondary"
-              className="sm:flex-1"
-            >
-              Back to Scenarios
-            </Button>
-            <Button
-              onClick={handleStartConversation}
-              variant="primary"
-              className="sm:flex-1"
-              isLoading={isCreatingConversation}
-              disabled={isCreatingConversation}
-            >
-              {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
-            </Button>
-          </div>
+      {/* Sticky action bar - Start is always one tap away, no scrolling */}
+      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-giraffe-200 bg-white/95 backdrop-blur-sm shadow-[0_-2px_12px_rgba(45,30,17,0.06)]">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
+          {startError ? (
+            <p className="flex-1 text-sm text-empathy-low font-medium">
+              {startError}
+            </p>
+          ) : (
+            <p className="flex-1 hidden sm:block text-sm text-brown-600">
+              Ready when you are — take your time.
+            </p>
+          )}
+          <Button
+            onClick={handleStartConversation}
+            variant="primary"
+            size="lg"
+            className="px-8 flex-1 sm:flex-none"
+            isLoading={isCreatingConversation}
+            disabled={isCreatingConversation}
+          >
+            {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
+          </Button>
         </div>
       </div>
     </main>

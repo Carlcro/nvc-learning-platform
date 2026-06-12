@@ -38,7 +38,7 @@ export function Button({
     <button
       className={`
         inline-flex items-center justify-center
-        rounded-lg font-medium
+        rounded-lg font-medium cursor-pointer
         transition-colors duration-200
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantStyles[variant]}

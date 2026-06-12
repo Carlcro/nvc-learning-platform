@@ -2,7 +2,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery as useConvexQuery } from 'convex/react'
 import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import type { ReactNode } from 'react'
 import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
+import { Button } from '~/components/ui/Button'
+import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/practice/')({
@@ -57,8 +60,12 @@ function PracticeHub() {
     Difficulty | 'all'
   >('all')
 
-  // Fetch scenarios ordered by index
-  const scenarios = useConvexQuery(api.scenarios.listByOrder) || []
+  // Fetch scenarios ordered by index. Keep the raw value so we can tell
+  // "still loading" (undefined) apart from "loaded, but empty" ([]) - otherwise
+  // the empty-state copy flashes before data arrives.
+  const scenariosResult = useConvexQuery(api.scenarios.listByOrder)
+  const isLoadingScenarios = scenariosResult === undefined
+  const scenarios = scenariosResult ?? []
 
   // Fetch user's per-scenario progress (status, best scores, stars)
   const userProgress =
@@ -71,7 +78,7 @@ function PracticeHub() {
 
   // Look up a user's saved progress for a given scenario id.
   const getScenarioProgress = (scenarioId: string) =>
-    userProgress.find((p: any) => p.scenarioId === scenarioId) || null
+    userProgress.find((p) => p.scenarioId === scenarioId) || null
 
   // Filter scenarios
   const filteredScenarios = scenarios.filter((scenario) => {
@@ -81,6 +88,14 @@ function PracticeHub() {
       selectedDifficulty === 'all' || scenario.difficulty === selectedDifficulty
     return categoryMatch && difficultyMatch
   })
+
+  const hasActiveFilters =
+    selectedCategory !== 'all' || selectedDifficulty !== 'all'
+
+  const clearFilters = () => {
+    setSelectedCategory('all')
+    setSelectedDifficulty('all')
+  }
 
   const handleStartScenario = (scenarioId: string | unknown) => {
     navigate({ to: `/practice/${scenarioId}/brief` })
@@ -118,20 +133,15 @@ function PracticeHub() {
     <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
       {/* Header with Giraffe Speaking */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
-            {/* Left side - Giraffe Mascot */}
-
-            {/* Right side - Title and Description */}
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left - Title and Description (the first thing the user reads) */}
             <div className="text-center md:text-left">
-              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
-                Practice <br />
-                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
-                  Your Skills
-                </span>
+              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6 text-balance tracking-tight">
+                Practice <span className="text-giraffe-700">Your Skills</span>
               </h1>
 
-              <p className="text-lg text-brown-700 mb-8 leading-relaxed">
+              <p className="text-lg text-brown-700 mb-8 leading-relaxed max-w-prose mx-auto md:mx-0">
                 Engage in realistic conversations. Each scenario presents a
                 different communication challenge where you can apply what
                 you've learned.
@@ -142,87 +152,95 @@ function PracticeHub() {
                 pointsToNext={overallProgress?.pointsToNextLevel}
               />
             </div>
+
+            {/* Right - Giraffe guide (decorative; desktop only) */}
+            <div className="hidden md:flex flex-col items-center">
+              <SpeechBubble className="mb-8 max-w-sm">
+                <p className="text-lg text-brown-800 text-center font-medium text-pretty">
+                  Practice Non-Violent Communication in realistic scenarios.
+                  Learn by doing in a safe, judgment-free environment.
+                </p>
+              </SpeechBubble>
+              <img
+                src="/giraff.png"
+                alt="Your compassionate communication guide"
+                className="object-contain h-72 w-auto drop-shadow-xl"
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Filters */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex relative">
-          <div className="space-y-4">
-            {/* Category Filter */}
-            <div>
-              <h2 className="text-sm font-semibold text-brown-800 mb-3">
-                By Category
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    onClick={() => setSelectedCategory(cat.value)}
-                    className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
-                      selectedCategory === cat.value
-                        ? 'bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
-                        : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Difficulty Filter */}
-            <div>
-              <h2 className="text-sm font-semibold text-brown-800 mb-3">
-                By Difficulty
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {difficulties.map((diff) => (
-                  <button
-                    key={diff.value}
-                    onClick={() => setSelectedDifficulty(diff.value)}
-                    className={`px-4 py-2 rounded-full font-semibold transition-all duration-200 text-sm ${
-                      selectedDifficulty === diff.value
-                        ? 'bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white shadow-lg'
-                        : 'bg-white border-2 border-giraffe-200 text-brown-700 hover:border-giraffe-300'
-                    }`}
-                  >
-                    {diff.label}
-                  </button>
-                ))}
-              </div>
+        <div className="space-y-4">
+          {/* Category Filter */}
+          <div role="group" aria-label="Filter scenarios by category">
+            <h2 className="text-sm font-semibold text-brown-800 mb-3">
+              By Category
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <FilterChip
+                  key={cat.value}
+                  selected={selectedCategory === cat.value}
+                  onClick={() => setSelectedCategory(cat.value)}
+                >
+                  {cat.label}
+                </FilterChip>
+              ))}
             </div>
           </div>
-          <div className="flex-col items-center absolute right-0 -top-[300px] hidden md:flex">
-            {/* Speech Bubble */}
-            <div className="mb-8 bg-white rounded-2xl p-6 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
-              <p className="text-lg text-brown-800 text-center font-medium">
-                Practice Non-Violent Communication in realistic scenarios. Learn
-                by doing in a safe, judgment-free environment.
-              </p>
-              {/* Speech bubble tail */}
-              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
-            </div>
 
-            {/* Giraffe Image */}
-            <img
-              src="/giraff.png"
-              alt="Giraffe - Your NVC Guide"
-              className="mx-auto object-contain h-80 w-auto"
-            />
+          {/* Difficulty Filter */}
+          <div role="group" aria-label="Filter scenarios by difficulty">
+            <h2 className="text-sm font-semibold text-brown-800 mb-3">
+              By Difficulty
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {difficulties.map((diff) => (
+                <FilterChip
+                  key={diff.value}
+                  selected={selectedDifficulty === diff.value}
+                  onClick={() => setSelectedDifficulty(diff.value)}
+                >
+                  {diff.label}
+                </FilterChip>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Scenarios Grid */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredScenarios.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-brown-600">
-              No scenarios match your filters. Try adjusting them!
-            </p>
+        {isLoadingScenarios ? (
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            aria-busy="true"
+            aria-label="Loading scenarios"
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
+        ) : filteredScenarios.length === 0 ? (
+          hasActiveFilters ? (
+            <div className="text-center py-12">
+              <p className="text-brown-700 mb-4">
+                No scenarios match these filters.
+              </p>
+              <Button variant="outline" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-brown-700">
+                No scenarios are available yet. Check back soon!
+              </p>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredScenarios.map((scenario) => (
@@ -274,5 +292,76 @@ function PracticeHub() {
         </div>
       </section>
     </main>
+  )
+}
+
+/**
+ * A filter toggle. Selection is exposed to assistive tech via aria-pressed and
+ * shown with a leading check (a non-color cue), so it never relies on color
+ * alone. Fill + dark text keeps it readable; min height meets the 44px target.
+ */
+function FilterChip({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 min-h-11 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2 ${
+        selected
+          ? 'bg-giraffe-400 text-brown-800 border-2 border-giraffe-500'
+          : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:border-giraffe-300 hover:bg-giraffe-50'
+      }`}
+    >
+      {selected && (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="w-4 h-4 -ml-1"
+        >
+          <path
+            fillRule="evenodd"
+            d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.3 3.29 6.8-6.8a1 1 0 0 1 1.4 0Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      )}
+      {children}
+    </button>
+  )
+}
+
+/**
+ * Shaped placeholder shown while scenarios load, so the grid never flashes the
+ * empty-state copy. Pulse only runs when motion is allowed.
+ */
+function SkeletonCard() {
+  return (
+    <div
+      aria-hidden="true"
+      className="rounded-lg border-2 border-giraffe-100 bg-white overflow-hidden motion-safe:animate-pulse"
+    >
+      <div className="h-8 bg-giraffe-100" />
+      <div className="px-6 py-4 border-b border-giraffe-100 space-y-2">
+        <div className="h-3 w-20 bg-giraffe-100 rounded" />
+        <div className="h-5 w-3/4 bg-giraffe-200 rounded" />
+      </div>
+      <div className="px-6 py-4 space-y-3">
+        <div className="h-3 w-full bg-giraffe-100 rounded" />
+        <div className="h-3 w-5/6 bg-giraffe-100 rounded" />
+        <div className="h-16 bg-giraffe-50 rounded-lg" />
+      </div>
+      <div className="px-6 py-4 border-t border-giraffe-100 bg-giraffe-50">
+        <div className="h-10 bg-giraffe-200 rounded-lg" />
+      </div>
+    </div>
   )
 }

@@ -97,6 +97,21 @@
   }
 }
 
+/* Gentle, unhurried float for the giraffe guide. Calm, never bouncy. */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+
 .animate-celebrate-in {
   animation: celebrate-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -117,7 +132,8 @@
   .animate-celebrate-in,
   .animate-celebrate-out,
   .animate-star-pop,
-  .animate-confetti {
+  .animate-confetti,
+  .animate-float-soft {
     animation: none !important;
   }
 }
