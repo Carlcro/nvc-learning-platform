@@ -15,7 +15,7 @@ interface QuizQuestion {
   sentence: string
   isRealFeeling: boolean
   explanation: string
-  correctFeelings?: string[]
+  correctFeelings?: Array<string>
   level: number
   category: string
 }
@@ -35,7 +35,7 @@ function QuizGame() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
   const [feedbackIsCorrect, setFeedbackIsCorrect] = useState(false)
-  const [questions, setQuestions] = useState<QuizQuestion[]>([])
+  const [questions, setQuestions] = useState<Array<QuizQuestion>>([])
 
   // Queries - only fetch when in loading state
   const quizBatch = useQuery(
@@ -48,7 +48,7 @@ function QuizGame() {
   // When quiz data loads, store it and transition to question state
   useEffect(() => {
     if (quizState === 'loading' && quizBatch !== undefined) {
-      setQuestions(quizBatch as QuizQuestion[])
+      setQuestions(quizBatch as Array<QuizQuestion>)
       setQuizState('question')
     }
   }, [quizBatch, quizState])
@@ -71,7 +71,7 @@ function QuizGame() {
     setQuizState('loading')
   }
 
-  const handleAnswer = async (userAnswer: boolean) => {
+  const handleAnswer = (userAnswer: boolean) => {
     if (!currentQuestionData) return
 
     const isCorrect = userAnswer === currentQuestionData.isRealFeeling
@@ -146,7 +146,7 @@ function QuizGame() {
                         ? 'Evaluative words disguised as feelings'
                         : 'Subtle and tricky cases'}
                   </p>
-                  <button className="w-full py-2 bg-giraffe-500 text-white rounded-lg font-semibold hover:bg-giraffe-600 transition-colors">
+                  <button className="w-full py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors">
                     Start Level {level}
                   </button>
                 </div>
@@ -174,7 +174,7 @@ function QuizGame() {
             </p>
             <button
               onClick={handleReturnToHome}
-              className="px-6 py-3 bg-giraffe-500 text-white rounded-lg font-semibold hover:bg-giraffe-600 transition-colors"
+              className="px-6 py-3 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors"
             >
               Back to Levels
             </button>
@@ -219,7 +219,7 @@ function QuizGame() {
               </p>
             </div>
 
-            <div className="bg-giraffe-50 border-l-4 border-giraffe-500 p-4 rounded-r-lg mb-6">
+            <div className="bg-giraffe-50 border border-giraffe-200 p-4 rounded-lg mb-6">
               <p className="text-lg text-giraffe-900 italic leading-relaxed">
                 "{currentQuestionData.sentence}"
               </p>
@@ -228,13 +228,13 @@ function QuizGame() {
             <div className="flex gap-4">
               <button
                 onClick={() => handleAnswer(true)}
-                className="flex-1 py-4 px-6 bg-green-500 text-white rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors shadow-md hover:shadow-lg"
+                className="flex-1 py-4 px-6 bg-empathy-high text-brown-900 rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity shadow-sm"
               >
                 Real Feeling
               </button>
               <button
                 onClick={() => handleAnswer(false)}
-                className="flex-1 py-4 px-6 bg-red-500 text-white rounded-lg font-semibold text-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
+                className="flex-1 py-4 px-6 bg-empathy-low text-brown-900 rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity shadow-sm"
               >
                 Pseudo-Feeling
               </button>
@@ -250,8 +250,8 @@ function QuizGame() {
                   inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-lg mb-4
                   ${
                     feedbackIsCorrect
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-amber-100 text-amber-800'
+                      ? 'bg-empathy-high/25 text-brown-800'
+                      : 'bg-empathy-low/20 text-brown-800'
                   }
                 `}
               >
@@ -290,7 +290,7 @@ function QuizGame() {
             <div className="pt-6 border-t border-giraffe-200">
               <button
                 onClick={handleNextQuestion}
-                className="w-full py-3 px-6 bg-giraffe-500 text-white rounded-lg font-semibold text-lg hover:bg-giraffe-600 transition-colors shadow-md hover:shadow-lg"
+                className="w-full py-3 px-6 bg-giraffe-400 text-brown-800 rounded-lg font-semibold text-lg hover:bg-giraffe-500 transition-colors shadow-md hover:shadow-lg"
               >
                 Continue to Next Question
               </button>
@@ -319,7 +319,7 @@ function QuizGame() {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleRetryLevel}
-                className="px-6 py-3 bg-giraffe-500 text-white rounded-lg font-semibold hover:bg-giraffe-600 transition-colors"
+                className="px-6 py-3 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors"
               >
                 Try Again
               </button>

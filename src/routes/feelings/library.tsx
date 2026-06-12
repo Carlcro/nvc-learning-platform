@@ -84,7 +84,7 @@ function PersonalLibrary() {
           </div>
           <Link
             to="/feelings/wheel"
-            className="px-4 py-2 bg-giraffe-500 text-white rounded-lg font-semibold hover:bg-giraffe-600 transition-colors shadow-md"
+            className="px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors shadow-md"
           >
             + Add More
           </Link>
@@ -110,7 +110,7 @@ function PersonalLibrary() {
             </p>
             <Link
               to="/feelings/wheel"
-              className="px-6 py-3 bg-giraffe-500 text-white rounded-lg font-semibold hover:bg-giraffe-600 transition-colors"
+              className="px-6 py-3 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors"
             >
               Go to Feelings Wheel
             </Link>
@@ -135,7 +135,7 @@ function PersonalLibrary() {
                     px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all
                     ${
                       filterFamily === 'all'
-                        ? 'bg-giraffe-500 text-white shadow-md'
+                        ? 'bg-giraffe-400 text-brown-800 shadow-md'
                         : 'bg-white text-giraffe-800 border-2 border-giraffe-200 hover:bg-giraffe-50'
                     }
                   `}
@@ -150,7 +150,7 @@ function PersonalLibrary() {
                       px-4 py-2 rounded-lg font-medium whitespace-nowrap capitalize transition-all
                       ${
                         filterFamily === family
-                          ? 'bg-giraffe-500 text-white shadow-md'
+                          ? 'bg-giraffe-400 text-brown-800 shadow-md'
                           : 'bg-white text-giraffe-800 border-2 border-giraffe-200 hover:bg-giraffe-50'
                       }
                     `}
@@ -174,7 +174,7 @@ function PersonalLibrary() {
                     </h3>
                     <button
                       onClick={() => handleRemove(feeling.word)}
-                      className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                      className="text-brown-400 hover:text-empathy-low transition-colors p-1"
                       title="Remove from library"
                     >
                       <span className="sr-only">Remove</span>
@@ -197,7 +197,7 @@ function PersonalLibrary() {
                     <span className="text-xs px-2 py-1 bg-giraffe-100 text-giraffe-800 rounded-full font-medium capitalize">
                       {feeling.family}
                     </span>
-                    <span className="text-xs px-2 py-1 bg-blue-50 text-blue-800 rounded-full font-medium">
+                    <span className="text-xs px-2 py-1 bg-giraffe-100 text-brown-800 rounded-full font-medium">
                       Intensity: {feeling.intensity}/5
                     </span>
                   </div>
@@ -207,7 +207,7 @@ function PersonalLibrary() {
                   </p>
 
                   {feeling.examples.length > 0 && (
-                    <div className="text-xs text-gray-600 italic bg-gray-50 p-3 rounded-lg">
+                    <div className="text-xs text-brown-600 italic bg-giraffe-50 p-3 rounded-lg">
                       "{feeling.examples[0]}"
                     </div>
                   )}

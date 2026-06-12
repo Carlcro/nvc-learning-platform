@@ -172,12 +172,12 @@ function DailyCheckIn() {
                   {selectedFeelings.map((word) => (
                     <span
                       key={word}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-giraffe-500 text-white rounded-full font-medium shadow-sm animate-in fade-in zoom-in"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-giraffe-400 text-brown-800 rounded-full font-medium shadow-sm animate-in fade-in zoom-in"
                     >
                       {word}
                       <button
                         onClick={() => handleToggleFeeling(word)}
-                        className="hover:text-giraffe-200"
+                        className="hover:text-brown-600 cursor-pointer"
                       >
                         ×
                       </button>
@@ -224,7 +224,7 @@ function DailyCheckIn() {
                         px-3 py-2 rounded-lg font-medium transition-all text-sm
                         ${
                           selectedFeelings.includes(feeling.word)
-                            ? 'bg-giraffe-500 text-white shadow-md ring-2 ring-giraffe-300'
+                            ? "bg-giraffe-400 text-brown-800 shadow-sm ring-2 ring-giraffe-300"
                             : 'bg-giraffe-50 text-giraffe-800 hover:bg-giraffe-100 border border-giraffe-200'
                         }
                       `}
@@ -329,7 +329,7 @@ function DailyCheckIn() {
                     {weeklyPatterns.frequentFeelings.map((insight) => (
                       <div
                         key={insight.feeling}
-                        className="border-l-4 border-giraffe-400 pl-4 py-2"
+                        className="bg-giraffe-50 border border-giraffe-200 rounded-lg px-4 py-3"
                       >
                         <p className="text-giraffe-900 font-medium">
                           You've felt{' '}

@@ -92,7 +92,7 @@ function IntensityExplorer() {
                     px-4 py-3 rounded-lg font-medium capitalize text-left transition-all
                     ${
                       selectedFamily === family
-                        ? 'bg-giraffe-500 text-white shadow-md transform scale-105'
+                        ? 'bg-giraffe-400 text-brown-800 shadow-md transform scale-105'
                         : 'bg-white text-giraffe-800 border-2 border-giraffe-200 hover:border-giraffe-300 hover:bg-giraffe-50'
                     }
                   `}
@@ -113,7 +113,7 @@ function IntensityExplorer() {
 
               {/* Slider Component */}
               <div className="relative mb-12 px-4">
-                <div className="h-4 bg-gradient-to-r from-blue-100 via-purple-100 to-red-100 rounded-full w-full absolute top-1/2 -translate-y-1/2 left-0 right-0 -z-0" />
+                <div className="h-4 bg-gradient-to-r from-giraffe-100 via-giraffe-300 to-empathy-low rounded-full w-full absolute top-1/2 -translate-y-1/2 left-0 right-0 -z-0" />
                 <input
                   type="range"
                   min="1"
@@ -181,7 +181,7 @@ function IntensityExplorer() {
                         cursor-pointer px-3 py-1.5 rounded-lg transition-all
                         ${
                           feeling.intensity === intensityLevel
-                            ? 'bg-giraffe-500 text-white font-bold shadow-md transform scale-110'
+                            ? 'bg-giraffe-400 text-brown-800 font-bold shadow-md transform scale-110'
                             : 'bg-giraffe-50 text-giraffe-800 hover:bg-giraffe-100'
                         }
                       `}

@@ -23,7 +23,7 @@ function FeelingHub() {
             <div className="text-center md:text-left">
               <h1 className="text-3xl sm:text-5xl font-bold text-brown-800 mb-3">
                 Learn to Identify{' '}
-                <span className="bg-linear-to-r from-giraffe-600 to-giraffe-500 bg-clip-text text-transparent">
+                <span className="text-giraffe-700">
                   Feelings
                 </span>
               </h1>
@@ -66,7 +66,7 @@ function FeelingHub() {
 
             <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-giraffe-200">
               <svg
-                className="w-4 h-4 text-blue-600"
+                className="w-4 h-4 text-giraffe-700"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -85,7 +85,7 @@ function FeelingHub() {
 
             <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-giraffe-200">
               <svg
-                className="w-4 h-4 text-purple-600"
+                className="w-4 h-4 text-giraffe-700"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -104,7 +104,7 @@ function FeelingHub() {
 
             <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-giraffe-200">
               <svg
-                className="w-4 h-4 text-green-600"
+                className="w-4 h-4 text-giraffe-700"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
