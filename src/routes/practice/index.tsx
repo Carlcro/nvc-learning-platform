@@ -131,17 +131,17 @@ function PracticeHub() {
 
   return (
     <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
-      {/* Header with Giraffe Speaking */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
+      {/* Header: intro + filters in one column, giraffe guide in the other */}
+      <section className="pt-6 pb-4 sm:pt-8 sm:pb-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left - Title and Description (the first thing the user reads) */}
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left - Title, description, level, and the filters */}
             <div className="text-center md:text-left">
-              <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6 text-balance tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 mb-3 text-balance tracking-tight">
                 Practice <span className="text-giraffe-700">Your Skills</span>
               </h1>
 
-              <p className="text-lg text-brown-700 mb-8 leading-relaxed max-w-prose mx-auto md:mx-0">
+              <p className="text-base sm:text-lg text-brown-700 mb-5 leading-relaxed max-w-prose mx-auto md:mx-0">
                 Engage in realistic conversations. Each scenario presents a
                 different communication challenge where you can apply what
                 you've learned.
@@ -151,12 +151,49 @@ function PracticeHub() {
                 level={userLevel}
                 pointsToNext={overallProgress?.pointsToNextLevel}
               />
+
+              {/* Filters - grouped with the intro so the giraffe can stand tall */}
+              <div className="mt-6 space-y-3 text-left">
+                <div role="group" aria-label="Filter scenarios by category">
+                  <h2 className="text-sm font-semibold text-brown-800 mb-2">
+                    By Category
+                  </h2>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {categories.map((cat) => (
+                      <FilterChip
+                        key={cat.value}
+                        selected={selectedCategory === cat.value}
+                        onClick={() => setSelectedCategory(cat.value)}
+                      >
+                        {cat.label}
+                      </FilterChip>
+                    ))}
+                  </div>
+                </div>
+
+                <div role="group" aria-label="Filter scenarios by difficulty">
+                  <h2 className="text-sm font-semibold text-brown-800 mb-2">
+                    By Difficulty
+                  </h2>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {difficulties.map((diff) => (
+                      <FilterChip
+                        key={diff.value}
+                        selected={selectedDifficulty === diff.value}
+                        onClick={() => setSelectedDifficulty(diff.value)}
+                      >
+                        {diff.label}
+                      </FilterChip>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Right - Giraffe guide (decorative; desktop only) */}
             <div className="hidden md:flex flex-col items-center">
-              <SpeechBubble className="mb-8 max-w-sm">
-                <p className="text-lg text-brown-800 text-center font-medium text-pretty">
+              <SpeechBubble className="mb-6 max-w-sm">
+                <p className="text-base lg:text-lg text-brown-800 text-center font-medium text-pretty">
                   Practice Non-Violent Communication in realistic scenarios.
                   Learn by doing in a safe, judgment-free environment.
                 </p>
@@ -164,56 +201,15 @@ function PracticeHub() {
               <img
                 src="/giraff.png"
                 alt="Your compassionate communication guide"
-                className="object-contain h-72 w-auto drop-shadow-xl"
+                className="object-contain h-52 lg:h-64 w-auto drop-shadow-xl mb-6"
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Filters */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-4">
-          {/* Category Filter */}
-          <div role="group" aria-label="Filter scenarios by category">
-            <h2 className="text-sm font-semibold text-brown-800 mb-3">
-              By Category
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <FilterChip
-                  key={cat.value}
-                  selected={selectedCategory === cat.value}
-                  onClick={() => setSelectedCategory(cat.value)}
-                >
-                  {cat.label}
-                </FilterChip>
-              ))}
-            </div>
-          </div>
-
-          {/* Difficulty Filter */}
-          <div role="group" aria-label="Filter scenarios by difficulty">
-            <h2 className="text-sm font-semibold text-brown-800 mb-3">
-              By Difficulty
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {difficulties.map((diff) => (
-                <FilterChip
-                  key={diff.value}
-                  selected={selectedDifficulty === diff.value}
-                  onClick={() => setSelectedDifficulty(diff.value)}
-                >
-                  {diff.label}
-                </FilterChip>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Scenarios Grid */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-8">
         {isLoadingScenarios ? (
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
