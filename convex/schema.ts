@@ -267,17 +267,23 @@ export default defineSchema({
     jackalLanguageCount: v.number(), // Number of messages with jackal language
 
     // ============ Milestone Tracking ============
-    milestonesAchieved: v.object({
-      conversationStarted: v.boolean(), // Always true once started
-      feelingExpressed: v.boolean(), // feeling >= 15
-      needIdentified: v.boolean(), // need >= 15
-      requestMade: v.boolean(), // request >= 15
-      resolutionReached: v.boolean(), // characterMood >= 5 AND total >= 70
-    }),
+    // Optional: conversations created before this feature lack it; the code
+    // reads it with a default (`milestonesAchieved || {...}`).
+    milestonesAchieved: v.optional(
+      v.object({
+        conversationStarted: v.boolean(), // Always true once started
+        feelingExpressed: v.boolean(), // feeling >= 15
+        needIdentified: v.boolean(), // need >= 15
+        requestMade: v.boolean(), // request >= 15
+        resolutionReached: v.boolean(), // characterMood >= 5 AND total >= 70
+      }),
+    ),
 
     // ============ Rewind Feature ============
-    rewindsUsed: v.number(), // 0-2, tracks rewinds used
-    maxRewinds: v.number(), // Default 2
+    // Optional: pre-rewind-feature conversations lack these; the code reads
+    // them with defaults (`rewindsUsed ?? 0`, `maxRewinds ?? 2`).
+    rewindsUsed: v.optional(v.number()), // 0-2, tracks rewinds used
+    maxRewinds: v.optional(v.number()), // Default 2
 
     // ============ Objectives ============
     objectivesMetInConversation: v.array(v.string()), // Learning objectives demonstrated
