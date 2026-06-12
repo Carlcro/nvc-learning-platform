@@ -24,3 +24,8 @@ node_modules
 /playwright/.cache/
 
 app.config.timestamp_*.js
+
+# Claude Code / Cursor tooling (reinstallable; not product code)
+.claude/skills/
+.cursor/skills/
+.claude/settings.local.json
