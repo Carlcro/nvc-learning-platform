@@ -64,13 +64,10 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
         await signIn('password', { email, password, flow: 'signIn' })
       }
       onSignInSuccess?.()
-      // Add small delay to ensure auth state is updated
-      setTimeout(() => {
-        navigate({ to: from as string })
-      }, 500)
+      // Tokens are set once signIn resolves, so we can navigate straight away.
+      navigate({ to: from as string, replace: true })
     } catch (err) {
       setError(friendlyAuthError(err, isSignup))
-    } finally {
       setIsLoading(false)
     }
   }
@@ -79,15 +76,13 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
     setError(null)
     setIsLoading(true)
     try {
-      await signIn('github')
+      // OAuth triggers a full-page redirect to GitHub and back. Telling Convex
+      // where to land afterwards sends the person straight into the app instead
+      // of bouncing through the home page or flashing the sign-in form again.
+      await signIn('github', { redirectTo: from as string })
       onSignInSuccess?.()
-      // Add small delay to ensure auth state is updated
-      setTimeout(() => {
-        navigate({ to: from as string })
-      }, 500)
     } catch (err) {
       setError(friendlyAuthError(err, isSignup))
-    } finally {
       setIsLoading(false)
     }
   }
