@@ -125,7 +125,7 @@ function Home() {
       </section>
 
       {/* What is NVC Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-brown-800 mb-6 text-center text-balance tracking-tight">
             What is Non-Violent Communication?
@@ -209,7 +209,7 @@ function Home() {
       </section>
 
       {/* Giraffe vs Jackal */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-cream">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-brown-800 mb-12 text-center text-balance tracking-tight">
             Giraffe Language vs Jackal Language
@@ -247,8 +247,8 @@ function Home() {
             </div>
 
             {/* Jackal Language Card */}
-            <div className="bg-white rounded-lg overflow-hidden border-2 border-empathy-low/50 shadow-sm">
-              <div className="bg-empathy-low/15 p-6 flex items-center justify-center h-48">
+            <div className="bg-white rounded-lg overflow-hidden border-2 border-brown-200 shadow-sm">
+              <div className="bg-brown-100 p-6 flex items-center justify-center h-48">
                 <img
                   src="/jakyll.png"
                   alt="The jackal, a symbol of reactive communication"
@@ -405,7 +405,7 @@ interface GuideNoteProps {
  */
 function GuideNote({ heading, children }: GuideNoteProps) {
   return (
-    <div className="flex items-start gap-4 bg-giraffe-50 border border-giraffe-200 rounded-2xl p-6">
+    <div className="flex items-start gap-4 bg-white border border-giraffe-200 rounded-2xl p-6">
       <img
         src="/giraff.png"
         alt=""
