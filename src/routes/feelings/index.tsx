@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+import { SpeechBubble } from '~/components/ui/SpeechBubble'
 
 export const Route = createFileRoute('/feelings/')({
   component: FeelingHub,
@@ -18,21 +19,36 @@ function FeelingHub() {
       {/* Header with Giraffe Speaking */}
       <section className="py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">
-          <div className="grid md:grid-cols-2 gap-8 items-center mb-6">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center mb-6">
             {/* Left side - Title and Description */}
             <div className="text-center md:text-left">
-              <h1 className="text-3xl sm:text-5xl font-bold text-brown-800 mb-3">
+              <h1 className="text-3xl sm:text-5xl font-bold text-brown-800 mb-3 text-balance tracking-tight">
                 Learn to Identify{' '}
                 <span className="text-giraffe-700">
                   Feelings
                 </span>
               </h1>
 
-              <p className="text-base text-brown-700 mb-4 leading-relaxed">
+              <p className="text-base sm:text-lg text-brown-700 mb-4 leading-relaxed max-w-prose mx-auto md:mx-0">
                 Expand your emotional vocabulary and learn to distinguish real
                 feelings from pseudo-feelings. Understanding your emotions is
                 the foundation of compassionate communication.
               </p>
+            </div>
+
+            {/* Right side - Giraffe guide (decorative; desktop only) */}
+            <div className="hidden md:flex flex-col items-center">
+              <SpeechBubble className="mb-6 max-w-sm">
+                <p className="text-base lg:text-lg text-brown-800 text-center font-medium text-pretty">
+                  Naming what you feel is where compassion begins. Take your
+                  time here — there are no wrong answers.
+                </p>
+              </SpeechBubble>
+              <img
+                src="/giraff.png"
+                alt="Your compassionate communication guide"
+                className="object-contain h-52 lg:h-64 w-auto drop-shadow-xl"
+              />
             </div>
           </div>
         </div>
@@ -129,7 +145,7 @@ function FeelingHub() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {/* Feelings Wheel Card */}
           <Link to="/feelings/wheel">
-            <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6 hover:border-giraffe-400 hover:shadow-lg transition-all cursor-pointer h-full">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm hover:border-giraffe-200 hover:shadow-md transition-all cursor-pointer h-full">
               <div className="flex items-start gap-4">
                 <div className="bg-giraffe-100 p-3 rounded-full shrink-0">
                   <svg
@@ -161,7 +177,7 @@ function FeelingHub() {
 
           {/* Quiz Game Card */}
           <Link to="/feelings/quiz">
-            <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6 hover:border-giraffe-400 hover:shadow-lg transition-all cursor-pointer h-full">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm hover:border-giraffe-200 hover:shadow-md transition-all cursor-pointer h-full">
               <div className="flex items-start gap-4">
                 <div className="bg-giraffe-100 p-3 rounded-full shrink-0">
                   <svg
@@ -194,7 +210,7 @@ function FeelingHub() {
 
           {/* Daily Check-In Card */}
           <Link to="/feelings/check-in">
-            <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6 hover:border-giraffe-400 hover:shadow-lg transition-all cursor-pointer h-full">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm hover:border-giraffe-200 hover:shadow-md transition-all cursor-pointer h-full">
               <div className="flex items-start gap-4">
                 <div className="bg-giraffe-100 p-3 rounded-full shrink-0">
                   <svg
@@ -226,7 +242,7 @@ function FeelingHub() {
 
           {/* Personal Library Card */}
           <Link to="/feelings/library">
-            <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6 hover:border-giraffe-400 hover:shadow-lg transition-all cursor-pointer h-full">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm hover:border-giraffe-200 hover:shadow-md transition-all cursor-pointer h-full">
               <div className="flex items-start gap-4">
                 <div className="bg-giraffe-100 p-3 rounded-full shrink-0">
                   <svg

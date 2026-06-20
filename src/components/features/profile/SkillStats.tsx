@@ -61,17 +61,6 @@ export function SkillStats({ stats }: SkillStatsProps) {
             </div>
           ))}
         </div>
-
-        <div className="mt-6 pt-4 border-t border-giraffe-100">
-          <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-brown-700">Overall average</span>
-              <span className="text-2xl font-bold text-giraffe-700">
-                {Math.round(stats.averageScores.overall)}/100
-              </span>
-            </div>
-          </div>
-        </div>
       </CardBody>
     </Card>
   )

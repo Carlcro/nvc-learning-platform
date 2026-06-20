@@ -48,12 +48,12 @@ export function DailyChallengeCard() {
       <CardBody className="py-6">
         <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-giraffe-800 bg-giraffe-100 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-giraffe-800 bg-giraffe-100 px-2.5 py-1 rounded-full">
               Daily focus
             </span>
             <DifficultyBadge difficulty={challenge.difficulty} />
             {challenge.completed && (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-brown-800 bg-empathy-high/20 px-2.5 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-brown-800 bg-empathy-high/20 px-2.5 py-1 rounded-full">
                 <span aria-hidden="true">✓</span> Completed
               </span>
             )}
@@ -119,7 +119,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 
   return (
     <span
-      className={`text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full ${tone}`}
+      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tone}`}
     >
       {label}
     </span>

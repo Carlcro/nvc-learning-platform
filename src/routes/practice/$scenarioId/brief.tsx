@@ -114,7 +114,7 @@ function ScenarioBrief() {
         </button>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl border-2 border-giraffe-200 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-lg border-2 border-giraffe-100 overflow-hidden shadow-sm">
           {/* Compact header */}
           <header className="bg-giraffe-400 px-6 sm:px-8 py-5">
             <h1 className="text-2xl sm:text-3xl font-bold text-brown-800 text-balance">
@@ -145,7 +145,7 @@ function ScenarioBrief() {
               <h2 className="text-lg font-bold text-brown-800 mb-2">
                 Situation
               </h2>
-              <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-xl p-4 border border-giraffe-100 text-pretty">
+              <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-lg p-4 border border-giraffe-100 text-pretty">
                 {scenario.situation}
               </p>
             </section>
@@ -159,7 +159,7 @@ function ScenarioBrief() {
                 </h2>
                 <div className="space-y-3">
                   {scenario.characterPersonality && (
-                    <div className="bg-giraffe-50 rounded-xl p-4 border border-giraffe-100">
+                    <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
                       <p className="text-xs font-semibold text-brown-700 mb-1">
                         Personality
                       </p>
@@ -169,7 +169,7 @@ function ScenarioBrief() {
                     </div>
                   )}
                   {scenario.characterBackground && (
-                    <div className="bg-giraffe-50 rounded-xl p-4 border border-giraffe-100">
+                    <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
                       <p className="text-xs font-semibold text-brown-700 mb-1">
                         Background
                       </p>
@@ -191,7 +191,7 @@ function ScenarioBrief() {
                     (objective: string, idx: number) => (
                       <li
                         key={idx}
-                        className="flex items-start gap-3 bg-giraffe-50 rounded-xl p-3 border border-giraffe-100"
+                        className="flex items-start gap-3 bg-giraffe-50 rounded-lg p-3 border border-giraffe-100"
                       >
                         <span className="flex-shrink-0 grid place-items-center w-6 h-6 rounded-full bg-giraffe-400 text-brown-800 text-xs font-bold">
                           {idx + 1}
@@ -218,8 +218,8 @@ function ScenarioBrief() {
             </div>
 
             {/* Tips - collapsed by default to keep the page short */}
-            <details className="group rounded-xl border border-giraffe-200 bg-giraffe-50/70">
-              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-4 py-3 font-bold text-brown-800 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2">
+            <details className="group rounded-lg border border-giraffe-200 bg-giraffe-50/70">
+              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-4 py-3 font-bold text-brown-800 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2">
                 Tips for success
                 <svg
                   viewBox="0 0 20 20"
@@ -257,7 +257,7 @@ function ScenarioBrief() {
 
             {/* Personal best, if any */}
             {userProgress && userProgress.bestScore > 0 && (
-              <div className="flex items-center gap-2 rounded-xl border border-empathy-high/40 bg-empathy-high/15 px-4 py-3 text-sm">
+              <div className="flex items-center gap-2 rounded-lg border border-empathy-high/40 bg-empathy-high/15 px-4 py-3 text-sm">
                 <span className="font-semibold text-brown-800">
                   Your best: {userProgress.bestScore}/100
                 </span>

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/check-in')({
   component: ProtectedDailyCheckIn,
@@ -118,21 +119,22 @@ function DailyCheckIn() {
   if (allFeelings === undefined) {
     return (
       <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream flex items-center justify-center">
-        <p className="text-giraffe-800">Loading...</p>
+        <p className="text-brown-700">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
       {/* Header */}
-      <div className="bg-white border-b-2 border-giraffe-200 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
+        <BackButton to="/feelings" label="Feelings" />
+        <div className="flex items-center justify-between gap-4 mt-2">
           <div>
-            <h1 className="text-3xl font-bold text-giraffe-900 mb-2">
+            <h1 className="text-3xl font-bold text-brown-800 mb-2">
               Daily Check-In
             </h1>
-            <p className="text-giraffe-800">
+            <p className="text-brown-700">
               Track your feelings to build emotional awareness
             </p>
           </div>
@@ -145,24 +147,24 @@ function DailyCheckIn() {
                 </svg>
               </div>
               <div>
-                <div className="text-xs text-giraffe-600 font-bold uppercase">
+                <div className="text-xs text-brown-700 font-bold">
                   Streak
                 </div>
-                <div className="text-xl font-bold text-giraffe-900">
+                <div className="text-xl font-bold text-brown-800">
                   {stats.currentStreak} Days
                 </div>
               </div>
             </div>
           )}
         </div>
-      </div>
+      </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Check-In Form */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-giraffe-900 mb-6">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-brown-800 mb-6">
                 How are you feeling today?
               </h2>
 
@@ -201,7 +203,7 @@ function DailyCheckIn() {
                       <button
                         key={feeling.word}
                         onClick={() => handleToggleFeeling(feeling.word)}
-                        className="w-full text-left px-4 py-2 hover:bg-giraffe-50 text-giraffe-900"
+                        className="w-full text-left px-4 py-2 hover:bg-giraffe-50 text-brown-800"
                       >
                         {feeling.word}
                       </button>
@@ -212,7 +214,7 @@ function DailyCheckIn() {
 
               {/* Common Feelings Grid */}
               <div className="mb-8">
-                <h3 className="text-sm font-semibold text-giraffe-600 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-brown-700 mb-3">
                   Common Feelings
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -225,7 +227,7 @@ function DailyCheckIn() {
                         ${
                           selectedFeelings.includes(feeling.word)
                             ? "bg-giraffe-400 text-brown-800 shadow-sm ring-2 ring-giraffe-300"
-                            : 'bg-giraffe-50 text-giraffe-800 hover:bg-giraffe-100 border border-giraffe-200'
+                            : 'bg-giraffe-50 text-brown-700 hover:bg-giraffe-100 border border-giraffe-200'
                         }
                       `}
                     >
@@ -237,7 +239,7 @@ function DailyCheckIn() {
 
               {/* Note */}
               <div className="mb-8">
-                <label className="block text-sm font-semibold text-giraffe-600 uppercase tracking-wide mb-2">
+                <label className="block text-sm font-semibold text-brown-700 mb-2">
                   Add a note (optional)
                 </label>
                 <textarea
@@ -274,8 +276,8 @@ function DailyCheckIn() {
 
           {/* Right: History */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6">
-              <h3 className="text-lg font-bold text-giraffe-900 mb-4">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
+              <h3 className="text-lg font-bold text-brown-800 mb-4">
                 Recent History
               </h3>
               {history && history.length > 0 ? (
@@ -297,7 +299,7 @@ function DailyCheckIn() {
                         {checkIn.feelings.map((f) => (
                           <span
                             key={f}
-                            className="text-xs px-2 py-0.5 bg-giraffe-50 text-giraffe-800 rounded-full border border-giraffe-100"
+                            className="text-xs px-2 py-0.5 bg-giraffe-50 text-brown-700 rounded-full border border-giraffe-100"
                           >
                             {f}
                           </span>
@@ -312,7 +314,7 @@ function DailyCheckIn() {
                   ))}
                 </div>
               ) : (
-                <p className="text-giraffe-800 text-sm">
+                <p className="text-brown-700 text-sm">
                   No check-ins yet. Start today!
                 </p>
               )}
@@ -321,8 +323,8 @@ function DailyCheckIn() {
             {/* Weekly Patterns Insights */}
             {weeklyPatterns &&
               weeklyPatterns.frequentFeelings.length > 0 && (
-                <div className="bg-white rounded-xl border-2 border-giraffe-200 p-6">
-                  <h3 className="text-lg font-bold text-giraffe-900 mb-4">
+                <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
+                  <h3 className="text-lg font-bold text-brown-800 mb-4">
                     Weekly Patterns
                   </h3>
                   <div className="space-y-4">
@@ -331,7 +333,7 @@ function DailyCheckIn() {
                         key={insight.feeling}
                         className="bg-giraffe-50 border border-giraffe-200 rounded-lg px-4 py-3"
                       >
-                        <p className="text-giraffe-900 font-medium">
+                        <p className="text-brown-800 font-medium">
                           You've felt{' '}
                           <span className="font-bold">{insight.feeling}</span>{' '}
                           {insight.count} times this week.
@@ -343,7 +345,7 @@ function DailyCheckIn() {
                           {insight.relatedNeeds.map((need) => (
                             <span
                               key={need}
-                              className="text-xs px-2 py-1 bg-giraffe-50 text-giraffe-800 rounded-full border border-giraffe-200 capitalize"
+                              className="text-xs px-2 py-1 bg-giraffe-50 text-brown-700 rounded-full border border-giraffe-200 capitalize"
                             >
                               {need}
                             </span>
@@ -371,7 +373,7 @@ function DailyCheckIn() {
                           }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs text-giraffe-600 mt-1">
+                      <div className="flex justify-between text-xs text-brown-700 mt-1">
                         <span>Pleasant {weeklyPatterns.pleasantPercent}%</span>
                         <span>
                           Unpleasant {weeklyPatterns.unpleasantPercent}%
@@ -382,7 +384,7 @@ function DailyCheckIn() {
                 </div>
               )}
 
-            <div className="bg-giraffe-50 rounded-xl border-2 border-giraffe-200 p-6">
+            <div className="bg-giraffe-50 rounded-lg border-2 border-giraffe-100 p-6">
               <h3 className="text-lg font-bold text-brown-800 mb-2">
                 Did you know?
               </h3>
@@ -394,6 +396,6 @@ function DailyCheckIn() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

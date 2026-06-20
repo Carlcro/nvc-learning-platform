@@ -200,7 +200,7 @@ function IntegrationLesson() {
                     <div className="text-sm space-y-2 pt-4 border-t border-giraffe-200">
                       <div>
                         <span className="font-semibold text-brown-900">
-                          👀 Observation:
+                          Observation:
                         </span>
                         <p className="text-brown-800 text-xs">
                           The specific fact observed
@@ -208,7 +208,7 @@ function IntegrationLesson() {
                       </div>
                       <div>
                         <span className="font-semibold text-brown-900">
-                          💭 Feeling:
+                          Feeling:
                         </span>
                         <p className="text-brown-800 text-xs">
                           The emotional response
@@ -216,7 +216,7 @@ function IntegrationLesson() {
                       </div>
                       <div>
                         <span className="font-semibold text-brown-900">
-                          ❤️ Need:
+                          Need:
                         </span>
                         <p className="text-brown-800 text-xs">
                           The universal need at stake
@@ -224,7 +224,7 @@ function IntegrationLesson() {
                       </div>
                       <div>
                         <span className="font-semibold text-brown-900">
-                          🎯 Request:
+                          Request:
                         </span>
                         <p className="text-brown-800 text-xs">
                           The concrete action being requested
@@ -234,24 +234,24 @@ function IntegrationLesson() {
                   </div>
 
                   {/* Jackal Response */}
-                  <div className="p-4 bg-empathy-lowlow rounded-lg border-2 border-empathy-lowlow">
+                  <div className="p-4 bg-empathy-low rounded-lg border-2 border-empathy-low">
                     <div className="flex items-center gap-2 mb-3">
-                      <h4 className="text-lg font-bold text-empathy-lowlow">
+                      <h4 className="text-lg font-bold text-empathy-low">
                         Judgmental Response
                       </h4>
                     </div>
-                    <p className="text-empathy-lowlow leading-relaxed mb-4">
+                    <p className="text-empathy-low leading-relaxed mb-4">
                       {currentExample.jackalResponse}
                     </p>
 
                     {/* Problem Breakdown */}
-                    <div className="text-sm space-y-2 pt-4 border-t border-empathy-lowlow">
+                    <div className="text-sm space-y-2 pt-4 border-t border-empathy-low">
                       <div>
-                        <span className="font-semibold text-empathy-lowlow">
-                          ❌ Issues:
+                        <span className="font-semibold text-empathy-low">
+                          Issues:
                         </span>
                       </div>
-                      <ul className="list-disc list-inside text-empathy-lowlow text-xs space-y-1">
+                      <ul className="list-disc list-inside text-empathy-low text-xs space-y-1">
                         <li>Uses judgment and blame</li>
                         <li>No clear observation</li>
                         <li>No expressed need</li>

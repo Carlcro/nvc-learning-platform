@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/wheel')({
   component: ProtectedFeelingsWheel,
@@ -96,31 +97,30 @@ function FeelingsWheel() {
   if (families === undefined || allFeelings === undefined) {
     return (
       <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream flex items-center justify-center">
-        <p className="text-giraffe-800">Loading feelings...</p>
+        <p className="text-brown-700">Loading feelings...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
       {/* Header */}
-      <div className="bg-white border-b-2 border-giraffe-200 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-giraffe-900 mb-2">
-            Feelings Wheel
-          </h1>
-          <p className="text-giraffe-800">
-            Explore feelings organized by family. Click on any feeling to learn
-            more.
-          </p>
-        </div>
-      </div>
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
+        <BackButton to="/feelings" label="Feelings" />
+        <h1 className="text-3xl font-bold text-brown-800 mb-2 mt-2">
+          Feelings Wheel
+        </h1>
+        <p className="text-brown-700">
+          Explore feelings organized by family. Click on any feeling to learn
+          more.
+        </p>
+      </section>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Family Selector */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6 sticky top-4">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 sticky top-4">
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-4 mb-4 border-b border-giraffe-200 pb-4">
                   <div className="flex-1">
@@ -169,7 +169,7 @@ function FeelingsWheel() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-giraffe-800 mb-3 uppercase tracking-wide">
+                  <h3 className="text-sm font-semibold text-brown-700 mb-3">
                     Feeling Families
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-3">
@@ -181,8 +181,8 @@ function FeelingsWheel() {
                           px-4 py-3 rounded-lg font-medium capitalize transition-all
                           ${
                             selectedFamily === family
-                              ? 'bg-giraffe-100 text-giraffe-900 border-2 border-giraffe-400 shadow-sm'
-                              : 'bg-white text-giraffe-800 border-2 border-giraffe-200 hover:border-giraffe-300 hover:bg-giraffe-50'
+                              ? 'bg-giraffe-100 text-brown-800 border-2 border-giraffe-400 shadow-sm'
+                              : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:border-giraffe-300 hover:bg-giraffe-50'
                           }
                         `}
                       >
@@ -198,8 +198,8 @@ function FeelingsWheel() {
           {/* Middle/Right: Feelings Grid and Detail */}
           <div className="lg:col-span-2 space-y-6">
             {/* Feelings Grid */}
-            <div className="bg-white rounded-lg border-2 border-giraffe-200 p-6">
-              <h2 className="text-xl font-bold text-giraffe-900 mb-4 capitalize">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
+              <h2 className="text-xl font-bold text-brown-800 mb-4 capitalize">
                 {selectedFamily} Feelings
               </h2>
               {filteredFeelings.length > 0 ? (
@@ -300,7 +300,7 @@ function FeelingsWheel() {
                     <ul className="space-y-2">
                       {selectedFeelingDetail.examples.map((example, idx) => (
                         <li key={idx} className="text-brown-700 flex gap-3">
-                          <span className="text-giraffe-600 font-semibold shrink-0">
+                          <span className="text-brown-700 font-semibold shrink-0">
                             •
                           </span>
                           <span className="italic">{example}</span>
@@ -317,7 +317,7 @@ function FeelingsWheel() {
                       {selectedFeelingDetail.synonyms.map((synonym) => (
                         <span
                           key={synonym}
-                          className="inline-block bg-giraffe-100 text-giraffe-900 px-3 py-1 rounded-full text-sm"
+                          className="inline-block bg-giraffe-100 text-brown-800 px-3 py-1 rounded-full text-sm"
                         >
                           {synonym}
                         </span>
@@ -361,7 +361,7 @@ function FeelingsWheel() {
 
             {!selectedFeelingDetail && (
               <div className="bg-giraffe-50 border-2 border-giraffe-200 rounded-lg p-8 text-center">
-                <p className="text-giraffe-800">
+                <p className="text-brown-700">
                   Click on a feeling above to see its definition, examples, and
                   related emotions.
                 </p>
@@ -370,6 +370,6 @@ function FeelingsWheel() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

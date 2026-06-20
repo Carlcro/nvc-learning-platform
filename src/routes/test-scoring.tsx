@@ -63,7 +63,7 @@ function TestScoringPage() {
   }
 
   return (
-    <main className="min-h-screen bg-giraffe-50 p-4 sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -92,7 +92,7 @@ function TestScoringPage() {
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   placeholder="e.g., 'When you arrive late without telling me, I feel frustrated because reliability is important to me. Would you be willing to text me if you're running late?'"
-                  className="w-full h-32 p-3 border border-giraffe-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-32 p-3 border border-giraffe-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-giraffe-300"
                   disabled={isLoading}
                 />
               </div>
@@ -111,7 +111,7 @@ function TestScoringPage() {
 
         {/* Error Message */}
         {error && (
-          <Card className="mb-8 border border-empathy-low bg-empathy-low">
+          <Card className="mb-8 border border-empathy-low/40 bg-empathy-low/15">
             <CardBody>
               <p className="text-empathy-low">{error}</p>
             </CardBody>
@@ -131,19 +131,19 @@ function TestScoringPage() {
                   <div
                     className={`text-5xl font-bold px-6 py-3 rounded-lg ${
                       result.total >= 90
-                        ? 'bg-empathy-high text-empathy-high'
+                        ? 'bg-empathy-high/20 text-brown-800'
                         : result.total >= 70
-                          ? 'bg-giraffe-100 text-giraffe-800'
+                          ? 'bg-giraffe-100 text-brown-800'
                           : result.total >= 50
-                            ? 'bg-giraffe-100 text-giraffe-800'
-                            : 'bg-empathy-low text-empathy-low'
+                            ? 'bg-giraffe-100 text-brown-800'
+                            : 'bg-empathy-low/20 text-empathy-low'
                     }`}
                   >
                     {result.total}/100
                   </div>
                 </div>
                 <p
-                  className={`text-lg mt-4 font-semibold ${result.total >= 70 ? 'text-empathy-high' : 'text-giraffe-600'}`}
+                  className={`text-lg mt-4 font-semibold ${result.total >= 70 ? 'text-brown-800' : 'text-brown-700'}`}
                 >
                   {getTotalStatus(result.total)}
                 </p>
@@ -185,9 +185,6 @@ function TestScoringPage() {
             <Card>
               <CardBody>
                 <div className="flex items-center gap-4">
-                  <div className="text-5xl">
-                    {result.isJackalLanguage ? '🐺' : '🦒'}
-                  </div>
                   <div>
                     <h3 className="text-xl font-bold text-brown-800">
                       {result.isJackalLanguage
@@ -206,7 +203,7 @@ function TestScoringPage() {
 
             {/* Jackal Phrases */}
             {result.jackalPhrases.length > 0 && (
-              <Card className="border border-empathy-low bg-empathy-low">
+              <Card className="border border-empathy-low/40 bg-empathy-low/15">
                 <CardBody>
                   <h3 className="text-lg font-bold text-empathy-low mb-3">
                     Potential Jackal Phrases Detected
@@ -223,12 +220,12 @@ function TestScoringPage() {
             )}
 
             {/* What Went Well */}
-            <Card className="border border-empathy-high bg-empathy-high">
+            <Card className="border border-empathy-high/40 bg-empathy-high/15">
               <CardBody>
-                <h3 className="text-lg font-bold text-empathy-high mb-2">
-                  ✨ What Went Well
+                <h3 className="text-lg font-bold text-brown-800 mb-2">
+                  What went well
                 </h3>
-                <p className="text-empathy-high">
+                <p className="text-brown-800">
                   {result.whatWentWell}
                 </p>
               </CardBody>
@@ -238,7 +235,7 @@ function TestScoringPage() {
             <Card>
               <CardBody>
                 <h3 className="text-lg font-bold text-brown-800 mb-3">
-                  💭 Coaching Feedback
+                  Coaching feedback
                 </h3>
                 <p className="text-brown-700 leading-relaxed">
                   {result.feedback}
@@ -250,7 +247,7 @@ function TestScoringPage() {
             <Card className="border border-giraffe-300 bg-giraffe-50">
               <CardBody>
                 <h3 className="text-lg font-bold text-brown-900 mb-2">
-                  🦒 Giraffe Alternative
+                  Giraffe alternative
                 </h3>
                 <p className="text-brown-800 italic">
                   "{result.giraffeAlternative}"

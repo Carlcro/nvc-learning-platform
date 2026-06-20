@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/quiz')({
   component: ProtectedQuiz,
@@ -112,18 +113,17 @@ function QuizGame() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
       {/* Header */}
-      <div className="bg-white border-b-2 border-giraffe-200 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-giraffe-900 mb-2">
-            Feelings Quiz Game
-          </h1>
-          <p className="text-giraffe-800">
-            Test your ability to identify real feelings vs pseudo-feelings
-          </p>
-        </div>
-      </div>
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
+        <BackButton to="/feelings" label="Feelings" />
+        <h1 className="text-3xl font-bold text-brown-800 mb-2 mt-2">
+          Feelings Quiz Game
+        </h1>
+        <p className="text-brown-700">
+          Test your ability to identify real feelings vs pseudo-feelings
+        </p>
+      </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {quizState === 'level-select' && (
@@ -132,14 +132,14 @@ function QuizGame() {
               {[1, 2, 3].map((level) => (
                 <div
                   key={level}
-                  className="bg-white rounded-lg border-2 border-giraffe-200 p-6 hover:border-giraffe-400 transition-colors cursor-pointer"
+                  className="bg-white rounded-lg border-2 border-giraffe-100 p-6 hover:border-giraffe-200 transition-colors cursor-pointer"
                   onClick={() => handleStartQuiz(level)}
                 >
                   <div className="text-3xl mb-3">{level}</div>
-                  <h3 className="text-lg font-bold text-giraffe-900 mb-2">
+                  <h3 className="text-lg font-bold text-brown-800 mb-2">
                     {level === 1 ? 'Easy' : level === 2 ? 'Medium' : 'Hard'}
                   </h3>
-                  <p className="text-sm text-giraffe-800 mb-4">
+                  <p className="text-sm text-brown-700 mb-4">
                     {level === 1
                       ? 'Obvious pseudo-feelings'
                       : level === 2
@@ -165,11 +165,11 @@ function QuizGame() {
         )}
 
         {quizState === 'question' && questions.length === 0 && (
-          <div className="bg-white rounded-lg border-2 border-giraffe-200 p-8 text-center max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-giraffe-900 mb-4">
+          <div className="bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-brown-800 mb-4">
               No questions available
             </h2>
-            <p className="text-giraffe-800 mb-6">
+            <p className="text-brown-700 mb-6">
               There are no quiz questions available for this level yet.
             </p>
             <button
@@ -182,10 +182,10 @@ function QuizGame() {
         )}
 
         {quizState === 'question' && currentQuestionData && (
-          <div className="bg-white rounded-lg border-2 border-giraffe-200 shadow-md p-6 max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg border-2 border-giraffe-100 shadow-sm p-6 max-w-2xl mx-auto">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-giraffe-600 uppercase tracking-wide">
+                <span className="text-sm font-semibold text-brown-700">
                   Question {currentQuestion + 1} of {questions.length}
                 </span>
                 <div className="flex gap-1">
@@ -209,10 +209,10 @@ function QuizGame() {
                 </div>
               </div>
 
-              <h2 className="text-xl font-bold text-giraffe-900 mb-2">
+              <h2 className="text-xl font-bold text-brown-800 mb-2">
                 Is this expressing a real feeling?
               </h2>
-              <p className="text-sm text-giraffe-800">
+              <p className="text-sm text-brown-700">
                 Real feelings describe your emotional state. Pseudo-feelings
                 often include "that" or "like" and describe thoughts about
                 others.
@@ -220,7 +220,7 @@ function QuizGame() {
             </div>
 
             <div className="bg-giraffe-50 border border-giraffe-200 p-4 rounded-lg mb-6">
-              <p className="text-lg text-giraffe-900 italic leading-relaxed">
+              <p className="text-lg text-brown-800 italic leading-relaxed">
                 "{currentQuestionData.sentence}"
               </p>
             </div>
@@ -243,7 +243,7 @@ function QuizGame() {
         )}
 
         {quizState === 'feedback' && currentQuestionData && (
-          <div className="bg-white rounded-lg border-2 shadow-md p-6 max-w-2xl mx-auto border-giraffe-200">
+          <div className="bg-white rounded-lg border-2 border-giraffe-100 shadow-sm p-6 max-w-2xl mx-auto">
             <div className="mb-6">
               <div
                 className={`
@@ -258,12 +258,12 @@ function QuizGame() {
                 {feedbackIsCorrect ? "That's right!" : 'Not quite'}
               </div>
 
-              <h2 className="text-xl font-bold text-giraffe-900 mb-3">
+              <h2 className="text-xl font-bold text-brown-800 mb-3">
                 {feedbackIsCorrect
                   ? 'Great work recognizing that!'
                   : 'This is a learning opportunity'}
               </h2>
-              <p className="text-giraffe-800 leading-relaxed">
+              <p className="text-brown-700 leading-relaxed">
                 {currentQuestionData.explanation}
               </p>
             </div>
@@ -271,14 +271,14 @@ function QuizGame() {
             {currentQuestionData.correctFeelings &&
               currentQuestionData.correctFeelings.length > 0 && (
                 <div className="mb-6 p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
-                  <h3 className="font-semibold text-giraffe-900 mb-2">
+                  <h3 className="font-semibold text-brown-800 mb-2">
                     Real feelings you could use instead:
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {currentQuestionData.correctFeelings.map((feeling) => (
                       <span
                         key={feeling}
-                        className="inline-block bg-white text-giraffe-900 px-3 py-1 rounded-full text-sm font-medium border border-giraffe-300"
+                        className="inline-block bg-white text-brown-800 px-3 py-1 rounded-full text-sm font-medium border border-giraffe-300"
                       >
                         {feeling}
                       </span>
@@ -299,7 +299,7 @@ function QuizGame() {
         )}
 
         {quizState === 'complete' && questions.length > 0 && (
-          <div className="bg-white rounded-lg border-2 border-giraffe-200 p-8 text-center max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center max-w-2xl mx-auto">
             <div className="text-6xl mb-4">
               {correctCount === questions.length
                 ? 'Perfect!'
@@ -307,10 +307,10 @@ function QuizGame() {
                   ? 'Great Job!'
                   : 'Good Effort!'}
             </div>
-            <h2 className="text-3xl font-bold text-giraffe-900 mb-2">
+            <h2 className="text-3xl font-bold text-brown-800 mb-2">
               Quiz Complete
             </h2>
-            <p className="text-2xl text-giraffe-600 font-semibold mb-6">
+            <p className="text-2xl text-brown-700 font-semibold mb-6">
               {correctCount} out of {questions.length} correct
               <br />
               {Math.round((correctCount / questions.length) * 100)}% Accuracy
@@ -325,7 +325,7 @@ function QuizGame() {
               </button>
               <button
                 onClick={handleReturnToHome}
-                className="px-6 py-3 bg-giraffe-100 text-giraffe-900 rounded-lg font-semibold hover:bg-giraffe-200 transition-colors"
+                className="px-6 py-3 bg-giraffe-100 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-200 transition-colors"
               >
                 Back to Levels
               </button>
@@ -333,6 +333,6 @@ function QuizGame() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   )
 }

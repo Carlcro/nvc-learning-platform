@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useConvexAuth } from 'convex/react'
 import { SignInForm } from '~/components/auth/SignInForm'
+import { SpeechBubble } from '~/components/ui/SpeechBubble'
 
 export const Route = createFileRoute('/auth')({
   component: AuthPage,
@@ -29,12 +30,11 @@ function AuthPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50">
         <div className="flex flex-col items-center gap-8">
-          <div className="bg-white rounded-3xl p-8 shadow-lg border-2 border-giraffe-200 relative max-w-sm">
+          <SpeechBubble className="max-w-sm">
             <p className="text-lg text-brown-800 text-center font-medium">
               Welcoming you in...
             </p>
-            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
-          </div>
+          </SpeechBubble>
           <img
             src="/giraff.png"
             alt="Your compassionate communication guide"

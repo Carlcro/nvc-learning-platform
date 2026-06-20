@@ -187,7 +187,7 @@ function LessonCard({ lesson }: LessonCardProps) {
         {/* Content */}
         <CardBody className="flex flex-col gap-3 pt-4 flex-grow">
           <div>
-            <div className="text-xs font-semibold text-giraffe-600 uppercase tracking-wide mb-1">
+            <div className="text-xs font-semibold text-brown-600 mb-1">
               Lesson {lessonNumber}
             </div>
             <h3 className="text-lg font-bold text-brown-800 group-hover:text-giraffe-600 transition-colors">

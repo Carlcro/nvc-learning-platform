@@ -11,8 +11,8 @@ interface ActivityFeedProps {
 function renderStars(count: number) {
   const filled = Math.min(count, 3)
   return (
-    <div
-      className="flex gap-0.5 justify-center"
+    <span
+      className="inline-flex gap-0.5 align-middle"
       role="img"
       aria-label={`${filled} of 3 stars`}
     >
@@ -25,61 +25,51 @@ function renderStars(count: number) {
           ★
         </span>
       ))}
-    </div>
+    </span>
   )
 }
 
+/**
+ * A closing "your journey so far" strip — the milestones earned through
+ * practice, paired with the one clear next step. Deliberately a horizontal
+ * call-to-action band, not another stat card, so the page ends on momentum.
+ */
 export function ActivityFeed({
   completedScenarios,
   masteredScenarios,
   totalStars,
 }: ActivityFeedProps) {
   return (
-    <Card className="overflow-hidden h-full flex flex-col">
-      {/* Header */}
-      <div className="bg-giraffe-50 px-6 py-3 border-b border-giraffe-100">
-        <h2 className="text-sm font-semibold text-brown-700">
-          Your journey
-        </h2>
-      </div>
+    <Card>
+      <CardBody className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <dl className="grid grid-cols-3 gap-4 sm:gap-10 text-center sm:text-left">
+          <JourneyStat value={completedScenarios} label="Completed" />
+          <JourneyStat value={masteredScenarios} label="Mastered" />
+          <div>
+            <dd className="text-2xl font-bold text-brown-800">
+              {totalStars} {renderStars(totalStars)}
+            </dd>
+            <dt className="text-xs text-brown-600 font-medium mt-0.5">
+              Stars earned
+            </dt>
+          </div>
+        </dl>
 
-      <CardBody className="flex-grow flex flex-col">
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-giraffe-50 p-4 rounded-lg text-center border border-giraffe-100">
-            <div className="text-2xl font-bold text-brown-800">
-              {completedScenarios}
-            </div>
-            <div className="text-xs text-brown-600 font-medium">
-              Completed
-            </div>
-          </div>
-          <div className="bg-giraffe-50 p-4 rounded-lg text-center border border-giraffe-100">
-            <div className="text-2xl font-bold text-brown-800">
-              {masteredScenarios}
-            </div>
-            <div className="text-xs text-brown-600 font-medium">
-              Mastered
-            </div>
-          </div>
-          <div className="bg-giraffe-50 p-4 rounded-lg text-center col-span-2 border border-giraffe-100">
-            <div className="text-3xl font-bold text-brown-800 mb-1">
-              {totalStars}
-            </div>
-            {renderStars(totalStars)}
-            <div className="text-xs text-brown-600 font-medium mt-1">
-              Total stars earned
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-auto">
-          <Link to="/practice">
-            <Button variant="primary" className="w-full">
-              Continue Practicing
-            </Button>
-          </Link>
-        </div>
+        <Link to="/practice" className="shrink-0">
+          <Button variant="primary" size="lg" className="w-full sm:w-auto">
+            Continue practicing
+          </Button>
+        </Link>
       </CardBody>
     </Card>
+  )
+}
+
+function JourneyStat({ value, label }: { value: number; label: string }) {
+  return (
+    <div>
+      <dd className="text-2xl font-bold text-brown-800">{value}</dd>
+      <dt className="text-xs text-brown-600 font-medium mt-0.5">{label}</dt>
+    </div>
   )
 }

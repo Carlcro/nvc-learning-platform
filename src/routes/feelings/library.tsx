@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/library')({
   component: ProtectedLibrary,
@@ -64,36 +65,37 @@ function PersonalLibrary() {
   if (allFeelings === undefined || userProgress === undefined) {
     return (
       <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream flex items-center justify-center">
-        <p className="text-giraffe-800">Loading library...</p>
+        <p className="text-brown-700">Loading library...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
       {/* Header */}
-      <div className="bg-white border-b-2 border-giraffe-200 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
+        <BackButton to="/feelings" label="Feelings" />
+        <div className="flex items-end justify-between gap-4 mt-2">
           <div>
-            <h1 className="text-3xl font-bold text-giraffe-900 mb-2">
+            <h1 className="text-3xl font-bold text-brown-800 mb-2">
               My Feelings Library
             </h1>
-            <p className="text-giraffe-800">
+            <p className="text-brown-700">
               Your personal collection of feelings to remember and practice
             </p>
           </div>
           <Link
             to="/feelings/wheel"
-            className="px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors shadow-md"
+            className="px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors shadow-sm whitespace-nowrap"
           >
             + Add More
           </Link>
         </div>
-      </div>
+      </section>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {savedFeelings.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl border-2 border-giraffe-200 border-dashed">
+          <div className="text-center py-16 bg-white rounded-lg border-2 border-giraffe-100 border-dashed">
             <div className="mb-4 flex justify-center">
               <div className="bg-giraffe-100 p-6 rounded-full">
                 <svg className="w-12 h-12 text-giraffe-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,10 +103,10 @@ function PersonalLibrary() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-giraffe-900 mb-2">
+            <h2 className="text-2xl font-bold text-brown-800 mb-2">
               Your library is empty
             </h2>
-            <p className="text-giraffe-800 mb-8 max-w-md mx-auto">
+            <p className="text-brown-700 mb-8 max-w-md mx-auto">
               Explore the Feelings Wheel and save feelings you want to add to
               your personal vocabulary.
             </p>
@@ -136,7 +138,7 @@ function PersonalLibrary() {
                     ${
                       filterFamily === 'all'
                         ? 'bg-giraffe-400 text-brown-800 shadow-md'
-                        : 'bg-white text-giraffe-800 border-2 border-giraffe-200 hover:bg-giraffe-50'
+                        : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:bg-giraffe-50'
                     }
                   `}
                 >
@@ -151,7 +153,7 @@ function PersonalLibrary() {
                       ${
                         filterFamily === family
                           ? 'bg-giraffe-400 text-brown-800 shadow-md'
-                          : 'bg-white text-giraffe-800 border-2 border-giraffe-200 hover:bg-giraffe-50'
+                          : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:bg-giraffe-50'
                       }
                     `}
                   >
@@ -166,10 +168,10 @@ function PersonalLibrary() {
               {filteredFeelings.map((feeling) => (
                 <div
                   key={feeling.word}
-                  className="bg-white rounded-xl border-2 border-giraffe-200 p-6 hover:border-giraffe-400 transition-all shadow-sm hover:shadow-md group relative"
+                  className="bg-white rounded-lg border-2 border-giraffe-100 p-6 hover:border-giraffe-200 transition-all shadow-sm hover:shadow-md group relative"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-giraffe-900 capitalize">
+                    <h3 className="text-xl font-bold text-brown-800 capitalize">
                       {feeling.word}
                     </h3>
                     <button
@@ -194,7 +196,7 @@ function PersonalLibrary() {
                   </div>
 
                   <div className="flex gap-2 mb-4">
-                    <span className="text-xs px-2 py-1 bg-giraffe-100 text-giraffe-800 rounded-full font-medium capitalize">
+                    <span className="text-xs px-2 py-1 bg-giraffe-100 text-brown-700 rounded-full font-medium capitalize">
                       {feeling.family}
                     </span>
                     <span className="text-xs px-2 py-1 bg-giraffe-100 text-brown-800 rounded-full font-medium">
@@ -202,7 +204,7 @@ function PersonalLibrary() {
                     </span>
                   </div>
 
-                  <p className="text-giraffe-800 text-sm mb-4 line-clamp-3">
+                  <p className="text-brown-700 text-sm mb-4 line-clamp-3">
                     {feeling.definition}
                   </p>
 
@@ -216,13 +218,13 @@ function PersonalLibrary() {
             </div>
 
             {filteredFeelings.length === 0 && savedFeelings.length > 0 && (
-              <div className="text-center py-12 text-giraffe-800">
+              <div className="text-center py-12 text-brown-700">
                 No feelings found matching your filters.
               </div>
             )}
           </div>
         )}
       </div>
-    </div>
+    </main>
   )
 }

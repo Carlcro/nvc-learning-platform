@@ -70,7 +70,7 @@ export function FloatingNav() {
                 ${
                   isActive(link.to)
                     ? 'bg-giraffe-400 text-brown-700'
-                    : 'text-slate-600 hover:bg-giraffe-50 hover:text-brown-700'
+                    : 'text-brown-400 hover:bg-giraffe-50 hover:text-brown-700'
                 }
               `}
             >
@@ -112,7 +112,7 @@ export function FloatingNav() {
                       ${
                         isActive(link.to)
                           ? 'bg-giraffe-400 text-brown-700'
-                          : 'text-slate-600 hover:bg-giraffe-50 hover:text-brown-700'
+                          : 'text-brown-400 hover:bg-giraffe-50 hover:text-brown-700'
                       }
                     `}
                   >
@@ -154,7 +154,7 @@ export function FloatingNav() {
                   <span className="text-xs font-semibold text-brown-700 leading-tight">
                     {user.name || 'Learner'}
                   </span>
-                  <span className="text-xs text-slate-600 leading-tight">
+                  <span className="text-xs text-brown-400 leading-tight">
                     Level {profile?.level || 1}
                   </span>
                 </div>

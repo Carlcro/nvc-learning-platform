@@ -36,7 +36,7 @@ function LevelIndicator({
   pointsToNext?: number
 }) {
   return (
-    <div className="inline-flex items-center gap-4 bg-white rounded-xl border-2 border-giraffe-200 px-5 py-3 shadow-sm">
+    <div className="inline-flex items-center gap-4 bg-white rounded-lg border-2 border-giraffe-100 px-5 py-3 shadow-sm">
       <div className="flex items-center gap-2">
         <span className="text-sm font-semibold text-brown-600">Your Level</span>
         <span className="text-2xl font-bold text-giraffe-700">{level}</span>
@@ -208,55 +208,58 @@ function PracticeHub() {
         </div>
       </section>
 
-      {/* Scenarios Grid */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-8">
-        {isLoadingScenarios ? (
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            aria-busy="true"
-            aria-label="Loading scenarios"
-          >
-            {Array.from({ length: 6 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : filteredScenarios.length === 0 ? (
-          hasActiveFilters ? (
-            <div className="text-center py-12">
-              <p className="text-brown-700 mb-4">
-                No scenarios match these filters.
-              </p>
-              <Button variant="outline" onClick={clearFilters}>
-                Clear filters
-              </Button>
+      {/* Scenarios Grid - mirrors the header's container so the cards line up
+          with the filters above (max-width inner, padding outer). */}
+      <section className="px-4 sm:px-6 lg:px-8 pt-2 pb-8">
+        <div className="max-w-6xl mx-auto">
+          {isLoadingScenarios ? (
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              aria-busy="true"
+              aria-label="Loading scenarios"
+            >
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
+          ) : filteredScenarios.length === 0 ? (
+            hasActiveFilters ? (
+              <div className="text-center py-12">
+                <p className="text-brown-700 mb-4">
+                  No scenarios match these filters.
+                </p>
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-brown-700">
+                  No scenarios are available yet. Check back soon!
+                </p>
+              </div>
+            )
           ) : (
-            <div className="text-center py-12">
-              <p className="text-brown-700">
-                No scenarios are available yet. Check back soon!
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredScenarios.map((scenario) => (
+                <ScenarioCard
+                  key={scenario._id}
+                  id={scenario._id}
+                  title={scenario.title}
+                  description={scenario.description}
+                  category={scenario.category}
+                  difficulty={scenario.difficulty}
+                  characterName={scenario.characterName}
+                  minLevel={scenario.unlockRequirements.minLevel}
+                  userLevel={userLevel}
+                  progress={getScenarioProgress(scenario._id)}
+                  onStart={handleStartScenario}
+                  onViewBest={handleViewBest}
+                />
+              ))}
             </div>
-          )
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredScenarios.map((scenario) => (
-              <ScenarioCard
-                key={scenario._id}
-                id={scenario._id}
-                title={scenario.title}
-                description={scenario.description}
-                category={scenario.category}
-                difficulty={scenario.difficulty}
-                characterName={scenario.characterName}
-                minLevel={scenario.unlockRequirements.minLevel}
-                userLevel={userLevel}
-                progress={getScenarioProgress(scenario._id)}
-                onStart={handleStartScenario}
-                onViewBest={handleViewBest}
-              />
-            ))}
-          </div>
-        )}
+          )}
+        </div>
       </section>
 
       {/* CTA Section */}

@@ -134,7 +134,6 @@ export function QuizSection({
             {/* Perfect Score & Lesson Completion Banner */}
             {isPerfectScore && lessonCompleted && (
               <div className="mb-8 p-6 rounded-lg bg-linear-to-r from-giraffe-100 to-empathy-high/30 border-2 border-giraffe-300">
-                <div className="text-5xl mb-3">🎓✨</div>
                 <h3 className="text-2xl font-bold text-giraffe-700 mb-2">
                   Lesson Complete!
                 </h3>
@@ -147,9 +146,6 @@ export function QuizSection({
 
             {/* Score Display */}
             <div className="mb-8">
-              <div className="text-6xl font-bold mb-4">
-                {score >= passingScore ? '🎉' : '📚'}
-              </div>
               <div className="text-5xl font-bold text-brown-800 mb-2">
                 {score}%
               </div>
@@ -350,8 +346,8 @@ export function QuizSection({
               }`}
             >
               <div className="flex gap-3">
-                <span className="text-2xl shrink-0">
-                  {isCorrect ? '✓' : '💡'}
+                <span className="text-2xl shrink-0 font-bold" aria-hidden="true">
+                  {isCorrect ? '✓' : '✗'}
                 </span>
                 <div>
                   <h4

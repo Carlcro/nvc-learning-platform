@@ -312,7 +312,7 @@ function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="px-8 border-cream text-cream hover:bg-brown-700"
+                    className="px-8 border-cream text-cream hover:bg-cream hover:text-brown-800"
                   >
                     Practice with Real Scenarios
                   </Button>
@@ -405,7 +405,7 @@ interface GuideNoteProps {
  */
 function GuideNote({ heading, children }: GuideNoteProps) {
   return (
-    <div className="flex items-start gap-4 bg-white border border-giraffe-200 rounded-2xl p-6">
+    <div className="flex items-start gap-4 bg-white border-2 border-giraffe-100 rounded-lg p-6">
       <img
         src="/giraff.png"
         alt=""

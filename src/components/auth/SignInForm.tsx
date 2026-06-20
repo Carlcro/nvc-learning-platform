@@ -3,6 +3,7 @@ import { useAuthActions } from '@convex-dev/auth/react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
+import { SpeechBubble } from '../ui/SpeechBubble'
 
 interface SignInFormProps {
   onSignInSuccess?: () => void
@@ -112,15 +113,14 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
           {/* Left side - Giraffe & Welcome Message */}
 
           <div className="flex flex-col items-center md:items-center space-y-10">
-            {/* Welcome Speech Bubble - Larger & More Spacious */}
-            <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-giraffe-200 relative w-full">
+            {/* Welcome Speech Bubble */}
+            <SpeechBubble className="w-full">
               <p className="text-brown-800 text-center font-medium leading-relaxed text-lg">
                 {isSignup
                   ? "Welcome! I'm excited to help you develop more compassionate communication skills. Let's get started on this meaningful journey together."
                   : "Welcome back! I'm glad you're continuing your practice in compassionate communication. You're building something beautiful."}
               </p>
-              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
-            </div>
+            </SpeechBubble>
             {/* Giraffe Image - Larger */}
             <div className="w-full">
               <img
@@ -133,7 +133,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
 
           {/* Right side - Form */}
           <div className="w-full">
-            <Card className="w-full shadow-2xl">
+            <Card className="w-full shadow-md">
               <div className="p-10 space-y-1">
                 {/* Header - Better Hierarchy */}
                 <div className="space-y-4 text-center md:text-left">
@@ -149,8 +149,8 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
 
                 {/* Error Message - Better Visibility */}
                 {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                    <p className="text-red-700 font-medium">{error}</p>
+                  <div className="p-4 bg-empathy-low/15 border-2 border-empathy-low/40 rounded-lg">
+                    <p className="text-empathy-low font-medium">{error}</p>
                   </div>
                 )}
 

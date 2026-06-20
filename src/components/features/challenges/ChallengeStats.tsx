@@ -28,7 +28,7 @@ export function ChallengeStats({
           <div className="text-3xl font-bold text-giraffe-600 mb-1">
             {currentStreak}
           </div>
-          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600">
             Current Streak
           </p>
           {showStreakFire && (
@@ -43,7 +43,7 @@ export function ChallengeStats({
           <div className="text-3xl font-bold text-brown-700 mb-1">
             {longestStreak}
           </div>
-          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600">
             Best Streak
           </p>
         </div>
@@ -53,7 +53,7 @@ export function ChallengeStats({
           <div className="text-3xl font-bold text-giraffe-700 mb-1">
             {completedCount}
           </div>
-          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600">
             Completed
           </p>
         </div>
@@ -63,7 +63,7 @@ export function ChallengeStats({
           <div className="text-3xl font-bold text-giraffe-700 mb-1">
             {averageScore}%
           </div>
-          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide">
+          <p className="text-xs font-medium text-brown-600">
             Avg Score
           </p>
         </div>
@@ -76,7 +76,7 @@ export function ChallengeStats({
       <div className="grid grid-cols-2 gap-4">
         {/* Total Points */}
         <div className="bg-white rounded-lg p-4">
-          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide mb-1">
+          <p className="text-xs font-medium text-brown-600 mb-1">
             Total Points
           </p>
           <p className="text-2xl font-bold text-giraffe-600">{totalPoints}</p>
@@ -84,7 +84,7 @@ export function ChallengeStats({
 
         {/* Level */}
         <div className="bg-white rounded-lg p-4">
-          <p className="text-xs font-medium text-brown-600 uppercase tracking-wide mb-1">
+          <p className="text-xs font-medium text-brown-600 mb-1">
             Level
           </p>
           <span className="text-2xl font-bold text-brown-800">{level}</span>

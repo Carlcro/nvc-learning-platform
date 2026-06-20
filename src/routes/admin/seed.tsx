@@ -108,7 +108,7 @@ function AdminSeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream p-6">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -124,7 +124,7 @@ function AdminSeedPage() {
         {stats && (
           <Card className="bg-giraffe-50 border-2 border-giraffe-300">
             <CardBody>
-              <h2 className="text-xl font-bold text-giraffe-900 mb-4">
+              <h2 className="text-xl font-bold text-brown-800 mb-4">
                 Database Status
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -176,15 +176,15 @@ function AdminSeedPage() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-start gap-2">
-                  <span className="text-blue-600 font-bold">•</span>
+                  <span className="text-giraffe-700 font-bold">•</span>
                   <span>Colleague Feedback</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-amber-600 font-bold">•</span>
+                  <span className="text-giraffe-700 font-bold">•</span>
                   <span>Romantic Partner Distance</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-orange-600 font-bold">•</span>
+                  <span className="text-giraffe-700 font-bold">•</span>
                   <span>Team Undermining</span>
                 </div>
               </div>
@@ -204,8 +204,8 @@ function AdminSeedPage() {
                 <div
                   className={`p-3 rounded-lg text-sm font-semibold ${
                     results.scenarios.success
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                      : 'bg-red-50 text-red-800 border border-red-300'
+                      ? 'bg-empathy-high/15 text-brown-800 border border-empathy-high/40'
+                      : 'bg-empathy-low/15 text-empathy-low border border-empathy-low/40'
                   }`}
                 >
                   {results.scenarios.success ? '✓ ' : '✗ '}
@@ -229,16 +229,16 @@ function AdminSeedPage() {
               <div className="space-y-2 text-sm">
                 <div>Families included:</div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs">
+                  <span className="px-2 py-1 bg-giraffe-100 text-brown-700 rounded text-xs">
                     Joyful
                   </span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                  <span className="px-2 py-1 bg-giraffe-100 text-brown-700 rounded text-xs">
                     Peaceful
                   </span>
-                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
+                  <span className="px-2 py-1 bg-giraffe-100 text-brown-700 rounded text-xs">
                     Angry
                   </span>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                  <span className="px-2 py-1 bg-giraffe-100 text-brown-700 rounded text-xs">
                     Scared
                   </span>
                 </div>
@@ -259,8 +259,8 @@ function AdminSeedPage() {
                 <div
                   className={`p-3 rounded-lg text-sm font-semibold ${
                     results.feelings.success
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                      : 'bg-red-50 text-red-800 border border-red-300'
+                      ? 'bg-empathy-high/15 text-brown-800 border border-empathy-high/40'
+                      : 'bg-empathy-low/15 text-empathy-low border border-empathy-low/40'
                   }`}
                 >
                   {results.feelings.success ? '✓ ' : '✗ '}
@@ -311,8 +311,8 @@ function AdminSeedPage() {
                 <div
                   className={`p-3 rounded-lg text-sm font-semibold ${
                     results.quizQuestions.success
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                      : 'bg-red-50 text-red-800 border border-red-300'
+                      ? 'bg-empathy-high/15 text-brown-800 border border-empathy-high/40'
+                      : 'bg-empathy-low/15 text-empathy-low border border-empathy-low/40'
                   }`}
                 >
                   {results.quizQuestions.success ? '✓ ' : '✗ '}
@@ -333,9 +333,9 @@ function AdminSeedPage() {
                 available scenarios.
               </p>
 
-              <div className="space-y-2 text-sm bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-                <div className="font-semibold text-blue-900">How it works:</div>
-                <ul className="list-disc list-inside text-blue-800 space-y-1">
+              <div className="space-y-2 text-sm bg-giraffe-50 p-3 rounded-lg border-2 border-giraffe-100">
+                <div className="font-semibold text-brown-800">How it works:</div>
+                <ul className="list-disc list-inside text-brown-700 space-y-1">
                   <li>Randomly picks a scenario</li>
                   <li>Awards bonus points</li>
                   <li>Resets daily at midnight</li>
@@ -359,8 +359,8 @@ function AdminSeedPage() {
                 <div
                   className={`p-3 rounded-lg text-sm font-semibold ${
                     results.challenges.success
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                      : 'bg-red-50 text-red-800 border border-red-300'
+                      ? 'bg-empathy-high/15 text-brown-800 border border-empathy-high/40'
+                      : 'bg-empathy-low/15 text-empathy-low border border-empathy-low/40'
                   }`}
                 >
                   {results.challenges.success ? '✓ ' : '✗ '}
@@ -374,8 +374,8 @@ function AdminSeedPage() {
         {/* Seed All Button */}
         <Card className="bg-giraffe-100 border-2 border-giraffe-400">
           <CardBody className="space-y-4">
-            <h2 className="text-xl font-bold text-giraffe-900">Quick Setup</h2>
-            <p className="text-sm text-giraffe-800">
+            <h2 className="text-xl font-bold text-brown-800">Quick Setup</h2>
+            <p className="text-sm text-brown-700">
               Click below to seed everything at once. This is perfect for
               setting up a fresh database.
             </p>
@@ -405,11 +405,11 @@ function AdminSeedPage() {
         </div>
 
         {/* Help Card */}
-        <Card className="bg-blue-50 border-2 border-blue-300">
+        <Card className="bg-giraffe-50 border-2 border-giraffe-200">
           <CardBody>
             <div className="space-y-3">
-              <h3 className="font-bold text-blue-900">Help & Information</h3>
-              <div className="space-y-2 text-sm text-blue-800">
+              <h3 className="font-bold text-brown-800">Help & Information</h3>
+              <div className="space-y-2 text-sm text-brown-700">
                 <div>
                   <div className="font-semibold">What is seeding?</div>
                   <p className="text-xs mt-1">
@@ -441,6 +441,6 @@ function AdminSeedPage() {
           </CardBody>
         </Card>
       </div>
-    </div>
+    </main>
   )
 }
