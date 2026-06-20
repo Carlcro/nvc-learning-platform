@@ -112,6 +112,22 @@
   animation: float-soft 5s ease-in-out infinite;
 }
 
+/* Wizard phase reveal: a calm fade-up as each step takes the stage. */
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-step-in {
+  animation: step-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Typing indicator dots: a calm fade, never a bounce. */
 @keyframes typing-dot {
   0%,
@@ -151,6 +167,7 @@
   .animate-star-pop,
   .animate-confetti,
   .animate-float-soft,
+  .animate-step-in,
   .animate-typing-dot {
     animation: none !important;
   }

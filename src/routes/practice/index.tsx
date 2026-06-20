@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useQuery as useConvexQuery } from 'convex/react'
+import { useQuery as useConvexQuery, useMutation } from 'convex/react'
 import { useState } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
 import { api } from '../../../convex/_generated/api'
 import type { ReactNode } from 'react'
+import type { Id } from 'convex/_generated/dataModel'
 import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
 import { Button } from '~/components/ui/Button'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
@@ -60,12 +62,21 @@ function PracticeHub() {
     Difficulty | 'all'
   >('all')
 
+  // The user's own scenario queued for deletion (drives the confirm dialog)
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: Id<'scenarios'>
+    title: string
+  } | null>(null)
+
   // Fetch scenarios ordered by index. Keep the raw value so we can tell
   // "still loading" (undefined) apart from "loaded, but empty" ([]) - otherwise
   // the empty-state copy flashes before data arrives.
   const scenariosResult = useConvexQuery(api.scenarios.listByOrder)
   const isLoadingScenarios = scenariosResult === undefined
   const scenarios = scenariosResult ?? []
+
+  // Fetch the user's own scenarios (shaped from real situations in their life)
+  const myScenarios = useConvexQuery(api.scenarios.listMine) ?? []
 
   // Fetch user's per-scenario progress (status, best scores, stars)
   const userProgress =
@@ -208,10 +219,102 @@ function PracticeHub() {
         </div>
       </section>
 
+      {/* Your own conversations - shaped from real situations in your life */}
+      <section className="px-4 sm:px-6 lg:px-8 pt-2 pb-2">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Entry point - turn a real situation into a practice space */}
+          <button
+            type="button"
+            onClick={() => navigate({ to: '/practice/create' })}
+            className="group relative w-full overflow-hidden text-left rounded-lg border-2 border-giraffe-200 bg-linear-to-br from-white to-giraffe-50 hover:border-giraffe-300 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
+          >
+            <div className="flex items-center gap-4 sm:gap-6 px-5 sm:px-8 py-5">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-xl font-bold text-brown-800">
+                  Rehearse a real conversation
+                </h2>
+                <p className="text-sm text-brown-600 text-pretty mt-1 max-w-prose">
+                  Have something difficult coming up? Shape it into a practice
+                  space and try what you want to say, gently, before the real
+                  thing.
+                </p>
+              </div>
+
+              {/* Action affordance: a full pill on wider screens, a chevron on phones */}
+              <span className="hidden md:inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg bg-giraffe-400 group-hover:bg-giraffe-500 text-brown-800 font-semibold px-5 py-3 transition-colors duration-200">
+                Start shaping it
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:translate-x-0"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L11.58 10 7.3 5.7a1 1 0 0 1 0-1.4Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="md:hidden w-5 h-5 flex-shrink-0 text-giraffe-600"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L11.58 10 7.3 5.7a1 1 0 0 1 0-1.4Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+          </button>
+
+          {/* The user's own scenarios, if they've made any */}
+          {myScenarios.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-brown-800 mb-3">
+                Your own scenarios
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myScenarios.map((scenario) => (
+                  <ScenarioCard
+                    key={scenario._id}
+                    id={scenario._id}
+                    title={scenario.title}
+                    description={scenario.description}
+                    category={scenario.category}
+                    difficulty={scenario.difficulty}
+                    characterName={scenario.characterName}
+                    minLevel={scenario.unlockRequirements.minLevel}
+                    userLevel={userLevel}
+                    progress={getScenarioProgress(scenario._id)}
+                    onStart={handleStartScenario}
+                    onViewBest={handleViewBest}
+                    onDelete={() =>
+                      setPendingDelete({
+                        id: scenario._id,
+                        title: scenario.title,
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Scenarios Grid - mirrors the header's container so the cards line up
           with the filters above (max-width inner, padding outer). */}
       <section className="px-4 sm:px-6 lg:px-8 pt-2 pb-8">
         <div className="max-w-6xl mx-auto">
+          {myScenarios.length > 0 && (
+            <h2 className="text-sm font-semibold text-brown-800 mb-3">
+              Scenario library
+            </h2>
+          )}
           {isLoadingScenarios ? (
             <div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -290,7 +393,98 @@ function PracticeHub() {
           </div>
         </div>
       </section>
+
+      <DeleteScenarioDialog
+        scenario={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+      />
     </main>
+  )
+}
+
+/**
+ * Confirmation before permanently removing one of the user's own scenarios.
+ * Framed gently and reversibly-worded - the destructive action is never the
+ * default focus, and the warm "Keep it" sits beside it.
+ */
+function DeleteScenarioDialog({
+  scenario,
+  onClose,
+}: {
+  scenario: { id: Id<'scenarios'>; title: string } | null
+  onClose: () => void
+}) {
+  const deleteScenario = useMutation(api.scenarios.deleteCustom)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    if (!scenario) return
+    setIsDeleting(true)
+    setError(null)
+    try {
+      await deleteScenario({ scenarioId: scenario.id })
+      setIsDeleting(false)
+      onClose()
+    } catch {
+      setError("That didn't go through. Take a breath and try again.")
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <Dialog.Root
+      open={scenario !== null}
+      onOpenChange={(open) => {
+        if (!open && !isDeleting) {
+          setError(null)
+          onClose()
+        }
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-brown-900/40 z-40" />
+        <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div className="bg-giraffe-400 text-brown-800 px-6 py-4">
+              <Dialog.Title className="text-lg font-bold">
+                Delete this scenario?
+              </Dialog.Title>
+            </div>
+
+            <div className="p-6 space-y-3">
+              <Dialog.Description className="text-brown-800 text-sm leading-relaxed text-pretty">
+                <span className="font-semibold">{scenario?.title}</span> and its
+                practice history will be removed for good.
+              </Dialog.Description>
+              {error && (
+                <p className="text-sm text-empathy-low font-medium">{error}</p>
+              )}
+            </div>
+
+            <div className="border-t border-giraffe-100 px-6 py-4 flex gap-3 justify-end bg-giraffe-50">
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-semibold text-brown-700 hover:bg-giraffe-100 rounded-lg transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  Keep it
+                </button>
+              </Dialog.Close>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-semibold text-brown-900 bg-empathy-low hover:brightness-95 rounded-lg transition-all duration-200 disabled:opacity-50 cursor-pointer"
+              >
+                {isDeleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }
 

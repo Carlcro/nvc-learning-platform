@@ -141,10 +141,22 @@ export default defineSchema({
     isActive: v.boolean(), // Whether scenario is available
     createdAt: v.number(), // When created
     updatedAt: v.optional(v.number()), // Last updated
+
+    // ============ Custom (user-created) scenarios ============
+    // Absent on the built-in library scenarios. Present when a user shapes a
+    // scenario from a real situation in their own life to rehearse it.
+    ownerId: v.optional(v.id('users')), // Creator; absent => built-in/public
+    visibility: v.optional(
+      v.union(v.literal('public'), v.literal('private')),
+    ), // 'private' scenarios are only visible to their owner
+    source: v.optional(
+      v.union(v.literal('builtin'), v.literal('user_created')),
+    ),
   })
     .index('by_category', ['category'])
     .index('by_difficulty', ['difficulty'])
-    .index('by_order', ['orderIndex']),
+    .index('by_order', ['orderIndex'])
+    .index('by_owner', ['ownerId']),
 
   /**
    * Scenario Progress - Tracks user's completion status for each scenario

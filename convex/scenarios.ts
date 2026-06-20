@@ -1,5 +1,6 @@
-import { mutation, query } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * Scenarios for NVC roleplay practice
@@ -400,20 +401,51 @@ You're tired of feeling like the "lenient" parent while Jordan gets the credit f
 
 /**
  * List all scenarios (with filtering options for future)
+ * Private (user-created) scenarios are never returned here.
  */
 export const list = query({
   handler: async (ctx) => {
-    return await ctx.db.query("scenarios").collect();
+    const scenarios = await ctx.db.query("scenarios").collect();
+    return scenarios.filter((s) => s.visibility !== "private");
   },
 });
 
 /**
  * Get a specific scenario by ID
+ * A private (user-created) scenario is only returned to the user who owns it,
+ * so one person's rehearsal can never be opened by anyone else.
  */
 export const getById = query({
   args: { scenarioId: v.id("scenarios") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.scenarioId);
+    const scenario = await ctx.db.get(args.scenarioId);
+    if (!scenario) return null;
+
+    if (scenario.visibility === "private") {
+      const userId = await getAuthUserId(ctx);
+      if (!userId || scenario.ownerId !== userId) {
+        return null;
+      }
+    }
+
+    return scenario;
+  },
+});
+
+/**
+ * List the current user's own (user-created) scenarios, most recent first.
+ * Returns an empty array when signed out.
+ */
+export const listMine = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return [];
+
+    return await ctx.db
+      .query("scenarios")
+      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
+      .order("desc")
+      .collect();
   },
 });
 
@@ -462,11 +494,15 @@ export const listByDifficulty = query({
  */
 export const listByOrder = query({
   handler: async (ctx) => {
-    return await ctx.db
+    // User-created scenarios use orderIndex -1 to stay out of the linear
+    // ladder; the visibility filter is a second guard so a private scenario
+    // can never surface in another user's hub.
+    const scenarios = await ctx.db
       .query("scenarios")
       .withIndex("by_order", (q) => q.gt("orderIndex", -1))
       .order("asc")
       .collect();
+    return scenarios.filter((s) => s.visibility !== "private");
   },
 });
 
@@ -513,6 +549,129 @@ export const create = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Create a personal scenario the user shaped from a real situation in their
+ * life. Stored in the shared scenarios table but owned by, and private to, the
+ * creator so it flows through the existing roleplay engine unchanged.
+ *
+ * Model-produced values are clamped/validated defensively before insert.
+ */
+export const createCustom = mutation({
+  args: {
+    title: v.string(),
+    description: v.string(),
+    category: v.union(
+      v.literal("workplace"),
+      v.literal("family"),
+      v.literal("friendship"),
+      v.literal("self_expression")
+    ),
+    difficulty: v.union(
+      v.literal("beginner"),
+      v.literal("intermediate"),
+      v.literal("advanced")
+    ),
+    situation: v.string(),
+    characterName: v.string(),
+    characterPersonality: v.string(),
+    characterInitialMood: v.number(),
+    characterBackground: v.string(),
+    characterHiddenNeeds: v.array(v.string()),
+    aiOpeningMessage: v.string(),
+    learningObjectives: v.array(v.string()),
+    focusArea: v.string(),
+    estimatedDuration: v.number(),
+    tags: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Not authenticated");
+    }
+
+    const now = Date.now();
+
+    // Keep mood inside the engine's -10..+10 band.
+    const mood = Math.max(-10, Math.min(10, Math.round(args.characterInitialMood)));
+
+    // Only keep the four real NVC components; fall back to all four.
+    const allowedObjectives = ["observation", "feeling", "need", "request"];
+    const objectives = args.learningObjectives.filter((o) =>
+      allowedObjectives.includes(o)
+    );
+
+    const scenarioId = await ctx.db.insert("scenarios", {
+      ...args,
+      characterInitialMood: mood,
+      learningObjectives: objectives.length > 0 ? objectives : allowedObjectives,
+      estimatedDuration: Math.max(
+        5,
+        Math.min(30, Math.round(args.estimatedDuration || 10))
+      ),
+      orderIndex: -1, // keep out of the linear practice ladder
+      unlockRequirements: {
+        minLevel: 1, // always available to its creator
+        requiredScenarios: [],
+        minStarsTotal: undefined,
+      },
+      isActive: true,
+      ownerId: userId,
+      visibility: "private" as const,
+      source: "user_created" as const,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return scenarioId;
+  },
+});
+
+/**
+ * Delete one of the user's own (user-created) scenarios, along with its
+ * practice history. Only the owner can delete it. Built-in library scenarios
+ * can never be deleted through here.
+ */
+export const deleteCustom = mutation({
+  args: { scenarioId: v.id("scenarios") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Not authenticated");
+    }
+
+    const scenario = await ctx.db.get(args.scenarioId);
+    if (!scenario) {
+      return { success: true }; // already gone
+    }
+
+    if (scenario.ownerId !== userId) {
+      throw new Error("You can only delete your own scenarios");
+    }
+
+    // Remove the conversations and progress tied to this scenario so nothing
+    // is left orphaned. These all belong to the owner (the scenario is private).
+    const conversations = await ctx.db
+      .query("conversations")
+      .withIndex("by_scenario", (q) => q.eq("scenarioId", args.scenarioId))
+      .collect();
+    for (const conversation of conversations) {
+      await ctx.db.delete(conversation._id);
+    }
+
+    const progressRecords = await ctx.db
+      .query("scenarioProgress")
+      .withIndex("by_scenario", (q) => q.eq("scenarioId", args.scenarioId))
+      .collect();
+    for (const progress of progressRecords) {
+      await ctx.db.delete(progress._id);
+    }
+
+    await ctx.db.delete(args.scenarioId);
+
+    return { success: true };
   },
 });
 

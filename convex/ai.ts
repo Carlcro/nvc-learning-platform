@@ -80,6 +80,108 @@ const nvcAnalysisSchema = {
   additionalProperties: false,
 } as const
 
+// JSON schema used when deciding whether we know enough to shape a scenario.
+const scenarioReadinessSchema = {
+  type: 'object',
+  properties: {
+    ready: { type: 'boolean' },
+    questions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          question: { type: 'string' },
+        },
+        required: ['question'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['ready', 'questions'],
+  additionalProperties: false,
+} as const
+
+// JSON schema for a fully-formed roleplay scenario built from a real situation.
+// Mirrors the fields scenarios.createCustom accepts.
+const customScenarioSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    description: { type: 'string' },
+    category: {
+      type: 'string',
+      enum: ['workplace', 'family', 'friendship', 'self_expression'],
+    },
+    difficulty: {
+      type: 'string',
+      enum: ['beginner', 'intermediate', 'advanced'],
+    },
+    situation: { type: 'string' },
+    characterName: { type: 'string' },
+    characterPersonality: { type: 'string' },
+    characterInitialMood: { type: 'integer' },
+    characterBackground: { type: 'string' },
+    characterHiddenNeeds: { type: 'array', items: { type: 'string' } },
+    aiOpeningMessage: { type: 'string' },
+    learningObjectives: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: ['observation', 'feeling', 'need', 'request'],
+      },
+    },
+    focusArea: { type: 'string' },
+    estimatedDuration: { type: 'integer' },
+    tags: { type: 'array', items: { type: 'string' } },
+  },
+  required: [
+    'title',
+    'description',
+    'category',
+    'difficulty',
+    'situation',
+    'characterName',
+    'characterPersonality',
+    'characterInitialMood',
+    'characterBackground',
+    'characterHiddenNeeds',
+    'aiOpeningMessage',
+    'learningObjectives',
+    'focusArea',
+    'estimatedDuration',
+    'tags',
+  ],
+  additionalProperties: false,
+} as const
+
+export interface ClarifyingQA {
+  question: string
+  answer: string
+}
+
+export interface ScenarioReadinessResult {
+  ready: boolean
+  questions: Array<{ question: string }>
+}
+
+export interface CustomScenarioResult {
+  title: string
+  description: string
+  category: 'workplace' | 'family' | 'friendship' | 'self_expression'
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  situation: string
+  characterName: string
+  characterPersonality: string
+  characterInitialMood: number
+  characterBackground: string
+  characterHiddenNeeds: Array<string>
+  aiOpeningMessage: string
+  learningObjectives: Array<string>
+  focusArea: string
+  estimatedDuration: number
+  tags: Array<string>
+}
+
 // ============================================================================
 // NVC ANALYSIS ACTION
 // ============================================================================
@@ -313,6 +415,168 @@ IMPORTANT REMINDERS:
       console.error('Error generating character response:', error)
       throw new Error(
         `Failed to generate character response: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  },
+})
+
+// ============================================================================
+// CUSTOM SCENARIO BUILDER ACTIONS
+// ============================================================================
+
+/**
+ * Decide whether we know enough about a person's real situation to shape a
+ * believable practice partner, and if not, return a few warm follow-up
+ * questions aimed only at the gaps.
+ *
+ * Fails open: if anything goes wrong we proceed (ready: true) rather than
+ * blocking someone from rehearsing.
+ */
+export const assessScenarioReadiness = action({
+  args: {
+    userDescription: v.string(),
+    priorAnswers: v.array(
+      v.object({ question: v.string(), answer: v.string() }),
+    ),
+    roundsSoFar: v.number(),
+  },
+  handler: async (_ctx, args): Promise<ScenarioReadinessResult> => {
+    // Hard cap: two rounds of follow-ups, then we always proceed.
+    const isFinalRound = args.roundsSoFar >= 2
+
+    const transcript =
+      args.priorAnswers.length > 0
+        ? args.priorAnswers
+            .map((qa) => `Q: ${qa.question}\nA: ${qa.answer || '(skipped)'}`)
+            .join('\n\n')
+        : 'No details gathered yet.'
+
+    const systemPrompt = `You are a warm, grounded guide helping someone prepare to rehearse a real, difficult conversation from their life before they have it for real.
+
+Your only job right now is to decide whether you have enough concrete detail to build a believable practice partner who behaves like the real person they described. You need a sense of:
+1. Who the other person is and the nature of the relationship
+2. A specific, observable thing that happened or a clear pattern (not a judgment)
+3. How that person usually reacts when things get tense
+4. What this person hopes to express or change in the conversation
+
+If any of these is thin or missing, write up to 3 short, specific, gentle follow-up questions that fill exactly those gaps. Never ask about something they already shared. Keep questions plain and human, the way a caring friend would ask. Do not give advice, do not teach, and do not name any communication method.
+
+If you already have enough to build a realistic partner, say it is ready and return no questions.`
+
+    const userPrompt = `The person described their situation:
+"${args.userDescription}"
+
+What we have gathered so far:
+${transcript}
+
+${
+  isFinalRound
+    ? 'This is the final round. Mark it ready and return no questions.'
+    : 'Decide whether this is ready. If not, list only the questions that close real gaps.'
+}`
+
+    try {
+      const response = await anthropic.messages.parse({
+        model: MODEL,
+        max_tokens: 512,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        output_config: {
+          format: {
+            type: 'json_schema',
+            schema: scenarioReadinessSchema,
+          },
+        },
+      })
+
+      if (!response.parsed_output) {
+        throw new Error('Empty structured response from Claude')
+      }
+
+      const result = response.parsed_output as ScenarioReadinessResult
+
+      if (isFinalRound) {
+        return { ready: true, questions: [] }
+      }
+
+      return {
+        ready: result.ready,
+        questions: result.questions.slice(0, 3),
+      }
+    } catch (error) {
+      console.error('Error assessing scenario readiness:', error)
+      // Fail open so the user is never stuck on this step.
+      return { ready: true, questions: [] }
+    }
+  },
+})
+
+/**
+ * Synthesize a fully-formed roleplay scenario from the person's account and the
+ * clarifying answers. The character is built to behave like the real person
+ * described, so the rehearsal feels true to life. Output maps onto
+ * scenarios.createCustom.
+ */
+export const generateCustomScenario = action({
+  args: {
+    userDescription: v.string(),
+    answers: v.array(
+      v.object({ question: v.string(), answer: v.string() }),
+    ),
+  },
+  handler: async (_ctx, args): Promise<CustomScenarioResult> => {
+    const transcript =
+      args.answers.length > 0
+        ? args.answers
+            .map((qa) => `Q: ${qa.question}\nA: ${qa.answer || '(not answered)'}`)
+            .join('\n\n')
+        : 'No additional details were provided.'
+
+    const systemPrompt = `You build a realistic roleplay practice partner from a person's account of a real relationship and situation, so they can rehearse a hard conversation before having it for real.
+
+Guidelines:
+- Build the character to behave like the ACTUAL person described. Mirror their described temperament, typical reactions under tension, and likely emotional triggers.
+- Do not make the character a cartoon villain, and do not make them implausibly easy. Aim for the difficulty the person implied.
+- Infer the underlying needs that, if met, would soften this person, and put them in characterHiddenNeeds. These stay hidden from the user.
+- characterInitialMood is an integer from -10 (very guarded/closed) to +10 (very open). Set it from how guarded or open the person seems given the situation.
+- Write "situation" in second person ("You..."), 2-3 sentences, describing only observable events - no judgments or labels.
+- Write "aiOpeningMessage" as the first thing this person would naturally say to open the conversation, in their own voice, with natural, casual speech.
+- Choose category, difficulty, learningObjectives (a subset of observation, feeling, need, request), and a short snake_case focusArea that best fit.
+- Write "description" and "title" warmly and encouragingly.
+- Never invent graphic, abusive, or unsafe specifics the person did not provide. If the situation is emotionally heavy, keep the character firm but never cruel, and keep everything safe and non-judgmental.
+- Never use emojis. Never mention any communication method, coaching, or that this is generated.`
+
+    const userPrompt = `The person wants to rehearse this conversation:
+"${args.userDescription}"
+
+What they shared:
+${transcript}
+
+Produce the scenario object that best brings this real situation to life as a practice partner.`
+
+    try {
+      const response = await anthropic.messages.parse({
+        model: MODEL,
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        output_config: {
+          format: {
+            type: 'json_schema',
+            schema: customScenarioSchema,
+          },
+        },
+      })
+
+      if (!response.parsed_output) {
+        throw new Error('Empty structured response from Claude')
+      }
+
+      return response.parsed_output as CustomScenarioResult
+    } catch (error) {
+      console.error('Error generating custom scenario:', error)
+      throw new Error(
+        `Failed to generate custom scenario: ${error instanceof Error ? error.message : String(error)}`,
       )
     }
   },

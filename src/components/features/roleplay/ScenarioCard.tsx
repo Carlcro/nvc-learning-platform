@@ -26,6 +26,8 @@ export interface ScenarioCardProps {
   progress: ScenarioProgress | null
   onStart: (scenarioId: string | unknown) => void
   onViewBest?: (scenarioId: string | unknown, conversationId: string) => void
+  /** When provided, a delete control appears (used for the user's own scenarios). */
+  onDelete?: (scenarioId: string | unknown) => void
 }
 
 const categoryLabels: Record<string, string> = {
@@ -118,6 +120,7 @@ export function ScenarioCard({
   progress,
   onStart,
   onViewBest,
+  onDelete,
 }: ScenarioCardProps) {
   const { status, bestStars } = getStatus(progress)
   const isCompleted = status === 'completed'
@@ -157,11 +160,35 @@ export function ScenarioCard({
               {title}
             </h3>
           </div>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${difficultyChip[difficulty]}`}
-          >
-            {difficultyLabels[difficulty]}
-          </span>
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${difficultyChip[difficulty]}`}
+            >
+              {difficultyLabels[difficulty]}
+            </span>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(id)}
+                aria-label={`Delete ${title}`}
+                title="Delete"
+                className="grid place-items-center p-2 -mr-1 rounded-lg text-brown-400 hover:text-empathy-low hover:bg-empathy-low/10 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-empathy-low/40 focus-visible:ring-offset-1"
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  className="w-4 h-4"
+                >
+                  <path d="M3.5 5.5h13M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5M6 5.5l.6 9a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4l.6-9M8.5 8.5v5M11.5 8.5v5" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Best result for completed scenarios */}
