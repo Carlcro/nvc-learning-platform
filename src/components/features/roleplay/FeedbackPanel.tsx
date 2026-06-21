@@ -355,17 +355,30 @@ function ScoreSection({ score }: { score: NVCScore }) {
   )
 }
 
-function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
-  const hasPositive = feedback.whatWentWell
-  const hasImprovement =
-    feedback.feedback ||
-    (feedback.isJackalLanguage && feedback.giraffeAlternative)
+/**
+ * The model is told to write plain text, but as a safety net we strip any stray
+ * markdown so the panel never shows literal ** or backticks to the user.
+ */
+function cleanText(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1$2')
+    .replace(/(^|[\s(])_([^_\n]+)_/g, '$1$2')
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .trim()
+}
 
-  if (!hasPositive && !hasImprovement) {
+function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
+  const strength = cleanText(feedback.whatWentWell)
+  const nextStep = cleanText(feedback.feedback)
+
+  if (!strength && !nextStep) {
     return (
-      <div className="flex gap-3 p-3 bg-giraffe-50 rounded border border-giraffe-100">
-        <p className="text-sm text-brown-600 text-center w-full">
-          Keep practicing! Focus on expressing feelings and needs.
+      <div className="p-3 bg-giraffe-50 rounded border border-giraffe-100">
+        <p className="text-sm text-brown-600 text-center">
+          Keep going. Try naming a feeling and the need underneath it.
         </p>
       </div>
     )
@@ -373,35 +386,24 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
 
   return (
     <div className="space-y-3">
-      {feedback.whatWentWell && (
-        <div className="flex gap-3 p-3 bg-empathy-high/15 rounded border border-empathy-high/40">
+      {/* What they did well this turn - a light, affirming line */}
+      {strength && (
+        <div className="flex gap-2.5 items-start">
           <div className="shrink-0 w-5 h-5 rounded-full bg-empathy-high flex items-center justify-center mt-0.5">
-            <span className="text-brown-900 text-xs font-bold">+</span>
+            <CheckIcon className="h-3 w-3 text-brown-900" />
           </div>
-          <p className="text-sm text-brown-700 leading-relaxed">
-            {feedback.whatWentWell}
-          </p>
+          <p className="text-sm text-brown-700 leading-relaxed">{strength}</p>
         </div>
       )}
 
-      {feedback.feedback && (
-        <div className="flex gap-3 p-3 bg-giraffe-50 rounded border border-giraffe-200">
-          <div className="shrink-0 w-5 h-5 rounded-full bg-giraffe-400 flex items-center justify-center mt-0.5">
-            <span className="text-brown-800 text-xs font-bold">*</span>
-          </div>
-          <p className="text-sm text-brown-700 leading-relaxed">
-            {feedback.feedback}
+      {/* The single next step - the heart of the coaching, given prominence */}
+      {nextStep && (
+        <div className="p-3.5 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brown-600 mb-1">
+            Try next
           </p>
-        </div>
-      )}
-
-      {feedback.isJackalLanguage && feedback.giraffeAlternative && (
-        <div className="flex gap-3 p-3 bg-cream rounded border border-giraffe-200">
-          <div className="shrink-0 w-5 h-5 rounded-full bg-brown-600 flex items-center justify-center mt-0.5">
-            <span className="text-cream text-xs font-bold">~</span>
-          </div>
-          <p className="text-sm text-brown-700 leading-relaxed italic">
-            "{feedback.giraffeAlternative}"
+          <p className="text-sm text-brown-800 leading-relaxed font-medium">
+            {nextStep}
           </p>
         </div>
       )}

@@ -257,10 +257,18 @@ export function useConversation({
       setIsLoading(true)
 
       try {
+        // Milestones reflect prior turns here (this message is not persisted
+        // yet), so the coaching can point at the piece still missing.
+        const milestones = conversation?.milestonesAchieved
         const analysis = await analyzeMessage({
           userMessage: text,
           conversationHistory: history,
           userLevel,
+          componentsLanded: {
+            feeling: milestones?.feelingExpressed ?? false,
+            need: milestones?.needIdentified ?? false,
+            request: milestones?.requestMade ?? false,
+          },
         })
 
         await addMessage({
@@ -277,6 +285,14 @@ export function useConversation({
         // The user message now lives on the server; drop the optimistic copy.
         setPending(null)
 
+        // The arc is complete once a feeling, a need, and a request have all
+        // been expressed (in earlier turns or in this one). When it is, the
+        // character closes the scene so ending coincides with a real ending.
+        const arcComplete =
+          Boolean(milestones?.feelingExpressed || analysis.feeling >= 15) &&
+          Boolean(milestones?.needIdentified || analysis.need >= 15) &&
+          Boolean(milestones?.requestMade || analysis.request >= 15)
+
         const characterResponse = await generateCharacterResponse({
           userMessage: text,
           conversationHistory: history,
@@ -290,6 +306,7 @@ export function useConversation({
           },
           userNVCScore: analysis.total,
           userLevel,
+          shouldClose: arcComplete,
         })
 
         await addMessage({
@@ -308,6 +325,7 @@ export function useConversation({
       conversationId,
       scenario,
       serverMessages,
+      conversation?.milestonesAchieved,
       userLevel,
       analyzeMessage,
       generateCharacterResponse,

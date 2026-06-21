@@ -77,15 +77,17 @@ function ConversationComponent() {
   }
 
   const userMessageCount = messages.filter((m) => m.role === 'user').length
-  const lastScore =
-    userMessageCount > 0
-      ? (messages.filter((m) => m.role === 'user').at(-1)?.nvcScore?.total ?? 0)
-      : 0
+
+  // Finishing is the reward for completing the full arc: the user can only end
+  // once they have expressed a feeling, a need, and a clear request. These
+  // milestones accumulate across the conversation and never reset.
+  const milestones = conversation?.milestonesAchieved
   const canEndConversation =
     !isArchiveMode &&
-    userMessageCount > 0 &&
-    messages.length > 3 &&
-    (lastScore >= 70 || messages.length >= 10)
+    !isLoading && // wait until the character's closing reply is on screen
+    !!milestones?.feelingExpressed &&
+    !!milestones?.needIdentified &&
+    !!milestones?.requestMade
 
   const characterMood =
     conversation?.currentCharacterMood ?? scenario.characterInitialMood

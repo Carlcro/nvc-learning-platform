@@ -197,6 +197,16 @@ export const analyzeNVCResponse = action({
     userMessage: v.string(),
     conversationHistory: v.array(v.any()),
     userLevel: v.optional(v.number()), // 1-10, affects feedback depth
+    // What the user has already demonstrated earlier in THIS conversation, so
+    // the coaching can point at the one piece that is still missing rather than
+    // re-explaining things they have already done.
+    componentsLanded: v.optional(
+      v.object({
+        feeling: v.boolean(),
+        need: v.boolean(),
+        request: v.boolean(),
+      }),
+    ),
   },
   handler: async (_ctx, args): Promise<NVCAnalysisResult> => {
     const conversationContext =
@@ -209,10 +219,29 @@ export const analyzeNVCResponse = action({
             .join('\n')
         : 'This is the start of a new conversation.'
 
-    const feedbackStyle =
-      (args.userLevel || 1) >= 5
-        ? 'concise and focused'
-        : 'detailed and educational'
+    // Summarise progress so the "next step" can steer toward the earliest NVC
+    // piece they have not yet expressed (feeling, then need, then request).
+    const landed = args.componentsLanded
+    const progressSummary = landed
+      ? (() => {
+          const done = [
+            landed.feeling && 'a feeling',
+            landed.need && 'a need',
+            landed.request && 'a clear request',
+          ].filter(Boolean) as Array<string>
+          const todo = [
+            !landed.feeling && 'a feeling',
+            !landed.need && 'a need',
+            !landed.request && 'a clear request',
+          ].filter(Boolean) as Array<string>
+          return [
+            done.length
+              ? `Already expressed earlier in this conversation: ${done.join(', ')}.`
+              : 'They have not yet clearly expressed a feeling, need, or request.',
+            todo.length ? `Still to come: ${todo.join(', ')}.` : 'All core pieces are present; help them refine.',
+          ].join(' ')
+        })()
+      : 'This is early in the conversation.'
 
     const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing a user's response in a roleplay conversation.
 
@@ -255,20 +284,26 @@ export const analyzeNVCResponse = action({
 - 50-69: Partial NVC, significant improvements needed
 - 0-49: Mostly jackal language, needs practice
 
-### Field Requirements
+### Writing the Feedback (read carefully)
+Write every text field in plain, warm, spoken English. Do NOT use markdown, asterisks, bold, headings, or bullet characters. Keep sentences short and easy to read at a glance.
+
 - total = sum of the four component scores (max 100)
-- feedback: be encouraging and constructive; embody NVC principles (non-judgmental, specific)
+- whatWentWell: name the single best thing in THIS message, in one specific, encouraging sentence (max 15 words). Always find something genuine, even in a weak message.
+- feedback: the ONE most useful next move, in a single short sentence (max 22 words). This is the heart of the coaching. Give a HINT, not a script: point them in a direction or ask a guiding question (for example "what's underneath that frustration?") so they discover their own words. NEVER hand them a phrase to copy or say. Use the progress summary: steer them toward the earliest piece they have NOT yet expressed in this conversation (feeling, then need, then request); if all three are present, help them sharpen the weakest component. Phrase it as an inviting nudge, never a correction, and do not restate what they already did well.
+- giraffeAlternative: leave this as an empty string. Do not write a suggested phrase; the user should find their own wording.
 - jackalPhrases: short verbatim excerpts from the user's response that read as judgmental or blaming; empty array if none
-- giraffeAlternative: a single rephrased sentence demonstrating stronger NVC
-- whatWentWell: a specific strength to acknowledge`
+- isJackalLanguage: true only if the message leans on blame, judgment, or labels`
 
     const userPrompt = `## Conversation Context
 ${conversationContext}
 
+## Progress so far in this conversation
+${progressSummary}
+
 ## User's Response to Analyze
 "${args.userMessage}"
 
-Analyze this response against the four NVC components. Use a ${feedbackStyle} feedback style.`
+Analyze this response against the four NVC components, then write concise, glanceable feedback that moves them one clear step forward.`
 
     try {
       const response = await anthropic.messages.parse({
@@ -323,6 +358,10 @@ export const generateCharacterResponse = action({
     }),
     userNVCScore: v.optional(v.number()),
     userLevel: v.optional(v.number()),
+    // True once the user has expressed a feeling, a need, and a clear request.
+    // The character then brings the scene to a natural close instead of opening
+    // a new thread, so the conversation actually ends when ending is unlocked.
+    shouldClose: v.optional(v.boolean()),
   },
   handler: async (_ctx, args): Promise<string> => {
     const userLevel = args.userLevel || 1
@@ -360,6 +399,19 @@ export const generateCharacterResponse = action({
           ? 'Defensive'
           : 'Neutral'
 
+    // When the user has completed the full arc, steer the character toward a
+    // genuine ending so the scene comes to rest rather than dangling.
+    const closingGuidance = args.shouldClose
+      ? `
+
+THIS IS THE CLOSING MOMENT:
+The user has expressed themselves fully and you now feel genuinely heard and understood. Let the conversation come to a natural, warm close:
+- Acknowledge what shifted for you and that you feel heard.
+- Respond with a sense of resolution, relief, or goodwill.
+- Do NOT ask a question, raise a new concern, or open a new topic. Let your reply land as a gentle ending, not an invitation to keep going.
+- Keep it short and heartfelt (1-2 sentences).`
+      : ''
+
     const systemPrompt = `You are roleplaying as ${args.scenario.characterName} in a realistic conflict resolution conversation.
 
 CHARACTER PROFILE:
@@ -384,7 +436,7 @@ IMPORTANT REMINDERS:
 - Never teach NVC explicitly
 - Never acknowledge the scoring system
 - Show character growth through openness, not through explaining yourself
-- React to both what they say AND how they say it`
+- React to both what they say AND how they say it${closingGuidance}`
 
     const history: Array<Anthropic.MessageParam> = args.conversationHistory.map(
       (msg) => ({
