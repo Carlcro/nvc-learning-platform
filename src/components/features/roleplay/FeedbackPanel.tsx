@@ -5,6 +5,15 @@
  * Design inspired by v0 mockup with giraffe color scheme
  */
 
+import {
+  Check,
+  Handshake,
+  Heart,
+  Loader2,
+  Sparkles,
+  Sprout,
+  Star,
+} from 'lucide-react'
 import type { Milestones } from './MilestoneProgress'
 import type { FeedbackData, NVCScore } from './types'
 
@@ -18,114 +27,6 @@ interface FeedbackPanelProps {
   characterMood?: number
   characterName?: string
   milestones?: Milestones
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-  )
-}
-
-function SparklesIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-      />
-    </svg>
-  )
-}
-
-function HeartIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-      />
-    </svg>
-  )
-}
-
-function HelpCircleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  )
-}
-
-function HandHelpingIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
-      />
-    </svg>
-  )
-}
-
-function StarIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-      />
-    </svg>
-  )
 }
 
 function getMoodLabel(mood: number): { label: string; color: string } {
@@ -183,7 +84,7 @@ function MoodMeter({
   const who = characterName || 'They'
 
   return (
-    <div className="bg-white rounded-lg p-4 border border-giraffe-100 space-y-2.5">
+    <div className="bg-white rounded-lg p-3.5 border border-giraffe-100 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-brown-800">
           How {who} feels
@@ -220,11 +121,11 @@ function getScoreMessage(score: number): string {
 }
 
 const steps = [
-  { key: 'conversationStarted', label: 'Start', Icon: SparklesIcon },
-  { key: 'feelingExpressed', label: 'Feeling', Icon: HeartIcon },
-  { key: 'needIdentified', label: 'Need', Icon: HelpCircleIcon },
-  { key: 'requestMade', label: 'Request', Icon: HandHelpingIcon },
-  { key: 'resolutionReached', label: 'Done', Icon: StarIcon },
+  { key: 'conversationStarted', label: 'Start', Icon: Sparkles },
+  { key: 'feelingExpressed', label: 'Feeling', Icon: Heart },
+  { key: 'needIdentified', label: 'Need', Icon: Sprout },
+  { key: 'requestMade', label: 'Request', Icon: Handshake },
+  { key: 'resolutionReached', label: 'Done', Icon: Star },
 ] as const
 
 function ProgressSteps({ milestones }: { milestones: Milestones }) {
@@ -278,7 +179,7 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
                 }`}
               >
                 {isCompleted ? (
-                  <CheckIcon className="h-4 w-4" />
+                  <Check className="h-4 w-4" strokeWidth={2.5} />
                 ) : (
                   <StepIcon className="h-4 w-4" />
                 )}
@@ -313,7 +214,7 @@ function ScoreSection({ score }: { score: NVCScore }) {
   ]
 
   return (
-    <div className="bg-giraffe-50/50 rounded p-4 space-y-4 border border-giraffe-100">
+    <div className="bg-giraffe-50/50 rounded-lg p-3.5 space-y-3 border border-giraffe-100">
       <div className="flex items-end justify-between">
         <div>
           <p className="text-lg font-bold text-giraffe-700">
@@ -342,7 +243,7 @@ function ScoreSection({ score }: { score: NVCScore }) {
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-giraffe-100"
+            className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-giraffe-100"
           >
             <span className="text-xs text-brown-500">{metric.label}</span>
             <span className="font-semibold text-sm text-brown-800">
@@ -390,7 +291,7 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
       {strength && (
         <div className="flex gap-2.5 items-start">
           <div className="shrink-0 w-5 h-5 rounded-full bg-empathy-high flex items-center justify-center mt-0.5">
-            <CheckIcon className="h-3 w-3 text-brown-900" />
+            <Check className="h-3 w-3 text-brown-900" strokeWidth={2.5} />
           </div>
           <p className="text-sm text-brown-700 leading-relaxed">{strength}</p>
         </div>
@@ -398,7 +299,7 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
 
       {/* The single next step - the heart of the coaching, given prominence */}
       {nextStep && (
-        <div className="p-3.5 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
+        <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-brown-600 mb-1">
             Try next
           </p>
@@ -421,37 +322,24 @@ export function FeedbackPanel({
   milestones,
 }: FeedbackPanelProps) {
   return (
-    <div className="w-full rounded overflow-hidden bg-giraffe-50 shadow-lg border border-giraffe-100 flex flex-col h-full">
+    <div className="w-full rounded-2xl overflow-hidden bg-giraffe-50 shadow-lg border border-giraffe-100 flex flex-col max-h-full">
       {/* Header */}
-      <div className="bg-giraffe-400 px-5 py-4">
+      <div className="bg-giraffe-400 px-5 py-4 shrink-0">
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-brown-800">Feedback</h2>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-5 space-y-5 overflow-y-auto">
+      {/* Content - hugs its content, scrolls internally only when it would
+          otherwise run past the available height */}
+      <div className="min-h-0 p-4 space-y-4 overflow-y-auto">
         {/* Live connection meter - always visible so the user can watch the
             character open up or close off as the conversation unfolds */}
         <MoodMeter mood={characterMood} characterName={characterName} />
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <div className="animate-spin">
-              <svg
-                className="w-8 h-8 text-giraffe-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </div>
+            <Loader2 className="w-8 h-8 text-giraffe-500 animate-spin" />
             <p className="text-sm text-brown-600">Analyzing...</p>
           </div>
         ) : feedback ? (
