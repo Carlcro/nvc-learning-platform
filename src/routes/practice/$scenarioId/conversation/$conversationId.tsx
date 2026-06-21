@@ -68,7 +68,9 @@ function ConversationComponent() {
         finalScore={completion.finalScore}
         stars={completion.finalStars}
         scenarioTitle={scenario.title}
+        characterName={scenario.characterName}
         messageCount={messages.length}
+        milestones={conversation?.milestonesAchieved}
         onRetry={startNewConversation}
         onNext={goToPractice}
         onViewTranscript={viewTranscript}
@@ -191,7 +193,7 @@ function ConversationComponent() {
             </div>
           </div>
 
-          <div className="w-[420px] hidden lg:flex flex-col min-w-0 px-6 overflow-hidden">
+          <div className="w-[420px] hidden lg:flex flex-col min-w-0 px-6 pb-6 overflow-hidden">
             <FeedbackPanel
               feedback={feedback}
               isLoading={isLoading}

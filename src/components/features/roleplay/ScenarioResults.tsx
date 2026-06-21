@@ -1,67 +1,106 @@
 /**
  * ScenarioResults Component
  *
- * Displays final score and feedback after completing a scenario
- * Shows breakdown of NVC components and learning insights
+ * The success moment after finishing a scenario, told as a journey: a trail
+ * draws itself through the four NVC steps the user walked and ends at the
+ * connection they made - expressing themselves and being heard. The relational
+ * payoff leads; the numeric score is a quiet supporting detail, in keeping with
+ * "show growth, not grades."
  */
 
 import { useMemo } from 'react'
 import { EmpathyMeter } from './EmpathyMeter'
-import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import type { Milestones } from './MilestoneProgress'
 
 interface ScenarioResultsProps {
   finalScore: number
   stars: number
   scenarioTitle: string
+  characterName: string
   messageCount: number
+  milestones?: Milestones
   onRetry: () => void
   onNext: () => void
   onViewTranscript: () => void
 }
 
-const CONFETTI_COLORS = [
-  'bg-giraffe-400',
-  'bg-giraffe-300',
-  'bg-empathy-high',
-  'bg-empathy-low',
-  'bg-giraffe-500',
-]
+function scoreLabel(score: number): string {
+  if (score >= 90) return 'Excellent'
+  if (score >= 70) return 'Good'
+  if (score >= 50) return 'Partial'
+  return 'Keep practicing'
+}
+
+function CheckMark() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2.5}
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  )
+}
+
+function HeartIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12 20.364l-7.682-7.682a4.5 4.5 0 016.364-6.364L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364z" />
+    </svg>
+  )
+}
 
 /**
- * Lightweight CSS confetti burst. Pieces are generated once on mount and fall
- * with varied drift, rotation, and timing. Purely decorative and
- * non-interactive; disabled automatically under prefers-reduced-motion.
+ * Warm light motes drifting gently upward behind the celebration. Purely
+ * decorative; the keyframe keeps them invisible under reduced-motion.
  */
-function Confetti() {
-  const pieces = useMemo(
+function LightMotes() {
+  const motes = useMemo(
     () =>
-      Array.from({ length: 28 }, (_, i) => ({
+      Array.from({ length: 14 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        dx: `${Math.round((Math.random() - 0.5) * 120)}px`,
-        rot: `${Math.round(Math.random() * 540 + 180)}deg`,
-        dur: `${(Math.random() * 1 + 1.4).toFixed(2)}s`,
-        delay: `${(Math.random() * 0.6).toFixed(2)}s`,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        size: Math.random() > 0.5 ? 'w-2 h-2' : 'w-1.5 h-3',
+        bottom: Math.random() * 80,
+        size: Math.round(Math.random() * 5 + 4),
+        dur: (Math.random() * 3 + 5).toFixed(2),
+        delay: (Math.random() * 5).toFixed(2),
+        opacity: (Math.random() * 0.3 + 0.3).toFixed(2),
       })),
     [],
   )
 
   return (
-    <div className="pointer-events-none fixed inset-0 overflow-hidden z-40">
-      {pieces.map((p) => (
+    <div
+      className="pointer-events-none fixed inset-0 overflow-hidden z-0"
+      aria-hidden="true"
+    >
+      {motes.map((m) => (
         <span
-          key={p.id}
-          className={`absolute top-0 rounded-sm ${p.color} ${p.size} animate-confetti`}
+          key={m.id}
+          className="absolute rounded-full bg-giraffe-300 animate-mote-rise"
           style={
             {
-              left: `${p.left}%`,
-              '--dx': p.dx,
-              '--rot': p.rot,
-              '--dur': p.dur,
-              '--delay': p.delay,
+              left: `${m.left}%`,
+              bottom: `${m.bottom}%`,
+              width: `${m.size}px`,
+              height: `${m.size}px`,
+              '--mote-dur': `${m.dur}s`,
+              '--mote-delay': `${m.delay}s`,
+              '--mote-opacity': m.opacity,
             } as React.CSSProperties
           }
         />
@@ -70,174 +109,172 @@ function Confetti() {
   )
 }
 
-function StarsReveal({ stars }: { stars: number }) {
-  return (
-    <div className="flex justify-center gap-2 mt-4">
-      {[0, 1, 2].map((i) => {
-        const earned = i < stars
-        return (
-          <svg
-            key={i}
-            className={`w-10 h-10 animate-star-pop ${
-              earned ? 'text-brown-900' : 'text-brown-900/25'
-            }`}
-            style={{ animationDelay: `${0.15 + i * 0.18}s` }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.293 9.8c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
-        )
-      })}
-    </div>
-  )
-}
-
-function getGrade(score: number): {
-  label: string
-  color: string
-} {
-  if (score >= 90)
-    return {
-      label: 'Excellent',
-      color: 'from-empathy-high to-giraffe-400',
-    }
-  if (score >= 70)
-    return {
-      label: 'Good',
-      color: 'from-giraffe-300 to-giraffe-400',
-    }
-  if (score >= 50)
-    return {
-      label: 'Partial',
-      color: 'from-giraffe-400 to-empathy-low',
-    }
-  return {
-    label: 'Needs Practice',
-    color: 'from-empathy-low/80 to-empathy-low',
-  }
-}
-
 export function ScenarioResults({
   finalScore,
-  stars,
+  stars: _stars,
   scenarioTitle,
+  characterName,
   messageCount,
+  milestones,
   onRetry,
   onNext,
   onViewTranscript,
 }: ScenarioResultsProps) {
-  const grade = getGrade(finalScore)
+  // The four steps walked, then the connection reached. Reaching the results screen
+  // requires completing the arc, so these are normally all true; we still read
+  // the milestones so a partial path would render honestly.
+  const stations = [
+    { label: 'You opened the conversation', reached: true },
+    { label: 'You named what you felt', reached: !!milestones?.feelingExpressed },
+    {
+      label: 'You uncovered the need beneath it',
+      reached: !!milestones?.needIdentified,
+    },
+    { label: 'You made a clear request', reached: !!milestones?.requestMade },
+    {
+      label: `You connected with ${characterName}`,
+      sub: 'You expressed yourself and were heard.',
+      reached: true,
+      final: true as const,
+    },
+  ]
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream p-6">
-      {stars > 0 && <Confetti />}
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-brown-800">
-            Scenario Complete!
+    <div className="relative min-h-screen bg-linear-to-b from-giraffe-50 to-cream px-4 pt-24 pb-12">
+      <LightMotes />
+
+      <div className="relative z-10 mx-auto max-w-md animate-step-in">
+        {/* Header - warm and relational, never a grade */}
+        <div className="text-center mb-8">
+          <p className="text-sm font-medium text-brown-500">{scenarioTitle}</p>
+          <h1 className="mt-1 text-3xl font-bold text-brown-800 text-balance">
+            Look how far you came
           </h1>
-          <p className="text-lg text-brown-600">{scenarioTitle}</p>
         </div>
 
-        {/* Score Card */}
-        <Card className="overflow-hidden">
-          <div className={`bg-linear-to-r ${grade.color} text-brown-900 p-8`}>
-            <div className="text-center">
-              <p className="text-brown-800 text-sm font-semibold mb-2">
-                Final score
-              </p>
-              <h2 className="text-6xl font-bold mb-2">{finalScore}</h2>
-              <p className="text-2xl font-bold text-brown-900">
-                {grade.label} NVC
-              </p>
-              <StarsReveal stars={stars} />
-            </div>
+        {/* The journey path - the hero */}
+        <div className="rounded-2xl bg-white border border-giraffe-100 shadow-sm p-6 sm:p-8">
+          <ol className="relative">
+            {stations.map((s, i) => {
+              const last = 'final' in s && s.final
+              const dotDelay = 0.15 + i * 0.55
+
+              return (
+                <li key={i} className="flex gap-4 items-stretch">
+                  {/* Rail column: the node, and the trail down to the next */}
+                  <div className="flex flex-col items-center w-14 shrink-0">
+                    {last ? (
+                      <span
+                        className="inline-block animate-node-ignite"
+                        style={{ animationDelay: `${dotDelay}s` }}
+                      >
+                        <span className="animate-connect-glow flex items-center justify-center w-14 h-14 rounded-full bg-empathy-high text-white">
+                          <HeartIcon className="w-6 h-6" />
+                        </span>
+                      </span>
+                    ) : (
+                      <span
+                        className={`animate-node-ignite flex items-center justify-center w-9 h-9 rounded-full ${
+                          s.reached
+                            ? 'bg-giraffe-400 text-brown-900 shadow-sm'
+                            : 'bg-giraffe-100 text-brown-400'
+                        }`}
+                        style={{ animationDelay: `${dotDelay}s` }}
+                      >
+                        {s.reached && <CheckMark />}
+                      </span>
+                    )}
+
+                    {!last && (
+                      <span className="relative w-0.5 flex-1 my-1 overflow-hidden rounded-full bg-giraffe-100">
+                        {s.reached && (
+                          <span
+                            className={`animate-connector absolute inset-0 ${
+                              i === stations.length - 2
+                                ? 'bg-linear-to-b from-giraffe-400 to-empathy-high'
+                                : 'bg-linear-to-b from-giraffe-300 to-giraffe-400'
+                            }`}
+                            style={{ animationDelay: `${dotDelay + 0.3}s` }}
+                          />
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Label */}
+                  <div
+                    className={`animate-step-in ${last ? 'pt-1.5 pb-1' : 'pt-2 pb-8'}`}
+                    style={{ animationDelay: `${dotDelay + 0.05}s` }}
+                  >
+                    <p
+                      className={`leading-snug ${
+                        last
+                          ? 'text-xl font-bold text-brown-800'
+                          : s.reached
+                            ? 'text-brown-700 font-medium'
+                            : 'text-brown-400 font-medium'
+                      }`}
+                    >
+                      {s.label}
+                    </p>
+                    {'sub' in s && s.sub && (
+                      <p className="text-sm text-brown-500 mt-1">{s.sub}</p>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+
+          {/* The score, woven in quietly at the end of the path */}
+          <div className="mt-2 pt-5 border-t border-giraffe-100">
+            <EmpathyMeter score={finalScore} showLabel={false} size="sm" />
+            <p className="mt-2 text-xs text-brown-500">
+              Empathy {finalScore} · {scoreLabel(finalScore)} · {messageCount}{' '}
+              messages
+            </p>
           </div>
+        </div>
 
-          <CardBody className="space-y-6">
-            {/* Empathy Meter */}
-            <div>
-              <EmpathyMeter score={finalScore} showLabel={false} />
-            </div>
+        {/* Encouragement from the guide */}
+        <div className="mt-6 flex items-center gap-4 px-2">
+          <img
+            src="/giraff.png"
+            alt=""
+            aria-hidden="true"
+            className="w-16 h-16 object-contain shrink-0"
+          />
+          <p className="text-sm text-brown-600 leading-relaxed">
+            Growth, not perfection. Every conversation like this one makes the
+            real ones a little easier.
+          </p>
+        </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-giraffe-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-giraffe-700">
-                  {messageCount}
-                </div>
-                <div className="text-sm text-giraffe-800 font-semibold mt-1">
-                  Messages
-                </div>
-              </div>
-              <div className="bg-giraffe-50 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-giraffe-700">
-                  {stars}/3
-                </div>
-                <div className="text-sm text-giraffe-800 font-semibold mt-1">
-                  Stars Earned
-                </div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Feedback Box */}
-        <Card className="bg-giraffe-50 border-2 border-giraffe-200">
-          <CardBody className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div>
-                <h3 className="font-bold text-brown-800 mb-2">Key Takeaway</h3>
-                <p className="text-brown-700 text-sm leading-relaxed">
-                  {finalScore >= 90
-                    ? 'Excellent work! You demonstrated strong NVC skills. Your messages showed clear observations, feelings, needs, and requests. Keep practicing to maintain this level of empathetic communication.'
-                    : finalScore >= 70
-                      ? 'Great effort! You showed good NVC components in your communication. To improve further, focus on clearly connecting your feelings to universal needs and making specific, doable requests.'
-                      : finalScore >= 50
-                        ? 'Good try! You made some progress with NVC components. Next time, focus on expressing feelings and needs more explicitly, and avoid judgmental language. Every attempt builds your skills!'
-                        : "Keep practicing! NVC takes time to learn. Focus on one component at a time: first observations, then feelings, then needs, then requests. You've got this!"}
-                </p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Encouragement */}
-        <Card className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-2 border-giraffe-300">
-          <CardBody>
-            <div className="flex items-start gap-3">
-              <p className="text-brown-800 text-sm leading-relaxed">
-                Remember, practicing NVC is about growth, not perfection. Each
-                conversation helps you develop greater empathy and
-                understanding. You're building a valuable skill that will
-                improve your real-world relationships.
-              </p>
-              <img
-                src="/giraff.png"
-                alt="Giraffe Coach"
-                className="w-24 h-24 object-contain flex-shrink-0"
-              />
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        {/* Actions: the forward step leads, the two lighter actions share a row */}
+        <div className="mt-6 space-y-3">
           <Button
-            variant="outline"
-            onClick={onViewTranscript}
-            className="flex-1"
+            variant="primary"
+            onClick={onNext}
+            className="w-full whitespace-nowrap"
           >
-            View Transcript
+            Keep going
           </Button>
-          <Button variant="secondary" onClick={onRetry} className="flex-1">
-            Try Again
-          </Button>
-          <Button variant="primary" onClick={onNext} className="flex-1">
-            Next Scenario
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onViewTranscript}
+              className="flex-1 whitespace-nowrap"
+            >
+              View transcript
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={onRetry}
+              className="flex-1 whitespace-nowrap"
+            >
+              Practice again
+            </Button>
+          </div>
         </div>
       </div>
     </div>

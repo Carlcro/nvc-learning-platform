@@ -97,21 +97,6 @@
   }
 }
 
-/* Gentle, unhurried float for the giraffe guide. Calm, never bouncy. */
-@keyframes float-soft {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-float-soft {
-  animation: float-soft 5s ease-in-out infinite;
-}
-
 /* Wizard phase reveal: a calm fade-up as each step takes the stage. */
 @keyframes step-in {
   from {
@@ -145,6 +130,90 @@
   animation: typing-dot 1.2s ease-in-out infinite;
 }
 
+/* Scenario success: the journey path draws itself station by station, each
+   node lighting up as the trail reaches it. Base styles are the finished
+   state, so reduced-motion shows a fully-drawn, fully-lit path. */
+@keyframes node-ignite {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-node-ignite {
+  animation: node-ignite 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes connector-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.animate-connector {
+  transform-origin: top;
+  animation: connector-grow 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* The final "connected" node breathes a warm glow once it lights up. The base
+   box-shadow is a soft static halo so reduced-motion still reads as special. */
+@keyframes connect-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(245, 184, 65, 0.18),
+      0 0 22px 4px rgba(245, 184, 65, 0.28);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(127, 176, 105, 0.22),
+      0 0 38px 10px rgba(245, 184, 65, 0.45);
+  }
+}
+
+.animate-connect-glow {
+  box-shadow:
+    0 0 0 4px rgba(245, 184, 65, 0.18),
+    0 0 26px 6px rgba(245, 184, 65, 0.32);
+  animation: connect-glow 3.2s ease-in-out 2.7s infinite;
+}
+
+/* Warm light motes drifting gently upward behind the celebration. Base opacity
+   is 0, so under reduced-motion they simply never appear. */
+@keyframes mote-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  18% {
+    opacity: var(--mote-opacity, 0.5);
+  }
+  82% {
+    opacity: var(--mote-opacity, 0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-130px);
+  }
+}
+
+.animate-mote-rise {
+  opacity: 0;
+  animation: mote-rise var(--mote-dur, 6s) ease-in-out var(--mote-delay, 0s)
+    infinite;
+}
+
 .animate-celebrate-in {
   animation: celebrate-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -166,9 +235,12 @@
   .animate-celebrate-out,
   .animate-star-pop,
   .animate-confetti,
-  .animate-float-soft,
   .animate-step-in,
-  .animate-typing-dot {
+  .animate-typing-dot,
+  .animate-node-ignite,
+  .animate-connector,
+  .animate-connect-glow,
+  .animate-mote-rise {
     animation: none !important;
   }
 }

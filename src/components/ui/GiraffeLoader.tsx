@@ -45,7 +45,7 @@ export function GiraffeLoader({
           src="/giraff.png"
           alt=""
           aria-hidden="true"
-          className="h-56 w-auto object-contain drop-shadow-xl animate-float-soft"
+          className="h-56 w-auto object-contain drop-shadow-xl"
         />
       </div>
     </div>
