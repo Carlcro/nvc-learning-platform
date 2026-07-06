@@ -1,322 +1,124 @@
-# 🦒 NVC Learning Platform
+# NVC Learning Platform
 
-An interactive web application for learning **Non-Violent Communication (NVC)** - a compassionate communication framework by Marshall Rosenberg.
+An interactive web app for learning and practising **Non-Violent Communication
+(NVC)** — the compassionate-communication framework created by Marshall
+Rosenberg. It combines short lessons, a feelings-vocabulary library, and — at
+its core — realistic roleplay conversations where you rehearse hard
+conversations and get warm, non-judgmental coaching on how you expressed
+yourself.
 
-![Status](https://img.shields.io/badge/status-beta-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+## Why it exists
 
-## About NVC
+Most people first meet NVC in a book or a workshop and then freeze the moment
+they try to use it in a real, emotionally charged conversation. This app closes
+that gap. You learn the four components, then practise them safely against a
+conversation partner that responds in character and opens up as your language
+becomes more empathetic. You can also describe a real situation from your own
+life and have a tailored partner generated, so you can rehearse a difficult
+talk _before_ you have it for real — without ever feeling judged for getting it
+wrong. It's aimed at anyone curious about communication and personal growth, no
+prior NVC experience required.
 
-Non-Violent Communication is a framework for empathetic, compassionate communication. It consists of **4 core pillars**:
+## The four components of NVC
 
-1. **Observation** - Facts without judgment
-2. **Feeling** - Naming actual emotions
-3. **Need** - Identifying universal human needs
-4. **Request** - Making concrete, actionable requests
+1. **Observation** — describing facts without judgment
+2. **Feeling** — naming the actual emotion
+3. **Need** — identifying the universal human need underneath the feeling
+4. **Request** — making a concrete, doable request
 
-This app teaches all 4 pillars through interactive lessons and AI-powered roleplay scenarios.
-
----
+The app frames the goal as moving from "jackal" language (judgmental, reactive)
+toward "giraffe" language (empathetic, connecting).
 
 ## Features
 
-✨ **Interactive Lessons** - Learn the 4 NVC components step-by-step
-✨ **Quizzes** - Test your understanding after each lesson
-✨ **AI Roleplay** - Practice NVC in realistic conversations (coming soon)
-✨ **Real-time Scoring** - Get feedback on your NVC responses
-✨ **Dark Mode** - Learn comfortably day or night
-✨ **Mobile Responsive** - Learn on any device
+- **Interactive lessons** on each of the four components, plus an introduction
+  and an integration lesson, with examples and quizzes
+- **Roleplay practice** — in-character conversations where the partner's
+  openness scales with how empathetically you communicate, reaching a natural
+  closing moment once you've expressed a feeling, a need and a request
+- **Per-message coaching** — each message is scored on the four components
+  (0–25 each, 0–100 total), with what went well, a single next-step hint, and
+  gentle detection of "jackal" phrases
+- **Custom scenario builder** — describe a real situation, answer a couple of
+  clarifying questions, and get a practice partner tailored to it
+- **Rewind** a conversation to try a different approach
+- **Feelings system** — a feelings wheel, intensity, a browsable library, a
+  daily check-in, and a quiz that distinguishes real feelings from
+  pseudo-feelings
+- **Daily challenges** with bonus points and streaks
+- **Progress and gamification** — levels, points, stars, streaks, achievements,
+  and a profile with skill stats and an activity feed
 
----
-
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
-|-------|-----------|
-| **Frontend** | TanStack Start + React + TypeScript + Tailwind CSS |
-| **Backend** | Convex (serverless database & functions) |
-| **AI** | Claude (via Anthropic API) |
-| **Hosting** | Cloudflare Pages (frontend) + Convex Cloud (backend) |
+|---|---|
+| Frontend | TanStack Start · React 19 · TypeScript · Tailwind CSS v4 |
+| Backend | Convex (reactive database, queries, mutations, actions) |
+| Auth | `@convex-dev/auth` (includes GitHub sign-in) |
+| Language model | Anthropic Claude via `@anthropic-ai/sdk`, called only from Convex Actions |
+| Hosting | Cloudflare Workers (SSR) · Convex Cloud (backend) |
 
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Git
-
-### Installation
+## Getting started
 
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/nvc-learning-platform.git
-cd nvc-learning-platform
-
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
+npm run dev        # http://localhost:3000
 ```
 
-The app will start at `http://localhost:3000`
+`npm run dev` runs a one-off Convex sync, then starts the Vite dev server and
+the Convex backend together.
 
-### Development Server
+Copy `.env.example` to `.env.local` and set:
 
-```bash
-npm run dev
+```env
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
+CONVEX_URL=https://your-deployment.convex.cloud
+ANTHROPIC_API_KEY=sk-ant-...      # used by the Convex action
 ```
 
-This runs:
-- Vite dev server (frontend)
-- Convex dev server (backend)
-- TypeScript compiler in watch mode
+## Scripts
 
-### Build for Production
-
-```bash
-npm run build
-```
-
-Creates optimized builds:
-- `dist/client/` - Static frontend (deployable to Cloudflare Pages)
-- `dist/server/` - Server code
-
----
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start web + Convex dev servers |
+| `npm run dev:web` | Frontend only |
+| `npm run dev:convex` | Convex backend only |
+| `npm run build` | Production build (`vite build && tsc --noEmit`) |
+| `npm run lint` | ESLint + TypeScript |
+| `npm run format` | Format with Prettier |
+| `npm run preview` | Preview the production build |
+| `npm run deploy` | Deploy Convex, then the Cloudflare Worker |
+| `npm run cf-typegen` | Generate Cloudflare types |
 
 ## Deployment
 
-### Quick Deploy (5 minutes)
-
-See **[DEPLOYMENT_QUICK_START.md](./DEPLOYMENT_QUICK_START.md)** for step-by-step instructions to deploy to Cloudflare Pages.
-
-### Full Deployment Guide
-
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for detailed deployment instructions, troubleshooting, and monitoring.
-
-### Pre-Deployment Checklist
-
-See **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** to verify everything is ready before deploying.
-
----
-
-## Project Structure
-
-```
-├── src/
-│   ├── routes/              # Page routes (TanStack Router)
-│   │   ├── __root.tsx       # Root layout
-│   │   ├── index.tsx        # Home page
-│   │   └── learn/           # Learning lessons
-│   ├── components/          # Reusable React components
-│   │   ├── ui/              # Generic UI components
-│   │   ├── features/        # Feature-specific components
-│   │   └── layout/          # Layout components
-│   └── styles/              # Global styles
-│
-├── convex/
-│   ├── schema.ts            # Database schema
-│   ├── lessons.ts           # Lesson queries
-│   ├── ai.ts                # Claude API integration
-│   └── _generated/          # Auto-generated types (don't edit)
-│
-├── vite.config.ts           # Vite + TanStack Start config
-├── tsconfig.json            # TypeScript config
-├── tailwind.config.js       # Tailwind CSS config
-└── wrangler.toml            # Cloudflare Pages config
-
-See [PROJECT_SPEC.md](./PROJECT_SPEC.md) for full architecture details.
-```
-
----
-
-## Available Scripts
-
 ```bash
-npm run dev              # Start development server
-npm run build           # Build for production
-npm run lint            # Run ESLint and TypeScript
-npm run format          # Format code with Prettier
-npm start               # Run production server (locally)
-npm run dev:web         # Run frontend only
-npm run dev:convex      # Run Convex backend only
-npm run dev:ts          # Run TypeScript compiler watch
+npm run deploy
 ```
 
----
+This deploys the Convex backend (`convex deploy`, which also runs the build) and
+then the Cloudflare Worker (`wrangler deploy`). The frontend is served from
+Cloudflare Workers and the reactive backend runs on Convex Cloud.
 
-## Core Concepts
-
-### Lessons
-
-6 foundational lessons covering NVC:
-1. **Introduction** - What is NVC and why it matters
-2. **Observation** - Facts without judgment
-3. **Feeling** - Real emotions vs pseudo-feelings
-4. **Need** - Universal human needs
-5. **Request** - Making effective requests
-6. **Integration** - Putting it all together
-
-### NVC Scoring
-
-When users respond to scenarios, responses are analyzed and scored (0-100):
+## Project structure
 
 ```
-0-49   → Needs practice (mostly jackal language)
-50-69  → Partial (some NVC components)
-70-89  → Good (minor improvements possible)
-90-100 → Excellent (pure giraffe language)
+src/
+  routes/        # Pages (TanStack Router): home, learn/, practice/, feelings/, profile
+  components/    # ui/, features/, layout/
+  styles/        # Global styles
+convex/
+  schema.ts      # Database schema (source of truth)
+  ai.ts          # Claude integration (in-character replies + scoring)
+  conversations.ts, dailyChallenges*.ts, crons.ts, ...
+  _generated/    # Auto-generated types (don't edit)
 ```
 
-### Giraffe vs Jackal Language
-
-- **Giraffe** 🦒 = Compassionate, empathetic NVC communication
-- **Jackal** 🐕 = Judgmental, reactive communication
-
-The app uses these symbols to help users distinguish healthy from unhealthy communication patterns.
-
----
-
-## Configuration
-
-### Environment Variables
-
-Create `.env.local` (copy from `.env.example`):
-
-```env
-# Required for Convex
-CONVEX_URL=https://your-deployment.convex.cloud
-
-# Optional: Anthropic API key (for Convex functions)
-ANTHROPIC_API_KEY=sk-...
-```
-
-**Note**: Never commit `.env.local` - it contains secrets!
-
-### Convex Setup
-
-Initialize Convex:
-```bash
-npx convex deploy
-```
-
-This sets up your Convex backend and generates types in `convex/_generated/`.
-
----
-
-## Development Guidelines
-
-See **[CLAUDE.md](./CLAUDE.md)** for detailed development guidelines covering:
-- Code style preferences
-- TypeScript conventions
-- Convex patterns
-- Component organization
-- Error handling
-- NVC principles in code
-
----
-
-## Testing
-
-### Run Tests
-```bash
-npm run test  # (when tests are added)
-```
-
-### Manual Testing Checklist
-
-Before deploying, verify:
-- [ ] All pages load without errors
-- [ ] Navigation works between routes
-- [ ] Lessons display all content
-- [ ] Quizzes are functional
-- [ ] No console errors (F12)
-- [ ] Mobile responsive design works
-- [ ] Convex API calls succeed
-
----
-
-## Deployment Status
-
-| Environment | Status | URL |
-|-------------|--------|-----|
-| Development | ✅ Running | `http://localhost:3000` |
-| Production | ⏳ Ready to deploy | See [DEPLOYMENT_QUICK_START.md](./DEPLOYMENT_QUICK_START.md) |
-
----
-
-## Contributing
-
-This is a learning project. Contributions are welcome!
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Please follow the guidelines in [CLAUDE.md](./CLAUDE.md) when contributing.
-
----
-
-## License
-
-MIT License - see LICENSE file for details
-
----
-
-## Support & Resources
-
-### Documentation
-- **Project Spec**: [PROJECT_SPEC.md](./PROJECT_SPEC.md) - Complete requirements
-- **Claude Guide**: [CLAUDE.md](./CLAUDE.md) - Development guidelines
-- **Deployment**: [DEPLOYMENT.md](./DEPLOYMENT.md) - Full deployment guide
-- **Quick Deploy**: [DEPLOYMENT_QUICK_START.md](./DEPLOYMENT_QUICK_START.md) - 15-min deploy
-
-### External Resources
-- **NVC**: https://www.cnvc.org
-- **TanStack Start**: https://tanstack.com/start
-- **Convex**: https://docs.convex.dev
-- **Cloudflare Pages**: https://developers.cloudflare.com/pages/
-
-### Get Help
-1. Check the documentation files above
-2. Search existing issues on GitHub
-3. Create a new issue with details about the problem
-4. Join the NVC community at https://www.cnvc.org
-
----
-
-## Roadmap
-
-### Phase 1 (Current) ✅
-- Core lessons (6 foundational)
-- Quiz functionality
-- NVC scoring system
-
-### Phase 2 (Next)
-- AI-powered roleplay scenarios
-- Conversation history & progress tracking
-- User authentication
-
-### Phase 3 (Future)
-- Daily challenges & gamification
-- User achievements & badges
-- Community features (share responses)
-- Multi-language support
-
----
+See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) and the various `*_SPEC.md` files for
+detailed design notes, and [`CLAUDE.md`](./CLAUDE.md) for development guidelines.
 
 ## Acknowledgments
 
-This project teaches the NVC framework created by **Marshall Rosenberg**. Learn more at https://www.cnvc.org
-
-Built with ❤️ to help people communicate more compassionately.
-
----
-
-**Ready to learn compassionate communication?** Start with the [Quick Start](./DEPLOYMENT_QUICK_START.md) guide or explore the [lessons](./src/routes/learn/).
-
-🦒 Let's communicate with compassion and understanding.
+This project teaches the NVC framework created by **Marshall Rosenberg**. Learn
+more at <https://www.cnvc.org>.
