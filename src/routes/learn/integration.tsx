@@ -234,24 +234,24 @@ function IntegrationLesson() {
                   </div>
 
                   {/* Jackal Response */}
-                  <div className="p-4 bg-empathy-low rounded-lg border-2 border-empathy-low">
+                  <div className="p-4 bg-empathy-low/15 rounded-lg border-2 border-empathy-low/40">
                     <div className="flex items-center gap-2 mb-3">
-                      <h4 className="text-lg font-bold text-empathy-low">
+                      <h4 className="text-lg font-bold text-brown-900">
                         Judgmental Response
                       </h4>
                     </div>
-                    <p className="text-empathy-low leading-relaxed mb-4">
+                    <p className="text-brown-800 leading-relaxed mb-4">
                       {currentExample.jackalResponse}
                     </p>
 
                     {/* Problem Breakdown */}
-                    <div className="text-sm space-y-2 pt-4 border-t border-empathy-low">
+                    <div className="text-sm space-y-2 pt-4 border-t border-empathy-low/40">
                       <div>
-                        <span className="font-semibold text-empathy-low">
+                        <span className="font-semibold text-brown-900">
                           Issues:
                         </span>
                       </div>
-                      <ul className="list-disc list-inside text-empathy-low text-xs space-y-1">
+                      <ul className="list-disc list-inside text-brown-800 text-xs space-y-1">
                         <li>Uses judgment and blame</li>
                         <li>No clear observation</li>
                         <li>No expressed need</li>
@@ -388,7 +388,7 @@ function IntegrationLesson() {
             </div>
             <div className="flex gap-4">
               <Button variant="primary" size="lg">
-                Start AI Roleplay
+                Start Practicing
               </Button>
               <Button variant="outline" size="lg">
                 Back to Lessons

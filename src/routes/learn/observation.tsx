@@ -215,10 +215,10 @@ function ObservationLesson() {
 
                     {/* Content Container */}
                     <div className="p-4">
-                      <h4 className="text-lg font-bold text-empathy-low mb-3">
+                      <h4 className="text-lg font-bold text-brown-900 mb-3">
                         Judgment-Filled
                       </h4>
-                      <p className="text-empathy-low leading-relaxed">
+                      <p className="text-brown-800 leading-relaxed">
                         {currentExample.jackalResponse}
                       </p>
                     </div>

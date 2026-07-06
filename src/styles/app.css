@@ -214,6 +214,72 @@
     infinite;
 }
 
+/* Feedback panel "ambient warmth": three soft light washes drift slowly behind
+   the header, expressing the character's mood as gentle weather. The blobs are
+   blurred and only ever transformed (composited, cheap); their colour is set
+   per-mood in JS and eased with a colour transition on the element itself.
+   Reduced-motion holds them still, so the mood colour still reads. */
+@keyframes aurora-a {
+  0%,
+  100% {
+    transform: translate(-6%, -8%) scale(1);
+  }
+  50% {
+    transform: translate(12%, 6%) scale(1.18);
+  }
+}
+@keyframes aurora-b {
+  0%,
+  100% {
+    transform: translate(8%, 6%) scale(1.12);
+  }
+  50% {
+    transform: translate(-10%, -6%) scale(1);
+  }
+}
+@keyframes aurora-c {
+  0%,
+  100% {
+    transform: translate(2%, 4%) scale(1.04);
+  }
+  50% {
+    transform: translate(-8%, -8%) scale(1.16);
+  }
+}
+
+.animate-aurora-a {
+  animation: aurora-a 17s ease-in-out infinite;
+}
+.animate-aurora-b {
+  animation: aurora-b 21s ease-in-out infinite;
+}
+.animate-aurora-c {
+  animation: aurora-c 25s ease-in-out infinite;
+}
+
+/* The score's warm halo blooms once as the turn's result lands, then settles to
+   a soft static glow whose colour carries the score band (never alarming). One
+   shot, not a perpetual pulse - the resting halo conveys the state on its own,
+   and reduced-motion simply shows that resting halo. */
+@keyframes score-bloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  55% {
+    opacity: 0.78;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+}
+
+.animate-score-bloom {
+  animation: score-bloom 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .animate-celebrate-in {
   animation: celebrate-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -240,7 +306,11 @@
   .animate-node-ignite,
   .animate-connector,
   .animate-connect-glow,
-  .animate-mote-rise {
+  .animate-mote-rise,
+  .animate-aurora-a,
+  .animate-aurora-b,
+  .animate-aurora-c,
+  .animate-score-bloom {
     animation: none !important;
   }
 }
