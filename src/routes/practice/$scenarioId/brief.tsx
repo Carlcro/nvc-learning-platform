@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
 import { Button } from '~/components/ui/Button'
@@ -68,6 +68,23 @@ function ScenarioBrief() {
     api.scenarioProgress.initializeScenarioProgress,
   )
 
+  // The card footer holds the real Start button. While it's scrolled out of
+  // view, a floating pill stands in so starting never requires scrolling.
+  const footerRef = useRef<HTMLDivElement>(null)
+  const [footerInView, setFooterInView] = useState(true)
+
+  useEffect(() => {
+    const footer = footerRef.current
+    if (!footer) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterInView(entry.isIntersecting),
+      { threshold: 0.4 },
+    )
+    observer.observe(footer)
+    return () => observer.disconnect()
+  }, [scenario])
+
   const handleStartConversation = async () => {
     if (!currentUser) return
 
@@ -103,7 +120,7 @@ function ScenarioBrief() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 sm:pt-36 pb-28 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 sm:pt-36 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Back link - breathing room under the nav, plus wayfinding */}
         <button
@@ -285,32 +302,87 @@ function ScenarioBrief() {
               </div>
             )}
           </div>
+
+          {/* Card footer - the real call to action, part of the brief itself */}
+          <footer className="border-t border-giraffe-100 bg-giraffe-50 px-6 sm:px-8 py-5">
+            <div
+              ref={footerRef}
+              className="flex flex-col sm:flex-row sm:items-center gap-3"
+            >
+              {startError ? (
+                <p className="flex-1 text-sm text-empathy-low font-medium">
+                  {startError}
+                </p>
+              ) : (
+                <p className="flex-1 text-sm text-brown-600">
+                  Ready when you are. Take your time.
+                </p>
+              )}
+              <Button
+                onClick={handleStartConversation}
+                variant="primary"
+                size="lg"
+                className="px-8 w-full sm:w-auto"
+                isLoading={isCreatingConversation}
+                disabled={isCreatingConversation}
+              >
+                {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
+              </Button>
+            </div>
+          </footer>
         </div>
       </div>
 
-      {/* Sticky action bar - Start is always one tap away, no scrolling */}
-      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-giraffe-200 bg-white/95 backdrop-blur-sm shadow-[0_-2px_12px_rgba(45,30,17,0.06)]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
-          {startError ? (
-            <p className="flex-1 text-sm text-empathy-low font-medium">
-              {startError}
-            </p>
-          ) : (
-            <p className="flex-1 hidden sm:block text-sm text-brown-600">
-              Ready when you are. Take your time.
-            </p>
+      {/* Floating stand-in - appears only while the card footer is off-screen,
+          echoing the floating nav pill. It fades away once the real button
+          scrolls into view, so the two never show at the same time. */}
+      <div
+        aria-hidden={footerInView}
+        className={`fixed bottom-5 inset-x-0 z-30 flex flex-col items-center gap-2 px-4 pointer-events-none transition-all duration-300 ease-out motion-reduce:transition-none ${
+          footerInView
+            ? 'opacity-0 translate-y-3'
+            : 'opacity-100 translate-y-0'
+        }`}
+      >
+        {startError && (
+          <p className="pointer-events-auto max-w-md text-center rounded-full bg-white border border-empathy-low/40 shadow-md px-4 py-2 text-sm text-empathy-low font-medium">
+            {startError}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={handleStartConversation}
+          disabled={isCreatingConversation}
+          tabIndex={footerInView ? -1 : 0}
+          className={`inline-flex items-center justify-center gap-2 rounded-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold text-lg px-8 py-3.5 shadow-lg cursor-pointer transition-colors duration-200 motion-safe:active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2 ${
+            footerInView ? '' : 'pointer-events-auto'
+          }`}
+        >
+          {isCreatingConversation && (
+            <svg
+              className="animate-spin -ml-1 h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
           )}
-          <Button
-            onClick={handleStartConversation}
-            variant="primary"
-            size="lg"
-            className="px-8 flex-1 sm:flex-none"
-            isLoading={isCreatingConversation}
-            disabled={isCreatingConversation}
-          >
-            {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
-          </Button>
-        </div>
+          {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
+        </button>
       </div>
     </main>
   )
