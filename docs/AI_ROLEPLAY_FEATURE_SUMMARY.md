@@ -1,8 +1,10 @@
 # AI Roleplay Scenario Feature - Summary
 
+**Status: shipped.** The feature is live. Where this summary and the code disagree, the code wins: see `convex/ai.ts` (submitTurn, analysis, character reply), `convex/conversations.ts` (recordTurn, complete), and `convex/lib/progress.ts` (stars, points, achievements).
+
 ## Overview
 
-The AI Roleplay Scenario feature is the **core learning experience** of the NVC Learning Platform. It allows users to practice Non-Violent Communication in realistic, AI-powered conversations where they interact with characters facing various conflicts and emotional situations.
+The Roleplay Scenario feature is the **core learning experience** of the NVC Learning Platform. It allows users to practice Non-Violent Communication in realistic, model-powered conversations where they interact with characters facing various conflicts and emotional situations.
 
 ---
 
@@ -29,19 +31,21 @@ User Flow:
 2. User browses available scenarios by category/difficulty
 3. User selects a scenario
 4. User reads scenario context (situation, character background)
-5. AI character starts the conversation with opening statement
+5. The character starts the conversation with an opening statement
 6. User responds using text input (voice option future enhancement)
-7. AI analyzes user's response for NVC components (real-time)
-8. AI character responds naturally based on user's communication style
+7. The server analyzes the response for NVC components and generates the character's reply in parallel (one action call)
+8. The character responds naturally based on the user's communication style
 9. Conversation continues (typically 5-10 exchanges)
 10. User can "rewind" and try different approaches
 11. Final score and detailed feedback provided
 12. User can retry scenario or move to next challenge
 ```
 
-### 2. The AI System (Two AI Functions)
+### 2. The Model System (Two Roles, One Action)
 
-**AI Function #1: Character Roleplay**
+Both roles run inside a single server-side action, `api.ai.submitTurn`, in parallel. They are deliberately independent: the character judges the user's message itself (it never sees the score).
+
+**Role #1: Character Roleplay**
 - Plays the role of the other person in the conversation
 - Maintains consistent personality and emotional state
 - Reacts authentically to user's communication:
@@ -49,12 +53,13 @@ User Flow:
   - Poor NVC (jackal) → Character becomes defensive, closed off
 - Never breaks character or explicitly teaches NVC
 
-**AI Function #2: NVC Analysis & Scoring**
-- Analyzes each user message for the 4 NVC components
-- Scores: Observation (0-25), Feeling (0-25), Need (0-25), Request (0-25)
+**Role #2: NVC Analysis & Scoring**
+- Analyzes each user message for the 4 NVC components, in the context of the whole conversation
+- Component scores: Observation (0-25), Feeling (0-25), Need (0-25), Request (0-25), given only for what the message attempts
+- Total (0-100) is a contextual judgment of turn quality, not the sum of the components
 - Identifies "jackal language" (judgments, blame, demands)
-- Provides coaching feedback and giraffe alternatives
-- Tracks conversation quality over time
+- Provides coaching feedback (one next-step hint per turn)
+- Scores are computed server-side and never accepted from the client
 
 ---
 
@@ -76,7 +81,7 @@ Each scenario includes:
    - Current needs (hidden from user)
 6. **Learning Goals**: What NVC skills this scenario practices
 7. **Estimated Duration**: 5-15 minutes
-8. **Unlock Level**: User must be at certain level to access
+8. **Recommendation**: scenarios are open access by design; the user's level only drives a "recommended" hint (nothing is locked)
 
 ### Example Scenario
 
@@ -125,8 +130,8 @@ Learning Goals:
 │  │  [Emoji]   │  │  [Emoji]   │        │
 │  │  Title     │  │  Title     │        │
 │  │  Category  │  │  Category  │        │
-│  │  ⏱ 10 min  │  │  ⏱ 8 min   │        │
-│  │  [Start]   │  │  [Locked]  │        │
+│  │  10 min    │  │  8 min     │        │
+│  │  [Start]   │  │  [Start]   │        │
 │  └────────────┘  └────────────┘        │
 └─────────────────────────────────────────┘
 ```
@@ -138,14 +143,14 @@ Learning Goals:
 │  Missed Deadline                         │
 │  Workplace • Intermediate • 10 min       │
 │                                          │
-│  📋 Situation:                           │
+│  Situation:                           │
 │  Your coworker Alex was responsible...   │
 │                                          │
-│  🎯 What You'll Practice:                │
+│  What You'll Practice:                │
 │  • Express frustration without blame    │
 │  • Make requests vs demands             │
 │                                          │
-│  💡 Tip: Remember to focus on your       │
+│  Tip: Remember to focus on your       │
 │  feelings and needs, not Alex's behavior │
 │                                          │
 │  [Start Conversation]                    │
@@ -164,20 +169,20 @@ Learning Goals:
 │ "Look, I know the    │ [████████░░] 80% │
 │ report is late..."   │                  │
 │                      │ Current Message: │
-│ You:                 │ ✓ Observation    │
-│ "When the report     │ ✓ Feeling        │
-│ wasn't delivered by  │ ⚠ Need (partial) │
-│ yesterday..."        │ ✗ No request     │
+│ You:                 │ (x) Observation  │
+│ "When the report     │ (x) Feeling      │
+│ wasn't delivered by  │ (~) Need partial │
+│ yesterday..."        │ ( ) No request   │
 │  [Score: 65/100]     │                  │
-│                      │ 💬 Quick Tip:    │
+│                      │ Quick Tip:    │
 │ Alex:                │ "Try making a    │
 │ "I'm really sorry,   │ specific request │
 │ I've been..."        │ for what you     │
 │                      │ need."           │
 │ ┌──────────────────┐ │                  │
-│ │ Type response... │ │ 🦒 Giraffe:      │
+│ │ Type response... │ │ Giraffe:      │
 │ └──────────────────┘ │ "Would you be    │
-│ [⏮ Rewind] [Send]   │ willing to..."   │
+│ [Rewind] [Send]   │ willing to..."   │
 └──────────────────────┴──────────────────┘
 ```
 
@@ -194,7 +199,7 @@ Components:
 
 ```
 ┌─────────────────────────────────────────┐
-│  Scenario Complete! 🦒                   │
+│  Scenario Complete!                   │
 │                                          │
 │  Final Score: 78/100                     │
 │  Grade: Good NVC (Giraffe Language)      │
@@ -205,11 +210,11 @@ Components:
 │  Need:         70/100  ███████░░░        │
 │  Request:      82/100  ████████░░        │
 │                                          │
-│  💚 What Went Well:                      │
+│  What Went Well:                      │
 │  • You expressed feelings clearly        │
 │  • You made specific, doable requests    │
 │                                          │
-│  🌱 Areas for Growth:                    │
+│  Areas for Growth:                    │
 │  • Try connecting feelings to needs      │
 │    more explicitly                       │
 │                                          │
@@ -221,7 +226,9 @@ Components:
 
 ## Scoring System
 
-### NVC Component Scoring (0-100 total)
+### Per-Turn Contextual Scoring
+
+Component scores (0-25 each) are given only for what a message actually attempts. An absent component scores 0, and that is not a flaw; healthy conversations unfold gradually, one piece at a time. The total (0-100) is NOT the sum of the components: it judges how well the single turn moves the conversation toward connection (quality of what it attempts, freedom from blame, empathy, and momentum). The conversation's final score is the average of the turn totals; stars are 85+ = 3, 70+ = 2, 60+ = 1.
 
 **Observation (0-25 points)**
 - Free from judgment, evaluation, interpretation
@@ -244,19 +251,19 @@ Components:
 - Request, not demand
 - Reasonable and doable
 
-### Additional Modifiers
+### How the Total Is Weighed
 
-**Empathy Bonus** (+5 to +10)
-- Shows curiosity about other person's needs
+**Empathy raises the total**
+- Shows curiosity about the other person's needs
 - Reflects back what they've said
 - Acknowledges their feelings
 
-**Jackal Penalty** (-10 to -20)
+**Jackal language lowers the total**
 - Blame, shame, criticism
 - Demands or ultimatums
 - Defensive or reactive language
 
-### Thresholds
+### Thresholds (anchors for the total)
 
 - **90-100**: Excellent - Pure giraffe language
 - **70-89**: Good - Solid NVC with minor improvements
@@ -312,11 +319,11 @@ Components:
 **UI Indicator**:
 ```
 You (Original attempt): "You never deliver on time!"
-  Score: 25/100 ⚠️
+  Score: 25/100
 
 You (After rewind): "When the report wasn't ready by 
 the deadline, I felt worried..."
-  Score: 82/100 ✓
+  Score: 82/100
 
 AI shows both and highlights improvement
 ```
@@ -361,51 +368,45 @@ AI shows both and highlights improvement
 
 ## Technical Implementation
 
-### Data Flow
+### Data Flow (as shipped)
 
 ```
 User types message
     ↓
-Frontend sends to Convex
+Frontend calls ONE action: api.ai.submitTurn(conversationId, message)
     ↓
-Convex Action #1: Analyze message with Claude API
+Server authenticates the user and loads history, scenario,
+character mood, and milestones from the database
+(never from the client)
     ↓
-Returns: NVC score + feedback
+Two Claude API calls run IN PARALLEL:
+  - NVC analysis (structured output via JSON schema)
+  - Character reply (in character; judges the message itself,
+    never sees the score)
     ↓
-Store in conversation record
+Both results persist atomically via
+internal.conversations.recordTurn
     ↓
-Convex Action #2: Generate AI character response
-    ↓
-AI character receives:
-  - User's message
-  - User's NVC score
-  - Conversation history
-  - Character personality
-    ↓
-AI responds in character
-    ↓
-Frontend displays both score and response
-    ↓
-Update empathy meter, show feedback
+The frontend's reactive query picks up the new turn:
+score, feedback, and character response render together
 ```
 
-### Key Convex Functions
+Scores are never accepted from the client, and a failed turn can always be retried safely.
 
-**Queries**:
-- `scenarios.list()` - Get available scenarios
-- `scenarios.getById(id)` - Get scenario details
-- `conversations.getActive(userId, scenarioId)` - Get ongoing conversation
-- `conversations.getHistory(userId)` - Past conversations
+### Key Convex Functions (as shipped)
+
+**Queries** (all derive the user via `getAuthUserId`; conversations are owner-only):
+- `scenarios.listByOrder` - Scenarios sorted into the practice path
+- `conversations.getActive` - Ongoing conversation for a scenario
 
 **Mutations**:
-- `conversations.create(userId, scenarioId)` - Start new conversation
-- `conversations.addMessage(conversationId, message, score)` - Add message
-- `conversations.complete(conversationId, finalScore)` - Mark complete
+- `conversations.create` - Start a new conversation
+- `conversations.complete` - Server-side, idempotent completion: computes finalScore and stars from server-held messages, updates scenarioProgress, awards points/streaks/achievements, credits daily challenges
+- `internal.conversations.recordTurn` - Internal: atomically persists a turn (user message + analysis + character reply)
 
-**Actions** (AI calls):
-- `ai.analyzeResponse(message, context)` - Score NVC components
-- `ai.generateCharacterResponse(message, character, history)` - AI response
-- `ai.provideFeedback(message, score)` - Generate coaching tips
+**Actions** (Claude API calls, in `convex/ai.ts`):
+- `ai.submitTurn(conversationId, message)` - The single entry point for a conversation turn (analysis + character reply in parallel)
+- `ai.assessScenarioReadiness` / `ai.generateCustomScenario` - Custom scenario builder
 
 ---
 
@@ -570,10 +571,10 @@ Update empathy meter, show feedback
 The AI Roleplay Scenario feature is where users transform from **understanding NVC concepts** to **actually using them in realistic situations**. 
 
 By providing:
-- ✅ Safe practice environment
-- ✅ Real-time feedback
-- ✅ Realistic, adaptive AI characters
-- ✅ Encouraging, non-judgmental coaching
+- Safe practice environment
+- Real-time feedback
+- Realistic, adaptive AI characters
+- Encouraging, non-judgmental coaching
 
 We create a learning experience that is:
 - **Effective** - Users actually improve their communication skills
@@ -584,6 +585,6 @@ This feature is the heart of the app and will determine its success in helping p
 
 ---
 
-**Last Updated**: November 1, 2025
-**Status**: Ready for Development
-**Priority**: HIGH - Core Feature
+**Last Updated**: July 9, 2026
+**Status**: Shipped
+**Priority**: Core feature, in maintenance and polish

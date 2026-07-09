@@ -1,168 +1,70 @@
-I need to implement the AI-Generated Daily Challenge System for the NVC app.
-This system generates 3 fresh scenarios every day (beginner, intermediate,
-advanced) and assigns each user the appropriate difficulty level.
+# Daily Challenge System
 
-Please read these documents:
+Status: shipped. This document describes the system as built. The code is the source of truth: `convex/dailyChallenges.ts`, `convex/dailyChallengesGeneration.ts`, `convex/crons.ts`, and `convex/conversations.ts`.
 
-1. CLAUDE.md - for project patterns
-2. PROJECT_SPEC.md - for overall context
-3. SCENARIO_PROGRESSION_SPEC.md - for scenario structure
-4. DAILY_CHALLENGE_SPEC.md - for complete daily challenge system specs
+## Overview
 
-Then implement the Daily Challenge System:
+Every day, three fresh practice scenarios are generated (easy, medium, hard) and offered as daily challenges. Each user sees the challenge matching their recommended difficulty, with the other two available as alternatives. Completing any of today's challenges earns that challenge's advertised bonus points on top of the normal scenario rewards.
 
-═══════════════════════════════════════════════════════════════
-PHASE 1: DATABASE & GENERATION (Start Here)
-═══════════════════════════════════════════════════════════════
+Challenge days follow UTC (the cron runs at midnight UTC); practice streaks follow the user's local calendar day.
 
-1. Update convex/schema.ts:
-   - Add dailyChallenges table (see DAILY_CHALLENGE_SPEC.md)
-   - Add dailyChallengeCompletions table
-   - Update userProgress table with challenge tracking fields
-   - Add all required indexes
+## Generation
 
-2. Create convex/crons.ts:
-   - Set up daily cron job at midnight UTC
-   - Call generation function
-   - Add weekly cleanup job (optional)
+- A cron in `convex/crons.ts` runs daily at 00:00 UTC and calls `internal.dailyChallenges.generateDailyChallenge`.
+- Generation uses the Claude API (model `claude-sonnet-4-6`) via a Convex Node action; the prompt and validation live in `convex/dailyChallengesGeneration.ts` (`generateThreeScenarios`).
+- Each generated scenario is persisted as a real row in the `scenarios` table with `source: 'daily'` and `orderIndex: -1`, which keeps it out of the linear practice ladder while making it fully playable through the normal conversation flow.
+- One `dailyChallenges` row is created per difficulty for the day, with fixed bonus points:
+  - easy: 50
+  - medium: 75
+  - hard: 100
+- To generate manually (for a new deployment or testing):
 
-3. Create convex/dailyChallenges.ts:
-   - Import Anthropic SDK ("use node")
-   - Implement generateThreeTiers (internal action)
-   - Implement AI generation function with proper prompt
-   - Add validation for generated scenarios
-   - Add queries: getToday, getMyChallenge, getByDate
-   - Add mutations: create, recordCompletion
-   - Implement determineUserDifficulty logic
-   - Add streak checking logic
+```bash
+npx convex run dailyChallenges:generateDailyChallenge
+```
 
-4. Test generation:
-   - Run generation manually in Convex dashboard
-   - Verify 3 scenarios created
-   - Check all fields are populated correctly
+## Serving challenges to users
 
-═══════════════════════════════════════════════════════════════
-PHASE 2: UI IMPLEMENTATION
-═══════════════════════════════════════════════════════════════
+- `api.dailyChallenges.getMyChallenge` loads today's challenges, determines the user's recommended difficulty from their level and average score, and returns:
+  - the recommended challenge (falling back to the nearest easier difficulty if a day has fewer than three)
+  - the other difficulties as `alternatives`
+  - the user's completion state for today (completing ANY of today's challenges counts as done for the day)
+- `api.dailyChallenges.getDailyChallenge` is a lighter query for the signed-in home dashboard card.
+- `api.dailyChallenges.getUserChallengeStats` powers challenge stats.
 
-5. Create main daily challenge page:
-   - File: app/routes/challenges/daily.tsx
-   - Show user's recommended challenge
-   - Display challenge stats
-   - Show other difficulty options
-   - Protected route (requires auth)
+## Completion and rewards
 
-6. Create DailyChallengeCard component:
-   - File: app/components/features/challenges/DailyChallengeCard.tsx
-   - Show challenge details (title, situation, character)
-   - Display learning objectives
-   - Show 2x bonus indicator
-   - Countdown timer (hours remaining)
-   - Start button links to conversation
-   - Handle completed state (show score, retry button)
+There is no separate challenge completion endpoint. Completion is credited inside `api.conversations.complete` (server-side and idempotent):
 
-7. Create ChallengeStats component:
-   - File: app/components/features/challenges/ChallengeStats.tsx
-   - Show current streak (with fire emoji if 7+)
-   - Display total challenges completed
-   - Show average score
-   - Highlight achievements
+- When a conversation for a daily challenge scenario completes, a `challengeCompletions` row is written.
+- The bonus awarded is exactly the challenge's advertised `bonusPoints` (no multipliers), added on top of the normal completion points.
+- Streaks, levels, averages, and achievements update through the same pipeline as any other completion (see `convex/lib/progress.ts`).
 
-8. Add to navigation:
-   - Update FloatingNav to include "Daily" link
-   - Use 🎯 emoji icon
-   - Link to /challenges/daily
+## Data model
 
-═══════════════════════════════════════════════════════════════
-PHASE 3: INTEGRATION WITH PRACTICE
-═══════════════════════════════════════════════════════════════
+```typescript
+// dailyChallenges
+{
+  date: string // "2026-07-09" (UTC day)
+  scenarioId: Id<'scenarios'>
+  difficulty: 'easy' | 'medium' | 'hard'
+  description: string
+  bonusPoints: number // 50 / 75 / 100
+}
 
-9. Connect to conversation system:
-   - When user starts daily challenge, create conversation
-   - Use daily challenge as scenario source
-   - Track that it's a daily challenge (for bonus points)
-   - Record completion with 2x multiplier
+// challengeCompletions
+{
+  userId: Id<'users'>
+  challengeId: Id<'dailyChallenges'>
+  conversationId: Id<'conversations'>
+  completed: boolean
+  score: number
+  completedAt: number
+}
+```
 
-10. Update completion flow:
-    - After conversation completes, call recordCompletion
-    - Calculate bonus points (base × 2)
-    - Update streak
-    - Show special "Daily Challenge Complete" results screen
-    - Update user progress stats
+## Security notes
 
-═══════════════════════════════════════════════════════════════
-IMPORTANT REQUIREMENTS
-═══════════════════════════════════════════════════════════════
-
-TypeScript & Types:
-
-- Use strict TypeScript
-- Import types from \_generated
-- Proper error handling
-
-AI Generation:
-
-- Use Claude Sonnet 4.5 model
-- Prompt must request 3 scenarios (one per difficulty)
-- Validate JSON response structure
-- Handle AI failures gracefully (log error, use backup)
-
-Difficulty Assignment:
-
-- Level 1-2 → Beginner
-- Level 3-5 → Intermediate (adjust based on recent scores)
-- Level 6+ → Advanced
-- Consider recent performance in recommendation
-
-Streak Logic:
-
-- Count consecutive days
-- Reset if missed a day
-- Show streak prominently
-- Celebrate 7, 30, 100 day milestones
-
-Points & Rewards:
-
-- Base: 100 points per star
-- Multiplier: 2x for daily challenges
-- Update user total points
-- Track separately from regular scenarios
-
-UI/UX:
-
-- Use giraffe color scheme
-- Prominent 2x bonus indicator
-- Countdown timer showing time remaining
-- Celebration on completion
-- Responsive design
-
-Testing:
-
-- Test generation manually first
-- Verify difficulty assignment works
-- Check streak logic
-- Test completion and points
-
-═══════════════════════════════════════════════════════════════
-DELIVERABLES
-═══════════════════════════════════════════════════════════════
-
-When complete, users should be able to:
-
-1. See today's challenge on /challenges/daily
-2. Start the challenge appropriate for their level
-3. Complete it and receive 2x points
-4. See their streak maintained
-5. View stats and history
-6. New challenges appear daily at midnight
-
-Success criteria:
-
-- Daily generation works (can test manually)
-- UI shows challenges correctly
-- Difficulty assignment is accurate
-- Streak tracking works
-- Points awarded with 2x multiplier
-- Stats update correctly
-
-═══════════════════════════════════════════════════════════════
+- Generation functions are internal (`internalAction` / `internalMutation`); they can only run via the cron, `npx convex run`, or the dashboard.
+- All user-facing queries derive the user via `getAuthUserId`.
+- Completion crediting and bonus awards happen server-side from server-held data; the client can never claim a bonus directly.

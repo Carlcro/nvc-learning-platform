@@ -1,9 +1,9 @@
 # NVC Learning Platform
 
 An interactive web app for learning and practising **Non-Violent Communication
-(NVC)** — the compassionate-communication framework created by Marshall
-Rosenberg. It combines short lessons, a feelings-vocabulary library, and — at
-its core — realistic roleplay conversations where you rehearse hard
+(NVC)**, the compassionate-communication framework created by Marshall
+Rosenberg. It combines short lessons, a feelings-vocabulary library, and, at
+its core, realistic roleplay conversations where you rehearse hard
 conversations and get warm, non-judgmental coaching on how you expressed
 yourself.
 
@@ -15,16 +15,16 @@ that gap. You learn the four components, then practise them safely against a
 conversation partner that responds in character and opens up as your language
 becomes more empathetic. You can also describe a real situation from your own
 life and have a tailored partner generated, so you can rehearse a difficult
-talk _before_ you have it for real — without ever feeling judged for getting it
+talk _before_ you have it for real, without ever feeling judged for getting it
 wrong. It's aimed at anyone curious about communication and personal growth, no
 prior NVC experience required.
 
 ## The four components of NVC
 
-1. **Observation** — describing facts without judgment
-2. **Feeling** — naming the actual emotion
-3. **Need** — identifying the universal human need underneath the feeling
-4. **Request** — making a concrete, doable request
+1. **Observation**: describing facts without judgment
+2. **Feeling**: naming the actual emotion
+3. **Need**: identifying the universal human need underneath the feeling
+4. **Request**: making a concrete, doable request
 
 The app frames the goal as moving from "jackal" language (judgmental, reactive)
 toward "giraffe" language (empathetic, connecting).
@@ -33,20 +33,20 @@ toward "giraffe" language (empathetic, connecting).
 
 - **Interactive lessons** on each of the four components, plus an introduction
   and an integration lesson, with examples and quizzes
-- **Roleplay practice** — in-character conversations where the partner's
+- **Roleplay practice**: in-character conversations where the partner's
   openness scales with how empathetically you communicate, reaching a natural
   closing moment once you've expressed a feeling, a need and a request
-- **Per-message coaching** — each message is scored on the four components
-  (0–25 each, 0–100 total), with what went well, a single next-step hint, and
+- **Per-message coaching**: each message is scored on the four components
+  (0-25 each, 0-100 total), with what went well, a single next-step hint, and
   gentle detection of "jackal" phrases
-- **Custom scenario builder** — describe a real situation, answer a couple of
+- **Custom scenario builder**: describe a real situation, answer a couple of
   clarifying questions, and get a practice partner tailored to it
 - **Rewind** a conversation to try a different approach
-- **Feelings system** — a feelings wheel, intensity, a browsable library, a
+- **Feelings system**: a feelings wheel, intensity, a browsable library, a
   daily check-in, and a quiz that distinguishes real feelings from
   pseudo-feelings
 - **Daily challenges** with bonus points and streaks
-- **Progress and gamification** — levels, points, stars, streaks, achievements,
+- **Progress and gamification**: levels, points, stars, streaks, achievements,
   and a profile with skill stats and an activity feed
 
 ## Tech stack
@@ -74,7 +74,22 @@ Copy `.env.example` to `.env.local` and set:
 ```env
 VITE_CONVEX_URL=https://your-deployment.convex.cloud
 CONVEX_URL=https://your-deployment.convex.cloud
-ANTHROPIC_API_KEY=sk-ant-...      # used by the Convex action
+```
+
+The Claude API key is used by Convex actions, so it is set on the Convex
+deployment (not in `.env.local`):
+
+```bash
+npx convex env set ANTHROPIC_API_KEY sk-ant-...
+```
+
+Set it separately for the dev and prod deployments. To seed a fresh
+deployment:
+
+```bash
+npx convex run seed:seedAllFeelings
+npx convex run scenarios:seedAll
+npx convex run dailyChallenges:generateDailyChallenge
 ```
 
 ## Scripts

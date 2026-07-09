@@ -6,9 +6,9 @@ This document provides context and guidelines for AI assistants (particularly Cl
 
 ## Project Context
 
-You are working on an **interactive web application that teaches Non-Violent Communication (NVC)** - a compassionate communication framework by Marshall Rosenberg. The app uses AI-powered roleplay to help users practice empathetic communication skills.
+You are working on an **interactive web application that teaches Non-Violent Communication (NVC)**, a compassionate communication framework by Marshall Rosenberg. The app uses model-powered roleplay to help users practice empathetic communication skills.
 
-**Key Philosophy**: The app should embody NVC principles - it should be encouraging, non-judgmental, and focused on growth rather than criticism.
+**Key Philosophy**: The app should embody NVC principles. It should be encouraging, non-judgmental, and focused on growth rather than criticism.
 
 ---
 
@@ -17,13 +17,29 @@ You are working on an **interactive web application that teaches Non-Violent Com
 ### Essential Files to Read First
 1. **PROJECT_SPEC.md** - Complete project specification, data models, and requirements
 2. **convex/schema.ts** - Database schema (source of truth for data structure)
-3. **app/routes/** - Application routing structure
+3. **src/routes/** - Application routing structure
 
 ### Tech Stack Quick Look
-- **Frontend**: TanStack Start + React + TypeScript + Tailwind CSS
+- **Frontend**: TanStack Start + React + TypeScript + Tailwind CSS (all frontend code lives in `src/`)
 - **Backend**: Convex (database + serverless functions)
-- **AI**: OpenAI API (called via Convex Actions)
-- **Hosting**: Cloudflare Pages (frontend) + Convex Cloud (backend)
+- **Model**: Anthropic Claude API (`claude-sonnet-4-6`), called only from Convex Node actions
+- **Hosting**: Cloudflare Workers (configured in `wrangler.jsonc`) + Convex Cloud (backend)
+
+---
+
+## Project Conventions (hard rules)
+
+1. **No emojis anywhere**: not in UI, docs, comments, or commits. If you see one, remove it (no replacement needed).
+2. **Never mention AI or artificial intelligence** in UI copy, commit messages, PR titles, or PR descriptions. Users should never be made to think about artificial intelligence while using the app. In developer docs, refer to "the model" or "the Claude API".
+3. **No em dashes or en dashes** anywhere: UI copy, comments, commits, docs. Use a comma, colon, or period instead.
+4. **No dark mode**: do not add dark mode support.
+5. **Never float or bob the giraffe guide image** up and down.
+6. **Never use a sparkle icon** (the Sparkles icon or similar) anywhere in the UI.
+7. **TypeScript strict**: no `any` types unless absolutely necessary.
+8. **Functional components only**, custom hooks for reusable logic.
+9. **Tailwind CSS only**: no custom CSS files unless there is a compelling reason.
+10. **All model calls happen server-side in Convex actions**: never from the frontend, and scores are never accepted from the client.
+11. **Encouraging, NVC-aligned copy**: feedback and UI text are warm, specific, and growth-oriented.
 
 ---
 
@@ -34,20 +50,20 @@ You are working on an **interactive web application that teaches Non-Violent Com
 NVC has **4 components** that users learn and practice:
 
 1. **Observation** - Facts without judgment
-   - ✅ "You arrived 30 minutes after we agreed"
-   - ❌ "You're always late and irresponsible"
+   - Good: "You arrived 30 minutes after we agreed"
+   - Avoid: "You're always late and irresponsible"
 
 2. **Feeling** - Actual emotions, not thoughts
-   - ✅ "I feel frustrated and worried"
-   - ❌ "I feel like you don't respect me" (this is a thought)
+   - Good: "I feel frustrated and worried"
+   - Avoid: "I feel like you don't respect me" (this is a thought)
 
 3. **Need** - Universal human need (not a strategy)
-   - ✅ "because reliability is important to me"
-   - ❌ "because I need you to be on time" (strategy, not need)
+   - Good: "because reliability is important to me"
+   - Avoid: "because I need you to be on time" (strategy, not need)
 
 4. **Request** - Concrete, positive, doable action
-   - ✅ "Would you be willing to text me if you're running late?"
-   - ❌ "You need to stop being late" (demand, not request)
+   - Good: "Would you be willing to text me if you're running late?"
+   - Avoid: "You need to stop being late" (demand, not request)
 
 ### Important Terminology
 
@@ -63,25 +79,23 @@ NVC has **4 components** that users learn and practice:
 ### When Writing Code
 
 1. **Always use TypeScript** - No `any` types unless absolutely necessary
-2. **Follow the existing file structure** - Check PROJECT_SPEC.md for organization
-3. **Use Tailwind CSS** - No custom CSS files unless there's a compelling reason
+2. **Follow the existing file structure** - Frontend in `src/` (`src/routes`, `src/components`, `src/hooks`), backend in `convex/`
+3. **Use Tailwind CSS** - No custom CSS files unless there is a compelling reason
 4. **Functional components only** - No class components
 5. **Custom hooks for logic** - Extract reusable logic into hooks
 6. **Convex functions are typed** - Use the generated types from `convex/_generated`
-7. ***Never use emojis** - Never use emojies and if you see emojies used remove them. You dont need to replaced them with something else
-8. **Never mention to the user the word AI** - I the ui never mention AI, I dont want to user to think about artificial intelligence when using the app
-9. **Never mention AI in commit messages or PR messages** - Do not reference AI, artificial intelligence, or any AI assistant/tool in commit messages, PR titles, PR descriptions, or anywhere of that nature
+7. **Follow the project conventions above** - especially no emojis, no dashes, no AI mentions
 
 ### Code Style Preferences
 
 ```typescript
-// ✅ Good - Clear, typed, functional
+// Good - Clear, typed, functional
 export function EmpathyMeter({ score }: { score: number }) {
   const color = score >= 70 ? 'green' : score >= 50 ? 'yellow' : 'red'
-  
+
   return (
     <div className="w-full bg-gray-200 rounded-full h-4">
-      <div 
+      <div
         className={`h-4 rounded-full transition-all duration-500 bg-${color}-500`}
         style={{ width: `${score}%` }}
       />
@@ -89,7 +103,7 @@ export function EmpathyMeter({ score }: { score: number }) {
   )
 }
 
-// ❌ Avoid - Untyped, class component, inline styles
+// Avoid - Untyped, class component, inline styles
 class EmpathyMeter extends React.Component {
   render() {
     return <div style={{ width: this.props.score }}></div>
@@ -104,80 +118,95 @@ class EmpathyMeter extends React.Component {
 - **Mutations** - Write data (transactional)
 - **Actions** - Call external APIs (can use Node.js APIs)
 
+**Security model**: every query and mutation derives the current user via `getAuthUserId(ctx)` and never trusts a client-supplied user id. Conversations are owner-only. Seed and admin functions are `internalMutation`s that are only runnable from the CLI or dashboard:
+
+```bash
+npx convex run seed:seedAllFeelings
+npx convex run scenarios:seedAll
+npx convex run dailyChallenges:generateDailyChallenge
+```
+
+There are no admin or test routes in the app itself.
+
 ```typescript
 // In app code - use generated API
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../convex/_generated/api'
 
 // Query data (auto-updates when data changes)
-const scenarios = useQuery(api.scenarios.list)
+const scenarios = useQuery(api.scenarios.listByOrder)
 
 // Mutate data
 const createConversation = useMutation(api.conversations.create)
-await createConversation({ scenarioId: "123" })
+await createConversation({ scenarioId })
 ```
 
 ```typescript
 // In convex/ folder - define functions
 import { query, mutation } from './_generated/server'
+import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 
-export const list = query({
+export const listMine = query({
   handler: async (ctx) => {
-    return await ctx.db.query('scenarios').collect()
-  }
-})
-
-export const create = mutation({
-  args: { scenarioId: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert('conversations', {
-      scenarioId: args.scenarioId,
-      messages: [],
-      status: 'in_progress',
-      createdAt: Date.now(),
-    })
-  }
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return []
+    return await ctx.db
+      .query('conversations')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect()
+  },
 })
 ```
 
-### Working with AI (OpenAI API)
+### Working with the Claude API
 
-**Always use Convex Actions for AI calls** - Never call APIs from the frontend:
+**Always use Convex Node actions for model calls** - never call the API from the frontend. The real pattern, from `convex/ai.ts`:
 
 ```typescript
 // convex/ai.ts
-"use node"; // Required for Node.js APIs
+'use node' // Required for Node.js APIs
 
-import { action } from "./_generated/server";
-import { v } from "convex/values";
-import OpenAI from "openai";
+import Anthropic from '@anthropic-ai/sdk'
+import { getAuthUserId } from '@convex-dev/auth/server'
+import { v } from 'convex/values'
+import { action } from './_generated/server'
+import { internal } from './_generated/api'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!, // set on the Convex deployment
+})
 
-export const analyzeResponse = action({
-  args: {
-    userMessage: v.string(),
-    conversationHistory: v.array(v.object({
-      role: v.union(v.literal("user"), v.literal("assistant")),
-      content: v.string(),
-    }))
+const MODEL = 'claude-sonnet-4-6'
+
+// Structured output: constrain the response with a JSON schema and
+// use anthropic.messages.parse, then read response.parsed_output.
+const response = await anthropic.messages.parse({
+  model: MODEL,
+  max_tokens: 1024,
+  system: systemPrompt,
+  messages: [{ role: 'user', content: userPrompt }],
+  output_config: {
+    format: {
+      type: 'json_schema',
+      schema: nvcAnalysisSchema,
+    },
   },
-  handler: async (ctx, args) => {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_tokens: 1000,
-      messages: args.conversationHistory.concat([
-        { role: "user", content: args.userMessage }
-      ]),
-    });
-
-    return response.choices[0].message.content;
-  },
-});
+})
+const analysis = response.parsed_output as NVCAnalysisResult
 ```
+
+Plain text responses (the roleplay character) use `anthropic.messages.create` and read the first text content block.
+
+### How a conversation turn works
+
+The client calls a single action, `api.ai.submitTurn({ conversationId, message })`. The server then:
+
+1. Authenticates the user and loads the conversation, scenario, character mood, and milestone state from the database (never from the client).
+2. Runs the NVC analysis and the character's reply **in parallel** (both helpers live in `convex/ai.ts`).
+3. Persists the user message, its analysis, and the character reply **atomically** via `internal.conversations.recordTurn`.
+
+Scores are never accepted from the client, and a failed turn can always be retried safely.
 
 ---
 
@@ -185,80 +214,66 @@ export const analyzeResponse = action({
 
 ### Task: Create a New Lesson
 
-1. **Add lesson data to Convex**:
-   ```typescript
-   // convex/lessons.ts
-   export const lessons = internalQuery({
-     handler: async (ctx) => {
-       return [
-         {
-           id: 'observation',
-           title: 'Observations Without Evaluation',
-           content: '...',
-           exercises: [...]
-         }
-       ]
-     }
-   })
-   ```
+Lessons are static content defined in `convex/lessons.ts`. Progress persists to the `lessonProgress` table for signed-in users (`api.lessons.recordCompletion`, `api.lessons.getMyProgress`), with a localStorage fallback for signed-out browsing (see `src/hooks/useLessonProgress.ts`). A lesson counts as completed when the quiz score reaches its `passingScore` (60), not 100.
 
-2. **Create route file**:
-   ```typescript
-   // app/routes/learn/observation.tsx
-   import { createFileRoute } from '@tanstack/react-router'
-   import { useQuery } from 'convex/react'
-   import { api } from '../../../convex/_generated/api'
-   
-   export const Route = createFileRoute('/learn/observation')({
-     component: ObservationLesson,
-   })
-   
-   function ObservationLesson() {
-     const lesson = useQuery(api.lessons.getById, { id: 'observation' })
-     // Render lesson content
-   }
-   ```
+1. **Add the lesson content** to `convex/lessons.ts`, following the existing lesson shape (sections, examples, quiz with `passingScore`).
+2. **Create the route file** in `src/routes/learn/` (see `src/routes/learn/observation.tsx` for the pattern).
+3. **Add navigation** in `src/routes/learn/index.tsx`.
 
-3. **Add navigation** to `/learn/index.tsx`
+### NVC Scoring: the per-turn contextual model
 
-### Task: Implement NVC Scoring
-
-See `PROJECT_SPEC.md` section "NVC Scoring Algorithm" for complete rules. Key points:
+Every user message is scored server-side during `submitTurn`. The shape:
 
 ```typescript
 interface NVCScore {
-  observation: number  // 0-25
-  feeling: number      // 0-25
-  need: number         // 0-25
-  request: number      // 0-25
-  total: number        // 0-100
+  observation: number // 0-25
+  feeling: number     // 0-25
+  need: number        // 0-25
+  request: number     // 0-25
+  total: number       // 0-100, contextual turn quality (NOT the sum)
 }
-
-// Scoring thresholds
-// 90-100: Excellent (pure giraffe)
-// 70-89: Good (minor improvements)
-// 50-69: Partial (significant jackal language)
-// 0-49: Needs practice (mostly jackal)
 ```
 
-**Implementation approach**:
-1. Send user message to Claude API via Convex Action
-2. Use detailed analysis prompt (see PROJECT_SPEC.md)
-3. Parse JSON response
-4. Store score in conversation message
-5. Display feedback to user
+**Component scores (0-25 each)** are given ONLY for what the message actually attempts. A healthy conversation unfolds gradually: an observation in one message, a feeling in the next, a request later. An absent component scores 0, and that 0 is not a flaw; it simply means "not this turn". Never reward cramming all four components into one message, and never punish a message for leaving out components that are not its job that turn.
+
+**Total (0-100)** is a contextual judgment of how well this single turn moves the conversation toward connection:
+- Quality of whatever it attempts (a single flawless piece that adds the next missing part of the arc can score 85-100 on its own)
+- Freedom from blame, judgment, demands, and defensiveness
+- Empathy: curiosity about, or reflection of, the other person's feelings and needs raises the score
+- Momentum: does it advance the conversation or stall and escalate?
+
+**Anchors**:
+- 90-100: pure giraffe, moves the conversation forward beautifully
+- 70-89: good, minor rough edges
+- 50-69: mixed, real effort but noticeable jackal elements
+- 0-49: mostly jackal, blame or judgment dominates
+
+**Conversation results**: the conversation's `finalScore` is the average of the turn totals. Stars: 85+ = 3 stars, 70+ = 2, 60+ = 1, below 60 = 0 (see `convex/lib/progress.ts`, the single source of truth for thresholds).
+
+### The completion pipeline
+
+`api.conversations.complete` is server-side and idempotent (completing twice awards nothing extra). It:
+
+1. Computes `finalScore` and stars from the server-held messages.
+2. Updates `scenarioProgress` (attempts, best score, status).
+3. Awards points: first completion earns `100 * stars`; repeats reward improvement over the previous best (plus a small practice bonus); a perfect 100 earns a one-time +200 bonus; completing a daily challenge adds that challenge's advertised `bonusPoints`.
+4. Advances the practice streak using the client's local calendar date, validated server-side (see `resolveLocalDate` in `convex/lib/progress.ts`).
+5. Updates true running averages for the four components and overall score.
+6. Awards achievements (catalog in `convex/lib/progress.ts`).
+
+**Levels**: thresholds are 0 / 300 / 700 / 1200 / 1800 / 2500 points, then +800 points per level after level 5.
 
 ### Task: Create a New UI Component
 
-1. **Check if similar component exists** in `app/components/`
-2. **Create in appropriate folder**:
-   - `ui/` - Generic, reusable (Button, Card, Badge)
-   - `features/` - Feature-specific (EmpathyMeter, FeedbackPanel)
-   - `layout/` - Layout components (Header, Sidebar)
+1. **Check if a similar component exists** in `src/components/`
+2. **Create in the appropriate folder**:
+   - `src/components/ui/` - Generic, reusable (Button, Card, Badge)
+   - `src/components/features/` - Feature-specific (EmpathyMeter, FeedbackPanel)
+   - `src/components/layout/` - Layout components (Header, navigation)
 
 3. **Use Tailwind + TypeScript**:
 ```typescript
-// app/components/ui/Badge.tsx
+// src/components/ui/Badge.tsx
 interface BadgeProps {
   variant: 'success' | 'warning' | 'error'
   children: React.ReactNode
@@ -270,7 +285,7 @@ export function Badge({ variant, children }: BadgeProps) {
     warning: 'bg-yellow-100 text-yellow-800',
     error: 'bg-red-100 text-red-800',
   }
-  
+
   return (
     <span className={`px-2 py-1 rounded-full text-sm ${colors[variant]}`}>
       {children}
@@ -281,70 +296,26 @@ export function Badge({ variant, children }: BadgeProps) {
 
 ### Task: Add a New Scenario
 
-1. **Define scenario in Convex**:
-```typescript
-// Either add to seed data or create via mutation
-await ctx.db.insert('scenarios', {
-  title: 'Disagreement with Colleague',
-  description: 'Your coworker criticized your work in a team meeting',
-  category: 'workplace',
-  difficulty: 'intermediate',
-  characterName: 'Alex',
-  characterPersonality: 'Defensive, feels attacked, values respect',
-  situation: 'Alex publicly criticized your proposal in the meeting...',
-  learningGoals: ['Practice empathy under pressure', 'Address conflict directly'],
-  unlockLevel: 3,
-})
+Built-in scenarios live as data arrays in `convex/scenarios.ts` (`BEGINNER_SCENARIOS`, `INTERMEDIATE_SCENARIOS`, `ADVANCED_SCENARIOS`) and are seeded with the internal mutation:
+
+```bash
+npx convex run scenarios:seedAll
 ```
 
-2. **Scenario automatically available** in roleplay interface
+**Scenario access is deliberately open**: scenarios are never locked. The user's level only drives a "recommended" hint in the practice hub. `unlockRequirements` remain in the schema but are not enforced; this is the intended design.
 
-### Task: Implement Daily Challenges
+Users can also build **custom scenarios** from a real situation in their life via `/practice/create`, which uses `ai.assessScenarioReadiness` (clarifying questions) and `ai.generateCustomScenario`. Custom scenarios are private and owned by their creator.
 
-1. **Create cron job** (convex/crons.ts):
-```typescript
-import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
+### Daily Challenges
 
-const crons = cronJobs();
+A cron (`convex/crons.ts`) runs at midnight UTC and calls `internal.dailyChallenges.generateDailyChallenge`, which generates 3 fresh scenarios via the Claude API (generation logic in `convex/dailyChallengesGeneration.ts`). Each generated scenario is persisted as a real scenario row (`source: 'daily'`, `orderIndex: -1` so it stays out of the practice ladder), and one challenge is created per difficulty with fixed bonus points: easy 50, medium 75, hard 100.
 
-crons.daily(
-  "reset daily challenge",
-  { hourUTC: 0, minuteUTC: 0 },
-  internal.challenges.generateDaily
-);
+`api.dailyChallenges.getMyChallenge` picks the challenge matching the user's recommended difficulty and returns the others as alternatives. Challenge completion is credited inside `conversations.complete`, which awards exactly the challenge's advertised `bonusPoints`.
 
-export default crons;
-```
+To generate a day's challenges manually:
 
-2. **Implement generation logic** (convex/challenges.ts):
-```typescript
-export const generateDaily = internalMutation({
-  handler: async (ctx) => {
-    const today = new Date().toISOString().split('T')[0]
-    
-    // Check if today's challenge exists
-    const existing = await ctx.db
-      .query('dailyChallenges')
-      .withIndex('by_date', q => q.eq('date', today))
-      .first()
-    
-    if (existing) return existing
-    
-    // Select random scenario
-    const scenarios = await ctx.db.query('scenarios').collect()
-    const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)]
-    
-    // Create challenge
-    return await ctx.db.insert('dailyChallenges', {
-      date: today,
-      scenarioId: randomScenario._id,
-      difficulty: randomScenario.difficulty,
-      description: randomScenario.description,
-      bonusPoints: calculateBonusPoints(randomScenario.difficulty),
-    })
-  }
-})
+```bash
+npx convex run dailyChallenges:generateDailyChallenge
 ```
 
 ---
@@ -354,81 +325,59 @@ export const generateDaily = internalMutation({
 ### Error Handling
 
 ```typescript
-// ✅ Good - Graceful error handling with user feedback
+// Good - Graceful error handling with user feedback
 function ConversationView() {
   const conversation = useQuery(api.conversations.getActive, { scenarioId })
-  
+
   if (conversation === undefined) {
     return <LoadingSpinner />
   }
-  
+
   if (conversation === null) {
     return (
-      <EmptyState 
+      <EmptyState
         title="No active conversation"
         action={<Button onClick={startNew}>Start New</Button>}
       />
     )
   }
-  
+
   return <ConversationDisplay conversation={conversation} />
 }
 
-// ❌ Avoid - Crashes on null/undefined
+// Avoid - Crashes on null/undefined
 function ConversationView() {
   const conversation = useQuery(api.conversations.getActive, { scenarioId })
   return <div>{conversation.messages.map(...)}</div> // Will crash!
 }
 ```
 
-### Optimistic Updates
-
-```typescript
-// Use Convex's optimistic updates for better UX
-const sendMessage = useMutation(api.conversations.addMessage)
-
-async function handleSend(message: string) {
-  // Optimistically add message to UI
-  setOptimisticMessages(prev => [...prev, {
-    role: 'user',
-    content: message,
-    timestamp: Date.now()
-  }])
-  
-  // Send to backend
-  await sendMessage({ conversationId, message })
-  
-  // Clear optimistic state (real data from query takes over)
-  setOptimisticMessages([])
-}
-```
-
 ### Form Handling
 
 ```typescript
-// ✅ Good - Controlled form with validation
+// Good - Controlled form with validation
 function MessageInput({ onSend }: { onSend: (msg: string) => void }) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!value.trim()) {
       setError('Please enter a message')
       return
     }
-    
+
     if (value.length > 1000) {
       setError('Message too long (max 1000 characters)')
       return
     }
-    
+
     setError(null)
     onSend(value)
     setValue('')
   }
-  
+
   return (
     <form onSubmit={handleSubmit}>
       <input
@@ -450,37 +399,38 @@ function MessageInput({ onSend }: { onSend: (msg: string) => void }) {
 ### What to Test
 
 1. **Convex functions** - Unit test queries, mutations, actions
-2. **NVC scoring logic** - Test against known good/bad examples
-3. **Critical user flows** - E2E tests for signup → lesson → roleplay
+2. **Progression logic** - The pure functions in `convex/lib/progress.ts` (streaks, stars, points, levels, achievements) are the easiest and most valuable to test
+3. **Critical user flows** - E2E tests for signup, lesson, roleplay
 4. **UI components** - Test rendering, interactions
 
 ### Testing NVC Scores
 
+Because the total is contextual (not a sum), test cases should assert ranges and the qualitative flags rather than exact totals:
+
 ```typescript
-// Example test cases for scoring algorithm
 const testCases = [
   {
+    context: 'first message of a conversation',
     input: "You're always late and you don't care about anyone else",
-    expected: {
-      observation: 0,  // No observation, just judgment
-      feeling: 0,      // No feeling expressed
-      need: 0,         // No need identified
-      request: 0,      // No request made
-      total: 0,
+    expect: {
+      totalRange: [0, 49], // mostly jackal
       isJackalLanguage: true,
-    }
+      jackalPhrases: ['always late', "don't care"],
+    },
   },
   {
-    input: "When you arrived 30 minutes after our agreed time, I felt worried because punctuality helps me feel respected. Would you be willing to text me if you're running late?",
-    expected: {
-      observation: 25,  // Clear, judgment-free observation
-      feeling: 22,      // Good feeling word ("worried")
-      need: 23,         // Need for respect identified
-      request: 24,      // Clear, positive request
-      total: 94,
+    context: 'feeling and need already expressed earlier in the conversation',
+    input: 'Would you be willing to text me if you are running late?',
+    expect: {
+      // A single clean request that adds the missing arc piece
+      // deserves a high total on its own.
+      totalRange: [85, 100],
+      request: [20, 25],
+      // Absent components score 0 and that is fine, not a flaw.
+      observation: [0, 0],
       isJackalLanguage: false,
-    }
-  }
+    },
+  },
 ]
 ```
 
@@ -488,39 +438,39 @@ const testCases = [
 
 ## Common Pitfalls & How to Avoid Them
 
-### ❌ Pitfall 1: Not handling loading states
+### Pitfall 1: Not handling loading states
 
 ```typescript
-// ❌ Bad
+// Bad
 const data = useQuery(api.something.get)
 return <div>{data.name}</div> // Crashes if data is undefined
 
-// ✅ Good
+// Good
 const data = useQuery(api.something.get)
 if (data === undefined) return <LoadingSpinner />
 return <div>{data.name}</div>
 ```
 
-### ❌ Pitfall 2: Calling AI directly from frontend
+### Pitfall 2: Calling the model directly from the frontend
 
 ```typescript
-// ❌ Bad - Exposes API key!
-import OpenAI from "openai"
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const response = await openai.chat.completions.create({...})
+// Bad - Exposes the API key!
+import Anthropic from '@anthropic-ai/sdk'
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const response = await anthropic.messages.create({...})
 
-// ✅ Good - Use Convex Action
-const analyzeMessage = useAction(api.ai.analyzeResponse)
-const response = await analyzeMessage({ message: userInput })
+// Good - Use the Convex action that runs the whole turn server-side
+const submitTurn = useAction(api.ai.submitTurn)
+await submitTurn({ conversationId, message: userInput })
 ```
 
-### ❌ Pitfall 3: Not using TypeScript properly
+### Pitfall 3: Not using TypeScript properly
 
 ```typescript
-// ❌ Bad
+// Bad
 function MessageBubble({ message }: any) { ... }
 
-// ✅ Good
+// Good
 interface MessageBubbleProps {
   message: {
     role: 'user' | 'assistant'
@@ -531,19 +481,23 @@ interface MessageBubbleProps {
 function MessageBubble({ message }: MessageBubbleProps) { ... }
 ```
 
-### ❌ Pitfall 4: Forgetting NVC principles in UI copy
+### Pitfall 4: Forgetting NVC principles in UI copy
 
 ```typescript
-// ❌ Bad - Judgmental, discouraging
+// Bad - Judgmental, discouraging
 <p>Your response was wrong. You clearly don't understand NVC.</p>
 
-// ✅ Good - Encouraging, specific, growth-oriented
+// Good - Encouraging, specific, growth-oriented
 <p>
-  Great effort! You identified a feeling. Let's work on connecting 
-  it to a universal need. Try asking yourself: what's important 
+  Great effort! You identified a feeling. Let's work on connecting
+  it to a universal need. Try asking yourself: what's important
   to me in this situation?
 </p>
 ```
+
+### Pitfall 5: Trusting client data for progress
+
+Scores, points, streaks, and completions are all computed server-side from server-held data. Never add a mutation that accepts a score, points value, or completion flag from the client. The only client-supplied progress input is the local calendar date for streaks, and even that is validated server-side.
 
 ---
 
@@ -563,8 +517,8 @@ function MessageBubble({ message }: MessageBubbleProps) { ... }
 **Issue**: Query returns `undefined` forever
 - **Fix**: Check Convex dashboard logs for errors in the query function
 
-**Issue**: AI responses are too slow
-- **Fix**: Use streaming (implement with SSE) or show loading indicators
+**Issue**: Model responses are too slow
+- **Fix**: The analysis and character reply already run in parallel inside `submitTurn`; make sure the UI shows a clear loading indicator
 
 **Issue**: Components re-rendering too often
 - **Fix**: Memoize with `useMemo` / `useCallback`, check dependency arrays
@@ -575,15 +529,15 @@ function MessageBubble({ message }: MessageBubbleProps) { ... }
 
 ### Good Questions to Ask
 
-✅ "How should I structure the conversation state to support 'rewind' functionality?"
-✅ "What's the best way to implement real-time scoring feedback during typing?"
-✅ "Should this be a Convex query or mutation?"
+- "How should I structure the conversation state to support 'rewind' functionality?"
+- "What's the best way to implement real-time scoring feedback during typing?"
+- "Should this be a Convex query or mutation?"
 
 ### Less Helpful Questions
 
-❌ "Can you write all the code for me?" (Break it into smaller tasks)
-❌ "Why doesn't this work?" (Include error messages, context)
-❌ "Is this good?" (Be specific about what you're optimizing for)
+- "Can you write all the code for me?" (Break it into smaller tasks)
+- "Why doesn't this work?" (Include error messages, context)
+- "Is this good?" (Be specific about what you're optimizing for)
 
 ### Useful Resources
 
@@ -646,55 +600,25 @@ These values should be reflected in:
 - Code comments and documentation
 - The overall user experience
 
-When working on specific features, check the `/docs/features/` folder:
-- **AI Roleplay**: See `docs/features/AI_ROLEPLAY_CLAUDE.md`
-- **Lessons**: See `docs/features/LESSONS_CLAUDE.md` (coming soon)
-- **Daily Challenges**: See `docs/features/CHALLENGES_CLAUDE.md` (coming soon)
-```
+---
+
+## Current State
+
+### Roleplay Scenarios (shipped)
+
+Interactive roleplay conversations are live. Key implementation facts:
+
+1. All model calls go through Convex Node actions in `convex/ai.ts`; the single entry point for a turn is `api.ai.submitTurn`.
+2. Scoring is server-side, per-turn, and contextual (see the scoring section above). Scores are never accepted from the client.
+3. Character responses stay in character and never break roleplay or mention the coaching system.
+4. Scenario access is open by design; the level only drives a recommendation.
+5. Feedback language is encouraging and non-judgmental, written in plain spoken English with no markdown.
+
+Routes live under `src/routes/practice/` and roleplay components under `src/components/features/`. See `docs/AI_ROLEPLAY_FEATURE_SUMMARY.md` for the feature summary.
+
+**Remember**: You're not just building an app, you're creating a tool that helps people communicate more compassionately. The code itself should reflect that compassion through thoughtful design, clear communication, and helpful guidance.
 
 ---
 
-## Current Development Focus
-
-### Active Feature: AI Roleplay Scenarios
-
-**What**: Interactive AI conversations where users practice NVC
-**Status**: In Development
-**Full Specs**: `docs/AI_ROLEPLAY_FEATURE_SUMMARY.md`
-
-**Quick Reference for Claude Code:**
-
-When working on AI Roleplay features:
-
-1. **Read the full spec first**: 
-```
-   Please read docs/AI_ROLEPLAY_FEATURE_SUMMARY.md for complete 
-   context on the AI Roleplay feature before starting any work.
-```
-
-2. **Key Implementation Rules**:
-   - All AI calls MUST go through Convex Actions (never frontend)
-   - Scoring algorithm is in the spec - implement exactly as written
-   - Character responses must stay in character (never break roleplay)
-   - NVC scores: 0-25 per component, 0-100 total
-   - Use encouraging, non-judgmental feedback language
-
-3. **Tech Stack for This Feature**:
-   - Convex for: scenarios, conversations, user progress
-   - Convex Actions for: Claude API calls (both character & scoring)
-   - TanStack Router for: `/practice/` routes
-   - React components in: `app/components/features/roleplay/`
-
-4. **Start Here**:
-   - Phase 1: Scenario schema (`convex/schema.ts`)
-   - Phase 2: AI Actions (`convex/ai.ts`)
-   - Phase 3: Conversation UI (`app/routes/practice/roleplay.$id.tsx`)
-
-**Remember**: You're not just building an app - you're creating a tool that helps people communicate more compassionately. The code itself should reflect that compassion through thoughtful design, clear communication, and helpful guidance.
-
-Good luck, and happy coding! 🦒💚
-
----
-
-**Last Updated**: October 25, 2025
+**Last Updated**: July 9, 2026
 **For Questions**: See PROJECT_SPEC.md or ask the project maintainers

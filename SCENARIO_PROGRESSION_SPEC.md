@@ -8,6 +8,19 @@ This document defines the complete scenario progression system for the NVC Learn
 
 ---
 
+## Design Decision: Open Access (read this first)
+
+**Scenarios are never locked.** This is the shipped, intended design, not an oversight.
+
+- Every scenario is playable by every user at any time. The user's level only drives a "recommended" hint in the practice hub so newcomers know where to start.
+- The `unlockRequirements` field still exists in the schema (`convex/schema.ts`) but is **not enforced** anywhere. It is a schema leftover from an earlier plan, kept for compatibility.
+- The `locked` status value in `scenarioProgress` is likewise unused in practice.
+- Any text in this document that describes unlock gates, lock icons, or "complete X to unlock Y" reflects the original plan and should be read as superseded by open access. It is kept for historical context on the rest of the design (scoring, stars, feedback), which did ship.
+
+Rationale: the app should embody NVC values. Gating practice behind performance felt like a test; an open library with a warm recommendation felt like an invitation.
+
+---
+
 ## Table of Contents
 
 1. [System Architecture](#system-architecture)
@@ -27,9 +40,7 @@ This document defines the complete scenario progression system for the NVC Learn
 ### High-Level Flow
 
 ```
-User selects scenario
-    ↓
-Convex: Check if unlocked (scenarioProgress)
+User selects any scenario (all scenarios are open; the hub highlights a recommendation)
     ↓
 Start conversation (create conversation record)
     ↓
@@ -47,7 +58,7 @@ User ends conversation OR meets completion criteria
     ↓
 Calculate final results
     ↓
-Update scenarioProgress (unlock next, award stars)
+Update scenarioProgress (award stars, update bests)
     ↓
 Show results screen with detailed feedback
     ↓
@@ -61,7 +72,7 @@ User can: retry, view transcript, or continue to next
 3. **Conversation Engine** - Handle active conversations
 4. **Scoring System** - Evaluate NVC quality in real-time
 5. **Feedback Generator** - Provide personalized coaching
-6. **Unlock System** - Control which scenarios are available
+6. **Recommendation System** - Suggest a fitting scenario for the user's level (nothing is ever locked)
 7. **Results Display** - Show comprehensive feedback after completion
 
 ---
@@ -110,11 +121,13 @@ export default defineSchema({
     focusArea: v.string(), // e.g., "conflict resolution", "boundary setting"
     
     // Progression
-    orderIndex: v.number(), // For linear progression
+    orderIndex: v.number(), // Sorts the practice hub into a learning path
+    // NOTE: kept in the schema for compatibility but NOT enforced.
+    // Scenarios are open access by design; see the note at the top.
     unlockRequirements: v.object({
       minLevel: v.number(),
-      requiredScenarios: v.array(v.string()), // IDs of scenarios that must be completed
-      minStarsTotal: v.optional(v.number()), // Total stars needed across all scenarios
+      requiredScenarios: v.array(v.string()),
+      minStarsTotal: v.optional(v.number()),
     }),
     
     // Metadata
@@ -137,7 +150,7 @@ export default defineSchema({
 
     // Status
     status: v.union(
-      v.literal("locked"),      // Not yet available
+      v.literal("locked"),      // Unused in practice (open access design)
       v.literal("available"),   // Can start
       v.literal("in_progress"), // Started but not completed
       v.literal("attempted"),   // Attempted but scored <60 (no stars earned)
@@ -326,18 +339,18 @@ A scenario is considered **completed** (with at least 1 star) when all of the fo
 2. **Minimum Score**: Average NVC score ≥ 60 (REQUIRED to earn a star)
 3. **Character De-escalation**: Character mood improved by at least +3 from start
 
-**Important**: If a scenario is attempted but scores below 60, the scenario is marked as **"Attempted"** (no stars earned) and the user must try again to unlock progression.
+**Important**: If a scenario is attempted but scores below 60, the scenario is marked as **"Attempted"** (no stars earned). The user is warmly encouraged to try again for a star, but nothing is blocked; all other scenarios remain open.
 
 ### Star Rating System
 
 Stars are awarded based on final average NVC score:
 
 | Stars | Score Range | Status | Description |
-|-------|-------------|--------|-------------|
-| ⭐ | 60-69 | Passed | Basic NVC demonstrated, scenario can progress |
-| ⭐⭐ | 70-84 | Success | Good NVC with minor improvements |
-| ⭐⭐⭐ | 85-100 | Excellent | Mastery of NVC principles |
-| (none) | 0-59 | Attempted | More practice needed, no progression yet |
+|---------|-------------|--------|-------------|
+| 1 star | 60-69 | Passed | Basic NVC demonstrated |
+| 2 stars | 70-84 | Success | Good NVC with minor improvements |
+| 3 stars | 85-100 | Excellent | Mastery of NVC principles |
+| none | 0-59 | Attempted | More practice needed, worth another try |
 
 ### Points System
 
@@ -376,49 +389,14 @@ function calculateLevel(totalPoints: number): number {
 
 ## Progression Rules
 
-### Scenario Unlocking (Linear Path - MVP)
+### Scenario Access: Open by Design (shipped behavior)
 
-**Rule**: Scenarios unlock sequentially by `orderIndex`. Previous scenario MUST be completed with at least 1 star to unlock the next.
+**Rule**: Every scenario is available to every user, always. See the "Design Decision: Open Access" section at the top of this document.
 
-```typescript
-function isScenarioUnlocked(
-  scenario: Scenario,
-  userProgress: ScenarioProgress[],
-  userLevel: number
-): boolean {
-  // Check level requirement
-  if (userLevel < scenario.unlockRequirements.minLevel) {
-    return false
-  }
-
-  // Check if previous scenario is completed with at least 1 star
-  if (scenario.orderIndex > 0) {
-    const previousScenario = findScenarioByOrder(scenario.orderIndex - 1)
-    const previousProgress = userProgress.find(
-      p => p.scenarioId === previousScenario._id
-    )
-
-    // Previous scenario must be at least "passed" or "mastered" (not "attempted")
-    // "attempted" means <60 score (no stars) - doesn't count as completion
-    if (!previousProgress || previousProgress.status === "locked" || previousProgress.status === "attempted" || previousProgress.status === "in_progress" || previousProgress.status === "available") {
-      return false
-    }
-  }
-
-  // Check required scenarios (if any)
-  if (scenario.unlockRequirements.requiredScenarios.length > 0) {
-    for (const requiredId of scenario.unlockRequirements.requiredScenarios) {
-      const requiredProgress = userProgress.find(p => p.scenarioId === requiredId)
-      // Required scenarios must also be completed (passed or mastered)
-      if (!requiredProgress || (requiredProgress.status !== "passed" && requiredProgress.status !== "mastered")) {
-        return false
-      }
-    }
-  }
-
-  return true
-}
-```
+- `orderIndex` is used only to sort the practice hub into a sensible learning path.
+- The user's level drives a "recommended" highlight, never a gate.
+- `unlockRequirements` is present in the schema but unenforced; no code checks it.
+- An earlier draft of this spec defined an `isScenarioUnlocked` gate that required completing the previous scenario with at least 1 star. That gate was deliberately not built.
 
 ### Attempt Limits
 
@@ -468,13 +446,13 @@ function shouldEncourageRetry(progress: ScenarioProgress): boolean {
 
 1. **After user message with score < 50**:
    ```
-   💡 That response included some judgmental language. 
+   That response included some judgmental language. 
    Try focusing on your own feelings and needs.
    ```
 
 2. **After 3 consecutive low scores**:
    ```
-   🦒 Tip: Remember the 4 components of NVC:
+   Tip: Remember the 4 components of NVC:
    1. Observation (what you see/hear)
    2. Feeling (your emotion)
    3. Need (what's important to you)
@@ -483,19 +461,19 @@ function shouldEncourageRetry(progress: ScenarioProgress): boolean {
 
 3. **After excellent message (score > 85)**:
    ```
-   ✨ Great NVC! You made a clear observation without judgment 
+   Great NVC! You made a clear observation without judgment 
    and connected it to your feelings.
    ```
 
 4. **Character mood improving**:
    ```
-   💚 Alex is becoming more open to the conversation.
+   Alex is becoming more open to the conversation.
    Your empathetic approach is working!
    ```
 
 5. **Objective completed**:
    ```
-   ✅ Learning Objective Complete: You expressed a feeling 
+   Learning Objective Complete: You expressed a feeling 
    without blaming the other person!
    ```
 
@@ -630,12 +608,11 @@ async function generateFeedback(
 interface ScenarioCardProps {
   scenario: Scenario
   progress: ScenarioProgress | null
-  isLocked: boolean
+  isRecommended: boolean
 }
 
-// States:
-// - Locked: Show lock icon, gray out, display unlock requirements
-// - Available: Show "Start" button, highlight in giraffe colors
+// States (all scenarios are always open):
+// - Available: Show "Start" button; the recommended scenario is highlighted
 // - In Progress: Show "Continue" button, show partial progress
 // - Completed: Show stars, best score, "Replay" or "Improve" button
 ```
@@ -643,9 +620,6 @@ interface ScenarioCardProps {
 **Visual Design**:
 ```
 ┌─────────────────────────────────────┐
-│ 🔒 Locked                           │  (if locked)
-│ Complete "First Steps" to unlock   │
-├─────────────────────────────────────┤
 │                                     │
 │ Missed Deadline                     │
 │ Workplace • Intermediate            │
@@ -653,7 +627,7 @@ interface ScenarioCardProps {
 │ Your colleague didn't deliver       │
 │ the report on time...               │
 │                                     │
-│ ⏱ 10 minutes                        │
+│ 10 minutes                        │
 │                                     │
 │ [Start Practice →]                  │
 └─────────────────────────────────────┘
@@ -661,7 +635,7 @@ interface ScenarioCardProps {
 OR (if completed):
 
 ┌─────────────────────────────────────┐
-│ ⭐⭐⭐ Mastered!                     │
+│ 3 stars - Mastered!                 │
 │ Best Score: 88/100                  │
 ├─────────────────────────────────────┤
 │ Missed Deadline                     │
@@ -696,22 +670,22 @@ interface ScenarioBriefProps {
 ```
 ┌─────────────────────────────────────────┐
 │  Missed Deadline                         │
-│  Workplace • Intermediate • ⏱ 10 min    │
+│  Workplace • Intermediate • 10 min    │
 ├─────────────────────────────────────────┤
 │                                          │
-│  📋 Situation:                           │
+│  Situation:                           │
 │  Your colleague Alex was responsible...  │
 │                                          │
-│  👤 About Alex:                          │
+│  About Alex:                          │
 │  Personality: Stressed, overworked...    │
 │  Current mood: Defensive and anxious     │
 │                                          │
-│  🎯 What You'll Practice:                │
+│  What You'll Practice:                │
 │  • Express frustration without blame    │
 │  • Make clear requests (not demands)    │
 │  • Show empathy while addressing issue  │
 │                                          │
-│  💡 Tip:                                 │
+│  Tip:                                 │
 │  Focus on your own needs rather than     │
 │  Alex's behavior. Remember, you're both  │
 │  on the same team.                       │
@@ -735,12 +709,12 @@ Desktop:
 │  "Look, I know..." │  [██████░░] 70% │
 │                    │                 │
 │  You:              │  Objectives:    │
-│  "When you didn't" │  ✅ Observation │
-│  [Score: 75/100]   │  ✅ Feeling     │
-│                    │  ⏳ Need        │
-│  Alex:             │  ⏳ Request     │
+│  "When you didn't" │  (x) Observation│
+│  [Score: 75/100]   │  (x) Feeling    │
+│                    │  ( ) Need       │
+│  Alex:             │  ( ) Request    │
 │  "I'm really..."   │                 │
-│                    │  💡 Hint:       │
+│                    │  Hint:       │
 │  ┌───────────────┐ │  Try connecting │
 │  │ Type here...  │ │  your feeling   │
 │  └───────────────┘ │  to a need      │
@@ -758,7 +732,7 @@ Mobile:
 **Key Features**:
 - Real-time NVC scoring display
 - Empathy meter (visual progress bar)
-- Character mood indicator (😠 😐 😊)
+- Character mood indicator (defensive / neutral / open)
 - Learning objectives checklist
 - Inline feedback after each message
 - Rewind button (optional: undo last 1-2 messages)
@@ -779,9 +753,9 @@ interface ResultsScreenProps {
 **Visual Design**:
 ```
 ┌───────────────────────────────────────────┐
-│         Scenario Complete! 🎉             │
+│         Scenario Complete!             │
 │                                           │
-│            ⭐⭐⭐ Excellent!               │
+│           3 stars - Excellent!            │
 │                                           │
 │         Your NVC Score: 84/100            │
 │                                           │
@@ -791,24 +765,24 @@ interface ResultsScreenProps {
 │  Need:         82/100  ████████░░         │
 │  Request:      91/100  █████████░         │
 │                                           │
-│  💚 What Went Well:                       │
+│  What Went Well:                       │
 │  • You made clear, specific requests      │
 │  • Your observations were judgment-free   │
 │  • You showed empathy for Alex's stress   │
 │                                           │
-│  🌱 Room to Grow:                         │
+│  Room to Grow:                         │
 │  • Try connecting feelings to needs       │
 │    more explicitly                        │
 │  • In message #3, "you always..." is      │
 │    a generalization. Try "this time"      │
 │                                           │
-│  📊 Character Journey:                    │
-│  Alex's mood: Defensive 😠 → Open 😊     │
+│  Character Journey:                    │
+│  Alex's mood: Defensive → Open            │
 │                                           │
-│  🎁 Rewards:                              │
+│  Rewards:                              │
 │  + 300 points                             │
 │  + 1 star (new best!)                     │
-│  Unlocked: Next scenario                  │
+│  Recommended: Next scenario               │
 │                                           │
 │  [View Transcript] [Try Again] [Next →]  │
 └───────────────────────────────────────────┘
@@ -829,6 +803,8 @@ Shows overall statistics and progress:
 ---
 
 ## AI Integration
+
+**Note (shipped architecture)**: the code sketches below predate implementation. As built, a single action (`api.ai.submitTurn` in `convex/ai.ts`) runs the NVC analysis and the character reply in parallel, loads all state server-side, and persists both atomically via `internal.conversations.recordTurn`. The character never receives the user's score; it judges the message itself. Scores are never accepted from the client.
 
 ### AI Character System
 
@@ -937,7 +913,7 @@ Remember: You're a real person dealing with real emotions, not an NVC teacher.`
 
     // Call Claude API
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 300,
       system: systemPrompt,
       messages: [
@@ -1017,7 +993,7 @@ Return JSON:
 }`
 
     const analysis = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 600,
       messages: [{ role: "user", content: analysisPrompt }],
     })
@@ -1063,7 +1039,7 @@ Be encouraging and specific. Focus on growth, not criticism.
 Return JSON array of suggestions.`
 
     const feedback = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1000,
       messages: [{ role: "user", content: feedbackPrompt }],
     })
@@ -1084,7 +1060,7 @@ Return JSON array of suggestions.`
    ↓
 2. Navigate to /practice
    ↓
-3. See first scenario (only one unlocked)
+3. See the full scenario list, with the first one highlighted as recommended
    ↓
 4. Click "Start" → See scenario brief
    ↓
@@ -1104,7 +1080,7 @@ Return JSON array of suggestions.`
    ↓
 12. See results screen with detailed feedback
    ↓
-13. If passed: Celebrate + unlock next scenario
+13. If passed: Celebrate + recommend the next scenario
    ↓
 14. If not passed: Encourage retry with specific tips
 ```
@@ -1122,11 +1098,11 @@ Return JSON array of suggestions.`
 3. Choose to:
    - Continue where they left off
    - Retry previous scenario for better score
-   - Jump to any unlocked scenario
+   - Jump to any scenario (all are open)
    ↓
 4. Practice and receive feedback
    ↓
-5. See progress updates (level up, new unlock, etc.)
+5. See progress updates (level up, new achievements, etc.)
 ```
 
 ### Completion Scenarios
@@ -1134,22 +1110,22 @@ Return JSON array of suggestions.`
 **Scenario A: Mastered (85+ score)**
 ```
 Results Screen:
-- ⭐⭐⭐ Excellent! message
+- "Excellent!" message with 3 stars
 - Detailed score breakdown
 - What went well (2-3 points)
 - Character mood progression shown
-- Unlock notification: "Next scenario available!"
+- Suggestion: "Ready for the next scenario?"
 - Options: [Next Scenario] [View Transcript]
 ```
 
 **Scenario B: Passed (60-84 score)**
 ```
 Results Screen:
-- ⭐ or ⭐⭐ message (Passed or Success)
+- 1 or 2 star message (Passed or Success)
 - Score breakdown
 - Encouraging feedback
 - Specific suggestions for improvement
-- Unlock notification: "Next scenario available!"
+- Suggestion: "Ready for the next scenario?"
 - Options: [Next Scenario] [Try for 3 stars] [View Transcript]
 ```
 
@@ -1178,22 +1154,22 @@ After 3 attempts:
 **Goal**: Basic scenario progression working
 
 **Tasks**:
-1. ✅ Implement Convex schema (scenarios, scenarioProgress, enhanced conversations)
-2. ✅ Create scenario seed data (5 beginner scenarios)
-3. ✅ Build scenario selection UI
-4. ✅ Build pre-scenario brief screen
-5. ✅ Implement basic conversation interface (left/right split)
-6. ✅ Integrate AI scoring (NVC analysis)
-7. ✅ Implement basic character mood tracking
-8. ✅ Build results screen with component breakdown
-9. ✅ Implement linear unlock system
-10. ✅ Create basic feedback generation
+1. [done] Implement Convex schema (scenarios, scenarioProgress, enhanced conversations)
+2. [done] Create scenario seed data (5 beginner scenarios)
+3. [done] Build scenario selection UI
+4. [done] Build pre-scenario brief screen
+5. [done] Implement basic conversation interface (left/right split)
+6. [done] Integrate AI scoring (NVC analysis)
+7. [done] Implement basic character mood tracking
+8. [done] Build results screen with component breakdown
+9. [done] Implement open scenario list with recommendation highlighting (unlock gates were cut; see the open access note)
+10. [done] Create basic feedback generation
 
 **Deliverables**:
 - Users can practice 5 scenarios
 - Real-time NVC scoring works
 - Results screen shows scores
-- Scenarios unlock sequentially
+- Scenarios are ordered into a learning path (all open)
 - Basic feedback provided
 
 ### Phase 2: Enhanced Feedback (Week 3)
@@ -1201,14 +1177,14 @@ After 3 attempts:
 **Goal**: Provide personalized, helpful feedback
 
 **Tasks**:
-1. ✅ Implement AI-generated feedback
-2. ✅ Add "what went well" and "room to grow"
-3. ✅ Generate specific examples from conversation
-4. ✅ Add giraffe alternatives for jackal language
-5. ✅ Implement real-time coaching hints
-6. ✅ Add learning objectives tracking
-7. ✅ Create feedback summary display
-8. ✅ Add transcript view with annotations
+1. [done] Implement AI-generated feedback
+2. [done] Add "what went well" and "room to grow"
+3. [done] Generate specific examples from conversation
+4. [done] Add giraffe alternatives for jackal language
+5. [done] Implement real-time coaching hints
+6. [done] Add learning objectives tracking
+7. [done] Create feedback summary display
+8. [done] Add transcript view with annotations
 
 **Deliverables**:
 - Detailed post-conversation feedback
@@ -1221,14 +1197,14 @@ After 3 attempts:
 **Goal**: Make progression rewarding and motivating
 
 **Tasks**:
-1. ✅ Implement star rating system
-2. ✅ Add points and level calculation
-3. ✅ Create progress dashboard
-4. ✅ Add achievements/badges
-5. ✅ Implement streak tracking
-6. ✅ Add visual progress indicators
-7. ✅ Create celebration animations
-8. ✅ Add "improve score" encouragement
+1. [done] Implement star rating system
+2. [done] Add points and level calculation
+3. [done] Create progress dashboard
+4. [done] Add achievements/badges
+5. [done] Implement streak tracking
+6. [done] Add visual progress indicators
+7. [done] Create celebration animations
+8. [done] Add "improve score" encouragement
 
 **Deliverables**:
 - Star ratings on scenarios
@@ -1242,16 +1218,16 @@ After 3 attempts:
 **Goal**: Improve UX and performance
 
 **Tasks**:
-1. ✅ Optimize AI response times (caching, streaming)
-2. ✅ Add loading states and animations
-3. ✅ Implement error handling
-4. ✅ Add mobile responsiveness
-5. ✅ Create tutorial/onboarding flow
-6. ✅ Add keyboard shortcuts
-7. ✅ Implement retry/rewind features
-8. ✅ Add scenario categories/filters
-9. ✅ Optimize database queries
-10. ✅ Add analytics tracking
+1. [done] Optimize AI response times (caching, streaming)
+2. [done] Add loading states and animations
+3. [done] Implement error handling
+4. [done] Add mobile responsiveness
+5. [done] Create tutorial/onboarding flow
+6. [done] Add keyboard shortcuts
+7. [done] Implement retry/rewind features
+8. [done] Add scenario categories/filters
+9. [done] Optimize database queries
+10. [done] Add analytics tracking
 
 **Deliverables**:
 - Fast, responsive UI
@@ -1376,6 +1352,7 @@ const exampleScenario = {
   focusArea: "conflict_resolution",
   
   orderIndex: 5,
+  // Present for schema compatibility; not enforced (open access design)
   unlockRequirements: {
     minLevel: 2,
     requiredScenarios: ["scenario_4_id"],
@@ -1396,7 +1373,7 @@ const exampleScenario = {
 Before implementation, confirm:
 
 1. **Scoring Strictness**: Should we be lenient (encourage) or strict (challenge)?
-2. **Unlock Policy**: Linear progression or allow skipping after X attempts?
+2. **Unlock Policy**: DECIDED, open access. Scenarios are never locked; the level only drives a recommendation.
 3. **Retry Incentives**: Should improving score give additional rewards?
 4. **Feedback Tone**: How directive vs. exploratory should feedback be?
 5. **AI Budget**: What's acceptable cost per conversation?
