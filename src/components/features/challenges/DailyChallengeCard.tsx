@@ -11,6 +11,7 @@ interface DailyChallengeCardProps {
   learningObjectives: Array<string>
   completed?: boolean
   completedScore?: number
+  bonusPoints: number
   scenarioId: string
   challengeId: string
 }
@@ -45,6 +46,7 @@ export function DailyChallengeCard({
   learningObjectives,
   completed,
   completedScore,
+  bonusPoints,
   scenarioId,
   challengeId,
 }: DailyChallengeCardProps) {
@@ -80,7 +82,7 @@ export function DailyChallengeCard({
           <span className="text-sm font-bold">
             {completed ? 'COMPLETED' : 'DAILY CHALLENGE'}
           </span>
-          <span className="text-sm font-semibold">2x Points</span>
+          <span className="text-sm font-semibold">+{bonusPoints} bonus pts</span>
         </div>
       </div>
 

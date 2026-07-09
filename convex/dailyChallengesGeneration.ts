@@ -19,14 +19,16 @@ const MODEL = 'claude-sonnet-4-6'
 interface GeneratedScenario {
   title: string
   description: string
-  category: string
+  category: 'workplace' | 'family' | 'friendship' | 'self_expression'
   difficulty: 'beginner' | 'intermediate' | 'advanced'
   characterName: string
   characterPersonality: string
   characterInitialMood: number
+  characterBackground: string
+  characterHiddenNeeds: Array<string>
   situation: string
   aiOpeningMessage: string
-  learningObjectives: string[]
+  learningObjectives: Array<string>
   focusArea: string
 }
 
@@ -41,7 +43,7 @@ export const generateThreeScenarios = internalAction({
   },
 })
 
-async function generateThreeScenariosFn(): Promise<GeneratedScenario[]> {
+async function generateThreeScenariosFn(): Promise<Array<GeneratedScenario>> {
   const prompt = `You are an expert in Non-Violent Communication (NVC) and conflict resolution. Generate 3 distinct daily challenge scenarios for an NVC learning app.
 
 Each scenario should be a realistic interpersonal conflict situation that users can practice NVC communication in.
@@ -76,8 +78,10 @@ For each scenario, return a JSON object with:
 - characterName: First name only
 - characterPersonality: 2-3 sentences describing personality traits
 - characterInitialMood: Number from -10 (very closed/defensive) to +10 (very open)
-- situation: 3-4 sentences setting up the conflict
-- aiOpeningMessage: The character\'s first message (2-3 sentences)
+- characterBackground: 1-2 sentences of background and motivation context
+- characterHiddenNeeds: Array of 2-3 universal needs that, if met, would soften this character (hidden from the user)
+- situation: 3-4 sentences setting up the conflict, written in second person ("You...")
+- aiOpeningMessage: The character's first message (2-3 sentences)
 - learningObjectives: Array of 2-3 NVC components to practice [observation, feeling, need, request]
 - focusArea: One of [conflict_resolution, boundary_setting, feedback_response, appreciation, apology, request_making, empathy]
 
@@ -98,7 +102,7 @@ Return the scenarios in the required structured format. Produce exactly 3 scenar
     })
 
     const parsed = response.parsed_output as
-      | { scenarios: GeneratedScenario[] }
+      | { scenarios: Array<GeneratedScenario> }
       | null
 
     if (!parsed || !Array.isArray(parsed.scenarios)) {
@@ -134,6 +138,8 @@ const scenarioSchema = {
     characterName: { type: 'string' },
     characterPersonality: { type: 'string' },
     characterInitialMood: { type: 'integer' },
+    characterBackground: { type: 'string' },
+    characterHiddenNeeds: { type: 'array', items: { type: 'string' } },
     situation: { type: 'string' },
     aiOpeningMessage: { type: 'string' },
     learningObjectives: {
@@ -164,6 +170,8 @@ const scenarioSchema = {
     'characterName',
     'characterPersonality',
     'characterInitialMood',
+    'characterBackground',
+    'characterHiddenNeeds',
     'situation',
     'aiOpeningMessage',
     'learningObjectives',
@@ -187,8 +195,8 @@ const scenarioBatchSchema = {
 /**
  * Validate that generated scenarios have required fields
  */
-function validateScenarios(scenarios: any[]): boolean {
-  const requiredFields = [
+function validateScenarios(scenarios: Array<GeneratedScenario>): boolean {
+  const requiredFields: Array<keyof GeneratedScenario> = [
     'title',
     'description',
     'category',
@@ -196,6 +204,8 @@ function validateScenarios(scenarios: any[]): boolean {
     'characterName',
     'characterPersonality',
     'characterInitialMood',
+    'characterBackground',
+    'characterHiddenNeeds',
     'situation',
     'aiOpeningMessage',
     'learningObjectives',
@@ -210,7 +220,7 @@ function validateScenarios(scenarios: any[]): boolean {
 /**
  * Generate fallback scenarios in case AI generation fails
  */
-function generateFallbackScenarios(): GeneratedScenario[] {
+function generateFallbackScenarios(): Array<GeneratedScenario> {
   return [
     {
       title: 'Miscommunication with a Friend',
@@ -222,10 +232,13 @@ function generateFallbackScenarios(): GeneratedScenario[] {
       characterPersonality:
         'Friendly but sometimes forgetful, values connection, gets defensive when criticized',
       characterInitialMood: 0,
+      characterBackground:
+        'Sam juggles a lot of commitments and hates letting people down, which makes them scattered.',
+      characterHiddenNeeds: ['acceptance', 'ease', 'connection'],
       situation:
         'You and Sam had plans to go to a movie tonight. An hour before you were supposed to meet, Sam texted saying they forgot they already committed to something else and cannot make it. You feel disappointed and hurt.',
       aiOpeningMessage:
-        "I know I messed up on the plans. I completely forgot I\'d already promised to help Jordan move. I felt terrible when I realized.",
+        "I know I messed up on the plans. I completely forgot I'd already promised to help Jordan move. I felt terrible when I realized.",
       learningObjectives: ['feeling', 'observation'],
       focusArea: 'boundary_setting',
     },
@@ -239,27 +252,33 @@ function generateFallbackScenarios(): GeneratedScenario[] {
       characterPersonality:
         'Direct communicator, values efficiency, sometimes comes across as harsh, actually cares deeply about team success',
       characterInitialMood: -2,
+      characterBackground:
+        'Alex has been burned by projects failing late and now pushes hard on quality early, without noticing how it lands.',
+      characterHiddenNeeds: ['competence', 'trust', 'contribution'],
       situation:
         'In a team meeting, Alex said your recent project proposal "lacks clear structure and seems rushed." You felt embarrassed and defensive. The feedback stung because you worked hard on it. Now Alex is walking by your desk and pauses.',
       aiOpeningMessage:
-        "Hey, I noticed you seemed upset after the meeting. I want to clarify what I meant. I wasn\'t trying to dismiss your work—I see potential in the idea.",
+        "Hey, I noticed you seemed upset after the meeting. I want to clarify what I meant. I wasn't trying to dismiss your work—I see potential in the idea.",
       learningObjectives: ['observation', 'need', 'request'],
       focusArea: 'conflict_resolution',
     },
     {
       title: 'Family Boundary Conflict',
       description:
-        'A family member keeps bringing up a sensitive topic that you\'ve asked them not to discuss. Practice setting boundaries respectfully.',
+        "A family member keeps bringing up a sensitive topic that you've asked them not to discuss. Practice setting boundaries respectfully.",
       category: 'family',
       difficulty: 'advanced',
       characterName: 'Jamie',
       characterPersonality:
         'Well-meaning but struggles to respect boundaries, comes from a generation where direct communication was less valued, values family closeness above all, can be stubborn but is ultimately loving',
       characterInitialMood: -4,
+      characterBackground:
+        'Jamie shows love through involvement and worries that backing off would mean losing closeness with you.',
+      characterHiddenNeeds: ['closeness', 'reassurance', 'to matter'],
       situation:
         'Your family member Jamie keeps asking about your personal life choices despite you having asked them multiple times to drop the subject. They bring it up again at a family gathering and everyone goes quiet. You need to address this firmly but without damaging the relationship.',
       aiOpeningMessage:
-        "I just want you to know I bring this up because I care about you. I only want what\'s best for you and your future.",
+        "I just want you to know I bring this up because I care about you. I only want what's best for you and your future.",
       learningObjectives: ['observation', 'feeling', 'need', 'request'],
       focusArea: 'boundary_setting',
     },

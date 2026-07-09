@@ -1,12 +1,12 @@
-import { useMutation, useQuery } from 'convex/react'
+import { useQuery } from 'convex/react'
 import { Link } from '@tanstack/react-router'
 import { api } from '../../../../convex/_generated/api'
 import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { CheckIcon } from '~/components/ui/Icons'
 
 export function DailyChallengeCard() {
   const challenge = useQuery(api.dailyChallenges.getDailyChallenge)
-  const seedChallenge = useMutation(api.dailyChallenges.seedDailyChallenge)
 
   if (challenge === undefined) {
     return (
@@ -25,13 +25,9 @@ export function DailyChallengeCard() {
           <h3 className="text-xl font-bold text-brown-800 mb-2">
             No Challenge for Today
           </h3>
-          <p className="text-brown-600 mb-4">
-            Check back tomorrow for a new NVC challenge!
+          <p className="text-brown-600">
+            A new challenge arrives every day. Check back soon!
           </p>
-          {/* Temporary button for demo/testing */}
-          <Button variant="secondary" size="sm" onClick={() => seedChallenge()}>
-            Generate Challenge
-          </Button>
         </CardBody>
       </Card>
     )
@@ -54,12 +50,14 @@ export function DailyChallengeCard() {
             <DifficultyBadge difficulty={challenge.difficulty} />
             {challenge.completed && (
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-brown-800 bg-empathy-high/20 px-2.5 py-1 rounded-full">
-                <span aria-hidden="true">✓</span> Completed
+                <CheckIcon className="w-3.5 h-3.5" /> Completed
+                {challenge.completedScore !== null &&
+                  ` with ${challenge.completedScore}/100`}
               </span>
             )}
           </div>
 
-          {/* Reward chip — a contained, warm marker, not floating text */}
+          {/* Reward chip: a contained, warm marker, not floating text */}
           <div className="inline-flex items-baseline gap-1 rounded-full bg-giraffe-100 px-3 py-1">
             <span className="text-base font-bold text-giraffe-800 leading-none">
               +{challenge.bonusPoints}
@@ -111,8 +109,8 @@ const DIFFICULTY_STYLES: Record<string, string> = {
 }
 
 /**
- * A gentle difficulty marker. Replaces the old emoji prefix with a calm,
- * on-palette pill—warm tints only, never an alarming signal color.
+ * A gentle difficulty marker: a calm, on-palette pill in warm tints only,
+ * never an alarming signal color.
  */
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
   const tone = DIFFICULTY_STYLES[difficulty] ?? DIFFICULTY_STYLES.medium
