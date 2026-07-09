@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { CheckIcon, XIcon } from '~/components/ui/Icons'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 
 export interface Question {
@@ -71,8 +73,9 @@ export function QuizSection({
 
   const handleSubmit = () => {
     const score = calculateScore()
-    // Save lesson completion if user gets 100% (all correct)
-    if (lessonId && score === 100) {
+    // The lesson counts as complete at its passing threshold, not only at a
+    // perfect score. Growth over grades.
+    if (lessonId && score >= passingScore) {
       completeLesson(lessonId, score)
     }
     setQuizState((prev) => ({
@@ -115,14 +118,14 @@ export function QuizSection({
     currentQ.correctAnswer
 
   if (quizState.submitted) {
-    const isPerfectScore = score === 100
+    const passed = score >= passingScore
     const lessonCompleted = lessonId && isLessonCompleted(lessonId)
 
     return (
       <Card className="mb-12">
         <CardHeader
           className={`bg-linear-to-r ${
-            isPerfectScore
+            passed
               ? 'from-giraffe-50 to-empathy-high/20'
               : 'from-giraffe-50 to-empathy-medium/20'
           }`}
@@ -131,15 +134,16 @@ export function QuizSection({
         </CardHeader>
         <CardBody>
           <div className="text-center py-8">
-            {/* Perfect Score & Lesson Completion Banner */}
-            {isPerfectScore && lessonCompleted && (
+            {/* Lesson Completion Banner */}
+            {passed && lessonCompleted && (
               <div className="mb-8 p-6 rounded-lg bg-linear-to-r from-giraffe-100 to-empathy-high/30 border-2 border-giraffe-300">
                 <h3 className="text-2xl font-bold text-giraffe-700 mb-2">
                   Lesson Complete!
                 </h3>
                 <p className="text-giraffe-600">
-                  Perfect score! You've mastered this lesson and it's been saved
-                  to your progress.
+                  {score === 100
+                    ? "Perfect score! You've mastered this lesson and it's been saved to your progress."
+                    : "You passed! This lesson has been saved to your progress."}
                 </p>
               </div>
             )}
@@ -150,11 +154,11 @@ export function QuizSection({
                 {score}%
               </div>
               <div className="text-lg text-brown-600">
-                {isPerfectScore && lessonCompleted
+                {score === 100
                   ? 'Outstanding! You answered every question correctly!'
-                  : score >= passingScore
-                    ? 'Excellent! You passed the quiz!'
-                    : `Keep practicing! You need ${passingScore}% to pass. Remember, you need a perfect score (100%) to complete this lesson.`}
+                  : passed
+                    ? 'Excellent! You passed the quiz and completed this lesson.'
+                    : `You're getting there. Reach ${passingScore}% to complete this lesson, and feel free to revisit the examples above first.`}
               </div>
             </div>
 
@@ -208,13 +212,18 @@ export function QuizSection({
                       className="flex items-center gap-3 p-3 rounded-lg bg-giraffe-100"
                     >
                       <span
-                        className={`text-lg ${
+                        className={
                           isAnswerCorrect
                             ? 'text-empathy-high'
                             : 'text-empathy-low'
-                        }`}
+                        }
+                        aria-label={isAnswerCorrect ? 'Correct' : 'Incorrect'}
                       >
-                        {isAnswerCorrect ? '✓' : '✗'}
+                        {isAnswerCorrect ? (
+                          <CheckIcon className="w-5 h-5" />
+                        ) : (
+                          <XIcon className="w-5 h-5" />
+                        )}
                       </span>
                       <span className="text-sm text-brown-700 flex-1">
                         Question {index + 1}
@@ -230,9 +239,11 @@ export function QuizSection({
               <Button variant="primary" size="lg" onClick={handleRestart}>
                 Retake Quiz
               </Button>
-              <Button variant="outline" size="lg">
-                Continue Learning
-              </Button>
+              <Link to="/learn">
+                <Button variant="outline" size="lg">
+                  Continue Learning
+                </Button>
+              </Link>
             </div>
           </div>
         </CardBody>
@@ -311,10 +322,10 @@ export function QuizSection({
                       }`}
                     >
                       {showCorrect && (
-                        <span className="text-white text-sm">✓</span>
+                        <CheckIcon className="w-3.5 h-3.5 text-white" />
                       )}
                       {showIncorrect && (
-                        <span className="text-white text-sm">✗</span>
+                        <XIcon className="w-3.5 h-3.5 text-white" />
                       )}
                     </div>
                     <span
@@ -346,8 +357,17 @@ export function QuizSection({
               }`}
             >
               <div className="flex gap-3">
-                <span className="text-2xl shrink-0 font-bold" aria-hidden="true">
-                  {isCorrect ? '✓' : '✗'}
+                <span
+                  className={`shrink-0 ${
+                    isCorrect ? 'text-empathy-high' : 'text-empathy-low'
+                  }`}
+                  aria-hidden="true"
+                >
+                  {isCorrect ? (
+                    <CheckIcon className="w-7 h-7" />
+                  ) : (
+                    <XIcon className="w-7 h-7" />
+                  )}
                 </span>
                 <div>
                   <h4

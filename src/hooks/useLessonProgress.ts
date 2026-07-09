@@ -1,9 +1,15 @@
 /**
- * Custom hook for managing lesson progress using localStorage
- * Allows users to track completed lessons without requiring login
+ * Lesson progress tracking.
+ *
+ * Signed-in users' progress lives in Convex (lessonProgress table) so it
+ * follows the account across devices. localStorage remains as a fallback for
+ * anyone browsing lessons signed out, and any local completions are synced up
+ * to the account once on sign-in.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from 'convex/_generated/api'
 
 interface LessonProgress {
   lessonId: string
@@ -11,138 +17,111 @@ interface LessonProgress {
   score: number // percentage
 }
 
-interface LessonProgressState {
-  completedLessons: Array<LessonProgress>
-  isLoading: boolean
-}
-
 const STORAGE_KEY = 'nvc_lesson_progress'
 
-export function useLessonProgress() {
-  const [state, setState] = useState<LessonProgressState>({
-    completedLessons: [],
-    isLoading: true,
-  })
+function readLocal(): Array<LessonProgress> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    console.error('Failed to load lesson progress:', error)
+    return []
+  }
+}
 
-  // Load progress from localStorage on mount
+export function useLessonProgress() {
+  const [localLessons, setLocalLessons] = useState<Array<LessonProgress>>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const serverProgress = useQuery(api.lessons.getMyProgress)
+  const recordCompletion = useMutation(api.lessons.recordCompletion)
+
+  // Load local progress on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      const completedLessons = stored ? JSON.parse(stored) : []
-      setState({
-        completedLessons,
-        isLoading: false,
-      })
-    } catch (error) {
-      console.error('Failed to load lesson progress:', error)
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-      }))
-    }
+    setLocalLessons(readLocal())
+    setIsLoading(false)
   }, [])
 
+  // One-time sync: push completions done while signed out up to the account.
+  const syncedRef = useRef(false)
+  useEffect(() => {
+    if (syncedRef.current) return
+    if (!serverProgress) return // signed out or still loading
+
+    const serverIds = new Set(serverProgress.map((p) => p.lessonId))
+    const missing = readLocal().filter((l) => !serverIds.has(l.lessonId))
+    syncedRef.current = true
+
+    for (const lesson of missing) {
+      recordCompletion({
+        lessonId: lesson.lessonId,
+        score: lesson.score,
+      }).catch((error) => console.error('Failed to sync lesson:', error))
+    }
+  }, [serverProgress, recordCompletion])
+
+  const serverCompleted = (serverProgress ?? []).filter((p) => p.completed)
+
+  const completedLessons: Array<LessonProgress> = serverProgress
+    ? serverCompleted.map((p) => ({
+        lessonId: p.lessonId,
+        completedAt: p.completedAt ?? p._creationTime,
+        score: p.score,
+      }))
+    : localLessons
+
   /**
-   * Mark a lesson as completed
-   * Only saves if the score is 100% (all correct answers)
+   * Record a passing quiz result. Persists to the account when signed in,
+   * and always to localStorage so signed-out progress is not lost.
    */
   const completeLesson = (lessonId: string, score: number) => {
     try {
-      setState((prev) => {
-        // Check if lesson already completed
-        const existingIndex = prev.completedLessons.findIndex(
-          (l) => l.lessonId === lessonId,
-        )
-
-        let updatedLessons: Array<LessonProgress>
-
-        if (existingIndex >= 0) {
-          // Update existing completion (keep the original completion time)
-          updatedLessons = [...prev.completedLessons]
-          updatedLessons[existingIndex] = {
-            ...updatedLessons[existingIndex],
-            score,
-          }
-        } else {
-          // Add new completion
-          updatedLessons = [
-            ...prev.completedLessons,
-            {
-              lessonId,
-              completedAt: Date.now(),
-              score,
-            },
-          ]
-        }
-
-        // Save to localStorage
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLessons))
-
-        return {
-          ...prev,
-          completedLessons: updatedLessons,
-        }
-      })
+      const existing = readLocal()
+      const index = existing.findIndex((l) => l.lessonId === lessonId)
+      const updated =
+        index >= 0
+          ? existing.map((l, i) =>
+              i === index ? { ...l, score: Math.max(l.score, score) } : l,
+            )
+          : [...existing, { lessonId, completedAt: Date.now(), score }]
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      setLocalLessons(updated)
     } catch (error) {
       console.error('Failed to save lesson progress:', error)
     }
-  }
 
-  /**
-   * Check if a specific lesson is completed
-   */
-  const isLessonCompleted = (lessonId: string): boolean => {
-    return state.completedLessons.some((l) => l.lessonId === lessonId)
-  }
-
-  /**
-   * Get the completion date for a lesson
-   */
-  const getLessonCompletionDate = (lessonId: string): Date | null => {
-    const completion = state.completedLessons.find(
-      (l) => l.lessonId === lessonId,
-    )
-    return completion ? new Date(completion.completedAt) : null
-  }
-
-  /**
-   * Get progress as a percentage (completed lessons / total lessons)
-   */
-  const getProgressPercentage = (totalLessons: number): number => {
-    if (totalLessons === 0) return 0
-    return Math.round((state.completedLessons.length / totalLessons) * 100)
-  }
-
-  /**
-   * Get all completed lesson IDs
-   */
-  const getCompletedLessonIds = (): Array<string> => {
-    return state.completedLessons.map((l) => l.lessonId)
-  }
-
-  /**
-   * Clear all progress (for testing or reset)
-   */
-  const clearProgress = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-      setState({
-        completedLessons: [],
-        isLoading: false,
-      })
-    } catch (error) {
-      console.error('Failed to clear lesson progress:', error)
+    if (serverProgress !== null && serverProgress !== undefined) {
+      recordCompletion({ lessonId, score }).catch((error) =>
+        console.error('Failed to save lesson progress:', error),
+      )
     }
   }
 
+  const isLessonCompleted = (lessonId: string): boolean => {
+    return completedLessons.some((l) => l.lessonId === lessonId)
+  }
+
+  const getLessonCompletionDate = (lessonId: string): Date | null => {
+    const completion = completedLessons.find((l) => l.lessonId === lessonId)
+    return completion ? new Date(completion.completedAt) : null
+  }
+
+  const getProgressPercentage = (totalLessons: number): number => {
+    if (totalLessons === 0) return 0
+    return Math.round((completedLessons.length / totalLessons) * 100)
+  }
+
+  const getCompletedLessonIds = (): Array<string> => {
+    return completedLessons.map((l) => l.lessonId)
+  }
+
   return {
-    completedLessons: state.completedLessons,
-    isLoading: state.isLoading,
+    completedLessons,
+    isLoading: isLoading || serverProgress === undefined,
     completeLesson,
     isLessonCompleted,
     getLessonCompletionDate,
     getProgressPercentage,
     getCompletedLessonIds,
-    clearProgress,
   }
 }

@@ -41,7 +41,7 @@ function IntroductionLesson() {
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
               <p className="text-sm text-brown-700">
-                You achieved a perfect score on this lesson.
+                You passed the quiz and completed this lesson.
               </p>
             </div>
           </div>
@@ -88,7 +88,7 @@ function IntroductionLesson() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
             <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
-                src="/lesson1.png"
+                src="/lesson1.webp"
                 alt="Non-Violent Communication Introduction"
                 className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
@@ -115,7 +115,7 @@ function IntroductionLesson() {
               <p className="text-brown-700">
                 The giraffe is the symbol of NVC because it has the largest
                 heart of any land animal and a long neck that allows it to see
-                from a wider perspective—just like compassionate communication!
+                from a wider perspective, just like compassionate communication!
               </p>
             </div>
           </CardBody>
@@ -207,7 +207,7 @@ function IntroductionLesson() {
                     {/* Image Container */}
                     <div className="bg-empathy-low p-6 flex items-center justify-center h-48">
                       <img
-                        src="/jakyll.png"
+                        src="/jakyll.webp"
                         alt="Jackal - Reactive Communication"
                         className="h-40 w-auto object-contain"
                       />
@@ -312,7 +312,7 @@ function IntroductionLesson() {
             <p className="text-brown-700 dark:text-brown-400 mb-6">
               Now that you understand the basics of NVC, you're ready to dive
               deeper into each component. In the next lesson, we'll explore{' '}
-              <strong>Observations Without Evaluation</strong> — the foundation
+              <strong>Observations Without Evaluation</strong>, the foundation
               of clear communication.
             </p>
             <div className="flex gap-4">

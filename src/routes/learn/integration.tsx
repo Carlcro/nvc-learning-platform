@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { useState } from 'react'
@@ -45,7 +45,7 @@ function IntegrationLesson() {
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
               <p className="text-sm text-brown-700">
-                You achieved a perfect score on this lesson.
+                You passed the quiz and completed this lesson.
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ function IntegrationLesson() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
             <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
-                src="/lesson6.png"
+                src="/lesson6.webp"
                 alt="Integrating All Four Pillars of NVC"
                 className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
@@ -371,10 +371,11 @@ function IntegrationLesson() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
                 <h3 className="font-semibold text-brown-800 mb-2">
-                  AI Roleplay Scenarios
+                  Roleplay Scenarios
                 </h3>
                 <p className="text-sm text-brown-700">
-                  Practice NVC in realistic conversations with AI characters
+                  Practice NVC in realistic conversations with lifelike
+                  practice partners
                 </p>
               </div>
               <div className="p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
@@ -387,12 +388,16 @@ function IntegrationLesson() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Button variant="primary" size="lg">
-                Start Practicing
-              </Button>
-              <Button variant="outline" size="lg">
-                Back to Lessons
-              </Button>
+              <Link to="/practice">
+                <Button variant="primary" size="lg">
+                  Start Practicing
+                </Button>
+              </Link>
+              <Link to="/learn">
+                <Button variant="outline" size="lg">
+                  Back to Lessons
+                </Button>
+              </Link>
             </div>
           </CardBody>
         </Card>

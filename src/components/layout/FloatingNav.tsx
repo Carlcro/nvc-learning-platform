@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useQuery } from 'convex/react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
@@ -25,20 +25,6 @@ export function FloatingNav() {
   const { signOut } = useAuthActions()
   const userProfile = useQuery(api.users.getUserProfile)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-
-  // Prevent scrollbar from disappearing when dropdown opens
-  useEffect(() => {
-    if (isDropdownOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isDropdownOpen])
 
   // Determine if a route is active
   const isActive = (to: string): boolean => {
@@ -48,11 +34,9 @@ export function FloatingNav() {
     return location.pathname.startsWith(to)
   }
 
-  // Still loading user profile
-  if (userProfile === undefined) {
-    return null
-  }
-
+  // Render the nav shell immediately (even while the profile query loads) so
+  // navigation never pops in late on a hard load; the user chip appears once
+  // the profile arrives.
   const user = userProfile?.user
   const profile = userProfile?.profile
 
@@ -85,6 +69,7 @@ export function FloatingNav() {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="flex flex-col gap-1.5 p-2 hover:bg-giraffe-50 rounded-full transition-colors"
             aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
           >
             <span
               className={`block h-0.5 w-5 bg-brown-700 transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}
@@ -135,10 +120,7 @@ export function FloatingNav() {
 
         {/* User Menu - Radix UI Dropdown */}
         {user ? (
-          <DropdownMenu.Root
-            open={isDropdownOpen}
-            onOpenChange={setIsDropdownOpen}
-          >
+          <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button
                 className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-giraffe-50 transition-colors ml-2 flex-shrink-0"

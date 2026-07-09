@@ -6,6 +6,7 @@ import { ProfileHero } from '~/components/features/profile/ProfileHero'
 import { OverallScoreRing } from '~/components/features/profile/OverallScoreRing'
 import { SkillStats } from '~/components/features/profile/SkillStats'
 import { ActivityFeed } from '~/components/features/profile/ActivityFeed'
+import { AchievementsGrid } from '~/components/features/profile/AchievementsGrid'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/profile/')({
@@ -54,6 +55,9 @@ function ProfileContent() {
             <SkillStats stats={stats} />
           </div>
         </div>
+
+        {/* Every achievement, earned ones lit up */}
+        <AchievementsGrid />
 
         {/* Milestones earned, and the next step */}
         <ActivityFeed

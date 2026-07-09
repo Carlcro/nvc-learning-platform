@@ -45,7 +45,7 @@ function ObservationLesson() {
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
               <p className="text-sm text-brown-700">
-                You achieved a perfect score on this lesson.
+                You passed the quiz and completed this lesson.
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ function ObservationLesson() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
             <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
-                src="/lesson2.png"
+                src="/lesson2.webp"
                 alt="Observations Without Evaluation"
                 className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
@@ -117,7 +117,7 @@ function ObservationLesson() {
                 <p className="text-brown-700 font-semibold">Key Point</p>
               </div>
               <p className="text-brown-700">
-                Observations are like photographs—they capture what is actually
+                Observations are like photographs: they capture what is actually
                 there without filters, interpretations, or judgments. When you
                 describe observable facts, you create the foundation for
                 understanding and connection.
@@ -207,7 +207,7 @@ function ObservationLesson() {
                     {/* Image Container */}
                     <div className="bg-empathy-low p-6 flex items-center justify-center h-48">
                       <img
-                        src="/jakyll.png"
+                        src="/jakyll.webp"
                         alt="Jackal - Reactive Communication"
                         className="h-40 w-auto object-contain"
                       />

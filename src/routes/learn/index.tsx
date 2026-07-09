@@ -25,7 +25,6 @@ interface Lesson {
   component: string
   order: number
   estimatedDuration: number
-  icon: string
   content: string
   examples: Array<{
     title: string

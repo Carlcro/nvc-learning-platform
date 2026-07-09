@@ -45,7 +45,7 @@ function RequestLesson() {
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
               <p className="text-sm text-brown-700">
-                You achieved a perfect score on this lesson.
+                You passed the quiz and completed this lesson.
               </p>
             </div>
           </div>
@@ -53,7 +53,7 @@ function RequestLesson() {
       )}
 
       {/* Header */}
-      <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white py-8 px-4 sm:px-6 lg:px-8">
+      <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white pt-28 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex items-center gap-8">
           {/* Left side - content */}
           <div className="flex-1">
@@ -92,7 +92,7 @@ function RequestLesson() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
             <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
-                src="/lesson5.png"
+                src="/lesson5.webp"
                 alt="Making Clear and Compassionate Requests"
                 className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
@@ -208,7 +208,7 @@ function RequestLesson() {
                     {/* Image Container */}
                     <div className="bg-empathy-low p-6 flex items-center justify-center h-48">
                       <img
-                        src="/jakyll.png"
+                        src="/jakyll.webp"
                         alt="Jackal - Reactive Communication"
                         className="h-40 w-auto object-contain"
                       />

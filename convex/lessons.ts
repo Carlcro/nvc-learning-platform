@@ -1,5 +1,6 @@
-import { query } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 /**
  * The 6 foundational NVC lessons
@@ -14,7 +15,6 @@ const LESSONS = [
     component: "introduction",
     order: 1,
     estimatedDuration: 8,
-    icon: "🌱",
     content:
       "Non-Violent Communication (NVC) is a framework for peaceful, empathetic communication created by Marshall Rosenberg. In this lesson, you'll learn the philosophy behind NVC and how it can help you communicate more authentically.",
     examples: [
@@ -103,7 +103,6 @@ const LESSONS = [
     component: "observation",
     order: 2,
     estimatedDuration: 7,
-    icon: "👀",
     content:
       "Observation is the first pillar of NVC. It means describing observable facts without adding judgment, interpretation, or evaluation. In this lesson, you'll learn to separate what you actually see from what you think about it.",
     examples: [
@@ -199,7 +198,6 @@ const LESSONS = [
     component: "feeling",
     order: 3,
     estimatedDuration: 8,
-    icon: "💭",
     content:
       "Feeling is the second pillar of NVC. It means naming actual emotions (sad, joyful, anxious) rather than thoughts disguised as feelings. In this lesson, you'll learn to identify and own your feelings without blame.",
     examples: [
@@ -294,7 +292,6 @@ const LESSONS = [
     component: "need",
     order: 4,
     estimatedDuration: 9,
-    icon: "❤️",
     content:
       "Need is the third pillar of NVC. It means identifying the universal human needs behind your feelings. In this lesson, you'll learn the difference between needs and strategies, and discover universal needs that apply to all humans.",
     examples: [
@@ -391,7 +388,6 @@ const LESSONS = [
     component: "request",
     order: 5,
     estimatedDuration: 8,
-    icon: "🎯",
     content:
       "Request is the fourth pillar of NVC. It means asking for a concrete, actionable, positive action—and leaving room for the other person to say no. In this lesson, you'll learn to transform demands into genuine requests.",
     examples: [
@@ -486,7 +482,6 @@ const LESSONS = [
     component: "integration",
     order: 6,
     estimatedDuration: 10,
-    icon: "🦒",
     content:
       "Integration is where NVC comes alive. In this lesson, you'll learn to combine all 4 components into complete, compassionate expressions. You'll practice translating everyday conflicts into NVC language.",
     examples: [
@@ -595,6 +590,8 @@ const LESSONS = [
  * Returns lessons in order with all content needed for the UI
  */
 export const getAllLessons = query({
+  args: {},
+  // eslint-disable-next-line @typescript-eslint/require-await -- Convex handlers are async by contract
   handler: async () => {
     // Return the hardcoded lessons in order
     // In the future, this could query from the database
@@ -607,7 +604,78 @@ export const getAllLessons = query({
  */
 export const getLessonById = query({
   args: { lessonId: v.string() },
+  // eslint-disable-next-line @typescript-eslint/require-await -- Convex handlers are async by contract
   handler: async (_, args) => {
     return LESSONS.find((lesson) => lesson.lessonId === args.lessonId) || null;
+  },
+});
+
+/**
+ * The signed-in user's lesson progress, so completions follow the account
+ * across devices instead of living only in one browser's localStorage.
+ */
+export const getMyProgress = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return null;
+
+    return await ctx.db
+      .query("lessonProgress")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+  },
+});
+
+/**
+ * Record a lesson quiz attempt for the signed-in user. A lesson counts as
+ * completed once the score reaches the lesson's passing threshold; a
+ * completion is never taken away by a later weaker attempt.
+ */
+export const recordCompletion = mutation({
+  args: { lessonId: v.string(), score: v.number() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Not authenticated");
+    }
+
+    const lesson = LESSONS.find((l) => l.lessonId === args.lessonId);
+    if (!lesson) {
+      throw new Error("Lesson not found");
+    }
+
+    const score = Math.max(0, Math.min(100, Math.round(args.score)));
+    const passingScore = lesson.quiz.passingScore;
+    const passed = score >= passingScore;
+
+    const existing = await ctx.db
+      .query("lessonProgress")
+      .withIndex("by_user_and_lesson", (q) =>
+        q.eq("userId", userId).eq("lessonId", args.lessonId),
+      )
+      .first();
+
+    if (existing) {
+      const nowCompleted = existing.completed || passed;
+      await ctx.db.patch(existing._id, {
+        completed: nowCompleted,
+        score: Math.max(existing.score, score),
+        attempts: existing.attempts + 1,
+        completedAt:
+          existing.completedAt ?? (nowCompleted ? Date.now() : undefined),
+      });
+      return { completed: nowCompleted, passingScore };
+    }
+
+    await ctx.db.insert("lessonProgress", {
+      userId,
+      lessonId: args.lessonId,
+      completed: passed,
+      score,
+      attempts: 1,
+      completedAt: passed ? Date.now() : undefined,
+    });
+    return { completed: passed, passingScore };
   },
 });

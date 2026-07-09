@@ -45,7 +45,7 @@ function FeelingLesson() {
             <div>
               <p className="font-bold text-brown-800">Lesson Completed!</p>
               <p className="text-sm text-brown-700">
-                You achieved a perfect score on this lesson.
+                You passed the quiz and completed this lesson.
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ function FeelingLesson() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:items-center">
             <div className="bg-transparent w-full max-w-xs max-h-64">
               <img
-                src="/lesson3.png"
+                src="/lesson3.webp"
                 alt="Understanding and Expressing Feelings"
                 className="w-auto h-auto max-h-64 object-contain rounded-lg"
               />
@@ -209,7 +209,7 @@ function FeelingLesson() {
                     {/* Image Container */}
                     <div className="bg-empathy-low p-6 flex items-center justify-center h-48">
                       <img
-                        src="/jakyll.png"
+                        src="/jakyll.webp"
                         alt="Jackal - Reactive Communication"
                         className="h-40 w-auto object-contain"
                       />
