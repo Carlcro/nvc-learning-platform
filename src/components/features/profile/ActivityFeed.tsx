@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { StarIcon } from '~/components/ui/Icons'
 
 interface ActivityFeedProps {
   completedScenarios: number
@@ -17,20 +18,17 @@ function renderStars(count: number) {
       aria-label={`${filled} of 3 stars`}
     >
       {[0, 1, 2].map((i) => (
-        <span
+        <StarIcon
           key={i}
-          aria-hidden="true"
-          className={i < filled ? 'text-giraffe-400' : 'text-brown-200'}
-        >
-          ★
-        </span>
+          className={`w-4 h-4 ${i < filled ? 'text-giraffe-400' : 'text-brown-200'}`}
+        />
       ))}
     </span>
   )
 }
 
 /**
- * A closing "your journey so far" strip — the milestones earned through
+ * A closing "your journey so far" strip: the milestones earned through
  * practice, paired with the one clear next step. Deliberately a horizontal
  * call-to-action band, not another stat card, so the page ends on momentum.
  */

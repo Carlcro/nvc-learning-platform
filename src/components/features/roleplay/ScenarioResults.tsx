@@ -11,7 +11,7 @@
 import { useMemo } from 'react'
 import { Award, Ear } from 'lucide-react'
 import { EmpathyMeter } from './EmpathyMeter'
-import type { Milestones } from './MilestoneProgress'
+import type { Milestones } from './milestones'
 import type { EarnedAchievement } from '~/hooks/useConversation'
 import { Button } from '~/components/ui/Button'
 

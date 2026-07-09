@@ -45,18 +45,22 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignup, setIsSignup] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  // Separate loading states so starting email sign-in does not make the
+  // GitHub button read "Connecting..." (and vice versa).
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [githubLoading, setGithubLoading] = useState(false)
+  const isLoading = emailLoading || githubLoading
   const [error, setError] = useState<string | null>(null)
 
   // Get redirect destination from search params or prop
   const searchParams = useSearch({ strict: false })
   const from =
-    redirectTo || (searchParams as Record<string, unknown>)?.from || '/practice'
+    redirectTo || (searchParams as Record<string, unknown>).from || '/practice'
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    setIsLoading(true)
+    setEmailLoading(true)
 
     try {
       if (isSignup) {
@@ -69,13 +73,13 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
       navigate({ to: from as string, replace: true })
     } catch (err) {
       setError(friendlyAuthError(err, isSignup))
-      setIsLoading(false)
+      setEmailLoading(false)
     }
   }
 
   const handleGitHub = async () => {
     setError(null)
-    setIsLoading(true)
+    setGithubLoading(true)
     try {
       // OAuth triggers a full-page redirect to GitHub and back. Telling Convex
       // where to land afterwards sends the person straight into the app instead
@@ -84,7 +88,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
       onSignInSuccess?.()
     } catch (err) {
       setError(friendlyAuthError(err, isSignup))
-      setIsLoading(false)
+      setGithubLoading(false)
     }
   }
 
@@ -161,7 +165,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                     disabled={isLoading}
                     className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white py-3.5 rounded-xl font-medium transition-colors text-base shadow-md"
                   >
-                    {isLoading ? 'Connecting...' : 'Continue with GitHub'}
+                    {githubLoading ? 'Connecting...' : 'Continue with GitHub'}
                   </Button>
                 </div>
 
@@ -180,10 +184,14 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                 {/* Email/Password Form - Larger Inputs */}
                 <form onSubmit={handleEmailAuth} className="space-y-6">
                   <div>
-                    <label className="block text-base font-semibold text-brown-800 mb-3">
+                    <label
+                      htmlFor="signin-email"
+                      className="block text-base font-semibold text-brown-800 mb-3"
+                    >
                       Email Address
                     </label>
                     <input
+                      id="signin-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -195,10 +203,14 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                   </div>
 
                   <div>
-                    <label className="block text-base font-semibold text-brown-800 mb-3">
+                    <label
+                      htmlFor="signin-password"
+                      className="block text-base font-semibold text-brown-800 mb-3"
+                    >
                       Password
                     </label>
                     <input
+                      id="signin-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -222,7 +234,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                     disabled={isLoading}
                     className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white py-3.5 rounded-xl font-semibold transition-colors text-base shadow-md mt-8"
                   >
-                    {isLoading
+                    {emailLoading
                       ? 'Please wait...'
                       : isSignup
                         ? 'Create Account'

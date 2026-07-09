@@ -21,7 +21,7 @@ import {
   Sprout,
   Star,
 } from 'lucide-react'
-import type { Milestones } from './MilestoneProgress'
+import type { Milestones } from './milestones'
 import type { FeedbackData, NVCScore } from './types'
 import type { SkillHint } from '~/hooks/useConversation'
 

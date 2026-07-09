@@ -6,7 +6,7 @@ interface OverallScoreRingProps {
 }
 
 /**
- * The profile's emotional centerpiece — the EmpathyMeter rendered as a ring.
+ * The profile's emotional centerpiece: the EmpathyMeter rendered as a ring.
  * Color reflects how close the learner's communication is to giraffe (never an
  * arbitrary hue), and the label frames the score as a stage on a journey, never
  * a grade. The ring draws in on mount; reduced motion shows it filled at once.

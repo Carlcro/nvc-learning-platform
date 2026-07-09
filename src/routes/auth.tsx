@@ -13,7 +13,7 @@ function AuthPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const from =
-    ((search as Record<string, unknown>)?.from as string | undefined) ||
+    ((search as Record<string, unknown>).from as string | undefined) ||
     '/practice'
 
   // Once auth resolves (including the return trip from GitHub), send the person

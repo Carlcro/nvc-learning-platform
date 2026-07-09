@@ -8,7 +8,7 @@ export interface SpeechBubbleProps
 }
 
 /**
- * The guide's speech bubble — a warm white card with a tail that shares the
+ * The guide's speech bubble: a warm white card with a tail that shares the
  * bubble's border (a rotated square), so the outline stays continuous instead
  * of the borderless triangle the landing page used before.
  */

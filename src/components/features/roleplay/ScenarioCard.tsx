@@ -1,5 +1,6 @@
 import { Card, CardBody } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
+import { StarIcon } from '~/components/ui/Icons'
 
 export interface ScenarioProgress {
   status?:
@@ -59,13 +60,10 @@ function renderStars(stars: number) {
       aria-label={`${stars} of 3 stars`}
     >
       {[0, 1, 2].map((i) => (
-        <span
+        <StarIcon
           key={i}
-          aria-hidden="true"
-          className={i < stars ? 'text-giraffe-700' : 'text-brown-200'}
-        >
-          ★
-        </span>
+          className={`w-4 h-4 ${i < stars ? 'text-giraffe-700' : 'text-brown-200'}`}
+        />
       ))}
     </span>
   )

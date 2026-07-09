@@ -4,6 +4,7 @@ import { Button } from '~/components/ui/Button'
 import { Card, CardBody } from '~/components/ui/Card'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { DailyChallengeCard } from '~/components/features/dashboard/DailyChallengeCard'
+import { CheckIcon, XIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -91,7 +92,7 @@ function Home() {
             <div className="space-y-4">
               <BenefitCard
                 title="4 Core Skills"
-                description="Learn observation, feeling, need, and request—the foundation of compassionate communication."
+                description="Learn observation, feeling, need, and request: the foundation of compassionate communication."
               />
               <BenefitCard
                 title="Practice in Real Scenarios"
@@ -134,7 +135,7 @@ function Home() {
           <p className="text-lg text-brown-700 mb-12 leading-relaxed text-center max-w-prose mx-auto text-pretty">
             Non-Violent Communication (NVC) is a communication framework created
             by Marshall Rosenberg. It's based on the idea that all humans share
-            the same universal needs—like understanding, respect, and
+            the same universal needs, like understanding, respect, and
             connection. When we communicate with this in mind, we can resolve
             conflicts peacefully and build deeper relationships.
           </p>
@@ -197,7 +198,7 @@ function Home() {
             <StepCard
               step="3"
               title="Get Thoughtful Feedback"
-              description="After each message, see instant feedback on your use of NVC—what you're doing well, and what to explore next."
+              description="After each message, see instant feedback on your use of NVC: what you're doing well, and what to explore next."
             />
             <StepCard
               step="4"
@@ -250,7 +251,7 @@ function Home() {
             <div className="bg-white rounded-lg overflow-hidden border-2 border-brown-200 shadow-sm">
               <div className="bg-brown-100 p-6 flex items-center justify-center h-48">
                 <img
-                  src="/jakyll.png"
+                  src="/jakyll.webp"
                   alt="The jackal, a symbol of reactive communication"
                   className="h-40 w-auto object-contain drop-shadow-md"
                 />
@@ -400,7 +401,7 @@ interface GuideNoteProps {
 
 /**
  * A warm aside in the guide's voice. Replaces the old side-stripe callouts with
- * a full-bordered tinted panel led by the giraffe avatar—the Patient Mentor
+ * a full-bordered tinted panel led by the giraffe avatar, the Patient Mentor
  * speaking directly to the learner.
  */
 function GuideNote({ heading, children }: GuideNoteProps) {
@@ -436,7 +437,11 @@ function TraitItem({ positive = false, children }: TraitItemProps) {
             : 'bg-empathy-low/15 text-empathy-low'
         }`}
       >
-        {positive ? '✓' : '✕'}
+        {positive ? (
+          <CheckIcon className="w-3 h-3" />
+        ) : (
+          <XIcon className="w-3 h-3" />
+        )}
       </span>
       <span>{children}</span>
     </li>

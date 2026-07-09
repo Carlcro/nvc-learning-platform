@@ -7,7 +7,7 @@ interface ProfileHeroProps {
 /**
  * The profile's focal band: the guide speaking to the learner. Identity (level
  * + title), an encouraging line in the mentor's voice, the level-progress bar,
- * and a quiet row of supporting stats — all in one warm panel, so the page
+ * and a quiet row of supporting stats, all in one warm panel, so the page
  * opens with a person's growth rather than a grid of boxes.
  */
 export function ProfileHero({ stats }: ProfileHeroProps) {
@@ -115,7 +115,7 @@ function getMentorLine(overall: number, completed: number): string {
     return 'Welcome. Every conversation you practice is a step toward connection.'
   }
   if (overall >= 90) return 'Your words are landing with real compassion.'
-  if (overall >= 70) return "You're growing beautifully — keep going."
+  if (overall >= 70) return "You're growing beautifully. Keep going."
   if (overall >= 50) {
     return "You're finding your giraffe voice, one conversation at a time."
   }

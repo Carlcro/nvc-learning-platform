@@ -1,8 +1,8 @@
 node_modules
 
-!.env
 .env
 .env.local
+!.env.example
 .DS_Store
 .cache
 .vercel
@@ -29,3 +29,4 @@ app.config.timestamp_*.js
 .claude/skills/
 .cursor/skills/
 .claude/settings.local.json
+.wrangler/
