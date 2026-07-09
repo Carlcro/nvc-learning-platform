@@ -39,7 +39,8 @@ export function Button({
       className={`
         inline-flex items-center justify-center
         rounded-lg font-medium cursor-pointer
-        transition-colors duration-200
+        transition duration-200
+        motion-safe:active:scale-[0.98] motion-safe:active:duration-75
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantStyles[variant]}
         ${sizeStyles[size]}

@@ -96,8 +96,8 @@ function ConversationComponent() {
     !isArchiveMode &&
     !isLoading && // wait until the character's closing reply is on screen
     !!milestones?.feelingExpressed &&
-    !!milestones?.needIdentified &&
-    !!milestones?.requestMade
+    !!milestones.needIdentified &&
+    !!milestones.requestMade
 
   const characterMood =
     conversation?.currentCharacterMood ?? scenario.characterInitialMood
@@ -169,13 +169,18 @@ function ConversationComponent() {
 
             <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 shrink-0">
               {canEndConversation && (
-                <Button
-                  onClick={completeScenario}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  End & Get Results
-                </Button>
+                // This button is earned: it only exists once a feeling, a need,
+                // and a request have all been expressed. Let it arrive like the
+                // small win it is.
+                <div className="animate-celebrate-in">
+                  <Button
+                    onClick={completeScenario}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Wrap up and see how it went
+                  </Button>
+                </div>
               )}
 
               <MessageInput
@@ -270,6 +275,7 @@ function ConversationComponent() {
               <div className="flex-1 overflow-y-auto">
                 <FeedbackPanel
                   feedback={feedback}
+                  skillHint={skillHint}
                   isLoading={isLoading}
                   messageCount={userMessageCount}
                   learningObjectives={scenario.learningObjectives}

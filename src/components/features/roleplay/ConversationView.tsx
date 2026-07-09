@@ -71,9 +71,11 @@ function highlightJackalPhrases(
 function MessageBubble({
   message,
   characterName,
+  animateIn = false,
 }: {
   message: Message
   characterName: string
+  animateIn?: boolean
 }) {
   const isUser = message.role === 'user'
   const jackalPhrases =
@@ -81,7 +83,11 @@ function MessageBubble({
   const hasHighlights = jackalPhrases.length > 0
 
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div
+      className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} ${
+        animateIn ? 'animate-message-in' : ''
+      }`}
+    >
       {/* Avatar */}
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
@@ -133,6 +139,22 @@ export function ConversationView({
 }: ConversationViewProps) {
   const endRef = useRef<HTMLDivElement>(null)
 
+  // Which messages should rise in: only ones that arrive while the user is
+  // watching. A jump of more than two at once (or the very first fill) is a
+  // history load and stays still; a rewind resets the threshold.
+  const arrivalRef = useRef({ len: messages.length, from: messages.length })
+  if (messages.length !== arrivalRef.current.len) {
+    const grewBy = messages.length - arrivalRef.current.len
+    arrivalRef.current = {
+      len: messages.length,
+      from:
+        grewBy > 0 && grewBy <= 2 && messages.length - grewBy > 0
+          ? messages.length - grewBy
+          : messages.length,
+    }
+  }
+  const animateFrom = arrivalRef.current.from
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -162,12 +184,13 @@ export function ConversationView({
                 key={index}
                 message={message}
                 characterName={characterName}
+                animateIn={index >= animateFrom}
               />
             ))}
 
             {/* Loading Indicator */}
             {isLoading && (
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-3 items-start animate-message-in">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-brown-600 to-brown-700 flex items-center justify-center text-white font-bold text-sm">
                   {characterName.charAt(0)}
                 </div>

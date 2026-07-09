@@ -113,6 +113,44 @@
   animation: step-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* New conversation bubbles rise in gently, like someone leaning into the
+   conversation. Only messages that arrive while you watch get this; replayed
+   history stays still. */
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-message-in {
+  animation: message-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* A small mark (like a filter chip's check) popping into place. */
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Typing indicator dots: a calm fade, never a bounce. */
 @keyframes typing-dot {
   0%,
@@ -214,49 +252,6 @@
     infinite;
 }
 
-/* Feedback panel "ambient warmth": three soft light washes drift slowly behind
-   the header, expressing the character's mood as gentle weather. The blobs are
-   blurred and only ever transformed (composited, cheap); their colour is set
-   per-mood in JS and eased with a colour transition on the element itself.
-   Reduced-motion holds them still, so the mood colour still reads. */
-@keyframes aurora-a {
-  0%,
-  100% {
-    transform: translate(-6%, -8%) scale(1);
-  }
-  50% {
-    transform: translate(12%, 6%) scale(1.18);
-  }
-}
-@keyframes aurora-b {
-  0%,
-  100% {
-    transform: translate(8%, 6%) scale(1.12);
-  }
-  50% {
-    transform: translate(-10%, -6%) scale(1);
-  }
-}
-@keyframes aurora-c {
-  0%,
-  100% {
-    transform: translate(2%, 4%) scale(1.04);
-  }
-  50% {
-    transform: translate(-8%, -8%) scale(1.16);
-  }
-}
-
-.animate-aurora-a {
-  animation: aurora-a 17s ease-in-out infinite;
-}
-.animate-aurora-b {
-  animation: aurora-b 21s ease-in-out infinite;
-}
-.animate-aurora-c {
-  animation: aurora-c 25s ease-in-out infinite;
-}
-
 /* The score's warm halo blooms once as the turn's result lands, then settles to
    a soft static glow whose colour carries the score band (never alarming). One
    shot, not a perpetual pulse - the resting halo conveys the state on its own,
@@ -302,14 +297,13 @@
   .animate-star-pop,
   .animate-confetti,
   .animate-step-in,
+  .animate-message-in,
+  .animate-pop-in,
   .animate-typing-dot,
   .animate-node-ignite,
   .animate-connector,
   .animate-connect-glow,
   .animate-mote-rise,
-  .animate-aurora-a,
-  .animate-aurora-b,
-  .animate-aurora-c,
   .animate-score-bloom {
     animation: none !important;
   }

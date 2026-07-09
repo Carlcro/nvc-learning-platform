@@ -3,15 +3,13 @@
  *
  * Right-side panel showing NVC analysis, progress steps, and coaching feedback.
  *
- * "Ambient warmth": the header is a small piece of mood-reactive weather. Three
- * soft light washes drift behind it and warm toward gold and green as the
- * character opens up, cooling to a gentle coral when they grow guarded - never
- * an alarming red. Light motes rise through it, and the turn's score arrives
- * inside a warm halo that breathes once and settles. Everything holds still and
- * legible under reduced motion; the mood colour and the score still read.
+ * The header holds the live "how the character feels" meter; mood is carried by
+ * the chip and the bar fill, warm and gentle, never an alarming red. The turn's
+ * score arrives inside a warm halo that breathes once and settles. Everything
+ * holds still and legible under reduced motion.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
@@ -46,7 +44,13 @@ interface FeedbackPanelProps {
  * fully-formed static state.
  */
 function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false)
+  // Read synchronously on first render so a reduced-motion user never sees a
+  // count-up begin before the preference is known.
+  const [reduced, setReduced] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -66,7 +70,10 @@ function usePrefersReducedMotion(): boolean {
  */
 function useCountUp(target: number, turnKey: number): number {
   const reduced = usePrefersReducedMotion()
-  const [value, setValue] = useState(target)
+  // Start where the animation starts, so the final value never flashes for a
+  // frame before the count begins. Reduced motion starts (and stays) at the
+  // final value.
+  const [value, setValue] = useState(reduced ? target : 0)
 
   useEffect(() => {
     if (reduced) {
@@ -132,93 +139,9 @@ function getMoodFill(mood: number): string {
 }
 
 /**
- * The three drifting light washes behind the header, tinted by mood. Kept as
- * soft, luminous warm tones so dark-brown text on top always stays well above
- * AA contrast - the weather changes hue, never brightness enough to threaten
- * legibility.
- */
-function auroraColors(mood: number): [string, string, string] {
-  if (mood >= 6)
-    return [
-      'rgba(127, 176, 105, 0.55)', // growth green
-      'rgba(255, 217, 109, 0.62)', // warm gold
-      'rgba(255, 244, 214, 0.55)', // pale gold light
-    ]
-  if (mood >= 3)
-    return [
-      'rgba(255, 217, 109, 0.66)',
-      'rgba(245, 184, 65, 0.55)',
-      'rgba(255, 244, 214, 0.55)',
-    ]
-  if (mood >= 0)
-    return [
-      'rgba(255, 227, 144, 0.6)',
-      'rgba(255, 237, 179, 0.62)',
-      'rgba(255, 244, 214, 0.55)',
-    ]
-  if (mood >= -6)
-    return [
-      'rgba(224, 120, 86, 0.4)', // gentle coral wash
-      'rgba(255, 208, 138, 0.58)',
-      'rgba(255, 244, 214, 0.55)',
-    ]
-  return [
-    'rgba(224, 120, 86, 0.5)',
-    'rgba(232, 155, 122, 0.5)',
-    'rgba(255, 228, 200, 0.55)',
-  ]
-}
-
-/**
- * Soft light motes rising through the header. Reuses the celebration's
- * mote-rise keyframe, which keeps them invisible under reduced motion.
- */
-function HeaderMotes() {
-  const motes = useMemo(
-    () =>
-      Array.from({ length: 10 }, (_, i) => ({
-        id: i,
-        left: Math.round((i / 10) * 100 + (i % 3) * 6),
-        bottom: (i % 4) * 18,
-        size: (i % 3) + 4,
-        dur: (6 + (i % 4)).toFixed(2),
-        delay: ((i % 5) * 1.1).toFixed(2),
-        opacity: (0.35 + (i % 3) * 0.12).toFixed(2),
-      })),
-    [],
-  )
-
-  return (
-    <div
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-      aria-hidden="true"
-    >
-      {motes.map((m) => (
-        <span
-          key={m.id}
-          className="absolute rounded-full bg-white animate-mote-rise"
-          style={
-            {
-              left: `${m.left}%`,
-              bottom: `${m.bottom}%`,
-              width: `${m.size}px`,
-              height: `${m.size}px`,
-              boxShadow: '0 0 6px 1px rgba(255, 255, 255, 0.6)',
-              '--mote-dur': `${m.dur}s`,
-              '--mote-delay': `${m.delay}s`,
-              '--mote-opacity': m.opacity,
-            } as React.CSSProperties
-          }
-        />
-      ))}
-    </div>
-  )
-}
-
-/**
- * Ambient, mood-reactive header. Absorbs the live connection meter so the
- * drifting colour behind it has real meaning: this whole strip is "how the
- * conversation feels right now".
+ * The panel header: holds the live connection meter, so this whole strip is
+ * "how the conversation feels right now". A calm, flat gold surface; the mood
+ * itself is carried by the chip and the bar fill.
  */
 function AmbientHeader({
   mood,
@@ -230,38 +153,15 @@ function AmbientHeader({
   const clampedMood = Math.max(-10, Math.min(10, mood))
   const percent = ((clampedMood + 10) / 20) * 100
   const moodInfo = getMoodLabel(clampedMood)
-  const [c1, c2, c3] = auroraColors(clampedMood)
   const who = characterName || 'They'
 
-  const blobBase =
-    'absolute rounded-full blur-2xl transition-[background-color] duration-700 ease-out'
-
   return (
-    <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-giraffe-300 to-giraffe-400">
-      {/* Drifting mood washes */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div
-          className={`${blobBase} animate-aurora-a -top-10 -left-8 h-40 w-40`}
-          style={{ backgroundColor: c1 }}
-        />
-        <div
-          className={`${blobBase} animate-aurora-b -top-6 right-0 h-44 w-44`}
-          style={{ backgroundColor: c2 }}
-        />
-        <div
-          className={`${blobBase} animate-aurora-c -bottom-12 left-1/3 h-36 w-44`}
-          style={{ backgroundColor: c3 }}
-        />
-      </div>
-
-      <HeaderMotes />
-
-      {/* Content */}
-      <div className="relative px-5 pt-4 pb-4">
+    <div className="shrink-0 bg-giraffe-300">
+      <div className="px-5 pt-4 pb-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold text-brown-900">Feedback</h2>
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${moodInfo.color}`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold border ${moodInfo.color}`}
           >
             {moodInfo.label}
           </span>
@@ -279,11 +179,11 @@ function AmbientHeader({
             <div
               className={`absolute inset-y-0 left-0 rounded-full ${getMoodFill(
                 clampedMood,
-              )} transition-all duration-700 ease-out`}
+              )} transition-[width,background-color] duration-700 ease-out`}
               style={{ width: `${percent}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-brown-700">
+          <div className="flex items-center justify-between text-[11px] font-medium text-brown-700">
             <span>Guarded</span>
             <span>Open</span>
           </div>
@@ -301,12 +201,26 @@ function getScoreMessage(score: number): string {
 }
 
 // Warm halo colour behind the score, by band. Mirrors the empathy bands; the
-// low band is the gentle coral, never an alarming red.
+// low band is the gentle coral, never an alarming red. Built from the theme
+// tokens so a palette change carries through.
 function scoreGlow(score: number): string {
-  if (score >= 80) return 'rgba(127, 176, 105, 0.6)' // growth green
-  if (score >= 60) return 'rgba(245, 184, 65, 0.62)' // giraffe gold
-  if (score >= 30) return 'rgba(255, 217, 109, 0.58)' // warm gold
-  return 'rgba(224, 120, 86, 0.45)' // gentle coral
+  if (score >= 80)
+    return 'color-mix(in srgb, var(--color-empathy-high) 60%, transparent)'
+  if (score >= 60)
+    return 'color-mix(in srgb, var(--color-giraffe-400) 62%, transparent)'
+  if (score >= 30)
+    return 'color-mix(in srgb, var(--color-giraffe-300) 58%, transparent)'
+  return 'color-mix(in srgb, var(--color-empathy-low) 45%, transparent)'
+}
+
+// The score bar speaks the same band language as the halo and the
+// EmpathyMeter: green when it lands, gold in the middle, gentle coral when
+// there is more jackal than giraffe.
+function scoreBarFill(score: number): string {
+  if (score >= 80) return 'bg-empathy-high'
+  if (score >= 60) return 'bg-giraffe-500'
+  if (score >= 30) return 'bg-giraffe-400'
+  return 'bg-empathy-low'
 }
 
 const steps = [
@@ -324,9 +238,11 @@ const steps = [
  */
 function EmpathyChip({
   earned,
+  justEarned = false,
   characterName,
 }: {
   earned: boolean
+  justEarned?: boolean
   characterName?: string
 }) {
   const who = characterName || 'they'
@@ -341,7 +257,7 @@ function EmpathyChip({
       <div
         className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
           earned ? 'bg-empathy-high text-brown-900' : 'bg-giraffe-100 text-brown-400'
-        }`}
+        } ${justEarned ? 'animate-node-ignite' : ''}`}
       >
         <Ear className="h-3.5 w-3.5" />
       </div>
@@ -403,7 +319,7 @@ function SkillHintCard({ hint }: { hint: SkillHint }) {
         <Link
           to={resource.to}
           target="_blank"
-          className="font-semibold text-giraffe-700 hover:text-giraffe-800 underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
+          className="font-semibold text-giraffe-800 hover:text-giraffe-900 underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
         >
           Open the {resource.label}
         </Link>{' '}
@@ -413,7 +329,13 @@ function SkillHintCard({ hint }: { hint: SkillHint }) {
   )
 }
 
-function ProgressSteps({ milestones }: { milestones: Milestones }) {
+function ProgressSteps({
+  milestones,
+  freshKeys,
+}: {
+  milestones: Milestones
+  freshKeys: ReadonlyArray<string>
+}) {
   const completedCount = steps.filter((s) => milestones[s.key]).length
   const totalSteps = steps.length
 
@@ -432,10 +354,11 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
 
       <div className="flex items-center justify-between relative">
         {/* Background Progress Line */}
-        <div className="absolute top-5 left-0 right-0 h-0.5 bg-giraffe-100 mx-6" />
-        {/* Active Progress Line */}
+        <div className="absolute top-5 left-0 right-0 h-1 rounded-full bg-giraffe-200 mx-6" />
+        {/* Active Progress Line - traces the contiguous journey from the
+            start; steps earned out of order still read from their circles */}
         <div
-          className="absolute top-5 left-6 h-0.5 bg-empathy-high transition-all duration-500"
+          className="absolute top-5 left-6 h-1 rounded-full bg-empathy-high transition-[width] duration-500"
           style={{
             width:
               currentStepIndex > 0
@@ -447,6 +370,7 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
         {steps.map((step, index) => {
           const isCompleted = milestones[step.key]
           const isCurrent = index === currentStepIndex
+          const isFresh = isCompleted && freshKeys.includes(step.key)
           const StepIcon = step.Icon
 
           return (
@@ -455,13 +379,13 @@ function ProgressSteps({ milestones }: { milestones: Milestones }) {
               className="flex flex-col items-center gap-1.5 relative z-10"
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
                   isCompleted
                     ? 'bg-empathy-high text-brown-900 shadow-sm'
                     : isCurrent
                       ? 'bg-giraffe-100 text-brown-800 border-2 border-giraffe-400'
                       : 'bg-giraffe-50 text-brown-400'
-                }`}
+                } ${isFresh ? 'animate-node-ignite' : ''}`}
               >
                 {isCompleted ? (
                   <Check className="h-4 w-4" strokeWidth={2.5} />
@@ -511,7 +435,7 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
         }}
       />
 
-      <div className="relative bg-giraffe-50/60 backdrop-blur-sm rounded-lg p-3.5 space-y-3 border border-giraffe-100">
+      <div className="relative bg-giraffe-50 rounded-lg p-3.5 space-y-3 border border-giraffe-100">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-lg font-bold text-giraffe-700">
@@ -530,7 +454,9 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
         {/* Score Progress Bar */}
         <div className="h-2.5 bg-giraffe-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-giraffe-400 to-giraffe-500 rounded-full transition-all duration-700 ease-out"
+            className={`h-full rounded-full transition-[width,background-color] duration-700 ease-out ${scoreBarFill(
+              score.total,
+            )}`}
             style={{ width: `${scorePercentage}%` }}
           />
         </div>
@@ -551,7 +477,7 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
                 </span>
               ) : (
                 <span
-                  className="text-sm text-brown-300"
+                  className="text-sm text-brown-400"
                   title="Not part of this message"
                   aria-label={`${metric.label}: not part of this message`}
                 >
@@ -611,9 +537,7 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
       {/* The single next step - the heart of the coaching, given prominence */}
       {nextStep && (
         <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-brown-600 mb-1">
-            Try next
-          </p>
+          <p className="text-xs font-semibold text-brown-600 mb-1">Try next</p>
           <p className="text-sm text-brown-800 leading-relaxed font-medium">
             {nextStep}
           </p>
@@ -622,6 +546,15 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
     </div>
   )
 }
+
+const MILESTONE_KEYS = [
+  'conversationStarted',
+  'feelingExpressed',
+  'needIdentified',
+  'requestMade',
+  'resolutionReached',
+  'empathyShown',
+] as const
 
 export function FeedbackPanel({
   feedback,
@@ -633,6 +566,39 @@ export function FeedbackPanel({
   characterName,
   milestones,
 }: FeedbackPanelProps) {
+  // Milestones earned just now get a one-time ignite pop. The memory lives up
+  // here because the turn block below remounts every turn (keyed by
+  // messageCount) and would otherwise forget what was already lit. A signature
+  // change marks the freshly earned keys; a new turn without one clears them,
+  // so a milestone never re-pops on later turns or on reload.
+  const signature = MILESTONE_KEYS.map((k) =>
+    milestones?.[k] ? '1' : '0',
+  ).join('')
+  const milestoneMemory = useRef({
+    signature,
+    turn: messageCount,
+    previous: milestones,
+    fresh: [] as Array<string>,
+  })
+  if (
+    signature !== milestoneMemory.current.signature ||
+    messageCount !== milestoneMemory.current.turn
+  ) {
+    const previous = milestoneMemory.current.previous
+    milestoneMemory.current = {
+      signature,
+      turn: messageCount,
+      previous: milestones,
+      fresh:
+        // No `previous` means the query just filled in (a reload), where
+        // nothing was earned "just now" and nothing should pop.
+        signature !== milestoneMemory.current.signature && milestones && previous
+          ? MILESTONE_KEYS.filter((k) => milestones[k] && !previous[k])
+          : [],
+    }
+  }
+  const freshMilestones = milestoneMemory.current.fresh
+
   return (
     <div className="w-full rounded-2xl overflow-hidden bg-giraffe-50 shadow-lg border border-giraffe-100 flex flex-col max-h-full">
       <AmbientHeader mood={characterMood} characterName={characterName} />
@@ -640,6 +606,16 @@ export function FeedbackPanel({
       {/* Content - hugs its content, scrolls internally only when it would
           otherwise run past the available height */}
       <div className="min-h-0 p-4 space-y-4 overflow-y-auto">
+        {/* Persistent status line for assistive tech: the loading state below
+            announces itself, but the result would otherwise arrive silently.
+            This sentence updates when a new score lands. */}
+        <div role="status" className="sr-only">
+          {feedback && !isLoading
+            ? `${getScoreMessage(feedback.score.total)}. Your message scored ${
+                feedback.score.total
+              } out of 100. ${cleanText(feedback.feedback)}`
+            : null}
+        </div>
         {isLoading ? (
           // The guide "thinking" - the same calm typing-dot idiom used while the
           // character composes a reply (ConversationView) and in GiraffeLoader,
@@ -653,6 +629,8 @@ export function FeedbackPanel({
               src="/giraff.png"
               alt=""
               aria-hidden="true"
+              width={232}
+              height={512}
               className="h-40 w-auto object-contain"
             />
             <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -678,9 +656,13 @@ export function FeedbackPanel({
                 className="animate-step-in space-y-3"
                 style={{ animationDelay: '90ms' }}
               >
-                <ProgressSteps milestones={milestones} />
+                <ProgressSteps
+                  milestones={milestones}
+                  freshKeys={freshMilestones}
+                />
                 <EmpathyChip
                   earned={!!milestones.empathyShown}
+                  justEarned={freshMilestones.includes('empathyShown')}
                   characterName={characterName}
                 />
               </div>
@@ -704,6 +686,8 @@ export function FeedbackPanel({
             <img
               src="/giraff.png"
               alt="Giraffe - Your NVC Guide"
+              width={232}
+              height={512}
               className="mx-auto object-contain h-48 w-auto"
             />
             <p className="text-center text-brown-600 text-sm px-2">

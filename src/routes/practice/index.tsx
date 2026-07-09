@@ -518,7 +518,7 @@ function FilterChip({
           aria-hidden="true"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="w-4 h-4 -ml-1"
+          className="w-4 h-4 -ml-1 animate-pop-in"
         >
           <path
             fillRule="evenodd"
