@@ -68,28 +68,19 @@ function FeelingsWheel() {
   const handleFeelingClick = (word: string) => {
     setSelectedFeeling(word)
     if (currentUser) {
-      markExploredMutation({
-        userId: currentUser._id,
-        feelingWord: word,
-      })
+      markExploredMutation({ feelingWord: word })
     }
   }
 
   const handleSave = () => {
     if (selectedFeeling && currentUser) {
-      saveFeelingMutation({
-        userId: currentUser._id,
-        feelingWord: selectedFeeling,
-      })
+      saveFeelingMutation({ feelingWord: selectedFeeling })
     }
   }
 
   const handleRemove = () => {
     if (selectedFeeling && currentUser) {
-      removeFeelingMutation({
-        userId: currentUser._id,
-        feelingWord: selectedFeeling,
-      })
+      removeFeelingMutation({ feelingWord: selectedFeeling })
     }
   }
 

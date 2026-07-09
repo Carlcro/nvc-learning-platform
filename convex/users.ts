@@ -1,49 +1,57 @@
-import { query, mutation } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { getAuthUserId } from '@convex-dev/auth/server'
+import { v } from 'convex/values'
+import { internalMutation, mutation, query } from './_generated/server'
 
 /**
  * Get the current authenticated user
  * Returns null if user is not authenticated
  */
 export const getCurrentUser = query({
+  args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      return null;
+      return null
     }
 
-    const user = await ctx.db.get(userId);
-    return user;
+    return await ctx.db.get(userId)
   },
-});
+})
 
 /**
- * Get the current user's profile with progress stats
- * Returns null if user is not authenticated
+ * Get the current user's account plus their progress stats.
+ *
+ * Stats come from the userProgress table, the single source of truth that
+ * conversations.complete writes to, so the nav and menus always show live
+ * level, points, and streak.
  */
 export const getUserProfile = query({
+  args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      return null;
+      return null
     }
 
-    const user = await ctx.db.get(userId);
-    if (!user) return null;
+    const user = await ctx.db.get(userId)
+    if (!user) return null
 
-    // Get or create user profile
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
+    const progress = await ctx.db
+      .query('userProgress')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first()
 
     return {
       user,
-      profile,
-    };
+      profile: {
+        level: progress?.level ?? 1,
+        totalPoints: progress?.totalPoints ?? 0,
+        currentStreak: progress?.currentStreak ?? 0,
+        longestStreak: progress?.longestStreak ?? 0,
+      },
+    }
   },
-});
+})
 
 /**
  * Update user profile (name, email, etc.)
@@ -54,112 +62,89 @@ export const updateUserProfile = mutation({
     name: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated')
     }
 
-    const user = await ctx.db.get(userId);
+    const user = await ctx.db.get(userId)
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found')
     }
 
-    // Update the auth user
     if (args.name !== undefined) {
       await ctx.db.patch(userId, {
         name: args.name,
-      });
+      })
     }
 
-    return await ctx.db.get(userId);
+    return await ctx.db.get(userId)
   },
-});
+})
 
 /**
- * Initialize user profile when they sign up
- * Called automatically after successful authentication
+ * Ensure the signed-in user has a progress record.
+ * Called once after successful authentication.
  */
 export const initializeUserProfile = mutation({
+  args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated')
     }
 
-    // Check if profile already exists
-    const existingProfile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
+    const existing = await ctx.db
+      .query('userProgress')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first()
 
-    if (existingProfile) {
-      return existingProfile;
+    if (existing) {
+      return existing
     }
 
-    // Create new profile
-    const profileId = await ctx.db.insert("userProfiles", {
+    const progressId = await ctx.db.insert('userProgress', {
       userId,
+      level: 1,
+      totalPoints: 0,
+      pointsToNextLevel: 300,
+      scenariosCompleted: 0,
+      scenariosPassed: 0,
+      scenariosMastered: 0,
+      totalStars: 0,
       currentStreak: 0,
       longestStreak: 0,
-      totalPoints: 0,
-      level: 1,
+      lastPracticeDate: '',
+      averageScores: {
+        observation: 0,
+        feeling: 0,
+        need: 0,
+        request: 0,
+        overall: 0,
+      },
+      scoredCompletions: 0,
+      achievements: [],
+      badges: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });
+    })
 
-    return await ctx.db.get(profileId);
+    return await ctx.db.get(progressId)
   },
-});
+})
 
 /**
- * Update user points and level
- * Internal use only - called by challenge completion
+ * One-off cleanup for the deprecated userProfiles table (stats moved to
+ * userProgress). Run via `npx convex run users:clearDeprecatedProfiles`,
+ * then the table can be dropped from the schema.
  */
-export const updateUserProgress = mutation({
-  args: {
-    userId: v.id("users"),
-    pointsToAdd: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-      .first();
-
-    if (!profile) {
-      throw new Error("User profile not found");
-    }
-
-    const newPoints = profile.totalPoints + args.pointsToAdd;
-    const newLevel = Math.min(10, Math.floor(newPoints / 500) + 1); // Level up every 500 points
-
-    await ctx.db.patch(profile._id, {
-      totalPoints: newPoints,
-      level: newLevel,
-      updatedAt: Date.now(),
-    });
-
-    return await ctx.db.get(profile._id);
-  },
-});
-
-/**
- * Get current user's conversation history
- * Returns all conversations for the authenticated user, most recent first
- */
-export const getMyConversations = query({
+export const clearDeprecatedProfiles = internalMutation({
+  args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      return null;
+    const profiles = await ctx.db.query('userProfiles').collect()
+    for (const profile of profiles) {
+      await ctx.db.delete(profile._id)
     }
-
-    const conversations = await ctx.db
-      .query("conversations")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .order("desc")
-      .collect();
-
-    return conversations;
+    return { deleted: profiles.length }
   },
-});
+})

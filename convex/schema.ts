@@ -16,8 +16,10 @@ export default defineSchema({
   // ============================================================================
 
   /**
-   * Extended user profile data
-   * Links to authTables.users and stores NVC-specific progress information
+   * DEPRECATED: progress stats live on userProgress now (the single source of
+   * truth written by conversations.complete). Nothing reads or writes this
+   * table anymore. Run `npx convex run users:clearDeprecatedProfiles` on each
+   * deployment, then this declaration can be deleted.
    */
   userProfiles: defineTable({
     userId: v.id('users'), // Reference to Convex Auth user
@@ -79,6 +81,10 @@ export default defineSchema({
       request: v.number(), // 0-25
       overall: v.number(), // 0-100
     }),
+    // How many scored completions the averages include, so they can be
+    // updated as a true running average. Optional: records from before this
+    // field are treated as 0.
+    scoredCompletions: v.optional(v.number()),
 
     // Achievements
     achievements: v.array(v.string()), // Achievement IDs
@@ -150,7 +156,11 @@ export default defineSchema({
       v.union(v.literal('public'), v.literal('private')),
     ), // 'private' scenarios are only visible to their owner
     source: v.optional(
-      v.union(v.literal('builtin'), v.literal('user_created')),
+      v.union(
+        v.literal('builtin'),
+        v.literal('user_created'),
+        v.literal('daily'), // generated for a daily challenge
+      ),
     ),
   })
     .index('by_category', ['category'])
@@ -315,24 +325,6 @@ export default defineSchema({
       ),
     ),
 
-    // ============ Feedback (generated at completion) ============
-    whatWentWell: v.optional(v.array(v.string())), // 2-4 positive specific points
-    roomToGrow: v.optional(v.array(v.string())), // 1-3 areas for improvement
-    personalizedSuggestions: v.optional(
-      v.array(
-        v.object({
-          component: v.string(), // "observation", "feeling", "need", "request"
-          issue: v.string(), // Description of the issue
-          example: v.object({
-            whatYouSaid: v.string(), // Actual quote from conversation
-            betterApproach: v.string(), // Suggested NVC rephrasing
-            why: v.string(), // Explanation of why this is better
-          }),
-          practiceTip: v.string(), // Actionable tip for next time
-        }),
-      ),
-    ),
-
     // ============ Timestamps ============
     createdAt: v.number(), // When conversation started
     completedAt: v.optional(v.number()), // When conversation ended
@@ -381,8 +373,7 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_challenge', ['challengeId'])
-    .index('by_user_and_challenge', ['userId', 'challengeId'])
-    .index('by_user_and_date', ['userId', 'completedAt']), // For streak calculations
+    .index('by_user_and_challenge', ['userId', 'challengeId']),
 
   // ============================================================================
   // REFERENCE CONTENT
@@ -404,7 +395,8 @@ export default defineSchema({
   })
     .index('by_category', ['category'])
     .index('by_family', ['family'])
-    .index('by_intensity', ['family', 'intensity']),
+    .index('by_intensity', ['family', 'intensity'])
+    .index('by_word', ['word']),
 
   /**
    * User Feelings Progress - Tracks learning and daily check-ins
@@ -455,28 +447,6 @@ export default defineSchema({
   })
     .index('by_level', ['level'])
     .index('by_category', ['category']),
-
-  /**
-   * Feelings Wheel - Reference tool for users (Legacy - for backwards compatibility)
-   * Helps users identify and name their emotions
-   */
-  feelingsWheel: defineTable({
-    category: v.string(), // e.g., "joyful", "sad", "fearful", "angry"
-    feelings: v.array(v.string()), // Specific feeling words
-    color: v.string(), // Hex color for UI
-    description: v.string(),
-  }).index('by_category', ['category']),
-
-  /**
-   * Needs Inventory - Reference tool for users
-   * Universal human needs used in NVC
-   */
-  needsInventory: defineTable({
-    category: v.string(), // e.g., "Connection", "Autonomy", "Safety"
-    needs: v.array(v.string()), // Specific need words
-    icon: v.optional(v.string()), // Emoji or icon name
-    description: v.string(),
-  }).index('by_category', ['category']),
 
   /**
    * Lessons - Educational content for Phase 1

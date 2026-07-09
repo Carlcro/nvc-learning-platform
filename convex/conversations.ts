@@ -1,98 +1,87 @@
-import { mutation, query } from './_generated/server'
+import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from './_generated/server'
+import {
+  advanceStreak,
+  completionStatusForScore,
+  levelForPoints,
+  newlyEarnedAchievements,
+  pointsForCompletion,
+  pointsToNextLevel,
+  resolveLocalDate,
+  scenarioStatusForScore,
+  starsForScore,
+  updateAverages,
+} from './lib/progress'
+import type { Doc, Id } from './_generated/dataModel'
+import type { MutationCtx, QueryCtx } from './_generated/server'
 
 /**
- * Conversations - Core conversation management for AI roleplay
+ * Conversations - Core conversation management for roleplay practice.
  *
- * Handles creation, messaging, and completion of NVC practice conversations.
- * Each conversation includes NVC scoring data for learning analytics.
+ * Every function derives the user from the auth context and verifies
+ * ownership; a conversation is private to the person practicing in it.
+ * Scores are only ever written by the server (ai.submitTurn -> recordTurn),
+ * never accepted from the client.
  */
+
+/** Load a conversation and verify it belongs to the authenticated user. */
+async function getOwnedConversation(
+  ctx: QueryCtx | MutationCtx,
+  conversationId: Id<'conversations'>,
+): Promise<Doc<'conversations'> | null> {
+  const userId = await getAuthUserId(ctx)
+  if (userId === null) return null
+
+  const conversation = await ctx.db.get(conversationId)
+  if (!conversation || conversation.userId !== userId) return null
+  return conversation
+}
 
 // ============================================================================
 // QUERIES
 // ============================================================================
 
 /**
- * Get the active conversation for a user in a specific scenario
- * Returns the ongoing conversation or null if none exists
+ * Get the current user's active conversation for a scenario, or null.
  */
 export const getActive = query({
-  args: {
-    userId: v.id('users'),
-    scenarioId: v.id('scenarios'),
-  },
+  args: { scenarioId: v.id('scenarios') },
   handler: async (ctx, args) => {
-    const conversations = await ctx.db
-      .query('conversations')
-      .withIndex('by_user_and_scenario', (q) =>
-        q.eq('userId', args.userId).eq('scenarioId', args.scenarioId),
-      )
-      .collect()
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
 
-    // Find the first in_progress conversation
-    const conversation = conversations.find((c) => c.status === 'in_progress')
-    return conversation || null
+    return await findActiveConversation(ctx, userId, args.scenarioId)
   },
 })
 
+async function findActiveConversation(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<'users'>,
+  scenarioId: Id<'scenarios'>,
+) {
+  const conversations = await ctx.db
+    .query('conversations')
+    .withIndex('by_user_and_scenario', (q) =>
+      q.eq('userId', userId).eq('scenarioId', scenarioId),
+    )
+    .collect()
+  return conversations.find((c) => c.status === 'in_progress') ?? null
+}
+
 /**
- * Get a specific conversation by ID with full history
+ * Get a conversation by id with full history.
+ * Only the owner can read it; anyone else gets null.
  */
 export const getById = query({
   args: { conversationId: v.id('conversations') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.conversationId)
-  },
-})
-
-/**
- * Get user's conversation history for a scenario
- * Useful for showing past attempts and progress
- */
-export const getHistory = query({
-  args: {
-    userId: v.id('users'),
-    scenarioId: v.id('scenarios'),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query('conversations')
-      .withIndex('by_user_and_scenario', (q) =>
-        q.eq('userId', args.userId).eq('scenarioId', args.scenarioId),
-      )
-      .order('desc')
-      .collect()
-  },
-})
-
-/**
- * Get all conversations for a user (across all scenarios)
- * For user dashboard/progress tracking
- */
-export const getUserConversations = query({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query('conversations')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .order('desc')
-      .collect()
-  },
-})
-
-/**
- * Get user's completed conversations (for analytics/progress)
- */
-export const getUserCompletedConversations = query({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
-    const conversations = await ctx.db
-      .query('conversations')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .order('desc')
-      .collect()
-
-    return conversations.filter((c) => c.status === 'completed')
+    return await getOwnedConversation(ctx, args.conversationId)
   },
 })
 
@@ -101,35 +90,44 @@ export const getUserCompletedConversations = query({
 // ============================================================================
 
 /**
- * Create a new conversation for a user in a scenario
- * Initializes with empty messages array and "in_progress" status
+ * Start a conversation in a scenario for the current user.
+ * If an in-progress conversation already exists for this scenario (double
+ * click, second tab), it is returned instead of creating a parallel one.
  */
 export const create = mutation({
-  args: {
-    userId: v.id('users'),
-    scenarioId: v.id('scenarios'),
-  },
+  args: { scenarioId: v.id('scenarios') },
   handler: async (ctx, args) => {
-    const now = Date.now()
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      throw new Error('Not authenticated')
+    }
 
-    // Get scenario to get initial character mood
     const scenario = await ctx.db.get(args.scenarioId)
-    const initialCharacterMood = scenario?.characterInitialMood || 0
+    if (!scenario) {
+      throw new Error('Scenario not found')
+    }
+    if (scenario.visibility === 'private' && scenario.ownerId !== userId) {
+      throw new Error('Scenario not found')
+    }
 
+    const existing = await findActiveConversation(ctx, userId, args.scenarioId)
+    if (existing) return existing._id
+
+    const now = Date.now()
     return await ctx.db.insert('conversations', {
-      userId: args.userId,
+      userId,
       scenarioId: args.scenarioId,
       messages: [
         {
           role: 'assistant',
-          content: scenario?.aiOpeningMessage || '',
+          content: scenario.aiOpeningMessage,
           timestamp: now,
         },
       ],
       status: 'in_progress',
       messageCount: 1,
       averageNVCScore: 0,
-      currentCharacterMood: initialCharacterMood,
+      currentCharacterMood: scenario.characterInitialMood,
       giraffeStreakCount: 0,
       jackalLanguageCount: 0,
       milestonesAchieved: {
@@ -149,302 +147,500 @@ export const create = mutation({
   },
 })
 
+// ============================================================================
+// TURN RECORDING (internal, called by ai.submitTurn)
+// ============================================================================
+
+const MILESTONE_THRESHOLD = 15 // 15/25 = 60% of a component's max score
+
 /**
- * Add a message to a conversation
- * Supports both user and assistant messages
- * NVC scoring data is optional (only for user messages)
+ * Internal: everything ai.submitTurn needs to run one turn. Ownership is
+ * checked here so the action never operates on someone else's conversation.
  */
-export const addMessage = mutation({
+export const getForTurn = internalQuery({
   args: {
     conversationId: v.id('conversations'),
-    role: v.union(v.literal('user'), v.literal('assistant')),
-    content: v.string(),
-    nvcScore: v.optional(
-      v.object({
+    userId: v.id('users'),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId)
+    if (
+      !conversation ||
+      conversation.userId !== args.userId ||
+      conversation.status !== 'in_progress'
+    ) {
+      return null
+    }
+
+    const scenario = await ctx.db.get(conversation.scenarioId)
+    if (!scenario) return null
+
+    const progress = await ctx.db
+      .query('userProgress')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .first()
+
+    return {
+      conversation,
+      scenario,
+      userLevel: progress?.level ?? 1,
+    }
+  },
+})
+
+/**
+ * Internal: persist one full turn (user message with its analysis, plus the
+ * character's reply) atomically, updating mood and milestones. A turn either
+ * lands completely or not at all, so a retry can never duplicate the user
+ * message or lose the reply.
+ */
+export const recordTurn = internalMutation({
+  args: {
+    conversationId: v.id('conversations'),
+    userId: v.id('users'),
+    userContent: v.string(),
+    analysis: v.object({
+      nvcScore: v.object({
         observation: v.number(),
         feeling: v.number(),
         need: v.number(),
         request: v.number(),
         total: v.number(),
       }),
-    ),
-    feedback: v.optional(v.string()),
-    isJackalLanguage: v.optional(v.boolean()),
-    jackalPhrases: v.optional(v.array(v.string())),
-    giraffeAlternative: v.optional(v.string()),
-    whatWentWell: v.optional(v.string()),
-    empathyShown: v.optional(v.boolean()),
+      feedback: v.string(),
+      isJackalLanguage: v.boolean(),
+      jackalPhrases: v.array(v.string()),
+      giraffeAlternative: v.string(),
+      whatWentWell: v.string(),
+      empathyShown: v.boolean(),
+    }),
+    assistantContent: v.string(),
   },
   handler: async (ctx, args) => {
-    const { conversationId, role, content, ...scoreData } = args
-
-    const conversation = await ctx.db.get(conversationId)
-    if (!conversation) {
+    const conversation = await ctx.db.get(args.conversationId)
+    if (!conversation || conversation.userId !== args.userId) {
       throw new Error('Conversation not found')
     }
+    if (conversation.status !== 'in_progress') {
+      throw new Error('Conversation is no longer active')
+    }
 
-    const updatedMessages = [
+    const now = Date.now()
+    const { nvcScore } = args.analysis
+
+    // Move the character's mood based on how well this turn moved the
+    // conversation toward connection. The total (0-100) is the contextual
+    // turn quality, centered at 50: above 50 the character warms up, below
+    // 50 they cool down. The shift is gradual (max +/-4 per turn) so a
+    // single message never fully transforms them.
+    const prevMood = conversation.currentCharacterMood
+    const moodDelta = Math.round((nvcScore.total - 50) / 12.5)
+    const newMood = Math.max(-10, Math.min(10, prevMood + moodDelta))
+
+    const current = conversation.milestonesAchieved || {
+      conversationStarted: true,
+      feelingExpressed: false,
+      needIdentified: false,
+      requestMade: false,
+      resolutionReached: false,
+      empathyShown: false,
+    }
+
+    const milestones = {
+      conversationStarted: true,
+      feelingExpressed:
+        current.feelingExpressed || nvcScore.feeling >= MILESTONE_THRESHOLD,
+      needIdentified:
+        current.needIdentified || nvcScore.need >= MILESTONE_THRESHOLD,
+      requestMade:
+        current.requestMade || nvcScore.request >= MILESTONE_THRESHOLD,
+      // Resolution requires the character to have opened up (mood >= 5)
+      // AND a strong turn (>= 70). Uses the freshly updated mood.
+      resolutionReached:
+        current.resolutionReached || (newMood >= 5 && nvcScore.total >= 70),
+      empathyShown:
+        (current.empathyShown ?? false) || args.analysis.empathyShown,
+    }
+
+    const messages = [
       ...conversation.messages,
       {
-        role,
-        content,
-        timestamp: Date.now(),
-        ...scoreData,
+        role: 'user' as const,
+        content: args.userContent,
+        timestamp: now,
+        nvcScore,
+        feedback: args.analysis.feedback,
+        isJackalLanguage: args.analysis.isJackalLanguage,
+        jackalPhrases: args.analysis.jackalPhrases,
+        giraffeAlternative: args.analysis.giraffeAlternative,
+        whatWentWell: args.analysis.whatWentWell,
+        empathyShown: args.analysis.empathyShown,
+      },
+      {
+        role: 'assistant' as const,
+        content: args.assistantContent,
+        timestamp: now,
         // Stamp the character's mood onto their reply so the transcript can
-        // show how they felt at that point in the conversation.
-        ...(role === 'assistant'
-          ? { characterMood: conversation.currentCharacterMood }
-          : {}),
+        // show how they felt at that point, and rewind can restore it.
+        characterMood: newMood,
       },
     ]
 
-    // Update milestones if this is a user message with NVC scores
-    const updates: Record<string, unknown> = {
-      messages: updatedMessages,
-      lastMessageAt: Date.now(),
-      messageCount: updatedMessages.length,
-    }
-
-    if (role === 'user' && scoreData.nvcScore) {
-      // Move the character's mood based on how well this turn moved the
-      // conversation toward connection. The total (0-100) is the contextual
-      // turn quality, centered at 50: above 50 the character warms up, below
-      // 50 they cool down. The shift is gradual (max +/-4 per turn) so a
-      // single message never fully transforms them.
-      const prevMood = conversation.currentCharacterMood ?? 0
-      const moodDelta = Math.round((scoreData.nvcScore.total - 50) / 12.5)
-      const newMood = Math.max(-10, Math.min(10, prevMood + moodDelta))
-      updates.currentCharacterMood = newMood
-
-      const currentMilestones = conversation.milestonesAchieved || {
-        conversationStarted: true,
-        feelingExpressed: false,
-        needIdentified: false,
-        requestMade: false,
-        resolutionReached: false,
-        empathyShown: false,
-      }
-
-      // Check milestone thresholds (15/25 = 60% of max score)
-      const MILESTONE_THRESHOLD = 15
-
-      const updatedMilestones = {
-        conversationStarted: true,
-        feelingExpressed:
-          currentMilestones.feelingExpressed ||
-          scoreData.nvcScore.feeling >= MILESTONE_THRESHOLD,
-        needIdentified:
-          currentMilestones.needIdentified ||
-          scoreData.nvcScore.need >= MILESTONE_THRESHOLD,
-        requestMade:
-          currentMilestones.requestMade ||
-          scoreData.nvcScore.request >= MILESTONE_THRESHOLD,
-        // Resolution requires the character to have opened up (mood >= 5)
-        // AND a strong turn (>= 70). Uses the freshly updated mood.
-        resolutionReached:
-          currentMilestones.resolutionReached ||
-          (newMood >= 5 && scoreData.nvcScore.total >= 70),
-        // Empathy: the user reflected the character's feelings or needs.
-        empathyShown:
-          (currentMilestones.empathyShown ?? false) ||
-          (scoreData.empathyShown ?? false),
-      }
-
-      updates.milestonesAchieved = updatedMilestones
-    }
-
-    await ctx.db.patch(conversationId, updates)
+    await ctx.db.patch(args.conversationId, {
+      messages,
+      messageCount: messages.length,
+      lastMessageAt: now,
+      currentCharacterMood: newMood,
+      milestonesAchieved: milestones,
+      jackalLanguageCount:
+        conversation.jackalLanguageCount +
+        (args.analysis.isJackalLanguage ? 1 : 0),
+    })
 
     return { success: true }
   },
 })
 
+// ============================================================================
+// COMPLETION (single server-side pipeline)
+// ============================================================================
+
 /**
- * Complete a conversation and calculate final score
- * Marks conversation as "completed" and stores final NVC score
- * Optionally records daily challenge completion if dailyChallengeId is provided
+ * Average a component over the turns where the user actually attempted it
+ * (score > 0). Components are scored per turn only when present, so counting
+ * absent turns as zeros would punish spreading the arc across the
+ * conversation, which is exactly what we teach.
+ */
+function averageAttempted(
+  messages: Doc<'conversations'>['messages'],
+  key: 'observation' | 'feeling' | 'need' | 'request',
+): number {
+  const attempts = messages
+    .filter((m) => m.role === 'user' && m.nvcScore)
+    .map((m) => m.nvcScore?.[key] ?? 0)
+    .filter((score) => score > 0)
+  if (attempts.length === 0) return 0
+  return attempts.reduce((a, b) => a + b, 0) / attempts.length
+}
+
+/**
+ * Complete a conversation. Computes the final score from the stored messages,
+ * updates scenario progress, points, level, streak, and achievements, and
+ * credits the daily challenge when one is attached. All in one transaction,
+ * from server-held data only.
+ *
+ * Idempotent: completing an already-completed conversation returns its stored
+ * results without awarding anything twice.
  */
 export const complete = mutation({
   args: {
     conversationId: v.id('conversations'),
     dailyChallengeId: v.optional(v.id('dailyChallenges')),
+    // The user's local calendar date, so streaks follow their day, not UTC.
+    localDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      throw new Error('Not authenticated')
+    }
+
     const conversation = await ctx.db.get(args.conversationId)
-    if (!conversation) {
+    if (!conversation || conversation.userId !== userId) {
       throw new Error('Conversation not found')
     }
 
-    // Calculate average NVC score from all user messages
-    const userMessages = conversation.messages.filter(
-      (m) => m.role === 'user' && m.nvcScore,
-    )
-
-    let finalScore = 0
-    if (userMessages.length > 0) {
-      const totalScore = userMessages.reduce(
-        (sum, m) => sum + (m.nvcScore?.total || 0),
-        0,
-      )
-      finalScore = Math.round(totalScore / userMessages.length)
+    if (conversation.status !== 'in_progress') {
+      // Already settled (double click or second tab): report stored results,
+      // award nothing again.
+      return {
+        finalScore: conversation.finalScore ?? 0,
+        finalStars: conversation.finalStars ?? 0,
+        pointsEarned: 0,
+        challengeBonus: 0,
+        newAchievements: [],
+        alreadyCompleted: true,
+      }
     }
 
-    // Update conversation
+    const now = Date.now()
+    const today = resolveLocalDate(args.localDate)
+
+    // ---- Final score from server-held messages -------------------------
+    const scoredMessages = conversation.messages.filter(
+      (m) => m.role === 'user' && m.nvcScore,
+    )
+    const finalScore =
+      scoredMessages.length > 0
+        ? Math.round(
+            scoredMessages.reduce((sum, m) => sum + (m.nvcScore?.total ?? 0), 0) /
+              scoredMessages.length,
+          )
+        : 0
+    const finalStars = starsForScore(finalScore)
+    const completionStatus = completionStatusForScore(finalScore)
+    const empathyShown =
+      conversation.milestonesAchieved?.empathyShown ?? false
+
     await ctx.db.patch(args.conversationId, {
       status: 'completed',
       finalScore,
-      completedAt: Date.now(),
+      finalStars,
+      completionStatus,
+      completedAt: now,
     })
 
-    // If this is a daily challenge, record the completion. A missing
-    // challenge (expired or deleted) skips the bonus quietly rather than
-    // failing the completion itself, which already succeeded above.
+    // ---- Scenario progress ---------------------------------------------
+    let scenarioProgress = await ctx.db
+      .query('scenarioProgress')
+      .withIndex('by_user_and_scenario', (q) =>
+        q.eq('userId', userId).eq('scenarioId', conversation.scenarioId),
+      )
+      .first()
+
+    if (!scenarioProgress) {
+      const progressId = await ctx.db.insert('scenarioProgress', {
+        userId,
+        scenarioId: conversation.scenarioId,
+        status: 'available',
+        attempts: 0,
+        bestScore: 0,
+        bestStars: 0,
+        lastAttemptAt: now,
+        objectivesCompleted: [],
+        conversationIds: [],
+        createdAt: now,
+        updatedAt: now,
+      })
+      scenarioProgress = await ctx.db.get(progressId)
+    }
+    if (!scenarioProgress) {
+      throw new Error('Failed to load scenario progress')
+    }
+
+    // Snapshot the previous best BEFORE overwriting it, so repeat
+    // completions are rewarded for improvement only.
+    const isFirstCompletion =
+      scenarioProgress.status !== 'passed' &&
+      scenarioProgress.status !== 'mastered' &&
+      scenarioProgress.status !== 'attempted'
+    const previousBestStars = scenarioProgress.bestStars
+    const previousBestScore = scenarioProgress.bestScore
+
+    const scenarioUpdate: Partial<Doc<'scenarioProgress'>> = {
+      status: scenarioStatusForScore(finalScore),
+      attempts: scenarioProgress.attempts + 1,
+      bestScore: Math.max(scenarioProgress.bestScore, finalScore),
+      bestStars: Math.max(scenarioProgress.bestStars, finalStars),
+      lastScore: finalScore,
+      lastAttemptAt: now,
+      conversationIds: [
+        ...scenarioProgress.conversationIds,
+        args.conversationId,
+      ],
+      updatedAt: now,
+    }
+    if (finalScore > previousBestScore) {
+      scenarioUpdate.bestConversationId = args.conversationId
+    }
+    if (isFirstCompletion) {
+      scenarioUpdate.firstCompletedAt = now
+      scenarioUpdate.firstCompletionScore = finalScore
+      scenarioUpdate.firstCompletionStars = finalStars
+    }
+    await ctx.db.patch(scenarioProgress._id, scenarioUpdate)
+
+    // ---- Daily challenge credit ----------------------------------------
+    // A missing challenge (expired or deleted) skips the bonus quietly rather
+    // than failing the completion, which already succeeded above.
+    let challengeBonus = 0
     const dailyChallenge = args.dailyChallengeId
       ? await ctx.db.get(args.dailyChallengeId)
       : null
-    if (dailyChallenge) {
-      const userId = conversation.userId
-
-      // Check if already completed
+    if (dailyChallenge && dailyChallenge.scenarioId === conversation.scenarioId) {
       const existing = await ctx.db
         .query('challengeCompletions')
-        .withIndex('by_user_and_challenge', (q: any) =>
+        .withIndex('by_user_and_challenge', (q) =>
           q.eq('userId', userId).eq('challengeId', dailyChallenge._id),
         )
         .first()
 
       if (!existing) {
-        // Record completion
         await ctx.db.insert('challengeCompletions', {
           userId,
           challengeId: dailyChallenge._id,
           conversationId: args.conversationId,
           completed: true,
           score: finalScore,
-          completedAt: Date.now(),
+          completedAt: now,
         })
-
-        // Award bonus points (2x multiplier for daily challenges)
-        const userProgress = await ctx.db
-          .query('userProgress')
-          .withIndex('by_user', (q) => q.eq('userId', userId))
-          .first()
-
-        if (userProgress) {
-          // Base points = score * 1, multiplier = 2x
-          const basePoints = finalScore
-          const bonusPoints = basePoints * 2
-          const totalNewPoints = userProgress.totalPoints + bonusPoints
-
-          await ctx.db.patch(userProgress._id, {
-            totalPoints: totalNewPoints,
-            updatedAt: Date.now(),
-          })
-        }
-
-        // Update streak
-        await updateStreak(ctx, userId)
+        // The bonus is exactly what the challenge card advertises.
+        challengeBonus = dailyChallenge.bonusPoints
       }
     }
 
-    return {
-      success: true,
+    // ---- Overall user progress -----------------------------------------
+    let progress = await ctx.db
+      .query('userProgress')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first()
+
+    if (!progress) {
+      const progressId = await ctx.db.insert('userProgress', {
+        userId,
+        level: 1,
+        totalPoints: 0,
+        pointsToNextLevel: 300,
+        scenariosCompleted: 0,
+        scenariosPassed: 0,
+        scenariosMastered: 0,
+        totalStars: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastPracticeDate: '',
+        averageScores: {
+          observation: 0,
+          feeling: 0,
+          need: 0,
+          request: 0,
+          overall: 0,
+        },
+        scoredCompletions: 0,
+        achievements: [],
+        badges: [],
+        createdAt: now,
+        updatedAt: now,
+      })
+      progress = await ctx.db.get(progressId)
+    }
+    if (!progress) {
+      throw new Error('Failed to load user progress')
+    }
+
+    const scenarioPoints = pointsForCompletion({
       finalScore,
-      messageCount: conversation.messages.length,
+      finalStars,
+      isFirstCompletion,
+      previousBestStars,
+      previousBestScore,
+    })
+    const pointsEarned = scenarioPoints + challengeBonus
+
+    // Passed/mastered count TRANSITIONS (the first time this scenario ever
+    // reaches that bar), so a scenario failed on the first try still counts
+    // as passed when a later attempt succeeds, and nothing is counted twice.
+    const newTotalPoints = progress.totalPoints + pointsEarned
+    const newTotals = {
+      totalPoints: newTotalPoints,
+      totalStars: progress.totalStars + finalStars,
+      scenariosCompleted:
+        progress.scenariosCompleted + (isFirstCompletion ? 1 : 0),
+      scenariosPassed:
+        progress.scenariosPassed +
+        (finalStars >= 1 && previousBestStars === 0 ? 1 : 0),
+      scenariosMastered:
+        progress.scenariosMastered +
+        (finalStars === 3 && previousBestStars < 3 ? 1 : 0),
+    }
+
+    const streak = advanceStreak(
+      {
+        currentStreak: progress.currentStreak,
+        longestStreak: progress.longestStreak,
+        lastPracticeDate: progress.lastPracticeDate,
+      },
+      today,
+    )
+
+    const sampleCount = progress.scoredCompletions ?? 0
+    const newAverages =
+      scoredMessages.length > 0
+        ? updateAverages(
+            progress.averageScores,
+            sampleCount,
+            {
+              observation: averageAttempted(conversation.messages, 'observation'),
+              feeling: averageAttempted(conversation.messages, 'feeling'),
+              need: averageAttempted(conversation.messages, 'need'),
+              request: averageAttempted(conversation.messages, 'request'),
+            },
+            finalScore,
+          )
+        : progress.averageScores
+
+    const achievements = newlyEarnedAchievements(
+      {
+        scenariosCompleted: newTotals.scenariosCompleted,
+        scenariosPassed: newTotals.scenariosPassed,
+        scenariosMastered: newTotals.scenariosMastered,
+        totalStars: newTotals.totalStars,
+        currentStreak: streak.currentStreak,
+        finalScore,
+        empathyShown,
+      },
+      progress.achievements,
+    )
+
+    await ctx.db.patch(progress._id, {
+      ...newTotals,
+      level: levelForPoints(newTotalPoints),
+      pointsToNextLevel: pointsToNextLevel(newTotalPoints),
+      currentStreak: streak.currentStreak,
+      longestStreak: streak.longestStreak,
+      lastPracticeDate: streak.lastPracticeDate,
+      averageScores: newAverages,
+      scoredCompletions:
+        sampleCount + (scoredMessages.length > 0 ? 1 : 0),
+      achievements: [
+        ...progress.achievements,
+        ...achievements.map((a) => a.id),
+      ],
+      updatedAt: now,
+    })
+
+    return {
+      finalScore,
+      finalStars,
+      pointsEarned,
+      challengeBonus,
+      newAchievements: achievements.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+      })),
+      alreadyCompleted: false,
     }
   },
 })
 
 /**
- * Helper function to update user's practice streak
- * Resets if user missed a day, increments if they practiced today
- */
-async function updateStreak(ctx: any, userId: string) {
-  const userProgress = await ctx.db
-    .query('userProgress')
-    .withIndex('by_user', (q: any) => q.eq('userId', userId))
-    .first()
-
-  if (!userProgress) return
-
-  const today = new Date().toISOString().split('T')[0]
-  const lastPracticeDate = userProgress.lastPracticeDate
-
-  let newStreak = userProgress.currentStreak
-
-  if (lastPracticeDate === today) {
-    // Already practiced today, don't increment
-    return
-  }
-
-  const lastDate = new Date(lastPracticeDate)
-  const currentDate = new Date(today)
-  const daysDifference = Math.floor(
-    (currentDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24),
-  )
-
-  if (daysDifference === 1) {
-    // Practiced yesterday, continue streak
-    newStreak = userProgress.currentStreak + 1
-  } else if (daysDifference > 1) {
-    // Missed at least one day, reset streak
-    newStreak = 1
-  } else {
-    // Same day or future date
-    return
-  }
-
-  // Update user progress with new streak
-  const longestStreak = Math.max(newStreak, userProgress.longestStreak)
-
-  await ctx.db.patch(userProgress._id, {
-    currentStreak: newStreak,
-    longestStreak,
-    lastPracticeDate: today,
-    updatedAt: Date.now(),
-  })
-}
-
-/**
- * Abandon a conversation (user gives up or navigates away)
- * Preserves the conversation for learning purposes
+ * Abandon a conversation (user gives up or starts over).
+ * Preserves the conversation for learning purposes.
  */
 export const abandon = mutation({
-  args: {
-    conversationId: v.id('conversations'),
-  },
+  args: { conversationId: v.id('conversations') },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.conversationId, {
-      status: 'abandoned',
-    })
+    const conversation = await getOwnedConversation(ctx, args.conversationId)
+    if (!conversation) {
+      throw new Error('Conversation not found')
+    }
+    if (conversation.status !== 'in_progress') {
+      return { success: true }
+    }
+
+    await ctx.db.patch(args.conversationId, { status: 'abandoned' })
     return { success: true }
   },
 })
 
 /**
- * Delete a conversation (for testing or data cleanup)
- * Use with caution - this removes all history
- */
-export const deleteConversation = mutation({
-  args: {
-    conversationId: v.id('conversations'),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.delete(args.conversationId)
-    return { success: true }
-  },
-})
-
-/**
- * Rewind the last user message and AI response
- * Allows users to try a different approach (limited to 2 rewinds per conversation)
+ * Rewind the last user message and character response, so the user can try a
+ * different approach (limited to 2 rewinds per conversation).
  */
 export const rewindLastMessages = mutation({
-  args: {
-    conversationId: v.id('conversations'),
-  },
+  args: { conversationId: v.id('conversations') },
   handler: async (ctx, args) => {
-    const conversation = await ctx.db.get(args.conversationId)
+    const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
       throw new Error('Conversation not found')
     }
@@ -465,25 +661,38 @@ export const rewindLastMessages = mutation({
       throw new Error('Not enough messages to rewind')
     }
 
-    // Remove last 2 messages (user message + AI response)
+    // Remove last 2 messages (user message + character response)
     const updatedMessages = conversation.messages.slice(0, -2)
 
-    // Recalculate milestones from remaining messages
-    const MILESTONE_THRESHOLD = 15
+    // Recalculate milestones from the remaining messages. Resolution uses the
+    // mood stamped on the character reply that followed each user turn, the
+    // same condition the forward path applies (mood >= 5 AND total >= 70).
     let feelingExpressed = false
     let needIdentified = false
     let requestMade = false
     let resolutionReached = false
     let empathyShown = false
 
-    for (const msg of updatedMessages) {
-      if (msg.role === 'user' && msg.nvcScore) {
-        if (msg.nvcScore.feeling >= MILESTONE_THRESHOLD) feelingExpressed = true
-        if (msg.nvcScore.need >= MILESTONE_THRESHOLD) needIdentified = true
-        if (msg.nvcScore.request >= MILESTONE_THRESHOLD) requestMade = true
-        // Note: resolution check needs mood at that point, simplified here
-        if (msg.nvcScore.total >= 70) resolutionReached = true
-        if (msg.empathyShown) empathyShown = true
+    for (let i = 0; i < updatedMessages.length; i++) {
+      const msg = updatedMessages[i]
+      if (msg.role !== 'user' || !msg.nvcScore) continue
+
+      if (msg.nvcScore.feeling >= MILESTONE_THRESHOLD) feelingExpressed = true
+      if (msg.nvcScore.need >= MILESTONE_THRESHOLD) needIdentified = true
+      if (msg.nvcScore.request >= MILESTONE_THRESHOLD) requestMade = true
+      if (msg.empathyShown) empathyShown = true
+
+      const followingReply =
+        i + 1 < updatedMessages.length ? updatedMessages[i + 1] : undefined
+      const moodAfterTurn =
+        followingReply && followingReply.role === 'assistant'
+          ? followingReply.characterMood
+          : undefined
+      if (
+        msg.nvcScore.total >= 70 &&
+        (moodAfterTurn === undefined || moodAfterTurn >= 5)
+      ) {
+        resolutionReached = true
       }
     }
 

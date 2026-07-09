@@ -277,6 +277,12 @@ function ScenarioCreate() {
   const update = (patch: Partial<DraftAnswers>) =>
     setAnswers((prev) => ({ ...prev, ...patch }))
 
+  // Bumped whenever the user navigates backwards out of an async flow, so an
+  // in-flight assess/generate response can never yank them forward to a step
+  // they just left.
+  const flowEpochRef = useRef(0)
+  const isStale = (epoch: number) => epoch !== flowEpochRef.current
+
   const name = answers.otherPersonName.trim() || 'them'
 
   const userDescription = [answers.whatsGoingOn.trim(), answers.whatWasSaid.trim()]
@@ -288,6 +294,7 @@ function ScenarioCreate() {
   const generateAndReview = async (
     clarify: Array<{ question: string; answer: string }>,
   ) => {
+    const epoch = flowEpochRef.current
     setStep('review')
     setGenerating(true)
     setError(null)
@@ -297,18 +304,21 @@ function ScenarioCreate() {
         userDescription,
         answers: [...buildSeedAnswers(answers), ...clarify],
       })) as GeneratedScenario
+      if (isStale(epoch)) return
       setGenerated(scenario)
       setEditedTitle(scenario.title)
     } catch {
+      if (isStale(epoch)) return
       setError("We couldn't shape this just now. Take a breath and try again.")
     } finally {
-      setGenerating(false)
+      if (!isStale(epoch)) setGenerating(false)
     }
   }
 
   // ---- Clarifying step ------------------------------------------------------
 
   const startRefine = async () => {
+    const epoch = flowEpochRef.current
     setStep('refine')
     setRefineLoading(true)
     setError(null)
@@ -322,6 +332,7 @@ function ScenarioCreate() {
         priorAnswers: buildSeedAnswers(answers),
         roundsSoFar: 0,
       })
+      if (isStale(epoch)) return
       setRounds(1)
       if (res.ready || res.questions.length === 0) {
         await generateAndReview([])
@@ -331,13 +342,14 @@ function ScenarioCreate() {
       }
     } catch {
       // Fail open: go straight to shaping the scenario.
-      await generateAndReview([])
+      if (!isStale(epoch)) await generateAndReview([])
     } finally {
-      setRefineLoading(false)
+      if (!isStale(epoch)) setRefineLoading(false)
     }
   }
 
   const submitClarifyAnswer = async (answer: string) => {
+    const epoch = flowEpochRef.current
     const question = pendingQuestions[questionIndex]
     const newThread = [...clarifyThread, { question, answer }]
     setClarifyThread(newThread)
@@ -361,6 +373,7 @@ function ScenarioCreate() {
         priorAnswers: [...buildSeedAnswers(answers), ...newThread],
         roundsSoFar: rounds,
       })
+      if (isStale(epoch)) return
       setRounds(rounds + 1)
       if (res.ready || res.questions.length === 0) {
         await generateAndReview(newThread)
@@ -369,9 +382,9 @@ function ScenarioCreate() {
         setQuestionIndex(0)
       }
     } catch {
-      await generateAndReview(newThread)
+      if (!isStale(epoch)) await generateAndReview(newThread)
     } finally {
-      setRefineLoading(false)
+      if (!isStale(epoch)) setRefineLoading(false)
     }
   }
 
@@ -393,10 +406,7 @@ function ScenarioCreate() {
       })
 
       await initializeScenarioProgress({ scenarioId })
-      const conversationId = await createConversation({
-        userId: currentUser._id,
-        scenarioId,
-      })
+      const conversationId = await createConversation({ scenarioId })
 
       navigate({
         to: `/practice/${scenarioId as Id<'scenarios'>}/conversation/${conversationId}`,
@@ -408,7 +418,10 @@ function ScenarioCreate() {
   }
 
   const keepEditing = () => {
+    flowEpochRef.current += 1
     setGenerated(null)
+    setGenerating(false)
+    setRefineLoading(false)
     setError(null)
     setClarifyThread([])
     setPendingQuestions([])
@@ -445,8 +458,13 @@ function ScenarioCreate() {
     if (step === 'situation') navigate({ to: '/practice' })
     else if (step === 'person') setStep('situation')
     else if (step === 'you') setStep('person')
-    else if (step === 'refine') setStep('you')
-    else keepEditing()
+    else if (step === 'refine') {
+      // Leaving an async step: invalidate any in-flight assess/generate so
+      // its response cannot pull the user forward again.
+      flowEpochRef.current += 1
+      setRefineLoading(false)
+      setStep('you')
+    } else keepEditing()
   }
 
   // Move focus to each phase's heading as it takes the stage, so keyboard and

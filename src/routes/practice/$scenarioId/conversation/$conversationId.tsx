@@ -45,6 +45,7 @@ function ConversationComponent() {
     feedback,
     skillHint,
     isLoading,
+    isCompleting,
     conversationStarted,
     completion,
     celebration,
@@ -64,8 +65,28 @@ function ConversationComponent() {
   })
 
   if (currentUser === undefined) return <LoadingScreen label="Initializing..." />
-  if (!scenario || conversation === undefined)
+  if (scenario === undefined || conversation === undefined)
     return <LoadingScreen label="Loading scenario..." />
+
+  // null (as opposed to undefined) means loaded and not found: a deleted or
+  // foreign scenario/conversation should not spin forever.
+  if (scenario === null || conversation === null) {
+    return (
+      <main className="min-h-screen bg-cream pt-28 px-6">
+        <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
+          <h1 className="text-2xl font-bold text-brown-800 mb-3">
+            We could not find this conversation
+          </h1>
+          <p className="text-brown-700 mb-6">
+            It may have been removed, or the link is no longer valid.
+          </p>
+          <Button onClick={goToPractice} variant="primary">
+            Back to Practice
+          </Button>
+        </div>
+      </main>
+    )
+  }
 
   if (completion) {
     return (
@@ -78,7 +99,7 @@ function ConversationComponent() {
         characterName={scenario.characterName}
         characterHiddenNeeds={scenario.characterHiddenNeeds}
         messageCount={messages.length}
-        milestones={conversation?.milestonesAchieved}
+        milestones={conversation.milestonesAchieved}
         onRetry={startNewConversation}
         onNext={goToPractice}
         onViewTranscript={viewTranscript}
@@ -91,7 +112,7 @@ function ConversationComponent() {
   // Finishing is the reward for completing the full arc: the user can only end
   // once they have expressed a feeling, a need, and a clear request. These
   // milestones accumulate across the conversation and never reset.
-  const milestones = conversation?.milestonesAchieved
+  const milestones = conversation.milestonesAchieved
   const canEndConversation =
     !isArchiveMode &&
     !isLoading && // wait until the character's closing reply is on screen
@@ -99,8 +120,7 @@ function ConversationComponent() {
     !!milestones.needIdentified &&
     !!milestones.requestMade
 
-  const characterMood =
-    conversation?.currentCharacterMood ?? scenario.characterInitialMood
+  const characterMood = conversation.currentCharacterMood
 
   return (
     <div className="h-screen bg-cream flex flex-col pt-24">
@@ -177,6 +197,8 @@ function ConversationComponent() {
                     onClick={completeScenario}
                     variant="secondary"
                     className="w-full"
+                    disabled={isCompleting}
+                    isLoading={isCompleting}
                   >
                     Wrap up and see how it went
                   </Button>
@@ -195,8 +217,8 @@ function ConversationComponent() {
                 <div className="flex justify-center pt-1">
                   <RewindButton
                     rewindsRemaining={
-                      (conversation?.maxRewinds ?? 2) -
-                      (conversation?.rewindsUsed ?? 0)
+                      (conversation.maxRewinds ?? 2) -
+                      (conversation.rewindsUsed ?? 0)
                     }
                     onRewind={rewind}
                     disabled={isLoading}
@@ -215,7 +237,7 @@ function ConversationComponent() {
               learningObjectives={scenario.learningObjectives}
               characterMood={characterMood}
               characterName={scenario.characterName}
-              milestones={conversation?.milestonesAchieved}
+              milestones={conversation.milestonesAchieved}
             />
           </div>
         </div>
@@ -281,7 +303,7 @@ function ConversationComponent() {
                   learningObjectives={scenario.learningObjectives}
                   characterMood={characterMood}
                   characterName={scenario.characterName}
-                  milestones={conversation?.milestonesAchieved}
+                  milestones={conversation.milestonesAchieved}
                 />
               </div>
 

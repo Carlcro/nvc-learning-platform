@@ -19,24 +19,11 @@ import type { Id } from 'convex/_generated/dataModel'
 import type { Message } from '~/components/features/roleplay/ConversationView'
 import type { FeedbackData } from '~/components/features/roleplay/FeedbackPanel'
 import type { Celebration } from '~/components/features/roleplay/MilestoneCelebration'
+import { localDateString } from '~/lib/localDate'
 
 // ---------------------------------------------------------------------------
 // Pure helpers
 // ---------------------------------------------------------------------------
-
-type Analysis = {
-  observation: number
-  feeling: number
-  need: number
-  request: number
-  total: number
-  feedback: string
-  isJackalLanguage: boolean
-  jackalPhrases: Array<string>
-  giraffeAlternative: string
-  whatWentWell: string
-  empathyShown: boolean
-}
 
 export interface EarnedAchievement {
   id: string
@@ -82,17 +69,6 @@ function deriveSkillHint(messages: Array<Message>): SkillHint | null {
   return weakest
 }
 
-/** The five-number score, pulled out of a full analysis result. */
-function toNvcScore(a: Analysis) {
-  return {
-    observation: a.observation,
-    feeling: a.feeling,
-    need: a.need,
-    request: a.request,
-    total: a.total,
-  }
-}
-
 /** Build the feedback-panel view-model from a stored message (if any). */
 function messageToFeedback(message: Message | undefined): FeedbackData | null {
   if (!message) return null
@@ -109,45 +85,6 @@ function messageToFeedback(message: Message | undefined): FeedbackData | null {
     giraffeAlternative: message.giraffeAlternative ?? '',
     isJackalLanguage: message.isJackalLanguage ?? false,
   }
-}
-
-function starsForScore(score: number): number {
-  if (score >= 85) return 3
-  if (score >= 70) return 2
-  if (score >= 60) return 1
-  return 0
-}
-
-function completionStatusForScore(
-  score: number,
-): 'excellent' | 'success' | 'pass' | 'incomplete' {
-  if (score >= 85) return 'excellent'
-  if (score >= 70) return 'success'
-  if (score >= 60) return 'pass'
-  return 'incomplete'
-}
-
-function scenarioStatusForScore(
-  score: number,
-): 'attempted' | 'passed' | 'mastered' {
-  if (score >= 85) return 'mastered'
-  if (score >= 60) return 'passed'
-  return 'attempted'
-}
-
-type ScoreKey = 'observation' | 'feeling' | 'need' | 'request'
-/**
- * Average a component over the turns where the user actually attempted it
- * (score > 0). Components are scored per turn only when present, so counting
- * absent turns as zeros would punish spreading the arc across the
- * conversation, which is exactly what we teach.
- */
-function averageScore(messages: Array<Message>, key: ScoreKey): number {
-  const attempts = messages
-    .map((m) => m.nvcScore?.[key] ?? 0)
-    .filter((score) => score > 0)
-  if (attempts.length === 0) return 0
-  return attempts.reduce((a, b) => a + b, 0) / attempts.length
 }
 
 /**
@@ -226,23 +163,12 @@ export function useConversation({
       : 'skip',
   )
 
-  const scenarioProgress = useQuery(
-    api.scenarioProgress.getScenarioProgress,
-    { scenarioId: scenarioId as Id<'scenarios'> },
-  )
+  const submitTurn = useAction(api.ai.submitTurn)
 
-  const analyzeMessage = useAction(api.ai.analyzeNVCResponse)
-  const generateCharacterResponse = useAction(api.ai.generateCharacterResponse)
-
-  const addMessage = useMutation(api.conversations.addMessage)
   const completeConversation = useMutation(api.conversations.complete)
   const abandonConversation = useMutation(api.conversations.abandon)
   const createConversation = useMutation(api.conversations.create)
   const rewindMessages = useMutation(api.conversations.rewindLastMessages)
-  const updateUserProgress = useMutation(api.userProgress.updateProgress)
-  const updateScenarioProgress = useMutation(
-    api.scenarioProgress.updateScenarioProgress,
-  )
 
   // --- Ephemeral state ---------------------------------------------------
   const [pending, setPending] = useState<Message | null>(null)
@@ -312,13 +238,18 @@ export function useConversation({
   }, [conversation?.milestonesAchieved, scenario?.characterName])
 
   // --- Actions -----------------------------------------------------------
+  /**
+   * Send one turn. The server analyzes the message, generates the reply, and
+   * persists both atomically, so a failed turn leaves nothing half-saved and
+   * a retry never duplicates anything.
+   *
+   * Returns true on success so the input only clears once the message is
+   * safely on its way; on failure the composed text stays in the box.
+   */
   const sendMessage = useCallback(
-    async (text: string) => {
-      if (!conversationId || !scenario) return
+    async (text: string): Promise<boolean> => {
+      if (!conversationId || isLoading) return false
 
-      // History captured before we persist anything, so it holds the prior
-      // turns only. Each AI action appends the current message itself.
-      const history = serverMessages
       const userMsg: Message = {
         role: 'user',
         content: text,
@@ -330,172 +261,58 @@ export function useConversation({
       setIsLoading(true)
 
       try {
-        // Milestones reflect prior turns here (this message is not persisted
-        // yet), so the coaching can point at the piece still missing.
-        const milestones = conversation?.milestonesAchieved
-        const arcSoFar = {
-          feelingExpressed: milestones?.feelingExpressed ?? false,
-          needIdentified: milestones?.needIdentified ?? false,
-          requestMade: milestones?.requestMade ?? false,
-        }
-
-        // The analysis and the character's reply are independent by design
-        // (the character reads the message itself, plus their current mood),
-        // so both model calls run in parallel and a turn costs one round trip
-        // instead of two.
-        const [analysis, characterResponse] = await Promise.all([
-          analyzeMessage({
-            userMessage: text,
-            conversationHistory: history,
-            userLevel,
-            componentsLanded: {
-              feeling: arcSoFar.feelingExpressed,
-              need: arcSoFar.needIdentified,
-              request: arcSoFar.requestMade,
-            },
-            scenario: {
-              situation: scenario.situation,
-              characterName: scenario.characterName,
-              learningObjectives: scenario.learningObjectives,
-              focusArea: scenario.focusArea,
-            },
-          }),
-          generateCharacterResponse({
-            userMessage: text,
-            conversationHistory: history,
-            scenario: {
-              title: scenario.title,
-              characterName: scenario.characterName,
-              characterPersonality: scenario.characterPersonality,
-              characterInitialMood: scenario.characterInitialMood,
-              characterBackground: scenario.characterBackground || '',
-              characterHiddenNeeds: scenario.characterHiddenNeeds,
-            },
-            currentMood:
-              conversation?.currentCharacterMood ??
-              scenario.characterInitialMood,
-            userLevel,
-            arcSoFar,
-          }),
-        ])
-
-        await addMessage({
+        await submitTurn({
           conversationId: conversationId as Id<'conversations'>,
-          role: 'user',
-          content: text,
-          nvcScore: toNvcScore(analysis),
-          feedback: analysis.feedback,
-          isJackalLanguage: analysis.isJackalLanguage,
-          jackalPhrases: analysis.jackalPhrases,
-          giraffeAlternative: analysis.giraffeAlternative,
-          whatWentWell: analysis.whatWentWell,
-          empathyShown: analysis.empathyShown,
+          message: text,
         })
-        // The user message now lives on the server; drop the optimistic copy.
+        // The turn now lives on the server; drop the optimistic copy.
         setPending(null)
-
-        await addMessage({
-          conversationId: conversationId as Id<'conversations'>,
-          role: 'assistant',
-          content: characterResponse,
-        })
+        return true
       } catch (err) {
         setPending(null)
-        setError('Something went wrong reading your message. Please try again.')
+        setError(
+          'Something went wrong sending your message. Your words are still below, give it another try.',
+        )
+        return false
       } finally {
         setIsLoading(false)
       }
     },
-    [
-      conversationId,
-      scenario,
-      serverMessages,
-      conversation?.milestonesAchieved,
-      conversation?.currentCharacterMood,
-      userLevel,
-      analyzeMessage,
-      generateCharacterResponse,
-      addMessage,
-    ],
+    [conversationId, isLoading, submitTurn],
   )
 
-  const completeScenario = useCallback(async () => {
-    if (!conversationId || !scenario) return
+  // Guards completeScenario against double clicks; the server is idempotent
+  // as a backstop, but this keeps the UI from firing the pipeline twice.
+  const [isCompleting, setIsCompleting] = useState(false)
 
+  const completeScenario = useCallback(async () => {
+    if (!conversationId || isCompleting) return
+
+    setIsCompleting(true)
     try {
+      // The server computes the final score from its own copy of the
+      // conversation and applies scenario progress, points, streak,
+      // achievements, and any daily challenge bonus in one transaction.
       const result = await completeConversation({
         conversationId: conversationId as Id<'conversations'>,
         dailyChallengeId: dailyChallengeId
           ? (dailyChallengeId as Id<'dailyChallenges'>)
           : undefined,
-      })
-      const stars = starsForScore(result.finalScore)
-
-      const scoredUserMessages = serverMessages.filter(
-        (m) => m.role === 'user' && m.nvcScore,
-      )
-      const averageComponentScores =
-        scoredUserMessages.length > 0
-          ? {
-              observation: averageScore(scoredUserMessages, 'observation'),
-              feeling: averageScore(scoredUserMessages, 'feeling'),
-              need: averageScore(scoredUserMessages, 'need'),
-              request: averageScore(scoredUserMessages, 'request'),
-            }
-          : undefined
-
-      const isFirstCompletion =
-        !scenarioProgress ||
-        (scenarioProgress.status !== 'passed' &&
-          scenarioProgress.status !== 'mastered')
-
-      // Snapshot the previous best BEFORE updateScenarioProgress overwrites
-      // it, so repeat completions are rewarded for improvement only.
-      const previousBestStars = scenarioProgress?.bestStars ?? 0
-      const previousBestScore = scenarioProgress?.bestScore ?? 0
-
-      await updateScenarioProgress({
-        scenarioId: scenarioId as Id<'scenarios'>,
-        score: result.finalScore,
-        stars,
-        status: scenarioStatusForScore(result.finalScore),
-        conversationId: conversationId as Id<'conversations'>,
-        objectivesCompleted: [],
-      })
-
-      const progressResult = await updateUserProgress({
-        scenarioId,
-        finalScore: result.finalScore,
-        finalStars: stars,
-        completionStatus: completionStatusForScore(result.finalScore),
-        averageComponentScores,
-        isFirstCompletion,
-        previousBestStars,
-        previousBestScore,
-        empathyShown: conversation?.milestonesAchieved?.empathyShown ?? false,
+        localDate: localDateString(),
       })
 
       setCompletion({
         finalScore: result.finalScore,
-        finalStars: stars,
-        pointsEarned: progressResult.pointsEarned,
-        newAchievements: progressResult.newAchievements,
+        finalStars: result.finalStars,
+        pointsEarned: result.pointsEarned,
+        newAchievements: result.newAchievements,
       })
     } catch (err) {
       setError('We could not save your results. Please try again.')
+    } finally {
+      setIsCompleting(false)
     }
-  }, [
-    conversationId,
-    scenario,
-    serverMessages,
-    scenarioProgress,
-    conversation?.milestonesAchieved?.empathyShown,
-    dailyChallengeId,
-    completeConversation,
-    updateScenarioProgress,
-    updateUserProgress,
-    scenarioId,
-  ])
+  }, [conversationId, isCompleting, dailyChallengeId, completeConversation])
 
   const startNewConversation = useCallback(async () => {
     if (!currentUser || !scenario) return
@@ -508,7 +325,6 @@ export function useConversation({
       }
 
       const newConversationId = await createConversation({
-        userId: currentUser._id,
         scenarioId: scenarioId as Id<'scenarios'>,
       })
 
@@ -571,6 +387,7 @@ export function useConversation({
     feedback,
     skillHint,
     isLoading,
+    isCompleting,
     conversationStarted: conversation != null,
     completion,
     celebration,

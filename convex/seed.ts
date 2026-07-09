@@ -1,9 +1,12 @@
-import { internalMutation, mutation } from './_generated/server'
+import { internalMutation, internalQuery } from './_generated/server'
 import { seedFeelings, seedFeelingsQuizQuestions } from './feelings/seed'
 
 /**
  * Seed Data Initialization
- * Use these mutations to populate the database with initial content
+ *
+ * All seed functions are internal: run them from the Convex dashboard or CLI,
+ * for example `npx convex run seed:seedAllFeelings`. Nothing here is callable
+ * from a browser.
  */
 
 /**
@@ -104,50 +107,9 @@ export const clearAllQuizQuestions = internalMutation({
 })
 
 /**
- * Public seed all feelings and quiz questions
+ * Get seed statistics (dashboard/CLI only)
  */
-export const seedAllFeelingsPublic = mutation({
-  args: {},
-  handler: async (ctx) => {
-    // Check if already seeded
-    const existingFeelings = await ctx.db.query('feelings').first()
-    const existingQuestions = await ctx.db
-      .query('feelingsQuizQuestions')
-      .first()
-
-    if (existingFeelings && existingQuestions) {
-      return { message: 'Feelings already seeded' }
-    }
-
-    await seedFeelings(ctx)
-    await seedFeelingsQuizQuestions(ctx)
-
-    return { message: 'Feelings seeded successfully' }
-  },
-})
-
-/**
- * Public seed only quiz questions
- */
-export const seedQuizQuestionsOnlyPublic = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const existing = await ctx.db.query('feelingsQuizQuestions').first()
-
-    if (existing) {
-      return { message: 'Quiz questions already seeded' }
-    }
-
-    await seedFeelingsQuizQuestions(ctx)
-
-    return { message: 'Quiz questions seeded successfully' }
-  },
-})
-
-/**
- * Get seed statistics
- */
-export const getSeedStats = mutation({
+export const getSeedStats = internalQuery({
   args: {},
   handler: async (ctx) => {
     const feelings = await ctx.db.query('feelings').collect()

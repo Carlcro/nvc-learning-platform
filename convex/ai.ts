@@ -1,24 +1,32 @@
 'use node'
 
 /**
- * AI Integration Module for NVC Analysis
+ * Model Integration for NVC Analysis and Roleplay
  *
  * Handles:
- * - Analyzing user messages for NVC components (structured JSON output)
- * - Generating character responses in roleplay scenarios
+ * - Running a full conversation turn (analysis + character reply) server-side
+ * - Building custom scenarios from a user's real situation
  *
- * See AI_ROLEPLAY_FEATURE_SUMMARY.md for feature details.
+ * Every action requires authentication, caps its inputs, and never trusts
+ * client-supplied history: conversation state is loaded from the database.
  */
 
 import Anthropic from '@anthropic-ai/sdk'
+import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { action } from './_generated/server'
+import { internal } from './_generated/api'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 })
 
 const MODEL = 'claude-sonnet-4-6'
+
+// Matches the UI's input limit; anything longer is rejected, not truncated.
+const MAX_MESSAGE_LENGTH = 1000
+const MAX_DESCRIPTION_LENGTH = 4000
+const MAX_ANSWER_LENGTH = 1000
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -46,9 +54,27 @@ export interface NVCAnalysisResult {
   empathyShown: boolean
 }
 
-export interface ConversationMessage {
+interface ConversationMessage {
   role: 'user' | 'assistant'
   content: string
+}
+
+interface TurnScenario {
+  title: string
+  situation: string
+  characterName: string
+  characterPersonality: string
+  characterInitialMood: number
+  characterBackground?: string
+  characterHiddenNeeds: Array<string>
+  learningObjectives: Array<string>
+  focusArea: string
+}
+
+interface ArcSoFar {
+  feelingExpressed: boolean
+  needIdentified: boolean
+  requestMade: boolean
 }
 
 // JSON schema used to constrain the analysis response.
@@ -157,11 +183,6 @@ const customScenarioSchema = {
   additionalProperties: false,
 } as const
 
-export interface ClarifyingQA {
-  question: string
-  answer: string
-}
-
 export interface ScenarioReadinessResult {
   ready: boolean
   questions: Array<{ question: string }>
@@ -186,84 +207,155 @@ export interface CustomScenarioResult {
 }
 
 // ============================================================================
-// NVC ANALYSIS ACTION
+// SUBMIT TURN (the one public entry point for a conversation turn)
 // ============================================================================
 
 /**
- * Analyze a user's message for NVC components.
+ * Run one full turn of a roleplay conversation:
+ * analyze the user's message and generate the character's reply in parallel,
+ * then persist both atomically.
  *
- * Returns a structured analysis with scores (0-25 per component, 0-100 total),
- * feedback, and suggested alternatives.
+ * The conversation history, scenario, mood, and milestones are all loaded
+ * server-side from the authenticated user's own conversation, so scores can
+ * never be forged and the turn either fully lands or fully fails (a retry is
+ * always safe).
  */
-export const analyzeNVCResponse = action({
+export const submitTurn = action({
   args: {
-    userMessage: v.string(),
-    conversationHistory: v.array(v.any()),
-    userLevel: v.optional(v.number()), // 1-10, affects feedback depth
-    // What the user has already demonstrated earlier in THIS conversation, so
-    // the coaching can point at the one piece that is still missing rather than
-    // re-explaining things they have already done.
-    componentsLanded: v.optional(
-      v.object({
-        feeling: v.boolean(),
-        need: v.boolean(),
-        request: v.boolean(),
-      }),
-    ),
-    // Scenario setup so the analysis can judge observations against what
-    // actually happened and steer coaching toward the scenario's goals.
-    scenario: v.optional(
-      v.object({
-        situation: v.string(),
-        characterName: v.string(),
-        learningObjectives: v.array(v.string()),
-        focusArea: v.string(),
-      }),
-    ),
+    conversationId: v.id('conversations'),
+    message: v.string(),
   },
-  handler: async (_ctx, args): Promise<NVCAnalysisResult> => {
-    const conversationContext =
-      args.conversationHistory.length > 0
-        ? args.conversationHistory
-            .map(
-              (msg) =>
-                `${msg.role === 'user' ? 'User' : 'Character'}: ${msg.content}`,
-            )
-            .join('\n')
-        : 'This is the start of a new conversation.'
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      throw new Error('Not authenticated')
+    }
 
-    // Summarise progress so the "next step" can steer toward the earliest NVC
-    // piece they have not yet expressed (feeling, then need, then request).
-    const landed = args.componentsLanded
-    const progressSummary = landed
-      ? (() => {
-          const done = [
-            landed.feeling && 'a feeling',
-            landed.need && 'a need',
-            landed.request && 'a clear request',
-          ].filter(Boolean) as Array<string>
-          const todo = [
-            !landed.feeling && 'a feeling',
-            !landed.need && 'a need',
-            !landed.request && 'a clear request',
-          ].filter(Boolean) as Array<string>
-          return [
-            done.length
-              ? `Already expressed earlier in this conversation: ${done.join(', ')}.`
-              : 'They have not yet clearly expressed a feeling, need, or request.',
-            todo.length ? `Still to come: ${todo.join(', ')}.` : 'All core pieces are present; help them refine.',
-          ].join(' ')
-        })()
-      : 'This is early in the conversation.'
+    const message = args.message.trim()
+    if (!message) {
+      throw new Error('Message is empty')
+    }
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      throw new Error('Message is too long')
+    }
 
-    const scenarioContext = args.scenario
-      ? `### The Scenario
+    const turn = await ctx.runQuery(internal.conversations.getForTurn, {
+      conversationId: args.conversationId,
+      userId,
+    })
+    if (!turn) {
+      throw new Error('Conversation not found')
+    }
+
+    const { conversation, scenario, userLevel } = turn
+
+    const history: Array<ConversationMessage> = conversation.messages.map(
+      (m) => ({ role: m.role, content: m.content }),
+    )
+
+    const milestones = conversation.milestonesAchieved
+    const arcSoFar: ArcSoFar = {
+      feelingExpressed: milestones?.feelingExpressed ?? false,
+      needIdentified: milestones?.needIdentified ?? false,
+      requestMade: milestones?.requestMade ?? false,
+    }
+
+    // The analysis and the character's reply are independent by design (the
+    // character reads the message itself, plus their current mood), so both
+    // model calls run in parallel and a turn costs one round trip.
+    const [analysis, characterResponse] = await Promise.all([
+      analyzeMessage({
+        userMessage: message,
+        history,
+        userLevel,
+        arcSoFar,
+        scenario,
+      }),
+      generateCharacterReply({
+        userMessage: message,
+        history,
+        userLevel,
+        arcSoFar,
+        scenario,
+        currentMood: conversation.currentCharacterMood,
+      }),
+    ])
+
+    await ctx.runMutation(internal.conversations.recordTurn, {
+      conversationId: args.conversationId,
+      userId,
+      userContent: message,
+      analysis: {
+        nvcScore: {
+          observation: analysis.observation,
+          feeling: analysis.feeling,
+          need: analysis.need,
+          request: analysis.request,
+          total: analysis.total,
+        },
+        feedback: analysis.feedback,
+        isJackalLanguage: analysis.isJackalLanguage,
+        jackalPhrases: analysis.jackalPhrases,
+        giraffeAlternative: analysis.giraffeAlternative,
+        whatWentWell: analysis.whatWentWell,
+        empathyShown: analysis.empathyShown,
+      },
+      assistantContent: characterResponse,
+    })
+
+    return { success: true }
+  },
+})
+
+// ============================================================================
+// NVC ANALYSIS (internal helper)
+// ============================================================================
+
+async function analyzeMessage(args: {
+  userMessage: string
+  history: Array<ConversationMessage>
+  userLevel: number
+  arcSoFar: ArcSoFar
+  scenario: TurnScenario
+}): Promise<NVCAnalysisResult> {
+  const conversationContext =
+    args.history.length > 0
+      ? args.history
+          .map(
+            (msg) =>
+              `${msg.role === 'user' ? 'User' : 'Character'}: ${msg.content}`,
+          )
+          .join('\n')
+      : 'This is the start of a new conversation.'
+
+  // Summarise progress so the "next step" can steer toward the earliest NVC
+  // piece they have not yet expressed (feeling, then need, then request).
+  const landed = args.arcSoFar
+  const done = [
+    landed.feelingExpressed && 'a feeling',
+    landed.needIdentified && 'a need',
+    landed.requestMade && 'a clear request',
+  ].filter(Boolean) as Array<string>
+  const todo = [
+    !landed.feelingExpressed && 'a feeling',
+    !landed.needIdentified && 'a need',
+    !landed.requestMade && 'a clear request',
+  ].filter(Boolean) as Array<string>
+  const progressSummary = [
+    done.length
+      ? `Already expressed earlier in this conversation: ${done.join(', ')}.`
+      : 'They have not yet clearly expressed a feeling, need, or request.',
+    todo.length
+      ? `Still to come: ${todo.join(', ')}.`
+      : 'All core pieces are present; help them refine.',
+  ].join(' ')
+
+  const scenarioContext = `### The Scenario
 The user is talking with ${args.scenario.characterName}. The setup: ${args.scenario.situation}
 This scenario practices: ${args.scenario.learningObjectives.join(', ')} (focus: ${args.scenario.focusArea.replace(/_/g, ' ')}).
 Judge observations against this setup: referencing these events accurately IS observing, not judging.`
-      : ''
 
-    const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing ONE TURN of a roleplay conversation.
+  const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing ONE TURN of a roleplay conversation.
 
 ### How real NVC conversations work (this shapes everything below)
 A healthy conversation unfolds gradually: an observation in one message, a feeling in the next, a request later. Nobody expresses all four NVC components in every message, and they should not. NEVER reward cramming components in, and NEVER punish a message for leaving out components that are not its job this turn.
@@ -300,7 +392,9 @@ Write every text field in plain, warm, spoken English. Do NOT use markdown, aste
 - isJackalLanguage: true only if the message leans on blame, judgment, or labels
 - empathyShown: true only if this message shows genuine curiosity about, or reflects back, the OTHER person's feelings, needs, or perspective`
 
-    const userPrompt = `${scenarioContext ? `${scenarioContext}\n\n` : ''}## Conversation Context
+  const userPrompt = `${scenarioContext}
+
+## Conversation Context
 ${conversationContext}
 
 ## Progress so far in this conversation
@@ -311,36 +405,28 @@ ${progressSummary}
 
 Score this single turn in context (components only for what it attempts, total for how well it moves things toward connection), then write concise, glanceable feedback that moves them one clear step forward.`
 
-    try {
-      const response = await anthropic.messages.parse({
-        model: MODEL,
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-        output_config: {
-          format: {
-            type: 'json_schema',
-            schema: nvcAnalysisSchema,
-          },
-        },
-      })
+  const response = await anthropic.messages.parse({
+    model: MODEL,
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
+    output_config: {
+      format: {
+        type: 'json_schema',
+        schema: nvcAnalysisSchema,
+      },
+    },
+  })
 
-      if (!response.parsed_output) {
-        throw new Error('Empty structured response from Claude')
-      }
-
-      return response.parsed_output as NVCAnalysisResult
-    } catch (error) {
-      console.error('Error analyzing NVC response:', error)
-      throw new Error(
-        `Failed to analyze NVC response: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  },
-})
+  const parsed = response.parsed_output as unknown
+  if (!parsed) {
+    throw new Error('Empty structured response from the model')
+  }
+  return parsed as NVCAnalysisResult
+}
 
 // ============================================================================
-// CHARACTER ROLEPLAY ACTION
+// CHARACTER ROLEPLAY (internal helper)
 // ============================================================================
 
 /** How open the character currently is, phrased for the roleplay prompt. */
@@ -353,67 +439,43 @@ function describeMood(mood: number): string {
 }
 
 /**
- * Generate a character response for a roleplay scenario.
- *
- * The character responds in character, reacting authentically to the user's
- * communication style. It judges the user's latest message itself (empathetic
- * language softens the character, blame hardens them), scaled by the
- * character's current mood and the user's level. This deliberately does not
- * depend on the NVC analysis, so both model calls can run in parallel.
+ * Generate the character's reply. The character responds in character,
+ * reacting authentically to the user's communication style. It judges the
+ * user's latest message itself (empathetic language softens the character,
+ * blame hardens them), scaled by the character's current mood and the user's
+ * level. Deliberately independent of the NVC analysis so both model calls can
+ * run in parallel.
  */
-export const generateCharacterResponse = action({
-  args: {
-    userMessage: v.string(),
-    conversationHistory: v.array(v.any()),
-    scenario: v.object({
-      title: v.string(),
-      characterName: v.string(),
-      characterPersonality: v.string(),
-      characterInitialMood: v.number(),
-      characterBackground: v.string(),
-      characterHiddenNeeds: v.array(v.string()),
-    }),
-    // The character's mood right now (-10 to +10), accumulated over the
-    // conversation so far.
-    currentMood: v.optional(v.number()),
-    userLevel: v.optional(v.number()),
-    // Which parts of the arc the user expressed in EARLIER turns. Combined with
-    // the latest message, the character decides whether the scene is ready to
-    // come to a natural close.
-    arcSoFar: v.optional(
-      v.object({
-        feelingExpressed: v.boolean(),
-        needIdentified: v.boolean(),
-        requestMade: v.boolean(),
-      }),
-    ),
-  },
-  handler: async (_ctx, args): Promise<string> => {
-    const userLevel = args.userLevel || 1
-    const mood = args.currentMood ?? args.scenario.characterInitialMood
+async function generateCharacterReply(args: {
+  userMessage: string
+  history: Array<ConversationMessage>
+  userLevel: number
+  arcSoFar: ArcSoFar
+  scenario: TurnScenario
+  currentMood: number
+}): Promise<string> {
+  const patienceGuidance =
+    args.userLevel <= 2
+      ? 'This person is early in their journey: stay patient and never escalate sharply, even when their words are clumsy. Reward every genuine attempt at openness visibly.'
+      : args.userLevel <= 5
+        ? 'Respond realistically: warm noticeably to genuine empathy, cool off when you feel judged, but stay reachable.'
+        : 'Hold a high bar: only genuine, specific empathy moves you. Vague niceness or lingering blame keeps your guard up, and you push back when you feel labeled.'
 
-    const patienceGuidance =
-      userLevel <= 2
-        ? 'This person is early in their journey: stay patient and never escalate sharply, even when their words are clumsy. Reward every genuine attempt at openness visibly.'
-        : userLevel <= 5
-          ? 'Respond realistically: warm noticeably to genuine empathy, cool off when you feel judged, but stay reachable.'
-          : 'Hold a high bar: only genuine, specific empathy moves you. Vague niceness or lingering blame keeps your guard up, and you push back when you feel labeled.'
+  // Which arc pieces the user has already expressed, so the character can
+  // close the scene the moment the final piece arrives in the latest message.
+  const arc = args.arcSoFar
+  const arcDone = [
+    arc.feelingExpressed && 'how they feel',
+    arc.needIdentified && 'what they need',
+    arc.requestMade && 'a clear request',
+  ].filter(Boolean) as Array<string>
+  const arcMissing = [
+    !arc.feelingExpressed && 'how they feel',
+    !arc.needIdentified && 'what they need',
+    !arc.requestMade && 'a clear request',
+  ].filter(Boolean) as Array<string>
 
-    // Which arc pieces the user has already expressed, so the character can
-    // close the scene the moment the final piece arrives in the latest message.
-    const arc = args.arcSoFar
-    const arcDone = [
-      arc?.feelingExpressed && 'how they feel',
-      arc?.needIdentified && 'what they need',
-      arc?.requestMade && 'a clear request',
-    ].filter(Boolean) as Array<string>
-    const arcMissing = [
-      !arc?.feelingExpressed && 'how they feel',
-      !arc?.needIdentified && 'what they need',
-      !arc?.requestMade && 'a clear request',
-    ].filter(Boolean) as Array<string>
-
-    const closingGuidance = `
+  const closingGuidance = `
 
 ENDING THE SCENE:
 In earlier messages the user has already expressed: ${arcDone.length ? arcDone.join(', ') : 'none of the core pieces yet'}.
@@ -425,13 +487,13 @@ If nothing was missing, or their LATEST message clearly supplies what was missin
 - Keep it short and heartfelt (1-2 sentences).
 Otherwise, keep the conversation naturally alive.`
 
-    const systemPrompt = `You are roleplaying as ${args.scenario.characterName} in a realistic conflict resolution conversation.
+  const systemPrompt = `You are roleplaying as ${args.scenario.characterName} in a realistic conflict resolution conversation.
 
 CHARACTER PROFILE:
 - Name: ${args.scenario.characterName}
 - Personality: ${args.scenario.characterPersonality}
-- Current Emotional State: ${describeMood(mood)}
-- Background: ${args.scenario.characterBackground}
+- Current Emotional State: ${describeMood(args.currentMood)}
+- Background: ${args.scenario.characterBackground || ''}
 - Your Hidden Needs: ${args.scenario.characterHiddenNeeds.join(', ')}
 
 BEHAVIORAL RULES:
@@ -451,39 +513,26 @@ IMPORTANT REMINDERS:
 - Show character growth through openness, not through explaining yourself
 - React to both what they say AND how they say it${closingGuidance}`
 
-    const history: Array<Anthropic.MessageParam> = args.conversationHistory.map(
-      (msg) => ({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
-        content: String(msg.content ?? ''),
-      }),
-    )
+  const history: Array<Anthropic.MessageParam> = args.history.map((msg) => ({
+    role: msg.role === 'assistant' ? 'assistant' : 'user',
+    content: msg.content,
+  }))
 
-    try {
-      const response = await anthropic.messages.create({
-        model: MODEL,
-        max_tokens: 300,
-        temperature: 0.8,
-        system: systemPrompt,
-        messages: [
-          ...history,
-          { role: 'user', content: args.userMessage },
-        ],
-      })
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 300,
+    temperature: 0.8,
+    system: systemPrompt,
+    messages: [...history, { role: 'user', content: args.userMessage }],
+  })
 
-      const textBlock = response.content.find((block) => block.type === 'text')
-      if (!textBlock || textBlock.type !== 'text') {
-        throw new Error('No text response from Claude')
-      }
+  const textBlock = response.content.find((block) => block.type === 'text')
+  if (!textBlock) {
+    throw new Error('No text response from the model')
+  }
 
-      return textBlock.text
-    } catch (error) {
-      console.error('Error generating character response:', error)
-      throw new Error(
-        `Failed to generate character response: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  },
-})
+  return textBlock.text
+}
 
 // ============================================================================
 // CUSTOM SCENARIO BUILDER ACTIONS
@@ -505,7 +554,21 @@ export const assessScenarioReadiness = action({
     ),
     roundsSoFar: v.number(),
   },
-  handler: async (_ctx, args): Promise<ScenarioReadinessResult> => {
+  handler: async (ctx, args): Promise<ScenarioReadinessResult> => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      throw new Error('Not authenticated')
+    }
+    if (args.userDescription.length > MAX_DESCRIPTION_LENGTH) {
+      throw new Error('Description is too long')
+    }
+    if (
+      args.priorAnswers.length > 6 ||
+      args.priorAnswers.some((qa) => qa.answer.length > MAX_ANSWER_LENGTH)
+    ) {
+      throw new Error('Answers are too long')
+    }
+
     // Hard cap: two rounds of follow-ups, then we always proceed.
     const isFinalRound = args.roundsSoFar >= 2
 
@@ -554,11 +617,11 @@ ${
         },
       })
 
-      if (!response.parsed_output) {
-        throw new Error('Empty structured response from Claude')
+      const parsed = response.parsed_output as unknown
+      if (!parsed) {
+        throw new Error('Empty structured response from the model')
       }
-
-      const result = response.parsed_output as ScenarioReadinessResult
+      const result = parsed as ScenarioReadinessResult
 
       if (isFinalRound) {
         return { ready: true, questions: [] }
@@ -585,15 +648,29 @@ ${
 export const generateCustomScenario = action({
   args: {
     userDescription: v.string(),
-    answers: v.array(
-      v.object({ question: v.string(), answer: v.string() }),
-    ),
+    answers: v.array(v.object({ question: v.string(), answer: v.string() })),
   },
-  handler: async (_ctx, args): Promise<CustomScenarioResult> => {
+  handler: async (ctx, args): Promise<CustomScenarioResult> => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      throw new Error('Not authenticated')
+    }
+    if (args.userDescription.length > MAX_DESCRIPTION_LENGTH) {
+      throw new Error('Description is too long')
+    }
+    if (
+      args.answers.length > 6 ||
+      args.answers.some((qa) => qa.answer.length > MAX_ANSWER_LENGTH)
+    ) {
+      throw new Error('Answers are too long')
+    }
+
     const transcript =
       args.answers.length > 0
         ? args.answers
-            .map((qa) => `Q: ${qa.question}\nA: ${qa.answer || '(not answered)'}`)
+            .map(
+              (qa) => `Q: ${qa.question}\nA: ${qa.answer || '(not answered)'}`,
+            )
             .join('\n\n')
         : 'No additional details were provided.'
 
@@ -633,11 +710,11 @@ Produce the scenario object that best brings this real situation to life as a pr
         },
       })
 
-      if (!response.parsed_output) {
-        throw new Error('Empty structured response from Claude')
+      const parsed = response.parsed_output as unknown
+      if (!parsed) {
+        throw new Error('Empty structured response from the model')
       }
-
-      return response.parsed_output as CustomScenarioResult
+      return parsed as CustomScenarioResult
     } catch (error) {
       console.error('Error generating custom scenario:', error)
       throw new Error(

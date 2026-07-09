@@ -1,7 +1,7 @@
 /**
  * MessageInput Component
  *
- * Input field for user's response to the AI character
+ * Input field for the user's response to the character
  * Handles validation, character limit, and submission
  */
 
@@ -9,7 +9,8 @@ import { useState } from 'react'
 import { Button } from '~/components/ui/Button'
 
 interface MessageInputProps {
-  onSubmit: (message: string) => Promise<void> | void
+  /** Returns whether the message was sent; the input only clears on success. */
+  onSubmit: (message: string) => Promise<boolean>
   isLoading?: boolean
   disabled?: boolean
   placeholder?: string
@@ -33,9 +34,7 @@ export function MessageInput({
   const charactersRemaining = MAX_MESSAGE_LENGTH - characterCount
   const isNearLimit = charactersRemaining < 100
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const submitMessage = async () => {
     // Validation
     if (!value.trim()) {
       setError('Please enter a message')
@@ -50,12 +49,13 @@ export function MessageInput({
     setError(null)
     setIsSubmitting(true)
 
-    // Clear textbox immediately
-    const messageToSend = value
-    setValue('')
-
     try {
-      await onSubmit(messageToSend)
+      const sent = await onSubmit(value)
+      // Only clear once the message is safely sent; on failure the user's
+      // words stay in the box so nothing is lost.
+      if (sent) {
+        setValue('')
+      }
     } catch (err) {
       setError('Failed to send message. Please try again.')
       console.error('Error submitting message:', err)
@@ -64,13 +64,18 @@ export function MessageInput({
     }
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void submitMessage()
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Send on Enter, but allow Shift+Enter for new lines
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       // Only submit if there's content and not already submitting
       if (value.trim() && !isSubmitting && !disabled && !isLoading) {
-        handleSubmit(e as any)
+        void submitMessage()
       }
     }
   }

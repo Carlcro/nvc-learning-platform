@@ -9,10 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestScoringRouteImport } from './routes/test-scoring'
 import { Route as FeelingsRouteImport } from './routes/feelings'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice/index'
@@ -30,18 +28,11 @@ import { Route as FeelingsLibraryRouteImport } from './routes/feelings/library'
 import { Route as FeelingsIntensityRouteImport } from './routes/feelings/intensity'
 import { Route as FeelingsCheckInRouteImport } from './routes/feelings/check-in'
 import { Route as ChallengesDailyRouteImport } from './routes/challenges/daily'
-import { Route as AdminSeedScenariosRouteImport } from './routes/admin/seed-scenarios'
-import { Route as AdminSeedRouteImport } from './routes/admin/seed'
 import { Route as PracticeCreateIndexRouteImport } from './routes/practice/create/index'
 import { Route as PracticeScenarioIdBriefRouteImport } from './routes/practice/$scenarioId/brief'
 import { Route as PracticeScenarioIdTranscriptConversationIdRouteImport } from './routes/practice/$scenarioId/transcript/$conversationId'
 import { Route as PracticeScenarioIdConversationConversationIdRouteImport } from './routes/practice/$scenarioId/conversation/$conversationId'
 
-const TestScoringRoute = TestScoringRouteImport.update({
-  id: '/test-scoring',
-  path: '/test-scoring',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FeelingsRoute = FeelingsRouteImport.update({
   id: '/feelings',
   path: '/feelings',
@@ -50,11 +41,6 @@ const FeelingsRoute = FeelingsRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnotherPageRoute = AnotherPageRouteImport.update({
-  id: '/anotherPage',
-  path: '/anotherPage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -142,16 +128,6 @@ const ChallengesDailyRoute = ChallengesDailyRouteImport.update({
   path: '/challenges/daily',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSeedScenariosRoute = AdminSeedScenariosRouteImport.update({
-  id: '/admin/seed-scenarios',
-  path: '/admin/seed-scenarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminSeedRoute = AdminSeedRouteImport.update({
-  id: '/admin/seed',
-  path: '/admin/seed',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PracticeCreateIndexRoute = PracticeCreateIndexRouteImport.update({
   id: '/practice/create/',
   path: '/practice/create/',
@@ -177,12 +153,8 @@ const PracticeScenarioIdConversationConversationIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/anotherPage': typeof AnotherPageRoute
   '/auth': typeof AuthRoute
   '/feelings': typeof FeelingsRouteWithChildren
-  '/test-scoring': typeof TestScoringRoute
-  '/admin/seed': typeof AdminSeedRoute
-  '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/feelings/check-in': typeof FeelingsCheckInRoute
   '/feelings/intensity': typeof FeelingsIntensityRoute
@@ -206,11 +178,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/anotherPage': typeof AnotherPageRoute
   '/auth': typeof AuthRoute
-  '/test-scoring': typeof TestScoringRoute
-  '/admin/seed': typeof AdminSeedRoute
-  '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/feelings/check-in': typeof FeelingsCheckInRoute
   '/feelings/intensity': typeof FeelingsIntensityRoute
@@ -235,12 +203,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/anotherPage': typeof AnotherPageRoute
   '/auth': typeof AuthRoute
   '/feelings': typeof FeelingsRouteWithChildren
-  '/test-scoring': typeof TestScoringRoute
-  '/admin/seed': typeof AdminSeedRoute
-  '/admin/seed-scenarios': typeof AdminSeedScenariosRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/feelings/check-in': typeof FeelingsCheckInRoute
   '/feelings/intensity': typeof FeelingsIntensityRoute
@@ -266,12 +230,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/anotherPage'
     | '/auth'
     | '/feelings'
-    | '/test-scoring'
-    | '/admin/seed'
-    | '/admin/seed-scenarios'
     | '/challenges/daily'
     | '/feelings/check-in'
     | '/feelings/intensity'
@@ -295,11 +255,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/anotherPage'
     | '/auth'
-    | '/test-scoring'
-    | '/admin/seed'
-    | '/admin/seed-scenarios'
     | '/challenges/daily'
     | '/feelings/check-in'
     | '/feelings/intensity'
@@ -323,12 +279,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/anotherPage'
     | '/auth'
     | '/feelings'
-    | '/test-scoring'
-    | '/admin/seed'
-    | '/admin/seed-scenarios'
     | '/challenges/daily'
     | '/feelings/check-in'
     | '/feelings/intensity'
@@ -353,12 +305,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AnotherPageRoute: typeof AnotherPageRoute
   AuthRoute: typeof AuthRoute
   FeelingsRoute: typeof FeelingsRouteWithChildren
-  TestScoringRoute: typeof TestScoringRoute
-  AdminSeedRoute: typeof AdminSeedRoute
-  AdminSeedScenariosRoute: typeof AdminSeedScenariosRoute
   ChallengesDailyRoute: typeof ChallengesDailyRoute
   LearnFeelingRoute: typeof LearnFeelingRoute
   LearnIntegrationRoute: typeof LearnIntegrationRoute
@@ -377,13 +325,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/test-scoring': {
-      id: '/test-scoring'
-      path: '/test-scoring'
-      fullPath: '/test-scoring'
-      preLoaderRoute: typeof TestScoringRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/feelings': {
       id: '/feelings'
       path: '/feelings'
@@ -396,13 +337,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/anotherPage': {
-      id: '/anotherPage'
-      path: '/anotherPage'
-      fullPath: '/anotherPage'
-      preLoaderRoute: typeof AnotherPageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -524,20 +458,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChallengesDailyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/seed-scenarios': {
-      id: '/admin/seed-scenarios'
-      path: '/admin/seed-scenarios'
-      fullPath: '/admin/seed-scenarios'
-      preLoaderRoute: typeof AdminSeedScenariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/seed': {
-      id: '/admin/seed'
-      path: '/admin/seed'
-      fullPath: '/admin/seed'
-      preLoaderRoute: typeof AdminSeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/practice/create/': {
       id: '/practice/create/'
       path: '/practice/create'
@@ -593,12 +513,8 @@ const FeelingsRouteWithChildren = FeelingsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AnotherPageRoute: AnotherPageRoute,
   AuthRoute: AuthRoute,
   FeelingsRoute: FeelingsRouteWithChildren,
-  TestScoringRoute: TestScoringRoute,
-  AdminSeedRoute: AdminSeedRoute,
-  AdminSeedScenariosRoute: AdminSeedScenariosRoute,
   ChallengesDailyRoute: ChallengesDailyRoute,
   LearnFeelingRoute: LearnFeelingRoute,
   LearnIntegrationRoute: LearnIntegrationRoute,

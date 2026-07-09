@@ -1,9 +1,16 @@
 import { v } from 'convex/values'
+import { getAuthUserId } from '@convex-dev/auth/server'
 import { mutation, query } from './_generated/server'
+import { daysBetween, resolveLocalDate } from './lib/progress'
+import { getOrCreateFeelingsProgress } from './feelings'
 
 /**
  * User Feelings Progress Functions
- * Handles daily check-ins, streak tracking, and progress stats
+ * Handles daily check-ins, streak tracking, and progress stats.
+ *
+ * Everything is scoped to the authenticated user; check-ins (which can hold
+ * personal notes) are never readable by anyone else. Check-in days follow the
+ * user's local calendar date, sent by the client and validated server-side.
  */
 
 // ============================================================================
@@ -11,14 +18,17 @@ import { mutation, query } from './_generated/server'
 // ============================================================================
 
 /**
- * Get user's overall feelings learning progress
+ * Get the current user's overall feelings learning progress
  */
 export const getUserProgress = query({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
+
     const progress = await ctx.db
       .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', (q) => q.eq('userId', userId))
       .first()
 
     if (!progress) {
@@ -34,14 +44,17 @@ export const getUserProgress = query({
 })
 
 /**
- * Get user's daily check-in history
+ * Get the current user's daily check-in history
  */
 export const getCheckInHistory = query({
-  args: { userId: v.id('users'), limit: v.optional(v.number()) },
+  args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return []
+
     const progress = await ctx.db
       .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', (q) => q.eq('userId', userId))
       .first()
 
     if (!progress) {
@@ -54,14 +67,17 @@ export const getCheckInHistory = query({
 })
 
 /**
- * Get user's emotional stats and patterns
+ * Get the current user's emotional stats and patterns
  */
 export const getStats = query({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
+
     const progress = await ctx.db
       .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', (q) => q.eq('userId', userId))
       .first()
 
     if (!progress) {
@@ -95,187 +111,21 @@ export const getStats = query({
   },
 })
 
-// ============================================================================
-// MUTATIONS
-// ============================================================================
-
 /**
- * Record a daily feelings check-in
- */
-export const recordCheckIn = mutation({
-  args: {
-    userId: v.id('users'),
-    feelings: v.array(v.string()),
-    note: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const today = new Date().toISOString().split('T')[0]
-
-    let progress = await ctx.db
-      .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .first()
-
-    if (!progress) {
-      const progressId = await ctx.db.insert('userFeelingsProgress', {
-        userId: args.userId,
-        feelingsExplored: [],
-        feelingsSaved: [],
-        quizQuestionsAnswered: 0,
-        quizQuestionsCorrect: 0,
-        quizScore: 0,
-        quizLevel: 1,
-        dailyCheckIns: [],
-        currentCheckInStreak: 0,
-        longestCheckInStreak: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
-      progress = await ctx.db.get(progressId)
-    }
-
-    if (!progress) {
-      throw new Error('Failed to create or retrieve user progress')
-    }
-
-    // Check if already checked in today
-    const existingToday = progress.dailyCheckIns.find((c) => c.date === today)
-
-    let updatedCheckIns = [...progress.dailyCheckIns]
-    let newStreak = progress.currentCheckInStreak
-    let newLongestStreak = progress.longestCheckInStreak
-
-    if (existingToday) {
-      // Update today's check-in
-      updatedCheckIns = updatedCheckIns.map((c) =>
-        c.date === today
-          ? {
-              ...c,
-              feelings: args.feelings,
-              note: args.note,
-              timestamp: Date.now(),
-            }
-          : c,
-      )
-    } else {
-      // New check-in - update streak
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0]
-      const lastCheckInDate = progress.lastCheckInDate
-
-      if (lastCheckInDate === yesterday) {
-        // Streak continues
-        newStreak = progress.currentCheckInStreak + 1
-      } else if (lastCheckInDate === today) {
-        // Already checked in today
-        newStreak = progress.currentCheckInStreak
-      } else {
-        // Streak broken, starting new
-        newStreak = 1
-      }
-
-      if (newStreak > newLongestStreak) {
-        newLongestStreak = newStreak
-      }
-
-      updatedCheckIns.push({
-        date: today,
-        feelings: args.feelings,
-        note: args.note,
-        timestamp: Date.now(),
-      })
-    }
-
-    await ctx.db.patch(progress._id, {
-      dailyCheckIns: updatedCheckIns,
-      currentCheckInStreak: newStreak,
-      longestCheckInStreak: newLongestStreak,
-      lastCheckInDate: today,
-      updatedAt: Date.now(),
-    })
-
-    return progress._id
-  },
-})
-
-/**
- * Update quiz progress and level
- */
-export const updateQuizProgress = mutation({
-  args: {
-    userId: v.id('users'),
-    correct: v.boolean(),
-    level: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    let progress = await ctx.db
-      .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .first()
-
-    if (!progress) {
-      const progressId = await ctx.db.insert('userFeelingsProgress', {
-        userId: args.userId,
-        feelingsExplored: [],
-        feelingsSaved: [],
-        quizQuestionsAnswered: 0,
-        quizQuestionsCorrect: 0,
-        quizScore: 0,
-        quizLevel: 1,
-        dailyCheckIns: [],
-        currentCheckInStreak: 0,
-        longestCheckInStreak: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
-      progress = await ctx.db.get(progressId)
-    }
-
-    if (!progress) {
-      throw new Error('Failed to create or retrieve user progress')
-    }
-
-    const newTotal = progress.quizQuestionsAnswered + 1
-    const newCorrect = args.correct
-      ? progress.quizQuestionsCorrect + 1
-      : progress.quizQuestionsCorrect
-    const newScore = Math.round((newCorrect / newTotal) * 100)
-
-    // Auto-level up if 80%+ correct in 10 questions
-    let newLevel = args.level || progress.quizLevel
-    if (newTotal % 10 === 0 && newScore >= 80 && newLevel < 3) {
-      newLevel = Math.min(newLevel + 1, 3)
-    }
-
-    await ctx.db.patch(progress._id, {
-      quizQuestionsAnswered: newTotal,
-      quizQuestionsCorrect: newCorrect,
-      quizScore: newScore,
-      quizLevel: newLevel,
-      updatedAt: Date.now(),
-    })
-
-    return {
-      progressId: progress._id,
-      score: newScore,
-      level: newLevel,
-      leveledUp: newLevel > (args.level || progress.quizLevel),
-    }
-  },
-})
-
-/**
- * Get today's check-in (if it exists)
+ * Get today's check-in for the current user (if it exists).
+ * "Today" is the client's local date when provided.
  */
 export const getTodayCheckIn = query({
-  args: { userId: v.id('users') },
+  args: { localDate: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const today = new Date().toISOString().split('T')[0]
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
+
+    const today = resolveLocalDate(args.localDate)
 
     const progress = await ctx.db
       .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', (q) => q.eq('userId', userId))
       .first()
 
     if (!progress) {
@@ -287,14 +137,17 @@ export const getTodayCheckIn = query({
 })
 
 /**
- * Get weekly patterns and insights
+ * Get weekly patterns and insights for the current user
  */
 export const getWeeklyPatterns = query({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
+
     const progress = await ctx.db
       .query('userFeelingsProgress')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user', (q) => q.eq('userId', userId))
       .first()
 
     if (!progress || progress.dailyCheckIns.length === 0) {
@@ -322,14 +175,14 @@ export const getWeeklyPatterns = query({
       }
     }
 
-    // Get feelings that appeared 3+ times
+    // Get feelings that appeared repeatedly
     const frequentFeelings = Object.entries(weeklyFrequency)
       .filter(([, count]) => count >= 2)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
 
     // Map feelings to related needs (simplified mapping)
-    const feelingToNeeds: Record<string, Array<string>> = {
+    const feelingToNeeds: Partial<Record<string, Array<string>>> = {
       anxious: ['safety', 'clarity', 'predictability'],
       worried: ['safety', 'clarity', 'predictability'],
       frustrated: ['ease', 'efficiency', 'progress'],
@@ -350,7 +203,7 @@ export const getWeeklyPatterns = query({
     const insights = frequentFeelings.map(([feeling, count]) => ({
       feeling,
       count,
-      relatedNeeds: feelingToNeeds[feeling.toLowerCase()] || [
+      relatedNeeds: feelingToNeeds[feeling.toLowerCase()] ?? [
         'understanding',
         'connection',
       ],
@@ -390,5 +243,96 @@ export const getWeeklyPatterns = query({
       unpleasantPercent: 100 - pleasantPercent,
       uniqueFeelings: Object.keys(weeklyFrequency).length,
     }
+  },
+})
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
+
+const MAX_CHECKIN_FEELINGS = 10
+const MAX_NOTE_LENGTH = 1000
+
+/**
+ * Record a daily feelings check-in for the current user
+ */
+export const recordCheckIn = mutation({
+  args: {
+    feelings: v.array(v.string()),
+    note: v.optional(v.string()),
+    // The user's local calendar date, so an evening check-in counts for
+    // their own day, not the UTC day.
+    localDate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) throw new Error('Not authenticated')
+
+    if (args.feelings.length === 0) {
+      throw new Error('Pick at least one feeling')
+    }
+    if (args.feelings.length > MAX_CHECKIN_FEELINGS) {
+      throw new Error('Too many feelings selected')
+    }
+    if (args.note && args.note.length > MAX_NOTE_LENGTH) {
+      throw new Error('Note is too long')
+    }
+
+    const today = resolveLocalDate(args.localDate)
+    const progress = await getOrCreateFeelingsProgress(ctx, userId)
+
+    // Check if already checked in today
+    const existingToday = progress.dailyCheckIns.find((c) => c.date === today)
+
+    let updatedCheckIns = [...progress.dailyCheckIns]
+    let newStreak = progress.currentCheckInStreak
+    let newLongestStreak = progress.longestCheckInStreak
+
+    if (existingToday) {
+      // Update today's check-in
+      updatedCheckIns = updatedCheckIns.map((c) =>
+        c.date === today
+          ? {
+              ...c,
+              feelings: args.feelings,
+              note: args.note,
+              timestamp: Date.now(),
+            }
+          : c,
+      )
+    } else {
+      // New check-in: update the streak
+      const lastCheckInDate = progress.lastCheckInDate
+      const gap = lastCheckInDate ? daysBetween(lastCheckInDate, today) : NaN
+
+      if (gap === 1) {
+        newStreak = progress.currentCheckInStreak + 1
+      } else if (gap === 0) {
+        newStreak = progress.currentCheckInStreak
+      } else {
+        newStreak = 1
+      }
+
+      if (newStreak > newLongestStreak) {
+        newLongestStreak = newStreak
+      }
+
+      updatedCheckIns.push({
+        date: today,
+        feelings: args.feelings,
+        note: args.note,
+        timestamp: Date.now(),
+      })
+    }
+
+    await ctx.db.patch(progress._id, {
+      dailyCheckIns: updatedCheckIns,
+      currentCheckInStreak: newStreak,
+      longestCheckInStreak: newLongestStreak,
+      lastCheckInDate: today,
+      updatedAt: Date.now(),
+    })
+
+    return progress._id
   },
 })

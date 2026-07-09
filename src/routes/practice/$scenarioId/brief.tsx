@@ -6,6 +6,7 @@ import type { Id } from 'convex/_generated/dataModel'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { StarIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
   // Daily challenges arrive here with their challenge id; keep it through the
@@ -97,7 +98,6 @@ function ScenarioBrief() {
       })
 
       const conversationId = await createConversation({
-        userId: currentUser._id,
         scenarioId: scenarioId as Id<'scenarios'>,
       })
 
@@ -115,8 +115,30 @@ function ScenarioBrief() {
     navigate({ to: '/practice' })
   }
 
-  if (!scenario) {
+  if (scenario === undefined) {
     return <GiraffeLoader message="Setting the scene for your conversation…" />
+  }
+
+  // Loaded but not found (deleted, or someone else's private scenario).
+  if (scenario === null) {
+    return (
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 px-6">
+        <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
+          <h1 className="text-2xl font-bold text-brown-800 mb-3">
+            We could not find this scenario
+          </h1>
+          <p className="text-brown-700 mb-6">
+            It may have been removed, or the link is no longer valid.
+          </p>
+          <button
+            onClick={handleBack}
+            className="px-6 py-3 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors cursor-pointer"
+          >
+            Back to scenarios
+          </button>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -290,9 +312,13 @@ function ScenarioBrief() {
                   <span
                     role="img"
                     aria-label={`${userProgress.bestStars} of 3 stars`}
-                    className="text-giraffe-700"
+                    className="inline-flex items-center gap-0.5 text-giraffe-700"
                   >
-                    {'★'.repeat(userProgress.bestStars)}
+                    {Array.from({ length: userProgress.bestStars }).map(
+                      (_, i) => (
+                        <StarIcon key={i} className="w-4 h-4" />
+                      ),
+                    )}
                   </span>
                 )}
                 <span className="text-brown-600">

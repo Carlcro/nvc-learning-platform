@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { Authenticated, Unauthenticated, useQuery, useMutation } from "convex/react";
+import { Authenticated, Unauthenticated, useMutation, useQuery } from "convex/react";
 import { useLocation } from "@tanstack/react-router";
 import { api } from "../../../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
+import type { ReactNode } from "react";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -13,13 +13,12 @@ interface ProtectedRouteProps {
 /**
  * Wrapper component that protects routes from unauthenticated access
  * Shows SignInForm for unauthenticated users
- * Ensures user profile is initialized on first login
+ * Ensures the user's progress record exists on first login
  */
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const userProfile = useQuery(api.users.getUserProfile);
   const location = useLocation();
 
-  // Initialize user profile on first login if needed
   if (userProfile === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-giraffe-50">
@@ -34,12 +33,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   return (
     <>
       <Authenticated>
-        {/* Initialize profile if it doesn't exist */}
-        {!userProfile?.profile ? (
-          <ProfileInitializer>{children}</ProfileInitializer>
-        ) : (
-          children
-        )}
+        <ProgressInitializer>{children}</ProgressInitializer>
       </Authenticated>
 
       <Unauthenticated>
@@ -50,37 +44,18 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 }
 
 /**
- * Internal component that initializes user profile on first login
+ * Ensures the signed-in user has a progress record (idempotent, runs once
+ * per mount). Children render immediately; nothing downstream requires the
+ * record to exist before its first read.
  */
-function ProfileInitializer({ children }: { children: ReactNode }) {
+function ProgressInitializer({ children }: { children: ReactNode }) {
   const initProfile = useMutation(api.users.initializeUserProfile);
-  const userProfile = useQuery(api.users.getUserProfile);
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        await initProfile();
-      } catch (error) {
-        console.error("Failed to initialize profile:", error);
-      }
-    };
-
-    if (!userProfile?.profile) {
-      initialize();
-    }
-  }, [initProfile, userProfile?.profile]);
-
-  // Wait until profile is initialized
-  if (!userProfile?.profile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-giraffe-50">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-giraffe-200 border-t-giraffe-600 rounded-full mx-auto" />
-          <p className="text-brown-700">Setting up your profile...</p>
-        </div>
-      </div>
-    );
-  }
+    initProfile().catch((error) => {
+      console.error("Failed to initialize progress:", error);
+    });
+  }, [initProfile]);
 
   return <>{children}</>;
 }

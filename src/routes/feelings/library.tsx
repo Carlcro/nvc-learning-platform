@@ -26,7 +26,7 @@ function PersonalLibrary() {
   const allFeelings = useQuery(api.feelings.getAll)
   const userProgress = useQuery(
     api.feelingsProgress.getUserProgress,
-    currentUser ? { userId: currentUser._id } : 'skip',
+    currentUser ? {} : 'skip',
   )
   const families = useQuery(api.feelings.getFamilies)
 
@@ -56,10 +56,7 @@ function PersonalLibrary() {
 
   const handleRemove = async (word: string) => {
     if (!currentUser) return
-    await removeFeelingMutation({
-      userId: currentUser._id,
-      feelingWord: word,
-    })
+    await removeFeelingMutation({ feelingWord: word })
   }
 
   if (allFeelings === undefined || userProgress === undefined) {

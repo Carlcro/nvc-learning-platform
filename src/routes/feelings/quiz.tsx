@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
@@ -11,14 +12,20 @@ export const Route = createFileRoute('/feelings/quiz')({
 
 type QuizState = 'level-select' | 'loading' | 'question' | 'feedback' | 'complete'
 
+// Questions arrive without their answers; the server grades each answer and
+// returns the explanation, so the solution is never in the client before the
+// user commits.
 interface QuizQuestion {
   _id: string
   sentence: string
-  isRealFeeling: boolean
-  explanation: string
-  correctFeelings?: Array<string>
   level: number
   category: string
+}
+
+interface AnswerFeedback {
+  correct: boolean
+  explanation: string
+  correctFeelings: Array<string>
 }
 
 function ProtectedQuiz() {
@@ -30,19 +37,21 @@ function ProtectedQuiz() {
 }
 
 function QuizGame() {
-  const currentUser = useQuery(api.users.getCurrentUser)
   const [quizState, setQuizState] = useState<QuizState>('level-select')
   const [selectedLevel, setSelectedLevel] = useState(1)
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9))
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
-  const [feedbackIsCorrect, setFeedbackIsCorrect] = useState(false)
+  const [answerFeedback, setAnswerFeedback] = useState<AnswerFeedback | null>(
+    null,
+  )
   const [questions, setQuestions] = useState<Array<QuizQuestion>>([])
 
   // Queries - only fetch when in loading state
   const quizBatch = useQuery(
-    api.feelingsQuiz.getRandomQuizBatch,
+    api.feelingsQuiz.getQuizBatch,
     quizState === 'loading'
-      ? { level: selectedLevel, count: 10 }
+      ? { level: selectedLevel, count: 10, seed }
       : 'skip',
   )
 
@@ -54,10 +63,7 @@ function QuizGame() {
     }
   }, [quizBatch, quizState])
 
-  // Mutations
-  const updateProgressMutation = useMutation(
-    api.feelingsProgress.updateQuizProgress,
-  )
+  const submitAnswer = useMutation(api.feelingsQuiz.submitAnswer)
 
   const currentQuestionData =
     questions.length > 0 && currentQuestion < questions.length
@@ -66,30 +72,34 @@ function QuizGame() {
 
   const handleStartQuiz = (level: number) => {
     setSelectedLevel(level)
+    setSeed(Math.floor(Math.random() * 1e9))
     setCurrentQuestion(0)
     setCorrectCount(0)
     setQuestions([])
     setQuizState('loading')
   }
 
-  const handleAnswer = (userAnswer: boolean) => {
+  const handleAnswer = async (userAnswer: boolean) => {
     if (!currentQuestionData) return
 
-    const isCorrect = userAnswer === currentQuestionData.isRealFeeling
-    setFeedbackIsCorrect(isCorrect)
-
-    if (isCorrect) {
-      setCorrectCount((prev) => prev + 1)
-    }
-
-    if (currentUser) {
-      updateProgressMutation({
-        userId: currentUser._id,
-        correct: isCorrect,
+    try {
+      const result = await submitAnswer({
+        questionId: currentQuestionData._id as Id<'feelingsQuizQuestions'>,
+        answeredRealFeeling: userAnswer,
       })
-    }
 
-    setQuizState('feedback')
+      if (result.correct) {
+        setCorrectCount((prev) => prev + 1)
+      }
+      setAnswerFeedback({
+        correct: result.correct,
+        explanation: result.explanation,
+        correctFeelings: result.correctFeelings,
+      })
+      setQuizState('feedback')
+    } catch (err) {
+      console.error('Error submitting answer:', err)
+    }
   }
 
   const handleNextQuestion = () => {
@@ -102,6 +112,7 @@ function QuizGame() {
   }
 
   const handleRetryLevel = () => {
+    setSeed(Math.floor(Math.random() * 1e9))
     setCurrentQuestion(0)
     setCorrectCount(0)
     setQuestions([])
@@ -227,13 +238,13 @@ function QuizGame() {
 
             <div className="flex gap-4">
               <button
-                onClick={() => handleAnswer(true)}
+                onClick={() => void handleAnswer(true)}
                 className="flex-1 py-4 px-6 bg-empathy-high text-brown-900 rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity shadow-sm"
               >
                 Real Feeling
               </button>
               <button
-                onClick={() => handleAnswer(false)}
+                onClick={() => void handleAnswer(false)}
                 className="flex-1 py-4 px-6 bg-empathy-low text-brown-900 rounded-lg font-semibold text-lg hover:opacity-90 transition-opacity shadow-sm"
               >
                 Pseudo-Feeling
@@ -242,50 +253,49 @@ function QuizGame() {
           </div>
         )}
 
-        {quizState === 'feedback' && currentQuestionData && (
+        {quizState === 'feedback' && answerFeedback && (
           <div className="bg-white rounded-lg border-2 border-giraffe-100 shadow-sm p-6 max-w-2xl mx-auto">
             <div className="mb-6">
               <div
                 className={`
                   inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-lg mb-4
                   ${
-                    feedbackIsCorrect
+                    answerFeedback.correct
                       ? 'bg-empathy-high/25 text-brown-800'
                       : 'bg-empathy-low/20 text-brown-800'
                   }
                 `}
               >
-                {feedbackIsCorrect ? "That's right!" : 'Not quite'}
+                {answerFeedback.correct ? "That's right!" : 'Not quite'}
               </div>
 
               <h2 className="text-xl font-bold text-brown-800 mb-3">
-                {feedbackIsCorrect
+                {answerFeedback.correct
                   ? 'Great work recognizing that!'
                   : 'This is a learning opportunity'}
               </h2>
               <p className="text-brown-700 leading-relaxed">
-                {currentQuestionData.explanation}
+                {answerFeedback.explanation}
               </p>
             </div>
 
-            {currentQuestionData.correctFeelings &&
-              currentQuestionData.correctFeelings.length > 0 && (
-                <div className="mb-6 p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
-                  <h3 className="font-semibold text-brown-800 mb-2">
-                    Real feelings you could use instead:
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {currentQuestionData.correctFeelings.map((feeling) => (
-                      <span
-                        key={feeling}
-                        className="inline-block bg-white text-brown-800 px-3 py-1 rounded-full text-sm font-medium border border-giraffe-300"
-                      >
-                        {feeling}
-                      </span>
-                    ))}
-                  </div>
+            {answerFeedback.correctFeelings.length > 0 && (
+              <div className="mb-6 p-4 bg-giraffe-50 rounded-lg border border-giraffe-200">
+                <h3 className="font-semibold text-brown-800 mb-2">
+                  Real feelings you could use instead:
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {answerFeedback.correctFeelings.map((feeling) => (
+                    <span
+                      key={feeling}
+                      className="inline-block bg-white text-brown-800 px-3 py-1 rounded-full text-sm font-medium border border-giraffe-300"
+                    >
+                      {feeling}
+                    </span>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
             <div className="pt-6 border-t border-giraffe-200">
               <button

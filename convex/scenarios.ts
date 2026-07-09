@@ -1,6 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 /**
  * Scenarios for NVC roleplay practice
@@ -400,17 +400,6 @@ You're tired of feeling like the "lenient" parent while Jordan gets the credit f
 // ============================================================================
 
 /**
- * List all scenarios (with filtering options for future)
- * Private (user-created) scenarios are never returned here.
- */
-export const list = query({
-  handler: async (ctx) => {
-    const scenarios = await ctx.db.query("scenarios").collect();
-    return scenarios.filter((s) => s.visibility !== "private");
-  },
-});
-
-/**
  * Get a specific scenario by ID
  * A private (user-created) scenario is only returned to the user who owns it,
  * so one person's rehearsal can never be opened by anyone else.
@@ -437,6 +426,7 @@ export const getById = query({
  * Returns an empty array when signed out.
  */
 export const listMine = query({
+  args: {},
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) return [];
@@ -450,49 +440,11 @@ export const listMine = query({
 });
 
 /**
- * Get scenarios by category
- */
-export const listByCategory = query({
-  args: {
-    category: v.union(
-      v.literal("workplace"),
-      v.literal("family"),
-      v.literal("friendship"),
-      v.literal("self_expression")
-    ),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("scenarios")
-      .withIndex("by_category", (q) => q.eq("category", args.category))
-      .collect();
-  },
-});
-
-/**
- * Get scenarios by difficulty level
- */
-export const listByDifficulty = query({
-  args: {
-    difficulty: v.union(
-      v.literal("beginner"),
-      v.literal("intermediate"),
-      v.literal("advanced")
-    ),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("scenarios")
-      .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty))
-      .collect();
-  },
-});
-
-/**
  * Get scenarios sorted by orderIndex for a user
  * Filtering by unlock requirements must be done in the component
  */
 export const listByOrder = query({
+  args: {},
   handler: async (ctx) => {
     // User-created scenarios use orderIndex -1 to stay out of the linear
     // ladder; the visibility filter is a second guard so a private scenario
@@ -507,9 +459,9 @@ export const listByOrder = query({
 });
 
 /**
- * Create a new scenario (admin/seed function)
+ * Create a new scenario (dashboard/CLI only)
  */
-export const create = mutation({
+export const create = internalMutation({
   args: {
     title: v.string(),
     description: v.string(),
@@ -681,7 +633,8 @@ export const deleteCustom = mutation({
  *
  * Usage: npx convex run scenarios:seedBeginner
  */
-export const seedBeginner = mutation({
+export const seedBeginner = internalMutation({
+  args: {},
   handler: async (ctx) => {
     const existingCount = await ctx.db.query("scenarios").collect();
 
@@ -714,7 +667,8 @@ export const seedBeginner = mutation({
  *
  * Usage: npx convex run scenarios:seedAll
  */
-export const seedAll = mutation({
+export const seedAll = internalMutation({
+  args: {},
   handler: async (ctx) => {
     const existingCount = await ctx.db.query("scenarios").collect();
 

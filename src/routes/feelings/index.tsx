@@ -11,7 +11,7 @@ function FeelingHub() {
   const currentUser = useQuery(api.users.getCurrentUser)
   const stats = useQuery(
     api.feelingsProgress.getStats,
-    currentUser ? { userId: currentUser._id } : 'skip',
+    currentUser ? {} : 'skip',
   )
 
   return (
@@ -41,7 +41,7 @@ function FeelingHub() {
               <SpeechBubble className="mb-6 max-w-sm">
                 <p className="text-base lg:text-lg text-brown-800 text-center font-medium text-pretty">
                   Naming what you feel is where compassion begins. Take your
-                  time here — there are no wrong answers.
+                  time here. There are no wrong answers.
                 </p>
               </SpeechBubble>
               <img

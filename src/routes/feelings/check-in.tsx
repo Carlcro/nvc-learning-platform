@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
+import { localDateString } from '~/lib/localDate'
 
 export const Route = createFileRoute('/feelings/check-in')({
   component: ProtectedDailyCheckIn,
@@ -29,19 +30,19 @@ function DailyCheckIn() {
   const allFeelings = useQuery(api.feelings.getAll)
   const todayCheckIn = useQuery(
     api.feelingsProgress.getTodayCheckIn,
-    currentUser ? { userId: currentUser._id } : 'skip',
+    currentUser ? { localDate: localDateString() } : 'skip',
   )
   const stats = useQuery(
     api.feelingsProgress.getStats,
-    currentUser ? { userId: currentUser._id } : 'skip',
+    currentUser ? {} : 'skip',
   )
   const history = useQuery(
     api.feelingsProgress.getCheckInHistory,
-    currentUser ? { userId: currentUser._id, limit: 7 } : 'skip',
+    currentUser ? { limit: 7 } : 'skip',
   )
   const weeklyPatterns = useQuery(
     api.feelingsProgress.getWeeklyPatterns,
-    currentUser ? { userId: currentUser._id } : 'skip',
+    currentUser ? {} : 'skip',
   )
 
   // Mutations
@@ -103,9 +104,9 @@ function DailyCheckIn() {
     setIsSubmitting(true)
     try {
       await recordCheckInMutation({
-        userId: currentUser._id,
         feelings: selectedFeelings,
         note: note,
+        localDate: localDateString(),
       })
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
