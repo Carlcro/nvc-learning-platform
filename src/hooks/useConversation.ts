@@ -35,6 +35,51 @@ type Analysis = {
   jackalPhrases: Array<string>
   giraffeAlternative: string
   whatWentWell: string
+  empathyShown: boolean
+}
+
+export interface EarnedAchievement {
+  id: string
+  title: string
+  description: string
+}
+
+/**
+ * Which NVC component would benefit most from a refresher, based on the last
+ * few turns. Only components the user actually attempted count: a component
+ * that simply was not this turn's job scores 0 and must not read as weakness.
+ */
+export interface SkillHint {
+  component: 'observation' | 'feeling' | 'need' | 'request'
+}
+
+const SKILL_HINT_WINDOW = 3 // look at the last N scored turns
+const SKILL_HINT_MIN_SAMPLES = 2 // need repeated evidence, not one rough turn
+const SKILL_HINT_THRESHOLD = 12 // avg below this (of 25) suggests a refresher
+
+function deriveSkillHint(messages: Array<Message>): SkillHint | null {
+  const recent = messages
+    .filter((m) => m.role === 'user' && m.nvcScore)
+    .slice(-SKILL_HINT_WINDOW)
+  if (recent.length < SKILL_HINT_MIN_SAMPLES) return null
+
+  const components = ['observation', 'feeling', 'need', 'request'] as const
+  let weakest: SkillHint | null = null
+  let weakestAvg = SKILL_HINT_THRESHOLD
+
+  for (const component of components) {
+    const attempts = recent
+      .map((m) => m.nvcScore?.[component] ?? 0)
+      .filter((score) => score > 0)
+    if (attempts.length < SKILL_HINT_MIN_SAMPLES) continue
+    const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length
+    if (avg < weakestAvg) {
+      weakestAvg = avg
+      weakest = { component }
+    }
+  }
+
+  return weakest
 }
 
 /** The five-number score, pulled out of a full analysis result. */
@@ -91,10 +136,18 @@ function scenarioStatusForScore(
 }
 
 type ScoreKey = 'observation' | 'feeling' | 'need' | 'request'
+/**
+ * Average a component over the turns where the user actually attempted it
+ * (score > 0). Components are scored per turn only when present, so counting
+ * absent turns as zeros would punish spreading the arc across the
+ * conversation, which is exactly what we teach.
+ */
 function averageScore(messages: Array<Message>, key: ScoreKey): number {
-  if (messages.length === 0) return 0
-  const sum = messages.reduce((acc, m) => acc + (m.nvcScore?.[key] ?? 0), 0)
-  return sum / messages.length
+  const attempts = messages
+    .map((m) => m.nvcScore?.[key] ?? 0)
+    .filter((score) => score > 0)
+  if (attempts.length === 0) return 0
+  return attempts.reduce((a, b) => a + b, 0) / attempts.length
 }
 
 /**
@@ -102,7 +155,12 @@ function averageScore(messages: Array<Message>, key: ScoreKey): number {
  * once we celebrate the most meaningful one.
  */
 const MILESTONE_CELEBRATIONS: Array<{
-  key: 'feelingExpressed' | 'needIdentified' | 'requestMade' | 'resolutionReached'
+  key:
+    | 'feelingExpressed'
+    | 'needIdentified'
+    | 'requestMade'
+    | 'empathyShown'
+    | 'resolutionReached'
   title: string
   message: (characterName: string) => string
 }> = [
@@ -122,6 +180,11 @@ const MILESTONE_CELEBRATIONS: Array<{
     message: () => 'You asked for something concrete and doable.',
   },
   {
+    key: 'empathyShown',
+    title: 'You heard them',
+    message: (name) => `You tuned into what ${name} might be feeling.`,
+  },
+  {
     key: 'resolutionReached',
     title: 'Breakthrough',
     message: (name) => `${name} feels genuinely heard.`,
@@ -135,11 +198,15 @@ const MILESTONE_CELEBRATIONS: Array<{
 interface UseConversationArgs {
   scenarioId: string
   conversationId: string
+  // Present when this conversation was started from a daily challenge; passed
+  // through to completion so the challenge gets credited.
+  dailyChallengeId?: string
 }
 
 export function useConversation({
   scenarioId,
   conversationId,
+  dailyChallengeId,
 }: UseConversationArgs) {
   const navigate = useNavigate()
 
@@ -184,6 +251,8 @@ export function useConversation({
   const [completion, setCompletion] = useState<{
     finalScore: number
     finalStars: number
+    pointsEarned: number
+    newAchievements: Array<EarnedAchievement>
   } | null>(null)
   const [celebration, setCelebration] = useState<Celebration | null>(null)
 
@@ -204,6 +273,10 @@ export function useConversation({
       .find((m) => m.role === 'user' && m.feedback)
     return messageToFeedback(lastUserWithFeedback)
   }, [serverMessages])
+
+  // A gentle pointer to the lesson or library for whichever component has
+  // been consistently rough over the last few turns (null when none has).
+  const skillHint = useMemo(() => deriveSkillHint(serverMessages), [serverMessages])
 
   // --- Milestone celebrations --------------------------------------------
   // Reacting to server-computed milestones to fire a one-shot toast is a
@@ -260,16 +333,51 @@ export function useConversation({
         // Milestones reflect prior turns here (this message is not persisted
         // yet), so the coaching can point at the piece still missing.
         const milestones = conversation?.milestonesAchieved
-        const analysis = await analyzeMessage({
-          userMessage: text,
-          conversationHistory: history,
-          userLevel,
-          componentsLanded: {
-            feeling: milestones?.feelingExpressed ?? false,
-            need: milestones?.needIdentified ?? false,
-            request: milestones?.requestMade ?? false,
-          },
-        })
+        const arcSoFar = {
+          feelingExpressed: milestones?.feelingExpressed ?? false,
+          needIdentified: milestones?.needIdentified ?? false,
+          requestMade: milestones?.requestMade ?? false,
+        }
+
+        // The analysis and the character's reply are independent by design
+        // (the character reads the message itself, plus their current mood),
+        // so both model calls run in parallel and a turn costs one round trip
+        // instead of two.
+        const [analysis, characterResponse] = await Promise.all([
+          analyzeMessage({
+            userMessage: text,
+            conversationHistory: history,
+            userLevel,
+            componentsLanded: {
+              feeling: arcSoFar.feelingExpressed,
+              need: arcSoFar.needIdentified,
+              request: arcSoFar.requestMade,
+            },
+            scenario: {
+              situation: scenario.situation,
+              characterName: scenario.characterName,
+              learningObjectives: scenario.learningObjectives,
+              focusArea: scenario.focusArea,
+            },
+          }),
+          generateCharacterResponse({
+            userMessage: text,
+            conversationHistory: history,
+            scenario: {
+              title: scenario.title,
+              characterName: scenario.characterName,
+              characterPersonality: scenario.characterPersonality,
+              characterInitialMood: scenario.characterInitialMood,
+              characterBackground: scenario.characterBackground || '',
+              characterHiddenNeeds: scenario.characterHiddenNeeds,
+            },
+            currentMood:
+              conversation?.currentCharacterMood ??
+              scenario.characterInitialMood,
+            userLevel,
+            arcSoFar,
+          }),
+        ])
 
         await addMessage({
           conversationId: conversationId as Id<'conversations'>,
@@ -281,33 +389,10 @@ export function useConversation({
           jackalPhrases: analysis.jackalPhrases,
           giraffeAlternative: analysis.giraffeAlternative,
           whatWentWell: analysis.whatWentWell,
+          empathyShown: analysis.empathyShown,
         })
         // The user message now lives on the server; drop the optimistic copy.
         setPending(null)
-
-        // The arc is complete once a feeling, a need, and a request have all
-        // been expressed (in earlier turns or in this one). When it is, the
-        // character closes the scene so ending coincides with a real ending.
-        const arcComplete =
-          Boolean(milestones?.feelingExpressed || analysis.feeling >= 15) &&
-          Boolean(milestones?.needIdentified || analysis.need >= 15) &&
-          Boolean(milestones?.requestMade || analysis.request >= 15)
-
-        const characterResponse = await generateCharacterResponse({
-          userMessage: text,
-          conversationHistory: history,
-          scenario: {
-            title: scenario.title,
-            characterName: scenario.characterName,
-            characterPersonality: scenario.characterPersonality,
-            characterInitialMood: scenario.characterInitialMood,
-            characterBackground: scenario.characterBackground || '',
-            characterHiddenNeeds: scenario.characterHiddenNeeds,
-          },
-          userNVCScore: analysis.total,
-          userLevel,
-          shouldClose: arcComplete,
-        })
 
         await addMessage({
           conversationId: conversationId as Id<'conversations'>,
@@ -326,6 +411,7 @@ export function useConversation({
       scenario,
       serverMessages,
       conversation?.milestonesAchieved,
+      conversation?.currentCharacterMood,
       userLevel,
       analyzeMessage,
       generateCharacterResponse,
@@ -339,9 +425,11 @@ export function useConversation({
     try {
       const result = await completeConversation({
         conversationId: conversationId as Id<'conversations'>,
+        dailyChallengeId: dailyChallengeId
+          ? (dailyChallengeId as Id<'dailyChallenges'>)
+          : undefined,
       })
       const stars = starsForScore(result.finalScore)
-      setCompletion({ finalScore: result.finalScore, finalStars: stars })
 
       const scoredUserMessages = serverMessages.filter(
         (m) => m.role === 'user' && m.nvcScore,
@@ -361,6 +449,11 @@ export function useConversation({
         (scenarioProgress.status !== 'passed' &&
           scenarioProgress.status !== 'mastered')
 
+      // Snapshot the previous best BEFORE updateScenarioProgress overwrites
+      // it, so repeat completions are rewarded for improvement only.
+      const previousBestStars = scenarioProgress?.bestStars ?? 0
+      const previousBestScore = scenarioProgress?.bestScore ?? 0
+
       await updateScenarioProgress({
         scenarioId: scenarioId as Id<'scenarios'>,
         score: result.finalScore,
@@ -370,13 +463,23 @@ export function useConversation({
         objectivesCompleted: [],
       })
 
-      await updateUserProgress({
+      const progressResult = await updateUserProgress({
         scenarioId,
         finalScore: result.finalScore,
         finalStars: stars,
         completionStatus: completionStatusForScore(result.finalScore),
         averageComponentScores,
         isFirstCompletion,
+        previousBestStars,
+        previousBestScore,
+        empathyShown: conversation?.milestonesAchieved?.empathyShown ?? false,
+      })
+
+      setCompletion({
+        finalScore: result.finalScore,
+        finalStars: stars,
+        pointsEarned: progressResult.pointsEarned,
+        newAchievements: progressResult.newAchievements,
       })
     } catch (err) {
       setError('We could not save your results. Please try again.')
@@ -386,6 +489,8 @@ export function useConversation({
     scenario,
     serverMessages,
     scenarioProgress,
+    conversation?.milestonesAchieved?.empathyShown,
+    dailyChallengeId,
     completeConversation,
     updateScenarioProgress,
     updateUserProgress,
@@ -413,9 +518,11 @@ export function useConversation({
       setError(null)
       seenMilestonesRef.current = null
 
+      // Keep the daily challenge attached so a retry can still credit it
+      // (completion of an already-credited challenge is a no-op server-side).
       navigate({
         to: `/practice/${scenarioId}/conversation/${newConversationId}`,
-        search: { view: undefined, dailyChallengeId: undefined },
+        search: { view: undefined, dailyChallengeId },
       })
     } catch (err) {
       setError('We could not start a new conversation. Please try again.')
@@ -425,6 +532,7 @@ export function useConversation({
     scenario,
     conversationId,
     scenarioId,
+    dailyChallengeId,
     abandonConversation,
     createConversation,
     navigate,
@@ -461,6 +569,7 @@ export function useConversation({
     // derived view data
     messages,
     feedback,
+    skillHint,
     isLoading,
     conversationStarted: conversation != null,
     completion,

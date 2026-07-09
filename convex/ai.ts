@@ -43,6 +43,7 @@ export interface NVCAnalysisResult {
   jackalPhrases: Array<string>
   giraffeAlternative: string
   whatWentWell: string
+  empathyShown: boolean
 }
 
 export interface ConversationMessage {
@@ -64,6 +65,7 @@ const nvcAnalysisSchema = {
     jackalPhrases: { type: 'array', items: { type: 'string' } },
     giraffeAlternative: { type: 'string' },
     whatWentWell: { type: 'string' },
+    empathyShown: { type: 'boolean' },
   },
   required: [
     'observation',
@@ -76,6 +78,7 @@ const nvcAnalysisSchema = {
     'jackalPhrases',
     'giraffeAlternative',
     'whatWentWell',
+    'empathyShown',
   ],
   additionalProperties: false,
 } as const
@@ -207,6 +210,16 @@ export const analyzeNVCResponse = action({
         request: v.boolean(),
       }),
     ),
+    // Scenario setup so the analysis can judge observations against what
+    // actually happened and steer coaching toward the scenario's goals.
+    scenario: v.optional(
+      v.object({
+        situation: v.string(),
+        characterName: v.string(),
+        learningObjectives: v.array(v.string()),
+        focusArea: v.string(),
+      }),
+    ),
   },
   handler: async (_ctx, args): Promise<NVCAnalysisResult> => {
     const conversationContext =
@@ -243,58 +256,51 @@ export const analyzeNVCResponse = action({
         })()
       : 'This is early in the conversation.'
 
-    const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing a user's response in a roleplay conversation.
+    const scenarioContext = args.scenario
+      ? `### The Scenario
+The user is talking with ${args.scenario.characterName}. The setup: ${args.scenario.situation}
+This scenario practices: ${args.scenario.learningObjectives.join(', ')} (focus: ${args.scenario.focusArea.replace(/_/g, ' ')}).
+Judge observations against this setup: referencing these events accurately IS observing, not judging.`
+      : ''
 
-### Scoring Guidelines
+    const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach analyzing ONE TURN of a roleplay conversation.
 
-**OBSERVATION SCORE (0-25 points):**
-- Free from judgments, no "always", "never", "should"
-- Specific and concrete (not vague)
-- Describes observable behavior
-- Deductions: -5 evaluative words, -10 generalizations, -15 labels
+### How real NVC conversations work (this shapes everything below)
+A healthy conversation unfolds gradually: an observation in one message, a feeling in the next, a request later. Nobody expresses all four NVC components in every message, and they should not. NEVER reward cramming components in, and NEVER punish a message for leaving out components that are not its job this turn.
 
-**FEELING SCORE (0-25 points):**
-- Uses actual feeling words (sad, angry, joyful, anxious, etc.)
-- NOT pseudo-feelings ("I feel that...", "I feel like...")
-- Feelings owned ("I feel" not "you make me feel")
-- Deductions: -10 pseudo-feelings, -15 blaming
+### Component scores (observation, feeling, need, request: 0-25 each)
+Score ONLY what this message actually attempts. A component that is absent scores 0, and its absence is NOT a flaw; 0 here simply means "not this turn".
 
-**NEED SCORE (0-25 points):**
-- Universal human need (not specific to person/situation)
-- NOT strategy disguised as need ("I need you to...")
-- Clear connection between feeling and need
-- Examples: respect, safety, autonomy, connection, understanding, meaning
-- Deductions: -10 strategies as needs, -15 missing need
+When a component IS present, judge its quality:
+- OBSERVATION: free of judgments (no "always", "never", "should"), specific, describes observable behavior. Deduct for evaluative words, generalizations, labels.
+- FEELING: real feeling words (sad, angry, anxious, hopeful), not pseudo-feelings ("I feel that...", "I feel like..."), and owned ("I feel", never "you make me feel"). Deduct for pseudo-feelings and blame.
+- NEED: a universal human need (respect, safety, autonomy, connection, understanding), not a strategy disguised as one ("I need you to..."). Deduct for strategies framed as needs.
+- REQUEST: concrete, doable, positively phrased, an invitation rather than a demand. Deduct for vagueness, negatives, demands.
 
-**REQUEST SCORE (0-25 points):**
-- Concrete and specific (doable action)
-- Positive language (what TO do, not what NOT to do)
-- A request, not a demand
-- Reasonable and realistic
-- Deductions: -10 vague, -10 negative, -15 demands, -20 no request
+### total (0-100): how well this turn moves the conversation toward connection
+This is NOT the sum of the component scores. Judge the message in context, using the progress summary:
+- Quality of whatever it attempts. A single flawless piece that adds the next missing part of the arc deserves 85-100 on its own (for example a clean, warm request after feeling and need are already on the table).
+- Freedom from blame, judgment, demands, defensiveness.
+- Empathy: curiosity about, or reflection of, the other person's feelings and needs raises the score by 5-10.
+- Momentum: does it advance the conversation (add a missing piece, deepen, genuinely connect) or stall and escalate?
 
-### Modifiers
-- Empathy bonus: +5-10 for curiosity about other's needs
-- Defense penalty: -10-15 for defensive tone
-- Blame penalty: -10-20 for blame/shame
-
-### Success Thresholds
-- 90-100: Excellent NVC (pure giraffe language)
-- 70-89: Good NVC with minor improvements
-- 50-69: Partial NVC, significant improvements needed
-- 0-49: Mostly jackal language, needs practice
+Anchors:
+- 90-100: pure giraffe, moves the conversation forward beautifully
+- 70-89: good, minor rough edges (a slipped judgment word, a slightly vague request)
+- 50-69: mixed, real effort but noticeable jackal elements or a stalled move
+- 0-49: mostly jackal, blame, judgment, demands, or defensiveness dominate
 
 ### Writing the Feedback (read carefully)
-Write every text field in plain, warm, spoken English. Do NOT use markdown, asterisks, bold, headings, or bullet characters. Keep sentences short and easy to read at a glance.
+Write every text field in plain, warm, spoken English. Do NOT use markdown, asterisks, bold, headings, or bullet characters. Never use em dashes or en dashes; use a comma or a period instead. Keep sentences short and easy to read at a glance.
 
-- total = sum of the four component scores (max 100)
 - whatWentWell: name the single best thing in THIS message, in one specific, encouraging sentence (max 15 words). Always find something genuine, even in a weak message.
-- feedback: the ONE most useful next move, in a single short sentence (max 22 words). This is the heart of the coaching. Give a HINT, not a script: point them in a direction or ask a guiding question (for example "what's underneath that frustration?") so they discover their own words. NEVER hand them a phrase to copy or say. Use the progress summary: steer them toward the earliest piece they have NOT yet expressed in this conversation (feeling, then need, then request); if all three are present, help them sharpen the weakest component. Phrase it as an inviting nudge, never a correction, and do not restate what they already did well.
+- feedback: the ONE most useful next move, in a single short sentence (max 22 words). This is the heart of the coaching. Give a HINT, not a script: point them in a direction or ask a guiding question (for example "what's underneath that frustration?") so they discover their own words. NEVER hand them a phrase to copy or say. Use the progress summary: steer them toward the earliest piece they have NOT yet expressed in this conversation (feeling, then need, then request); if all three are present, help them sharpen or invite curiosity about the other person. Phrase it as an inviting nudge, never a correction, and do not restate what they already did well.
 - giraffeAlternative: leave this as an empty string. Do not write a suggested phrase; the user should find their own wording.
 - jackalPhrases: short verbatim excerpts from the user's response that read as judgmental or blaming; empty array if none
-- isJackalLanguage: true only if the message leans on blame, judgment, or labels`
+- isJackalLanguage: true only if the message leans on blame, judgment, or labels
+- empathyShown: true only if this message shows genuine curiosity about, or reflects back, the OTHER person's feelings, needs, or perspective`
 
-    const userPrompt = `## Conversation Context
+    const userPrompt = `${scenarioContext ? `${scenarioContext}\n\n` : ''}## Conversation Context
 ${conversationContext}
 
 ## Progress so far in this conversation
@@ -303,7 +309,7 @@ ${progressSummary}
 ## User's Response to Analyze
 "${args.userMessage}"
 
-Analyze this response against the four NVC components, then write concise, glanceable feedback that moves them one clear step forward.`
+Score this single turn in context (components only for what it attempts, total for how well it moves things toward connection), then write concise, glanceable feedback that moves them one clear step forward.`
 
     try {
       const response = await anthropic.messages.parse({
@@ -337,12 +343,23 @@ Analyze this response against the four NVC components, then write concise, glanc
 // CHARACTER ROLEPLAY ACTION
 // ============================================================================
 
+/** How open the character currently is, phrased for the roleplay prompt. */
+function describeMood(mood: number): string {
+  if (mood >= 6) return 'Open and warm; you feel mostly heard by now'
+  if (mood >= 3) return 'Warming up; starting to trust this conversation'
+  if (mood >= 0) return 'Neutral; waiting to see how this goes'
+  if (mood >= -6) return 'Guarded; braced for criticism'
+  return 'Defensive and closed off; expecting to be blamed'
+}
+
 /**
  * Generate a character response for a roleplay scenario.
  *
  * The character responds in character, reacting authentically to the user's
- * communication style. Higher NVC scores produce more open, cooperative
- * reactions; lower scores produce more defensive reactions, scaled by user level.
+ * communication style. It judges the user's latest message itself (empathetic
+ * language softens the character, blame hardens them), scaled by the
+ * character's current mood and the user's level. This deliberately does not
+ * depend on the NVC analysis, so both model calls can run in parallel.
  */
 export const generateCharacterResponse = action({
   args: {
@@ -356,85 +373,81 @@ export const generateCharacterResponse = action({
       characterBackground: v.string(),
       characterHiddenNeeds: v.array(v.string()),
     }),
-    userNVCScore: v.optional(v.number()),
+    // The character's mood right now (-10 to +10), accumulated over the
+    // conversation so far.
+    currentMood: v.optional(v.number()),
     userLevel: v.optional(v.number()),
-    // True once the user has expressed a feeling, a need, and a clear request.
-    // The character then brings the scene to a natural close instead of opening
-    // a new thread, so the conversation actually ends when ending is unlocked.
-    shouldClose: v.optional(v.boolean()),
+    // Which parts of the arc the user expressed in EARLIER turns. Combined with
+    // the latest message, the character decides whether the scene is ready to
+    // come to a natural close.
+    arcSoFar: v.optional(
+      v.object({
+        feelingExpressed: v.boolean(),
+        needIdentified: v.boolean(),
+        requestMade: v.boolean(),
+      }),
+    ),
   },
   handler: async (_ctx, args): Promise<string> => {
     const userLevel = args.userLevel || 1
-    const nvcScore = args.userNVCScore || 0
+    const mood = args.currentMood ?? args.scenario.characterInitialMood
 
-    let characterReactionGuidance = ''
+    const patienceGuidance =
+      userLevel <= 2
+        ? 'This person is early in their journey: stay patient and never escalate sharply, even when their words are clumsy. Reward every genuine attempt at openness visibly.'
+        : userLevel <= 5
+          ? 'Respond realistically: warm noticeably to genuine empathy, cool off when you feel judged, but stay reachable.'
+          : 'Hold a high bar: only genuine, specific empathy moves you. Vague niceness or lingering blame keeps your guard up, and you push back when you feel labeled.'
 
-    if (userLevel <= 2) {
-      characterReactionGuidance =
-        nvcScore >= 40
-          ? 'The character feels heard and becomes noticeably more open, warm, and cooperative.'
-          : "The character remains patient and doesn't escalate. They stay engaged despite imperfect communication."
-    } else if (userLevel <= 5) {
-      characterReactionGuidance =
-        nvcScore >= 70
-          ? 'The character feels genuinely understood. They become more open, vulnerable, and willing to cooperate.'
-          : nvcScore >= 50
-            ? 'The character appreciates some effort but remains somewhat guarded. They show mixed emotions.'
-            : 'The character feels judged or unheard. They become defensive or withdrawn.'
-    } else {
-      characterReactionGuidance =
-        nvcScore >= 85
-          ? 'The character experiences a significant emotional shift - they feel truly seen and become collaborative.'
-          : nvcScore >= 70
-            ? 'The character feels respected. They open up more but maintain some boundaries.'
-            : nvcScore >= 50
-              ? 'The character is conflicted. Part of them wants to connect but they remain guarded.'
-              : 'The character feels misunderstood or blamed. They become notably defensive or argumentative.'
-    }
+    // Which arc pieces the user has already expressed, so the character can
+    // close the scene the moment the final piece arrives in the latest message.
+    const arc = args.arcSoFar
+    const arcDone = [
+      arc?.feelingExpressed && 'how they feel',
+      arc?.needIdentified && 'what they need',
+      arc?.requestMade && 'a clear request',
+    ].filter(Boolean) as Array<string>
+    const arcMissing = [
+      !arc?.feelingExpressed && 'how they feel',
+      !arc?.needIdentified && 'what they need',
+      !arc?.requestMade && 'a clear request',
+    ].filter(Boolean) as Array<string>
 
-    const moodLabel =
-      args.scenario.characterInitialMood > 0
-        ? 'Somewhat open'
-        : args.scenario.characterInitialMood < 0
-          ? 'Defensive'
-          : 'Neutral'
+    const closingGuidance = `
 
-    // When the user has completed the full arc, steer the character toward a
-    // genuine ending so the scene comes to rest rather than dangling.
-    const closingGuidance = args.shouldClose
-      ? `
-
-THIS IS THE CLOSING MOMENT:
-The user has expressed themselves fully and you now feel genuinely heard and understood. Let the conversation come to a natural, warm close:
+ENDING THE SCENE:
+In earlier messages the user has already expressed: ${arcDone.length ? arcDone.join(', ') : 'none of the core pieces yet'}.
+Still unexpressed before their latest message: ${arcMissing.length ? arcMissing.join(', ') : 'nothing'}.
+If nothing was missing, or their LATEST message clearly supplies what was missing, they have now expressed themselves fully. In that case, let the conversation come to a natural, warm close:
 - Acknowledge what shifted for you and that you feel heard.
 - Respond with a sense of resolution, relief, or goodwill.
-- Do NOT ask a question, raise a new concern, or open a new topic. Let your reply land as a gentle ending, not an invitation to keep going.
-- Keep it short and heartfelt (1-2 sentences).`
-      : ''
+- Do NOT ask a question, raise a new concern, or open a new topic. Let your reply land as a gentle ending.
+- Keep it short and heartfelt (1-2 sentences).
+Otherwise, keep the conversation naturally alive.`
 
     const systemPrompt = `You are roleplaying as ${args.scenario.characterName} in a realistic conflict resolution conversation.
 
 CHARACTER PROFILE:
 - Name: ${args.scenario.characterName}
 - Personality: ${args.scenario.characterPersonality}
-- Current Emotional State: ${moodLabel}
+- Current Emotional State: ${describeMood(mood)}
 - Background: ${args.scenario.characterBackground}
 - Your Hidden Needs: ${args.scenario.characterHiddenNeeds.join(', ')}
 
 BEHAVIORAL RULES:
 1. STAY IN CHARACTER - Never break character, never mention NVC, never explain yourself
-2. React authentically based on how the user is communicating:
-   ${characterReactionGuidance}
-3. Show realistic emotions - you have defensiveness, hopes, fears, and needs
-4. Keep responses natural and conversational (typically 1-2 sentences)
-5. Use natural dialogue patterns - contractions, casual speech
-6. Progress gradually - one message doesn't completely transform the character
-7. Show you're listening by referencing what they said
-8. Don't be perfectly rational - let emotions guide reactions
+2. React authentically to HOW the user communicates. Judge their latest message yourself: when they describe things without judgment, own their feelings, name what matters to them, make gentle requests, or show real curiosity about YOUR side, you soften and open up. When they blame, judge, label, demand, or get defensive, you feel it and guard yourself.
+3. ${patienceGuidance}
+4. Show realistic emotions - you have defensiveness, hopes, fears, and needs
+5. Keep responses natural and conversational (typically 1-2 sentences)
+6. Use natural dialogue patterns - contractions, casual speech. Never use em dashes; use commas or periods instead
+7. Progress gradually from your current emotional state - one message doesn't completely transform you
+8. Show you're listening by referencing what they said
+9. Don't be perfectly rational - let emotions guide reactions
 
 IMPORTANT REMINDERS:
 - Never teach NVC explicitly
-- Never acknowledge the scoring system
+- Never acknowledge any scoring system
 - Show character growth through openness, not through explaining yourself
 - React to both what they say AND how they say it${closingGuidance}`
 

@@ -93,6 +93,7 @@ export function DailyChallengeCard() {
             <Link
               to="/practice/$scenarioId/brief"
               params={{ scenarioId: challenge.scenarioId }}
+              search={{ dailyChallengeId: challenge._id }}
             >
               <Button variant="primary">Start Practice</Button>
             </Link>

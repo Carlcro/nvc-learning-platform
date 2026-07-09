@@ -161,27 +161,29 @@ export function AnnotatedMessage({
             </div>
           )}
 
-          {/* Gentle giraffe alternative */}
-          {message.isJackalLanguage && message.giraffeAlternative && (
-            <div className="bg-empathy-low/15 rounded-lg p-3 border border-empathy-low/30">
-              <h4 className="text-xs font-semibold text-brown-800 mb-1">
-                Giraffe Alternative
-              </h4>
-              <p className="text-sm text-brown-700 italic">
-                "{message.giraffeAlternative}"
-              </p>
-              {message.jackalPhrases && message.jackalPhrases.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-empathy-low/30">
-                  <span className="text-xs text-brown-600">
-                    Phrases to reconsider:{' '}
-                  </span>
-                  <span className="text-xs font-medium text-brown-700">
-                    {message.jackalPhrases.join(', ')}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Words that may have landed as judgment or blame */}
+          {message.isJackalLanguage &&
+            message.jackalPhrases &&
+            message.jackalPhrases.length > 0 && (
+              <div className="bg-empathy-low/15 rounded-lg p-3 border border-empathy-low/30">
+                <h4 className="text-xs font-semibold text-brown-800 mb-1">
+                  Phrases to reconsider
+                </h4>
+                <p className="text-sm text-brown-700">
+                  {message.jackalPhrases.map((phrase, i) => (
+                    <span key={i}>
+                      {i > 0 && ', '}
+                      <span className="italic">"{phrase}"</span>
+                    </span>
+                  ))}
+                </p>
+                {message.giraffeAlternative && (
+                  <p className="mt-2 pt-2 border-t border-empathy-low/30 text-sm text-brown-700 italic">
+                    "{message.giraffeAlternative}"
+                  </p>
+                )}
+              </div>
+            )}
         </div>
       )}
 

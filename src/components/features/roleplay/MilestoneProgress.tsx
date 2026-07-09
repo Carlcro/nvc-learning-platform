@@ -11,6 +11,8 @@ export interface Milestones {
   needIdentified: boolean
   requestMade: boolean
   resolutionReached: boolean
+  // Optional: conversations from before the empathy milestone lack it.
+  empathyShown?: boolean
 }
 
 interface MilestoneProgressProps {

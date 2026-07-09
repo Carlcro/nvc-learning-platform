@@ -12,14 +12,26 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Handshake, Heart, MessageCircle, Sprout, Star } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import {
+  BookOpen,
+  Check,
+  Ear,
+  Handshake,
+  Heart,
+  MessageCircle,
+  Sprout,
+  Star,
+} from 'lucide-react'
 import type { Milestones } from './MilestoneProgress'
 import type { FeedbackData, NVCScore } from './types'
+import type { SkillHint } from '~/hooks/useConversation'
 
 export type { FeedbackData, NVCScore }
 
 interface FeedbackPanelProps {
   feedback: FeedbackData | null
+  skillHint?: SkillHint | null
   isLoading?: boolean
   messageCount?: number
   learningObjectives?: Array<string>
@@ -305,6 +317,102 @@ const steps = [
   { key: 'resolutionReached', label: 'Done', Icon: Star },
 ] as const
 
+/**
+ * Standing chip under the progress rail for the empathy milestone. Unlike the
+ * arc steps it has no fixed order - it lights up whenever the user tunes into
+ * the character's side, and hints at the mechanic until then.
+ */
+function EmpathyChip({
+  earned,
+  characterName,
+}: {
+  earned: boolean
+  characterName?: string
+}) {
+  const who = characterName || 'they'
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors duration-300 ${
+        earned
+          ? 'bg-empathy-high/15 border-empathy-high/40'
+          : 'bg-giraffe-50 border-giraffe-100'
+      }`}
+    >
+      <div
+        className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+          earned ? 'bg-empathy-high text-brown-900' : 'bg-giraffe-100 text-brown-400'
+        }`}
+      >
+        <Ear className="h-3.5 w-3.5" />
+      </div>
+      <p className="text-xs text-brown-700 leading-snug">
+        {earned ? (
+          <span className="font-semibold">
+            You heard them. You tuned into {who === 'they' ? 'their' : `${who}'s`}{' '}
+            side.
+          </span>
+        ) : (
+          <>Wondering what {who} might be feeling? Asking counts too.</>
+        )}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * When one NVC component has been consistently rough over the last few turns,
+ * point to the matching lesson or the feelings library. Opens in a new tab so
+ * the conversation stays right where it is.
+ */
+const SKILL_RESOURCES: Record<
+  SkillHint['component'],
+  { to: string; label: string; invite: string }
+> = {
+  observation: {
+    to: '/learn/observation',
+    label: 'Observations lesson',
+    invite:
+      'Separating what happened from what we think about it is its own skill.',
+  },
+  feeling: {
+    to: '/feelings',
+    label: 'Feelings library',
+    invite: 'Finding the exact feeling word gets easier with a bigger vocabulary.',
+  },
+  need: {
+    to: '/learn/need',
+    label: 'Needs lesson',
+    invite: 'Connecting feelings to the universal needs beneath them takes practice.',
+  },
+  request: {
+    to: '/learn/request',
+    label: 'Requests lesson',
+    invite: 'Shaping clear, doable requests is worth a short refresher.',
+  },
+}
+
+function SkillHintCard({ hint }: { hint: SkillHint }) {
+  const resource = SKILL_RESOURCES[hint.component]
+  return (
+    <div className="flex items-start gap-2.5 p-3 bg-white rounded-lg border border-giraffe-200">
+      <div className="shrink-0 w-5 h-5 rounded-full bg-giraffe-100 flex items-center justify-center mt-0.5">
+        <BookOpen className="h-3 w-3 text-brown-700" />
+      </div>
+      <p className="text-xs text-brown-700 leading-relaxed">
+        {resource.invite}{' '}
+        <Link
+          to={resource.to}
+          target="_blank"
+          className="font-semibold text-giraffe-700 hover:text-giraffe-800 underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
+        >
+          Open the {resource.label}
+        </Link>{' '}
+        in a new tab; this conversation will wait for you.
+      </p>
+    </div>
+  )
+}
+
 function ProgressSteps({ milestones }: { milestones: Milestones }) {
   const completedCount = steps.filter((s) => milestones[s.key]).length
   const totalSteps = steps.length
@@ -427,7 +535,9 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
           />
         </div>
 
-        {/* Metrics Grid */}
+        {/* Metrics Grid. A zero simply means the component was not part of
+            this message (which is healthy), so it renders as a quiet dot
+            rather than a failing number. */}
         <div className="grid grid-cols-2 gap-2">
           {metrics.map((metric) => (
             <div
@@ -435,9 +545,19 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
               className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-giraffe-100"
             >
               <span className="text-xs text-brown-500">{metric.label}</span>
-              <span className="font-semibold text-sm text-brown-800">
-                {metric.value}
-              </span>
+              {metric.value > 0 ? (
+                <span className="font-semibold text-sm text-brown-800">
+                  {metric.value}
+                </span>
+              ) : (
+                <span
+                  className="text-sm text-brown-300"
+                  title="Not part of this message"
+                  aria-label={`${metric.label}: not part of this message`}
+                >
+                  ·
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -458,6 +578,7 @@ function cleanText(text: string): string {
     .replace(/(^|[\s(])_([^_\n]+)_/g, '$1$2')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/\s*[–—]\s*/g, ', ')
     .trim()
 }
 
@@ -504,6 +625,7 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
 
 export function FeedbackPanel({
   feedback,
+  skillHint = null,
   isLoading = false,
   messageCount = 0,
   learningObjectives: _learningObjectives = [],
@@ -553,16 +675,29 @@ export function FeedbackPanel({
 
             {milestones && (
               <div
-                className="animate-step-in"
+                className="animate-step-in space-y-3"
                 style={{ animationDelay: '90ms' }}
               >
                 <ProgressSteps milestones={milestones} />
+                <EmpathyChip
+                  earned={!!milestones.empathyShown}
+                  characterName={characterName}
+                />
               </div>
             )}
 
             <div className="animate-step-in" style={{ animationDelay: '180ms' }}>
               <FeedbackNotes feedback={feedback} />
             </div>
+
+            {skillHint && (
+              <div
+                className="animate-step-in"
+                style={{ animationDelay: '270ms' }}
+              >
+                <SkillHintCard hint={skillHint} />
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-3 py-6 flex-1 ">

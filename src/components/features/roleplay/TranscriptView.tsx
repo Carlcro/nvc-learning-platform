@@ -166,29 +166,24 @@ function SummaryStats({
   const userMessagesWithScores = userMessages.filter((m) => m.nvcScore)
   const jackalCount = userMessages.filter((m) => m.isJackalLanguage).length
 
+  // Components are scored per turn only when attempted (absent = 0), so the
+  // average counts attempted turns only; zeros would punish a healthy,
+  // spread-out conversation.
+  const avgComponent = (key: keyof NVCScore): number | null => {
+    const attempts = userMessagesWithScores
+      .map((m) => m.nvcScore?.[key] ?? 0)
+      .filter((score) => score > 0)
+    if (attempts.length === 0) return null
+    return attempts.reduce((a, b) => a + b, 0) / attempts.length
+  }
+
   const avgComponents =
     userMessagesWithScores.length > 0
       ? {
-          observation:
-            userMessagesWithScores.reduce(
-              (sum, m) => sum + (m.nvcScore?.observation || 0),
-              0,
-            ) / userMessagesWithScores.length,
-          feeling:
-            userMessagesWithScores.reduce(
-              (sum, m) => sum + (m.nvcScore?.feeling || 0),
-              0,
-            ) / userMessagesWithScores.length,
-          need:
-            userMessagesWithScores.reduce(
-              (sum, m) => sum + (m.nvcScore?.need || 0),
-              0,
-            ) / userMessagesWithScores.length,
-          request:
-            userMessagesWithScores.reduce(
-              (sum, m) => sum + (m.nvcScore?.request || 0),
-              0,
-            ) / userMessagesWithScores.length,
+          observation: avgComponent('observation'),
+          feeling: avgComponent('feeling'),
+          need: avgComponent('need'),
+          request: avgComponent('request'),
         }
       : null
 
@@ -224,7 +219,7 @@ function SummaryStats({
             {Object.entries(avgComponents).map(([key, value]) => (
               <div key={key} className="text-center">
                 <div className="text-lg font-bold text-giraffe-700">
-                  {Math.round(value)}
+                  {value === null ? '·' : Math.round(value)}
                 </div>
                 <div className="text-xs text-brown-600 capitalize">{key}</div>
               </div>

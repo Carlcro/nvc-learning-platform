@@ -43,6 +43,7 @@ function ConversationComponent() {
     currentUser,
     messages,
     feedback,
+    skillHint,
     isLoading,
     conversationStarted,
     completion,
@@ -56,7 +57,11 @@ function ConversationComponent() {
     viewTranscript,
     dismissCelebration,
     dismissError,
-  } = useConversation({ scenarioId, conversationId })
+  } = useConversation({
+    scenarioId,
+    conversationId,
+    dailyChallengeId: search.dailyChallengeId,
+  })
 
   if (currentUser === undefined) return <LoadingScreen label="Initializing..." />
   if (!scenario || conversation === undefined)
@@ -67,8 +72,11 @@ function ConversationComponent() {
       <ScenarioResults
         finalScore={completion.finalScore}
         stars={completion.finalStars}
+        pointsEarned={completion.pointsEarned}
+        newAchievements={completion.newAchievements}
         scenarioTitle={scenario.title}
         characterName={scenario.characterName}
+        characterHiddenNeeds={scenario.characterHiddenNeeds}
         messageCount={messages.length}
         milestones={conversation?.milestonesAchieved}
         onRetry={startNewConversation}
@@ -196,6 +204,7 @@ function ConversationComponent() {
           <div className="w-[420px] hidden lg:flex flex-col min-w-0 px-6 pb-6 overflow-hidden">
             <FeedbackPanel
               feedback={feedback}
+              skillHint={skillHint}
               isLoading={isLoading}
               messageCount={userMessageCount}
               learningObjectives={scenario.learningObjectives}

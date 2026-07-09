@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 
 export interface Message {
   id?: string
@@ -24,6 +25,7 @@ export interface Message {
   isJackalLanguage?: boolean
   jackalPhrases?: Array<string>
   giraffeAlternative?: string
+  empathyShown?: boolean
   characterMood?: number
 }
 
@@ -31,6 +33,39 @@ interface ConversationViewProps {
   messages: Array<Message>
   characterName: string
   isLoading?: boolean
+}
+
+/**
+ * Render message text with the analysis' jackal phrases gently marked, so the
+ * abstract "jackal language" feedback points at the exact words that carried
+ * it. The marking is a soft underline, never red ink.
+ */
+function highlightJackalPhrases(
+  content: string,
+  phrases: Array<string>,
+): ReactNode {
+  const escaped = phrases
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  if (escaped.length === 0) return content
+
+  const splitter = new RegExp(`(${escaped.join('|')})`, 'gi')
+  const matcher = new RegExp(`^(?:${escaped.join('|')})$`, 'i')
+
+  return content.split(splitter).map((part, i) =>
+    matcher.test(part) ? (
+      <mark
+        key={i}
+        title="This might land as judgment or blame"
+        className="bg-white/40 text-inherit rounded px-0.5 -mx-0.5 underline decoration-empathy-low decoration-2 underline-offset-2 box-decoration-clone"
+      >
+        {part}
+      </mark>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  )
 }
 
 function MessageBubble({
@@ -41,6 +76,9 @@ function MessageBubble({
   characterName: string
 }) {
   const isUser = message.role === 'user'
+  const jackalPhrases =
+    isUser && message.isJackalLanguage ? (message.jackalPhrases ?? []) : []
+  const hasHighlights = jackalPhrases.length > 0
 
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -72,8 +110,17 @@ function MessageBubble({
               : 'bg-white border-2 border-giraffe-200 text-brown-800 rounded-bl-none'
           }`}
         >
-          {message.content}
+          {hasHighlights
+            ? highlightJackalPhrases(message.content, jackalPhrases)
+            : message.content}
         </div>
+
+        {/* One quiet line explaining the marks, only when there are marks */}
+        {hasHighlights && (
+          <p className="text-[11px] text-brown-500">
+            Underlined words may land as judgment or blame.
+          </p>
+        )}
       </div>
     </div>
   )

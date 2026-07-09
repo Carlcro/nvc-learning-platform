@@ -8,6 +8,12 @@ import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
+  // Daily challenges arrive here with their challenge id; keep it through the
+  // brief so completing the conversation can credit the challenge.
+  validateSearch: (search: Record<string, unknown>) => ({
+    dailyChallengeId:
+      (search.dailyChallengeId as string | undefined) ?? undefined,
+  }),
   component: ProtectedBrief,
 })
 
@@ -44,6 +50,7 @@ const TIPS = [
 function ScenarioBrief() {
   const navigate = useNavigate()
   const { scenarioId } = Route.useParams()
+  const { dailyChallengeId } = Route.useSearch()
   const currentUser = useQuery(api.users.getCurrentUser)
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
@@ -79,6 +86,7 @@ function ScenarioBrief() {
 
       navigate({
         to: `/practice/${scenarioId}/conversation/${conversationId}`,
+        search: { dailyChallengeId },
       })
     } catch {
       setStartError("That didn't go through. Take a breath and try again.")
@@ -289,7 +297,7 @@ function ScenarioBrief() {
             </p>
           ) : (
             <p className="flex-1 hidden sm:block text-sm text-brown-600">
-              Ready when you are — take your time.
+              Ready when you are. Take your time.
             </p>
           )}
           <Button

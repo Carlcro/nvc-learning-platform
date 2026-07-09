@@ -138,6 +138,7 @@ export const create = mutation({
         needIdentified: false,
         requestMade: false,
         resolutionReached: false,
+        empathyShown: false,
       },
       rewindsUsed: 0,
       maxRewinds: 2,
@@ -172,6 +173,7 @@ export const addMessage = mutation({
     jackalPhrases: v.optional(v.array(v.string())),
     giraffeAlternative: v.optional(v.string()),
     whatWentWell: v.optional(v.string()),
+    empathyShown: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { conversationId, role, content, ...scoreData } = args
@@ -188,6 +190,11 @@ export const addMessage = mutation({
         content,
         timestamp: Date.now(),
         ...scoreData,
+        // Stamp the character's mood onto their reply so the transcript can
+        // show how they felt at that point in the conversation.
+        ...(role === 'assistant'
+          ? { characterMood: conversation.currentCharacterMood }
+          : {}),
       },
     ]
 
@@ -199,10 +206,11 @@ export const addMessage = mutation({
     }
 
     if (role === 'user' && scoreData.nvcScore) {
-      // Move the character's mood based on how empathetic this message was.
-      // The NVC total (0-100) is centered at 50: above 50 the character warms
-      // up, below 50 they cool down. The shift is gradual (max +/-4 per turn)
-      // so a single message never fully transforms them.
+      // Move the character's mood based on how well this turn moved the
+      // conversation toward connection. The total (0-100) is the contextual
+      // turn quality, centered at 50: above 50 the character warms up, below
+      // 50 they cool down. The shift is gradual (max +/-4 per turn) so a
+      // single message never fully transforms them.
       const prevMood = conversation.currentCharacterMood ?? 0
       const moodDelta = Math.round((scoreData.nvcScore.total - 50) / 12.5)
       const newMood = Math.max(-10, Math.min(10, prevMood + moodDelta))
@@ -214,6 +222,7 @@ export const addMessage = mutation({
         needIdentified: false,
         requestMade: false,
         resolutionReached: false,
+        empathyShown: false,
       }
 
       // Check milestone thresholds (15/25 = 60% of max score)
@@ -231,10 +240,14 @@ export const addMessage = mutation({
           currentMilestones.requestMade ||
           scoreData.nvcScore.request >= MILESTONE_THRESHOLD,
         // Resolution requires the character to have opened up (mood >= 5)
-        // AND a strong NVC message (>= 70). Uses the freshly updated mood.
+        // AND a strong turn (>= 70). Uses the freshly updated mood.
         resolutionReached:
           currentMilestones.resolutionReached ||
           (newMood >= 5 && scoreData.nvcScore.total >= 70),
+        // Empathy: the user reflected the character's feelings or needs.
+        empathyShown:
+          (currentMilestones.empathyShown ?? false) ||
+          (scoreData.empathyShown ?? false),
       }
 
       updates.milestonesAchieved = updatedMilestones
@@ -283,20 +296,20 @@ export const complete = mutation({
       completedAt: Date.now(),
     })
 
-    // If this is a daily challenge, record the completion
-    if (args.dailyChallengeId) {
-      const dailyChallenge = await ctx.db.get(args.dailyChallengeId as any)
-      if (!dailyChallenge) {
-        throw new Error('Daily challenge not found')
-      }
-
+    // If this is a daily challenge, record the completion. A missing
+    // challenge (expired or deleted) skips the bonus quietly rather than
+    // failing the completion itself, which already succeeded above.
+    const dailyChallenge = args.dailyChallengeId
+      ? await ctx.db.get(args.dailyChallengeId)
+      : null
+    if (dailyChallenge) {
       const userId = conversation.userId
 
       // Check if already completed
       const existing = await ctx.db
         .query('challengeCompletions')
         .withIndex('by_user_and_challenge', (q: any) =>
-          q.eq('userId', userId).eq('challengeId', args.dailyChallengeId),
+          q.eq('userId', userId).eq('challengeId', dailyChallenge._id),
         )
         .first()
 
@@ -304,7 +317,7 @@ export const complete = mutation({
         // Record completion
         await ctx.db.insert('challengeCompletions', {
           userId,
-          challengeId: args.dailyChallengeId,
+          challengeId: dailyChallenge._id,
           conversationId: args.conversationId,
           completed: true,
           score: finalScore,
@@ -461,6 +474,7 @@ export const rewindLastMessages = mutation({
     let needIdentified = false
     let requestMade = false
     let resolutionReached = false
+    let empathyShown = false
 
     for (const msg of updatedMessages) {
       if (msg.role === 'user' && msg.nvcScore) {
@@ -469,6 +483,7 @@ export const rewindLastMessages = mutation({
         if (msg.nvcScore.request >= MILESTONE_THRESHOLD) requestMade = true
         // Note: resolution check needs mood at that point, simplified here
         if (msg.nvcScore.total >= 70) resolutionReached = true
+        if (msg.empathyShown) empathyShown = true
       }
     }
 
@@ -478,13 +493,27 @@ export const rewindLastMessages = mutation({
       needIdentified,
       requestMade,
       resolutionReached,
+      empathyShown,
     }
+
+    // Roll the character's mood back to where it stood before the rewound
+    // turn. Replies carry a mood stamp; fall back to the scenario's initial
+    // mood when none of the remaining replies have one (older conversations).
+    const lastStampedReply = [...updatedMessages]
+      .reverse()
+      .find((m) => m.role === 'assistant' && m.characterMood !== undefined)
+    const scenario = await ctx.db.get(conversation.scenarioId)
+    const restoredMood =
+      lastStampedReply?.characterMood ??
+      scenario?.characterInitialMood ??
+      conversation.currentCharacterMood
 
     await ctx.db.patch(args.conversationId, {
       messages: updatedMessages,
       messageCount: updatedMessages.length,
       rewindsUsed: rewindsUsed + 1,
       milestonesAchieved: updatedMilestones,
+      currentCharacterMood: restoredMood,
       lastMessageAt: Date.now(),
     })
 

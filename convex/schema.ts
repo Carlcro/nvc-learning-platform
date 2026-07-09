@@ -258,6 +258,7 @@ export default defineSchema({
         giraffeAlternative: v.optional(v.string()), // Suggested NVC rephrasing
         whatWorked: v.optional(v.string()), // What was good about this message
         whatWentWell: v.optional(v.string()), // Feedback on what the user did well
+        empathyShown: v.optional(v.boolean()), // True if the message reflected the other's feelings/needs
 
         // ============ Character State (for assistant messages) ============
         characterMood: v.optional(v.number()), // -10 to +10, character's emotional state
@@ -288,6 +289,8 @@ export default defineSchema({
         needIdentified: v.boolean(), // need >= 15
         requestMade: v.boolean(), // request >= 15
         resolutionReached: v.boolean(), // characterMood >= 5 AND total >= 70
+        // Optional: conversations from before the empathy milestone lack it.
+        empathyShown: v.optional(v.boolean()), // Reflected the other's feelings/needs
       }),
     ),
 

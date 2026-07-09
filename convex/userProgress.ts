@@ -3,6 +3,88 @@ import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 
 /**
+ * Achievement catalog. Achievements are awarded server-side the moment their
+ * condition first holds and stored by id on userProgress.achievements.
+ */
+interface AchievementSnapshot {
+  scenariosCompleted: number
+  scenariosPassed: number
+  scenariosMastered: number
+  totalStars: number
+  currentStreak: number
+  finalScore: number
+  empathyShown: boolean
+}
+
+const ACHIEVEMENTS: Array<{
+  id: string
+  title: string
+  description: string
+  earned: (s: AchievementSnapshot) => boolean
+}> = [
+  {
+    id: 'first-conversation',
+    title: 'First Conversation',
+    description: 'You completed your first practice conversation.',
+    earned: (s) => s.scenariosCompleted >= 1,
+  },
+  {
+    id: 'first-pass',
+    title: 'Finding Your Voice',
+    description: 'You guided a conversation to a good place.',
+    earned: (s) => s.scenariosPassed >= 1,
+  },
+  {
+    id: 'first-mastery',
+    title: 'Fluent Giraffe',
+    description: 'You mastered a scenario with a score of 85 or higher.',
+    earned: (s) => s.scenariosMastered >= 1,
+  },
+  {
+    id: 'five-completed',
+    title: 'Regular Practice',
+    description: 'You completed five different scenarios.',
+    earned: (s) => s.scenariosCompleted >= 5,
+  },
+  {
+    id: 'heard-them',
+    title: 'You Heard Them',
+    description: "You tuned into the other person's feelings and needs.",
+    earned: (s) => s.empathyShown,
+  },
+  {
+    id: 'streak-3',
+    title: 'Three Days Running',
+    description: 'You practiced three days in a row.',
+    earned: (s) => s.currentStreak >= 3,
+  },
+  {
+    id: 'streak-7',
+    title: 'A Weekly Rhythm',
+    description: 'You practiced seven days in a row.',
+    earned: (s) => s.currentStreak >= 7,
+  },
+  {
+    id: 'stars-10',
+    title: 'Ten Stars',
+    description: 'You collected ten stars across your scenarios.',
+    earned: (s) => s.totalStars >= 10,
+  },
+  {
+    id: 'stars-25',
+    title: 'Star Collector',
+    description: 'You collected twenty-five stars.',
+    earned: (s) => s.totalStars >= 25,
+  },
+  {
+    id: 'perfect-connection',
+    title: 'Perfect Connection',
+    description: 'You finished a conversation with a perfect score.',
+    earned: (s) => s.finalScore === 100,
+  },
+]
+
+/**
  * Get user's overall progress
  * Returns level, points, scenarios completed, streaks, and average scores
  */
@@ -97,6 +179,12 @@ export const updateProgress = mutation({
       }),
     ),
     isFirstCompletion: v.boolean(),
+    // The user's best result on this scenario BEFORE this attempt, so repeat
+    // completions reward improvement instead of repetition.
+    previousBestStars: v.optional(v.number()),
+    previousBestScore: v.optional(v.number()),
+    // Whether the user reflected the character's feelings or needs this run.
+    empathyShown: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -143,21 +231,27 @@ export const updateProgress = mutation({
       throw new Error('Failed to create or retrieve user progress')
     }
 
-    // Calculate points earned
+    // Calculate points earned. First completions pay in full; repeats reward
+    // improvement over the previous best (plus a small practice bonus), so
+    // replaying an easy scenario cannot be farmed for unlimited points.
+    const previousBestStars = args.previousBestStars ?? 0
+    const previousBestScore = args.previousBestScore ?? 0
     let pointsEarned = 0
 
     if (args.isFirstCompletion) {
-      // First time completing: 100 points × star rating
       pointsEarned = 100 * args.finalStars
+    } else {
+      const starsGained = Math.max(0, args.finalStars - previousBestStars)
+      pointsEarned =
+        starsGained > 0
+          ? 100 * starsGained
+          : args.finalStars > 0
+            ? 25 // showing up to practice still counts for a little
+            : 0
     }
 
-    if (args.finalStars > 0) {
-      // All completions award points
-      pointsEarned = Math.max(pointsEarned, 100 * args.finalStars)
-    }
-
-    // Perfect score bonus
-    if (args.finalScore === 100) {
+    // Perfect score bonus, once per scenario
+    if (args.finalScore === 100 && previousBestScore < 100) {
       pointsEarned += 200
     }
 
@@ -245,8 +339,23 @@ export const updateProgress = mutation({
       }
     }
 
+    // Award any achievements whose condition first holds after this attempt
+    const snapshot: AchievementSnapshot = {
+      scenariosCompleted: newScenariosCompleted,
+      scenariosPassed: newScenariosPassed,
+      scenariosMastered: newScenariosMastered,
+      totalStars: newTotalStars,
+      currentStreak: newCurrentStreak,
+      finalScore: args.finalScore,
+      empathyShown: args.empathyShown ?? false,
+    }
+    const alreadyEarned = new Set(progress.achievements)
+    const newAchievements = ACHIEVEMENTS.filter(
+      (a) => !alreadyEarned.has(a.id) && a.earned(snapshot),
+    )
+
     // Update progress record
-    const updatedProgress = await ctx.db.patch(progress._id, {
+    await ctx.db.patch(progress._id, {
       level: newLevel,
       totalPoints: newTotalPoints,
       pointsToNextLevel,
@@ -258,10 +367,18 @@ export const updateProgress = mutation({
       longestStreak: newLongestStreak,
       lastPracticeDate: today,
       averageScores: newAverageScores,
+      achievements: [...progress.achievements, ...newAchievements.map((a) => a.id)],
       updatedAt: Date.now(),
     })
 
-    return updatedProgress
+    return {
+      pointsEarned,
+      newAchievements: newAchievements.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+      })),
+    }
   },
 })
 

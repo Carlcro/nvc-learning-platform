@@ -9,15 +9,20 @@
  */
 
 import { useMemo } from 'react'
+import { Award, Ear } from 'lucide-react'
 import { EmpathyMeter } from './EmpathyMeter'
-import { Button } from '~/components/ui/Button'
 import type { Milestones } from './MilestoneProgress'
+import type { EarnedAchievement } from '~/hooks/useConversation'
+import { Button } from '~/components/ui/Button'
 
 interface ScenarioResultsProps {
   finalScore: number
   stars: number
+  pointsEarned?: number
+  newAchievements?: Array<EarnedAchievement>
   scenarioTitle: string
   characterName: string
+  characterHiddenNeeds?: Array<string>
   messageCount: number
   milestones?: Milestones
   onRetry: () => void
@@ -112,8 +117,11 @@ function LightMotes() {
 export function ScenarioResults({
   finalScore,
   stars: _stars,
+  pointsEarned = 0,
+  newAchievements = [],
   scenarioTitle,
   characterName,
+  characterHiddenNeeds = [],
   messageCount,
   milestones,
   onRetry,
@@ -232,9 +240,80 @@ export function ScenarioResults({
             <p className="mt-2 text-xs text-brown-500">
               Empathy {finalScore} · {scoreLabel(finalScore)} · {messageCount}{' '}
               messages
+              {pointsEarned > 0 && (
+                <>
+                  {' '}
+                  ·{' '}
+                  <span className="font-semibold text-brown-700">
+                    +{pointsEarned} points
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>
+
+        {/* What was underneath - the empathy payoff. Revealing the character's
+            hidden needs turns every conversation into a small mystery solved. */}
+        {characterHiddenNeeds.length > 0 && (
+          <div
+            className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
+            style={{ animationDelay: '2.6s' }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-giraffe-100 text-brown-700">
+                <Ear className="w-4 h-4" />
+              </span>
+              <h2 className="font-bold text-brown-800">
+                What {characterName} needed underneath
+              </h2>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {characterHiddenNeeds.map((need) => (
+                <span
+                  key={need}
+                  className="px-3 py-1 rounded-full bg-giraffe-50 border border-giraffe-200 text-sm text-brown-700"
+                >
+                  {need}
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-brown-600 leading-relaxed text-pretty">
+              {milestones?.empathyShown
+                ? `You reached toward this during the conversation. That is what helped ${characterName} open up.`
+                : `Next time, try wondering out loud what ${characterName} might be feeling or needing. Guessing at this is what opens people up.`}
+            </p>
+          </div>
+        )}
+
+        {/* Newly earned badges */}
+        {newAchievements.length > 0 && (
+          <div
+            className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
+            style={{ animationDelay: '2.9s' }}
+          >
+            <h2 className="font-bold text-brown-800 mb-3">
+              {newAchievements.length === 1 ? 'New badge' : 'New badges'}
+            </h2>
+            <ul className="space-y-3">
+              {newAchievements.map((achievement) => (
+                <li key={achievement.id} className="flex items-start gap-3">
+                  <span className="flex items-center justify-center w-9 h-9 rounded-full bg-giraffe-100 text-giraffe-700 shrink-0">
+                    <Award className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-brown-800 leading-tight">
+                      {achievement.title}
+                    </p>
+                    <p className="text-sm text-brown-600">
+                      {achievement.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Encouragement from the guide */}
         <div className="mt-6 flex items-center gap-4 px-2">
