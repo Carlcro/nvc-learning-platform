@@ -8,14 +8,19 @@ import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { pageMeta } from '~/lib/seo'
 import { ConversationView } from '~/components/features/roleplay/ConversationView'
-import { FeedbackPanel } from '~/components/features/roleplay/FeedbackPanel'
+import {
+  FeedbackPanel,
+  getScoreMessage,
+} from '~/components/features/roleplay/FeedbackPanel'
 import { MessageInput } from '~/components/features/roleplay/MessageInput'
 import { MilestoneCelebration } from '~/components/features/roleplay/MilestoneCelebration'
 import { RewindButton } from '~/components/features/roleplay/RewindButton'
 import { ScenarioResults } from '~/components/features/roleplay/ScenarioResults'
+import { StartOverButton } from '~/components/features/roleplay/StartOverButton'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { useConversation } from '~/hooks/useConversation'
+import { isNVCComponent } from '~/lib/conversationInsights'
 
 export const Route = createFileRoute(
   '/practice/$scenarioId/conversation/$conversationId',
@@ -31,6 +36,8 @@ export const Route = createFileRoute(
     view: (search.view as string | undefined) ?? undefined,
     dailyChallengeId:
       (search.dailyChallengeId as string | undefined) ?? undefined,
+    // The piece to work on, carried over from the last attempt's results.
+    focus: isNVCComponent(search.focus) ? search.focus : undefined,
   }),
   component: ConversationComponent,
 })
@@ -48,6 +55,11 @@ function ConversationComponent() {
 
   const [mobileFeedbackExpanded, setMobileFeedbackExpanded] = useState(false)
   const [showScenarioContext, setShowScenarioContext] = useState(false)
+  // Words handed back to the composer after a rewind.
+  const [restoredDraft, setRestoredDraft] = useState<{
+    id: number
+    text: string
+  } | null>(null)
 
   const {
     scenario,
@@ -60,6 +72,7 @@ function ConversationComponent() {
     isCompleting,
     conversationStarted,
     completion,
+    reflection,
     celebration,
     error,
     sendMessage,
@@ -74,7 +87,15 @@ function ConversationComponent() {
     scenarioId,
     conversationId,
     dailyChallengeId: search.dailyChallengeId,
+    view: search.view,
   })
+
+  // Take back the last turn and hand its words back for reshaping.
+  const handleRewind = async () => {
+    const text = await rewind()
+    if (text) setRestoredDraft((prev) => ({ id: (prev?.id ?? 0) + 1, text }))
+    setMobileFeedbackExpanded(false)
+  }
 
   if (currentUser === undefined) return <LoadingScreen label="Initializing..." />
   if (scenario === undefined || conversation === undefined)
@@ -107,10 +128,14 @@ function ConversationComponent() {
         stars={completion.finalStars}
         pointsEarned={completion.pointsEarned}
         newAchievements={completion.newAchievements}
+        summary={completion.summary}
+        reflection={reflection}
+        scenarioId={scenarioId}
         scenarioTitle={scenario.title}
         characterName={scenario.characterName}
         characterHiddenNeeds={scenario.characterHiddenNeeds}
-        messageCount={messages.length}
+        finalMood={conversation.currentCharacterMood}
+        messages={messages}
         milestones={conversation.milestonesAchieved}
         onRetry={startNewConversation}
         onNext={goToPractice}
@@ -152,6 +177,27 @@ function ConversationComponent() {
     turnsRemaining <= TURNS_REMAINING_WARNING
 
   const characterMood = conversation.currentCharacterMood
+  const rewindsRemaining =
+    (conversation.maxRewinds ?? 2) - (conversation.rewindsUsed ?? 0)
+
+  const feedbackPanel = (
+    <FeedbackPanel
+      feedback={feedback}
+      skillHint={skillHint}
+      isLoading={isLoading}
+      messageCount={userMessageCount}
+      learningObjectives={scenario.learningObjectives}
+      focusArea={scenario.focusArea}
+      retryFocus={search.focus}
+      characterMood={characterMood}
+      characterName={scenario.characterName}
+      milestones={conversation.milestonesAchieved}
+      onRetryLastTurn={
+        isArchiveMode || isLoading ? undefined : () => void handleRewind()
+      }
+      rewindsRemaining={rewindsRemaining}
+    />
+  )
 
   return (
     <div className="h-screen bg-cream flex flex-col pt-24">
@@ -214,6 +260,7 @@ function ConversationComponent() {
               <ConversationView
                 messages={messages}
                 characterName={scenario.characterName}
+                initialMood={scenario.characterInitialMood}
                 isLoading={isLoading}
               />
             </div>
@@ -248,7 +295,7 @@ function ConversationComponent() {
                   onSubmit={sendMessage}
                   isLoading={isLoading}
                   disabled={isLoading || isArchiveMode}
-                  onStartOver={startNewConversation}
+                  restoredDraft={restoredDraft}
                 />
               )}
 
@@ -260,15 +307,18 @@ function ConversationComponent() {
                 </p>
               )}
 
-              {/* Rewind Button - show after at least one user message */}
+              {/* Taking back a turn, or the whole conversation. Both sit apart
+                  from Send and both ask first, so neither happens by slip. */}
               {userMessageCount > 0 && !isArchiveMode && (
-                <div className="flex justify-center pt-1">
+                <div className="flex items-center justify-center gap-2 pt-1">
                   <RewindButton
-                    rewindsRemaining={
-                      (conversation.maxRewinds ?? 2) -
-                      (conversation.rewindsUsed ?? 0)
-                    }
-                    onRewind={rewind}
+                    rewindsRemaining={rewindsRemaining}
+                    onRewind={handleRewind}
+                    disabled={isLoading}
+                  />
+                  <StartOverButton
+                    onStartOver={() => startNewConversation(search.focus)}
+                    canWrapUp={canEndConversation}
                     disabled={isLoading}
                   />
                 </div>
@@ -277,16 +327,7 @@ function ConversationComponent() {
           </div>
 
           <div className="w-[420px] hidden lg:flex flex-col min-w-0 px-6 pb-6 overflow-hidden">
-            <FeedbackPanel
-              feedback={feedback}
-              skillHint={skillHint}
-              isLoading={isLoading}
-              messageCount={userMessageCount}
-              learningObjectives={scenario.learningObjectives}
-              characterMood={characterMood}
-              characterName={scenario.characterName}
-              milestones={conversation.milestonesAchieved}
-            />
+            {feedbackPanel}
           </div>
         </div>
       )}
@@ -297,14 +338,44 @@ function ConversationComponent() {
             <div className="lg:hidden border-t border-giraffe-200 bg-white px-4 py-3">
               <button
                 onClick={() => setMobileFeedbackExpanded(true)}
-                className="w-full min-h-11 flex items-center justify-between gap-2 text-brown-700 hover:text-brown-900 font-semibold text-sm cursor-pointer rounded-lg px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
+                aria-label="Open the full feedback"
+                className="w-full min-h-11 flex items-center justify-between gap-3 text-left text-brown-700 hover:text-brown-900 text-sm cursor-pointer rounded-lg px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
               >
-                <span>View Feedback</span>
+                {/* On a phone the panel is out of sight, so the latest turn's
+                    result lands right here; the full panel is one tap away.
+                    Keyed by turn so each new result eases in and is noticed. */}
+                {isLoading ? (
+                  <span className="font-semibold">Reading your message…</span>
+                ) : feedback ? (
+                  <span
+                    key={userMessageCount}
+                    className="flex items-center gap-3 min-w-0 animate-step-in"
+                  >
+                    <span className="shrink-0 grid place-items-center w-11 h-11 rounded-full bg-giraffe-100 border border-giraffe-300 font-bold text-brown-800 tabular-nums">
+                      {feedback.score.total}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold text-brown-800">
+                        {getScoreMessage(feedback.score.total)}
+                      </span>
+                      {feedback.feedback && (
+                        <span className="block text-xs text-brown-600 line-clamp-2">
+                          Try next: {feedback.feedback}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="font-semibold">
+                    Tips for your first message
+                  </span>
+                )}
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -342,18 +413,7 @@ function ConversationComponent() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
-                <FeedbackPanel
-                  feedback={feedback}
-                  skillHint={skillHint}
-                  isLoading={isLoading}
-                  messageCount={userMessageCount}
-                  learningObjectives={scenario.learningObjectives}
-                  characterMood={characterMood}
-                  characterName={scenario.characterName}
-                  milestones={conversation.milestonesAchieved}
-                />
-              </div>
+              <div className="flex-1 overflow-y-auto">{feedbackPanel}</div>
 
               <div className="border-t border-giraffe-200 bg-white px-4 py-3">
                 <button

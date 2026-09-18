@@ -38,6 +38,14 @@ interface TranscriptViewProps {
   finalScore: number
   completedAt: number
   initialMood: number
+  /** One of the user's messages said another way, shown on that message. */
+  reflection?: {
+    messageIndex: number
+    rewrite: string
+    why: string
+  } | null
+  /** Names where Back leads (the results screen, or the practice hub). */
+  backLabel?: string
   onBack: () => void
 }
 
@@ -164,7 +172,13 @@ function SummaryStats({
 }) {
   const userMessages = messages.filter((m) => m.role === 'user')
   const userMessagesWithScores = userMessages.filter((m) => m.nvcScore)
-  const jackalCount = userMessages.filter((m) => m.isJackalLanguage).length
+  // Counted as what went right, never as a tally of slips: the slips are
+  // marked gently on the messages themselves, where they can teach something.
+  const giraffeCount = userMessages.filter((m) => !m.isJackalLanguage).length
+  const bestTurn = userMessagesWithScores.reduce(
+    (best, m) => Math.max(best, m.nvcScore?.total ?? 0),
+    0,
+  )
 
   // Components are scored per turn only when attempted (absent = 0), so the
   // average counts attempted turns only; zeros would punish a healthy,
@@ -195,26 +209,34 @@ function SummaryStats({
       </div>
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-brown-700">
-          {messages.length}
+          {userMessages.length}
         </div>
-        <div className="text-xs text-brown-600">Total Messages</div>
+        <div className="text-xs text-brown-600">Your Messages</div>
       </div>
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-brown-800">
-          {userMessages.length - jackalCount}
+          {giraffeCount}
+          <span className="text-sm font-semibold text-brown-500">
+            {' '}
+            of {userMessages.length}
+          </span>
         </div>
-        <div className="text-xs text-brown-600">Giraffe Responses</div>
+        <div className="text-xs text-brown-600">Free of Blame</div>
       </div>
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
-        <div className="text-2xl font-bold text-brown-800">{jackalCount}</div>
-        <div className="text-xs text-brown-600">Jackal Responses</div>
+        <div className="text-2xl font-bold text-brown-800">{bestTurn}</div>
+        <div className="text-xs text-brown-600">Best Single Turn</div>
       </div>
 
       {avgComponents && (
         <div className="col-span-2 md:col-span-4 bg-white rounded-lg p-4 border border-giraffe-100">
-          <h4 className="text-sm font-semibold text-brown-700 mb-3">
+          <h4 className="text-sm font-semibold text-brown-700">
             Average Component Scores
           </h4>
+          <p className="text-xs text-brown-500 mb-3">
+            Out of 25, across the messages where you used each one. A dot means
+            it was not part of this conversation.
+          </p>
           <div className="grid grid-cols-4 gap-3">
             {Object.entries(avgComponents).map(([key, value]) => (
               <div key={key} className="text-center">
@@ -238,6 +260,8 @@ export function TranscriptView({
   finalScore,
   completedAt,
   initialMood,
+  reflection = null,
+  backLabel = 'Back to Practice',
   onBack,
 }: TranscriptViewProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
@@ -293,14 +317,16 @@ ${transcript}
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-giraffe-50 to-cream">
-      {/* Header */}
-      <div className="bg-white border-b border-giraffe-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 sm:pt-28">
+      {/* Wayfinding row. It sits in the page flow under the floating nav (the
+          same shell as the brief), rather than a bar pinned over it. */}
+      <div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between gap-3">
             <button
+              type="button"
               onClick={onBack}
-              className="flex items-center gap-2 text-brown-700 hover:text-brown-900 transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-brown-700 hover:text-brown-900 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
             >
               <svg
                 className="w-5 h-5"
@@ -315,7 +341,7 @@ ${transcript}
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              <span className="font-medium">Back</span>
+              <span className="font-semibold text-sm">{backLabel}</span>
             </button>
 
             <Button
@@ -331,7 +357,7 @@ ${transcript}
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Title Section */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-brown-800">
@@ -370,6 +396,9 @@ ${transcript}
                 message={message}
                 characterName={characterName}
                 messageIndex={index}
+                reflection={
+                  reflection?.messageIndex === index ? reflection : undefined
+                }
                 previousMood={
                   message.role === 'assistant'
                     ? getPreviousMood(index)
@@ -383,10 +412,10 @@ ${transcript}
         {/* Footer */}
         <div className="text-center pt-8 pb-4">
           <Button onClick={onBack} variant="primary">
-            Back to Practice
+            {backLabel}
           </Button>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

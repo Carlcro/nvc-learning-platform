@@ -242,7 +242,7 @@ The total is NOT the sum of the components. It judges how well this single turn 
 
 ### Points, streaks, and levels
 `conversations.complete` (idempotent, server-side) awards:
-- First completion: `100 * stars`
+- First completion: `100 * stars` (a flat 25 when the first completion earned no star)
 - Repeat completions: reward improvement over the previous best, plus a small practice bonus
 - Perfect score (100): one-time +200 bonus per scenario
 - Daily challenge: the challenge's advertised `bonusPoints`

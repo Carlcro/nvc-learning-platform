@@ -32,7 +32,22 @@ export interface Message {
 interface ConversationViewProps {
   messages: Array<Message>
   characterName: string
+  /** The character's mood before anything was said, for the first shift. */
+  initialMood?: number
   isLoading?: boolean
+}
+
+/**
+ * A quiet line under the character's reply when their mood moved, so the
+ * link between what was just said and how it landed is visible in the
+ * conversation itself, not only on the meter.
+ */
+function moodShiftNote(name: string, delta: number): string | null {
+  if (delta >= 3) return `${name} opened up`
+  if (delta > 0) return `${name} softened a little`
+  if (delta <= -3) return `${name} grew more guarded`
+  if (delta < 0) return `${name} pulled back a little`
+  return null
 }
 
 /**
@@ -71,16 +86,23 @@ function highlightJackalPhrases(
 function MessageBubble({
   message,
   characterName,
+  moodDelta,
   animateIn = false,
 }: {
   message: Message
   characterName: string
+  /** How far the character's mood moved with this reply, when known. */
+  moodDelta?: number
   animateIn?: boolean
 }) {
   const isUser = message.role === 'user'
   const jackalPhrases =
     isUser && message.isJackalLanguage ? (message.jackalPhrases ?? []) : []
   const hasHighlights = jackalPhrases.length > 0
+  const shiftNote =
+    !isUser && moodDelta !== undefined
+      ? moodShiftNote(characterName, moodDelta)
+      : null
 
   return (
     <div
@@ -127,6 +149,16 @@ function MessageBubble({
             Underlined words may land as judgment or blame.
           </p>
         )}
+
+        {shiftNote && moodDelta !== undefined && (
+          <p
+            className={`text-[11px] font-medium ${
+              moodDelta > 0 ? 'text-brown-700' : 'text-brown-500'
+            }`}
+          >
+            {shiftNote}
+          </p>
+        )}
       </div>
     </div>
   )
@@ -135,6 +167,7 @@ function MessageBubble({
 export function ConversationView({
   messages,
   characterName,
+  initialMood,
   isLoading = false,
 }: ConversationViewProps) {
   const endRef = useRef<HTMLDivElement>(null)
@@ -155,6 +188,20 @@ export function ConversationView({
   }
   const animateFrom = arrivalRef.current.from
 
+  // Mood movement per reply: each stamped reply against the one before it
+  // (or the scenario's starting mood for the first).
+  const moodDeltas = new Map<number, number>()
+  let previousMood = initialMood
+  messages.forEach((message, index) => {
+    if (message.role !== 'assistant' || message.characterMood === undefined) {
+      return
+    }
+    if (previousMood !== undefined) {
+      moodDeltas.set(index, message.characterMood - previousMood)
+    }
+    previousMood = message.characterMood
+  })
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -164,26 +211,16 @@ export function ConversationView({
     <div className="flex flex-col w-full h-full bg-cream">
       {/* Conversation Messages */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-8 space-y-6 scrollbar-thin scrollbar-thumb-giraffe-400 scrollbar-track-cream">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center gap-4">
-            <div>
-              <h3 className="text-lg font-bold text-brown-800 mb-2">
-                Welcome to the Roleplay!
-              </h3>
-              <p className="text-brown-600 max-w-xs">
-                Read the character's message below and respond with your
-                message. You'll receive real-time feedback on your NVC
-                communication.
-              </p>
-            </div>
-          </div>
-        ) : (
+        {/* A conversation always opens with the character's first line, so
+            there is no empty state to design for. */}
+        {messages.length > 0 && (
           <>
             {messages.map((message, index) => (
               <MessageBubble
                 key={index}
                 message={message}
                 characterName={characterName}
+                moodDelta={moodDeltas.get(index)}
                 animateIn={index >= animateFrom}
               />
             ))}

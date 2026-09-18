@@ -19,6 +19,8 @@ import type { Id } from 'convex/_generated/dataModel'
 import type { Message } from '~/components/features/roleplay/ConversationView'
 import type { FeedbackData } from '~/components/features/roleplay/FeedbackPanel'
 import type { Celebration } from '~/components/features/roleplay/MilestoneCelebration'
+import type { NVCComponent } from '~/lib/conversationInsights'
+import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { localDateString } from '~/lib/localDate'
 
@@ -38,7 +40,28 @@ export interface EarnedAchievement {
  * that simply was not this turn's job scores 0 and must not read as weakness.
  */
 export interface SkillHint {
-  component: 'observation' | 'feeling' | 'need' | 'request'
+  component: NVCComponent
+}
+
+/** What completing the conversation changed, beyond the score itself. */
+export interface CompletionSummary {
+  pointsEarned: number
+  challengeBonus: number
+  previousBestScore?: number
+  levelBefore: number
+  levelAfter: number
+  pointsToNextLevel: number
+  currentStreak: number
+  streakExtended: boolean
+  newAchievements: Array<EarnedAchievement>
+}
+
+export interface Completion {
+  finalScore: number
+  finalStars: number
+  pointsEarned: number
+  newAchievements: Array<EarnedAchievement>
+  summary: CompletionSummary | null
 }
 
 const SKILL_HINT_WINDOW = 3 // look at the last N scored turns
@@ -51,7 +74,7 @@ function deriveSkillHint(messages: Array<Message>): SkillHint | null {
     .slice(-SKILL_HINT_WINDOW)
   if (recent.length < SKILL_HINT_MIN_SAMPLES) return null
 
-  const components = ['observation', 'feeling', 'need', 'request'] as const
+  const components = NVC_COMPONENTS
   let weakest: SkillHint | null = null
   let weakestAvg = SKILL_HINT_THRESHOLD
 
@@ -94,6 +117,7 @@ function messageToFeedback(message: Message | undefined): FeedbackData | null {
  */
 const MILESTONE_CELEBRATIONS: Array<{
   key:
+    | 'observationMade'
     | 'feelingExpressed'
     | 'needIdentified'
     | 'requestMade'
@@ -102,6 +126,11 @@ const MILESTONE_CELEBRATIONS: Array<{
   title: string
   message: (characterName: string) => string
 }> = [
+  {
+    key: 'observationMade',
+    title: 'Clear observation',
+    message: () => 'You described what happened without judging it.',
+  },
   {
     key: 'feelingExpressed',
     title: 'Feeling named',
@@ -139,12 +168,15 @@ interface UseConversationArgs {
   // Present when this conversation was started from a daily challenge; passed
   // through to completion so the challenge gets credited.
   dailyChallengeId?: string
+  // 'results' reopens the results screen of a finished conversation.
+  view?: string
 }
 
 export function useConversation({
   scenarioId,
   conversationId,
   dailyChallengeId,
+  view,
 }: UseConversationArgs) {
   const navigate = useNavigate()
 
@@ -165,6 +197,7 @@ export function useConversation({
   )
 
   const submitTurn = useAction(api.ai.submitTurn)
+  const generateReflection = useAction(api.ai.generateReflection)
 
   const completeConversation = useMutation(api.conversations.complete)
   const abandonConversation = useMutation(api.conversations.abandon)
@@ -175,12 +208,7 @@ export function useConversation({
   const [pending, setPending] = useState<Message | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [completion, setCompletion] = useState<{
-    finalScore: number
-    finalStars: number
-    pointsEarned: number
-    newAchievements: Array<EarnedAchievement>
-  } | null>(null)
+  const [justCompleted, setJustCompleted] = useState<Completion | null>(null)
   const [celebration, setCelebration] = useState<Celebration | null>(null)
 
   // --- Derived view data (no syncing effects) ----------------------------
@@ -200,6 +228,42 @@ export function useConversation({
       .find((m) => m.role === 'user' && m.feedback)
     return messageToFeedback(lastUserWithFeedback)
   }, [serverMessages])
+
+  // The results screen shows right after completing, and can be reopened
+  // later (view=results) from what the server stored at completion time.
+  const completion = useMemo<Completion | null>(() => {
+    if (justCompleted) return justCompleted
+    if (view !== 'results' || conversation?.status !== 'completed') return null
+    const summary = conversation.resultSummary ?? null
+    return {
+      finalScore: conversation.finalScore ?? 0,
+      finalStars: conversation.finalStars ?? 0,
+      pointsEarned: summary?.pointsEarned ?? 0,
+      newAchievements: summary?.newAchievements ?? [],
+      summary,
+    }
+  }, [justCompleted, view, conversation])
+
+  // One of the user's messages said another way. Written once, server-side,
+  // the first time the results are shown; after that it is simply stored.
+  const reflection = conversation?.reflection ?? null
+  const reflectionRequestedRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!completion || !conversationId) return
+    if (conversation?.status !== 'completed' || conversation.reflection) return
+    if (reflectionRequestedRef.current === conversationId) return
+    reflectionRequestedRef.current = conversationId
+    // Purely additive: if it cannot be written, the results stand without it.
+    generateReflection({
+      conversationId: conversationId as Id<'conversations'>,
+    }).catch(() => {})
+  }, [
+    completion,
+    conversationId,
+    conversation?.status,
+    conversation?.reflection,
+    generateReflection,
+  ])
 
   // A gentle pointer to the lesson or library for whichever component has
   // been consistently rough over the last few turns (null when none has).
@@ -305,11 +369,12 @@ export function useConversation({
         localDate: localDateString(),
       })
 
-      setCompletion({
+      setJustCompleted({
         finalScore: result.finalScore,
         finalStars: result.finalStars,
         pointsEarned: result.pointsEarned,
         newAchievements: result.newAchievements,
+        summary: result.summary ?? null,
       })
     } catch (err) {
       setError(
@@ -320,7 +385,9 @@ export function useConversation({
     }
   }, [conversationId, isCompleting, dailyChallengeId, completeConversation])
 
-  const startNewConversation = useCallback(async () => {
+  // `focus` carries the takeaway from the results screen into the retry, so
+  // the next attempt opens with the one thing worth working on.
+  const startNewConversation = useCallback(async (focus?: NVCComponent) => {
     if (!currentUser || !scenario) return
 
     try {
@@ -336,7 +403,7 @@ export function useConversation({
 
       // Resetting these here keeps the results screen from flashing before the
       // route swaps to the new conversation id.
-      setCompletion(null)
+      setJustCompleted(null)
       setError(null)
       seenMilestonesRef.current = null
 
@@ -344,7 +411,7 @@ export function useConversation({
       // (completion of an already-credited challenge is a no-op server-side).
       navigate({
         to: `/practice/${scenarioId}/conversation/${newConversationId}`,
-        search: { view: undefined, dailyChallengeId },
+        search: { view: undefined, dailyChallengeId, focus },
       })
     } catch (err) {
       setError(
@@ -365,17 +432,27 @@ export function useConversation({
     navigate,
   ])
 
-  const rewind = useCallback(async () => {
-    if (!conversationId) return
+  /**
+   * Take back the last turn. Resolves to the words that were taken back, so
+   * the composer can offer them for editing rather than making the user
+   * retype a message they only wanted to adjust.
+   */
+  const rewind = useCallback(async (): Promise<string | null> => {
+    if (!conversationId) return null
+    const lastUserMessage = [...serverMessages]
+      .reverse()
+      .find((m) => m.role === 'user')
     try {
       await rewindMessages({
         conversationId: conversationId as Id<'conversations'>,
       })
       // Rendered messages follow the conversation query, so nothing to set.
+      return lastUserMessage?.content ?? null
     } catch (err) {
       setError(userFacingMessage(err, 'We could not rewind. Please try again.'))
+      return null
     }
-  }, [conversationId, rewindMessages])
+  }, [conversationId, rewindMessages, serverMessages])
 
   const goToPractice = useCallback(() => {
     navigate({ to: '/practice' })
@@ -384,6 +461,7 @@ export function useConversation({
   const viewTranscript = useCallback(() => {
     navigate({
       to: `/practice/${scenarioId}/transcript/${conversationId}`,
+      search: { from: 'results' },
     })
   }, [navigate, scenarioId, conversationId])
 
@@ -401,6 +479,7 @@ export function useConversation({
     isCompleting,
     conversationStarted: conversation != null,
     completion,
+    reflection,
     celebration,
     error,
     // actions

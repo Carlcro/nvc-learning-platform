@@ -282,6 +282,8 @@ export default defineSchema({
         resolutionReached: v.boolean(), // characterMood >= 5 AND total >= 70
         // Optional: conversations from before the empathy milestone lack it.
         empathyShown: v.optional(v.boolean()), // Reflected the other's feelings/needs
+        // Optional: conversations from before the observation milestone lack it.
+        observationMade: v.optional(v.boolean()), // observation >= 15
       }),
     ),
 
@@ -304,6 +306,42 @@ export default defineSchema({
         v.literal('pass'), // 60-69
         v.literal('incomplete'), // <60
       ),
+    ),
+
+    // What completing this conversation changed, stored so the results screen
+    // can be reopened later (from the transcript, say) exactly as it was shown.
+    resultSummary: v.optional(
+      v.object({
+        pointsEarned: v.number(),
+        challengeBonus: v.number(),
+        // Best score on this scenario BEFORE this conversation; absent on a
+        // first finished attempt, when there is nothing to compare against.
+        previousBestScore: v.optional(v.number()),
+        levelBefore: v.number(),
+        levelAfter: v.number(),
+        pointsToNextLevel: v.number(),
+        currentStreak: v.number(),
+        streakExtended: v.boolean(), // false when today was already counted
+        newAchievements: v.array(
+          v.object({
+            id: v.string(),
+            title: v.string(),
+            description: v.string(),
+          }),
+        ),
+      }),
+    ),
+
+    // One of the user's own messages said another way, written once after the
+    // conversation is complete (never during it, where finding their own
+    // words is the point). See ai.generateReflection.
+    reflection: v.optional(
+      v.object({
+        messageIndex: v.number(),
+        original: v.string(),
+        rewrite: v.string(),
+        why: v.string(),
+      }),
     ),
 
     // ============ Timestamps ============

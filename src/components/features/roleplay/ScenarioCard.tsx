@@ -25,6 +25,10 @@ export interface ScenarioCardProps {
   minLevel: number
   userLevel: number
   progress: ScenarioProgress | null
+  /** A conversation in this scenario is waiting to be picked up again. */
+  hasActiveConversation?: boolean
+  /** This is the scenario suggested as the user's next step. */
+  isRecommended?: boolean
   onStart: (scenarioId: string | unknown) => void
   onViewBest?: (scenarioId: string | unknown, conversationId: string) => void
   /** When provided, a delete control appears (used for the user's own scenarios). */
@@ -71,11 +75,17 @@ function renderStars(stars: number) {
 
 type ScenarioStatus = 'start' | 'in_progress' | 'attempted' | 'completed'
 
-function getStatus(progress: ScenarioProgress | null): {
+function getStatus(
+  progress: ScenarioProgress | null,
+  hasActiveConversation: boolean,
+): {
   status: ScenarioStatus
   bestStars: number
 } {
   const bestStars = progress?.bestStars || 0
+  // A waiting conversation wins over any earlier result: picking it back up
+  // is the most relevant thing this card can offer.
+  if (hasActiveConversation) return { status: 'in_progress', bestStars }
   if (progress?.status === 'passed' || progress?.status === 'mastered') {
     return { status: 'completed', bestStars }
   }
@@ -116,11 +126,15 @@ export function ScenarioCard({
   minLevel,
   userLevel,
   progress,
+  hasActiveConversation = false,
+  isRecommended = false,
   onStart,
   onViewBest,
   onDelete,
 }: ScenarioCardProps) {
-  const { status, bestStars } = getStatus(progress)
+  const { status, bestStars } = getStatus(progress, hasActiveConversation)
+  const hasPassed =
+    progress?.status === 'passed' || progress?.status === 'mastered'
   const isCompleted = status === 'completed'
   const isMastered = isCompleted && bestStars === 3
   // Scenarios are never blocked - we simply suggest a level so users know what
@@ -142,9 +156,14 @@ export function ScenarioCard({
     <Card className="flex flex-col h-full hover:shadow-md transition-all duration-200">
       {/* Status strip - color is glanceable, dark text is always legible */}
       <div
-        className={`${strip.className} px-6 py-2 text-sm font-bold rounded-t-md`}
+        className={`${strip.className} px-6 py-2 text-sm font-bold rounded-t-md flex items-center justify-between gap-2`}
       >
-        {strip.label}
+        <span>{strip.label}</span>
+        {isRecommended && status !== 'in_progress' && (
+          <span className="rounded-full bg-cream text-brown-800 px-2.5 py-0.5 text-xs font-semibold">
+            Suggested next
+          </span>
+        )}
       </div>
 
       {/* Header */}
@@ -189,8 +208,8 @@ export function ScenarioCard({
           </div>
         </div>
 
-        {/* Best result for completed scenarios */}
-        {isCompleted && (
+        {/* Best result for scenarios that have been passed */}
+        {(isCompleted || (status === 'in_progress' && hasPassed)) && (
           <div className="flex items-center gap-2 mt-3 text-sm font-semibold text-brown-700">
             <span>Best: {progress?.bestScore}/100</span>
             {renderStars(bestStars)}

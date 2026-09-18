@@ -10,6 +10,7 @@ import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
 import { Button } from '~/components/ui/Button'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { pickRecommendedScenario } from '~/lib/conversationInsights'
 
 export const Route = createFileRoute('/practice/')({
   head: () => ({
@@ -95,6 +96,44 @@ function PracticeHub() {
   const overallProgress = useConvexQuery(api.userProgress.getByUserId)
   const userLevel = overallProgress?.level ?? 1
 
+  // Scenarios with a conversation waiting to be picked up again.
+  const activeScenarioIds =
+    useConvexQuery(api.conversations.listMyActiveScenarioIds) ?? []
+  const hasActiveConversation = (scenarioId: string) =>
+    activeScenarioIds.some((id) => id === scenarioId)
+
+  // One concrete suggestion: a waiting conversation first, otherwise the next
+  // scenario on the ladder that has not been passed. A pointer, never a gate.
+  const waitingScenario =
+    [...myScenarios, ...scenarios].find((s) => hasActiveConversation(s._id)) ??
+    null
+  const recommendedScenario = pickRecommendedScenario(
+    scenarios,
+    userProgress,
+    userLevel,
+  )
+  const suggestion = waitingScenario
+    ? {
+        scenario: waitingScenario,
+        eyebrow: 'Pick up where you left off',
+        note: `Your conversation with ${waitingScenario.characterName} is waiting for you.`,
+        action: 'Continue',
+      }
+    : recommendedScenario
+      ? {
+          scenario: recommendedScenario,
+          eyebrow:
+            userProgress.length === 0 ? 'A good place to start' : 'Suggested next',
+          note: recommendedScenario.description,
+          action:
+            userProgress.find(
+              (p) => p.scenarioId === recommendedScenario._id,
+            )?.status === 'attempted'
+              ? 'Try it again'
+              : 'Start',
+        }
+      : null
+
   // Look up a user's saved progress for a given scenario id.
   const getScenarioProgress = (scenarioId: string) =>
     userProgress.find((p) => p.scenarioId === scenarioId) || null
@@ -124,9 +163,10 @@ function PracticeHub() {
     scenarioId: string | unknown,
     conversationId: string,
   ) => {
+    // The transcript is the one good review screen: scores, the coaching at
+    // each turn, and how the mood moved.
     navigate({
-      to: `/practice/${scenarioId}/conversation/${conversationId}`,
-      search: { view: 'archive' },
+      to: `/practice/${scenarioId}/transcript/${conversationId}`,
     })
   }
 
@@ -230,6 +270,34 @@ function PracticeHub() {
       {/* Your own conversations - shaped from real situations in your life */}
       <section className="px-4 sm:px-6 lg:px-8 pt-2 pb-2">
         <div className="max-w-6xl mx-auto space-y-6">
+          {/* One clear next step, so the grid below is a choice rather than
+              a question. Waits for the data so it never flashes and swaps. */}
+          {suggestion && !isLoadingScenarios && (
+            <div className="rounded-lg border-2 border-giraffe-400 bg-white shadow-sm overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 px-5 sm:px-8 py-5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-giraffe-800">
+                    {suggestion.eyebrow}
+                  </p>
+                  <h2 className="text-lg sm:text-xl font-bold text-brown-800 text-balance">
+                    {suggestion.scenario.title}
+                  </h2>
+                  <p className="text-sm text-brown-600 text-pretty mt-1 max-w-prose line-clamp-2">
+                    {suggestion.note}
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => handleStartScenario(suggestion.scenario._id)}
+                  className="w-full sm:w-auto flex-shrink-0 px-8"
+                >
+                  {suggestion.action}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Entry point - turn a real situation into a practice space */}
           <button
             type="button"
@@ -298,6 +366,7 @@ function PracticeHub() {
                     minLevel={scenario.unlockRequirements.minLevel}
                     userLevel={userLevel}
                     progress={getScenarioProgress(scenario._id)}
+                    hasActiveConversation={hasActiveConversation(scenario._id)}
                     onStart={handleStartScenario}
                     onViewBest={handleViewBest}
                     onDelete={() =>
@@ -364,6 +433,8 @@ function PracticeHub() {
                   minLevel={scenario.unlockRequirements.minLevel}
                   userLevel={userLevel}
                   progress={getScenarioProgress(scenario._id)}
+                  hasActiveConversation={hasActiveConversation(scenario._id)}
+                  isRecommended={recommendedScenario?._id === scenario._id}
                   onStart={handleStartScenario}
                   onViewBest={handleViewBest}
                 />
@@ -377,27 +448,29 @@ function PracticeHub() {
       <section className="bg-linear-to-b from-cream to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 mt-12">
         <div className="max-w-3xl mx-auto text-center space-y-4">
           <h2 className="text-2xl font-bold text-brown-800">
-            Tips for Success
+            One piece at a time
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg p-4 border-2 border-giraffe-100">
-              <p className="text-sm text-brown-700 font-semibold">Observe</p>
-              <p className="text-xs text-brown-600 mt-1">
-                Describe facts without judgment
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-4 border-2 border-giraffe-100">
-              <p className="text-sm text-brown-700 font-semibold">Feel</p>
-              <p className="text-xs text-brown-600 mt-1">
-                Express actual emotions
-              </p>
-            </div>
-            <div className="bg-white rounded-lg p-4 border-2 border-giraffe-100">
-              <p className="text-sm text-brown-700 font-semibold">Request</p>
-              <p className="text-xs text-brown-600 mt-1">
-                Ask for what you need
-              </p>
-            </div>
+          <p className="text-sm text-brown-700 max-w-prose mx-auto text-pretty">
+            A real conversation unfolds gradually. One of these per message is
+            plenty, and the others can wait for their turn.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { name: 'Observe', hint: 'Describe facts without judgment' },
+              { name: 'Feel', hint: 'Name the actual emotion' },
+              { name: 'Need', hint: 'Say what matters underneath' },
+              { name: 'Request', hint: 'Ask for one doable thing' },
+            ].map((tip) => (
+              <div
+                key={tip.name}
+                className="bg-white rounded-lg p-4 border-2 border-giraffe-100"
+              >
+                <p className="text-sm text-brown-700 font-semibold">
+                  {tip.name}
+                </p>
+                <p className="text-xs text-brown-600 mt-1">{tip.hint}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

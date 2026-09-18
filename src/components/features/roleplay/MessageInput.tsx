@@ -5,7 +5,7 @@
  * Handles validation, character limit, and submission
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '~/components/ui/Button'
 
 interface MessageInputProps {
@@ -14,7 +14,12 @@ interface MessageInputProps {
   isLoading?: boolean
   disabled?: boolean
   placeholder?: string
-  onStartOver?: () => void
+  /**
+   * Words handed back to the composer after a rewind, so a message can be
+   * adjusted rather than retyped. A new `id` means a new hand-back, even when
+   * the text repeats.
+   */
+  restoredDraft?: { id: number; text: string } | null
 }
 
 const MAX_MESSAGE_LENGTH = 1000
@@ -23,12 +28,21 @@ export function MessageInput({
   onSubmit,
   isLoading = false,
   disabled = false,
-  placeholder = 'Type your response here... Express your observations, feelings, needs, and requests.',
-  onStartOver,
+  placeholder = 'What is the next true thing you want to say?',
+  restoredDraft = null,
 }: MessageInputProps) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // After a rewind the taken-back words return here, ready to be reshaped.
+  useEffect(() => {
+    if (!restoredDraft) return
+    setValue(restoredDraft.text)
+    setError(null)
+    textareaRef.current?.focus()
+  }, [restoredDraft])
 
   const characterCount = value.length
   const charactersRemaining = MAX_MESSAGE_LENGTH - characterCount
@@ -92,6 +106,8 @@ export function MessageInput({
       {/* Textarea */}
       <div className="relative">
         <textarea
+          ref={textareaRef}
+          aria-label="Your message"
           value={value}
           onChange={(e) => {
             setValue(e.target.value)
@@ -127,29 +143,15 @@ export function MessageInput({
 
       {/* Buttons */}
       <div className="flex gap-3 items-center flex-wrap">
-        <div className="flex gap-3 flex-1">
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={disabled || isLoading || isSubmitting || !value.trim()}
-            isLoading={isSubmitting}
-            className="text-nowrap"
-          >
-            {'Send Response'}
-          </Button>
-
-          {onStartOver && (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={disabled || isLoading || isSubmitting}
-              onClick={onStartOver}
-              className="text-nowrap"
-            >
-              Start Over
-            </Button>
-          )}
-        </div>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={disabled || isLoading || isSubmitting || !value.trim()}
+          isLoading={isSubmitting}
+          className="text-nowrap"
+        >
+          Send Response
+        </Button>
 
         {/* Info Text */}
         {characterCount > 0 && (

@@ -31,6 +31,8 @@ interface AnnotatedMessageProps {
   characterName: string
   messageIndex: number
   previousMood?: number
+  /** This message said another way, when it is the one chosen for that. */
+  reflection?: { rewrite: string; why: string }
 }
 
 function getMoodLabel(mood: number): string {
@@ -93,13 +95,27 @@ function NVCScoreBreakdown({ score }: { score: NVCScore }) {
           {score.total}/100
         </span>
       </div>
+      {/* Only what this message attempted gets a bar. An absent component
+          simply was not this turn's job, so it reads as a quiet dot, the same
+          way the live panel shows it, never as an empty failing bar. */}
       {components.map((comp) => (
         <div key={comp.label} className="flex items-center gap-2">
           <span className="text-xs text-brown-600 w-20">{comp.label}</span>
-          <ScoreBar score={comp.value} />
-          <span className="text-xs font-medium text-brown-700 w-8">
-            {comp.value}/25
-          </span>
+          {comp.value > 0 ? (
+            <>
+              <ScoreBar score={comp.value} />
+              <span className="text-xs font-medium text-brown-700 w-10 text-right">
+                {comp.value}/25
+              </span>
+            </>
+          ) : (
+            <span
+              className="text-xs text-brown-400"
+              aria-label={`${comp.label}: not part of this message`}
+            >
+              · not this turn
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -111,6 +127,7 @@ export function AnnotatedMessage({
   characterName,
   messageIndex,
   previousMood,
+  reflection,
 }: AnnotatedMessageProps) {
   const isUser = message.role === 'user'
   const timestamp = new Date(message.timestamp).toLocaleTimeString([], {
@@ -161,6 +178,17 @@ export function AnnotatedMessage({
             </div>
           )}
 
+          {/* The coaching hint given at the time: the heart of the feedback,
+              and the thing most worth rereading afterwards. */}
+          {message.feedback && (
+            <div className="bg-giraffe-100/70 rounded-lg p-3 border border-giraffe-200">
+              <h4 className="text-xs font-semibold text-brown-800 mb-1">
+                The next step suggested
+              </h4>
+              <p className="text-sm text-brown-800">{message.feedback}</p>
+            </div>
+          )}
+
           {/* Words that may have landed as judgment or blame */}
           {message.isJackalLanguage &&
             message.jackalPhrases &&
@@ -184,6 +212,19 @@ export function AnnotatedMessage({
                 )}
               </div>
             )}
+        </div>
+      )}
+
+      {/* This message said another way (written after the conversation) */}
+      {isUser && reflection && (
+        <div className="mt-3 bg-white rounded-lg p-3 border-2 border-empathy-high/40">
+          <h4 className="text-xs font-semibold text-brown-800 mb-1">
+            It could also sound like
+          </h4>
+          <p className="text-sm text-brown-800 font-medium">
+            {reflection.rewrite}
+          </p>
+          <p className="mt-1.5 text-sm text-brown-600">{reflection.why}</p>
         </div>
       )}
 

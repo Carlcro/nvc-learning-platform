@@ -15,15 +15,19 @@ import {
   BookOpen,
   Check,
   Ear,
+  Eye,
   Handshake,
   Heart,
   MessageCircle,
+  RotateCcw,
   Sprout,
   Star,
 } from 'lucide-react'
 import type { Milestones } from './milestones'
 import type { FeedbackData, NVCScore } from './types'
 import type { SkillHint } from '~/hooks/useConversation'
+import type { NVCComponent } from '~/lib/conversationInsights'
+import { SKILL_RESOURCES } from '~/lib/conversationInsights'
 
 export type { FeedbackData, NVCScore }
 
@@ -33,9 +37,16 @@ interface FeedbackPanelProps {
   isLoading?: boolean
   messageCount?: number
   learningObjectives?: Array<string>
+  /** The scenario's focus area, shown before the first message. */
+  focusArea?: string
+  /** Carried over from the last attempt's results: the piece to work on. */
+  retryFocus?: NVCComponent | null
   characterMood?: number
   characterName?: string
   milestones?: Milestones
+  /** Offer to take back a turn that landed roughly. Omit to hide the offer. */
+  onRetryLastTurn?: () => void
+  rewindsRemaining?: number
 }
 
 /**
@@ -193,11 +204,13 @@ function AmbientHeader({
   )
 }
 
-function getScoreMessage(score: number): string {
-  if (score < 30) return 'Keep Going'
-  if (score < 60) return 'Good Progress'
-  if (score < 80) return 'Great Work'
-  return 'Excellent!'
+// Follows the scoring anchors (0-49, 50-69, 70-89, 90+) so the words and the
+// number always tell the same story, and stays kind at every band.
+export function getScoreMessage(score: number): string {
+  if (score < 50) return 'Keep going'
+  if (score < 70) return 'Getting there'
+  if (score < 90) return 'Landing well'
+  return 'Beautifully said'
 }
 
 // Warm halo colour behind the score, by band. Mirrors the empathy bands; the
@@ -225,6 +238,7 @@ function scoreBarFill(score: number): string {
 
 const steps = [
   { key: 'conversationStarted', label: 'Start', Icon: MessageCircle },
+  { key: 'observationMade', label: 'Observe', Icon: Eye },
   { key: 'feelingExpressed', label: 'Feeling', Icon: Heart },
   { key: 'needIdentified', label: 'Need', Icon: Sprout },
   { key: 'requestMade', label: 'Request', Icon: Handshake },
@@ -280,33 +294,6 @@ function EmpathyChip({
  * point to the matching lesson or the feelings library. Opens in a new tab so
  * the conversation stays right where it is.
  */
-const SKILL_RESOURCES: Record<
-  SkillHint['component'],
-  { to: string; label: string; invite: string }
-> = {
-  observation: {
-    to: '/learn/observation',
-    label: 'Observations lesson',
-    invite:
-      'Separating what happened from what we think about it is its own skill.',
-  },
-  feeling: {
-    to: '/feelings',
-    label: 'Feelings library',
-    invite: 'Finding the exact feeling word gets easier with a bigger vocabulary.',
-  },
-  need: {
-    to: '/learn/need',
-    label: 'Needs lesson',
-    invite: 'Connecting feelings to the universal needs beneath them takes practice.',
-  },
-  request: {
-    to: '/learn/request',
-    label: 'Requests lesson',
-    invite: 'Shaping clear, doable requests is worth a short refresher.',
-  },
-}
-
 function SkillHintCard({ hint }: { hint: SkillHint }) {
   const resource = SKILL_RESOURCES[hint.component]
   return (
@@ -332,9 +319,11 @@ function SkillHintCard({ hint }: { hint: SkillHint }) {
 function ProgressSteps({
   milestones,
   freshKeys,
+  characterName,
 }: {
   milestones: Milestones
   freshKeys: ReadonlyArray<string>
+  characterName?: string
 }) {
   const completedCount = steps.filter((s) => milestones[s.key]).length
   const totalSteps = steps.length
@@ -408,6 +397,14 @@ function ProgressSteps({
           )
         })}
       </div>
+
+      {/* What the last step means, so the mood meter reads as a goal */}
+      {!milestones.resolutionReached && (
+        <p className="text-[11px] text-brown-500 text-center text-pretty">
+          The star lights when {characterName || 'they'} opens up. People open
+          up when they feel heard.
+        </p>
+      )}
     </div>
   )
 }
@@ -547,8 +544,127 @@ function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
   )
 }
 
+/**
+ * When a turn lands roughly, trying it again is the most instructive thing
+ * there is. Offered right beside the feedback, as an invitation.
+ */
+function RetryOffer({
+  onRetry,
+  rewindsRemaining,
+}: {
+  onRetry: () => void
+  rewindsRemaining: number
+}) {
+  return (
+    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-giraffe-200">
+      <p className="flex-1 text-xs text-brown-700 leading-relaxed text-pretty">
+        Want to try that one again? Your words come back to the box so you can
+        reshape them.{' '}
+        <span className="text-brown-500">
+          {rewindsRemaining === 1
+            ? 'One rewind left.'
+            : `${rewindsRemaining} rewinds left.`}
+        </span>
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="shrink-0 inline-flex items-center gap-1.5 min-h-9 px-3 py-1.5 rounded-lg bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
+      >
+        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+        Try again
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Before the first message: the blank page is the hardest moment, so the
+ * guide says what this scenario is for and suggests a first move.
+ */
+function FirstTurnGuide({
+  focusArea,
+  learningObjectives,
+  retryFocus,
+}: {
+  focusArea?: string
+  learningObjectives: Array<string>
+  retryFocus?: NVCComponent | null
+}) {
+  const focus = retryFocus ? SKILL_RESOURCES[retryFocus] : null
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <img
+          src="/giraff.png"
+          alt=""
+          aria-hidden="true"
+          width={232}
+          height={512}
+          className="h-24 w-auto object-contain shrink-0"
+        />
+        <p className="text-sm text-brown-700 leading-relaxed text-pretty">
+          Take your time. After each message I will tell you how it landed and
+          suggest one next step.
+        </p>
+      </div>
+
+      {focus && (
+        <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
+          <p className="text-xs font-semibold text-brown-600 mb-1">
+            Your focus this time: {focus.plural}
+          </p>
+          <p className="text-sm text-brown-800 leading-relaxed font-medium text-pretty">
+            {focus.nudge}
+          </p>
+        </div>
+      )}
+
+      <div className="p-3 bg-white rounded-lg border border-giraffe-200">
+        <p className="text-xs font-semibold text-brown-600 mb-1">
+          A good opening
+        </p>
+        <p className="text-sm text-brown-800 leading-relaxed text-pretty">
+          Describe what happened, just the facts, with no verdict on it yet.
+          One piece is plenty. Feelings, needs, and a request can each have
+          their own message.
+        </p>
+      </div>
+
+      {(focusArea || learningObjectives.length > 0) && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-semibold text-brown-600">
+            What this conversation practices
+            {focusArea && (
+              <span className="font-normal text-brown-500">
+                {' '}
+                ({focusArea.replace(/_/g, ' ')})
+              </span>
+            )}
+          </p>
+          <ul className="space-y-1">
+            {learningObjectives.map((objective) => (
+              <li
+                key={objective}
+                className="flex items-start gap-2 text-xs text-brown-700 leading-relaxed"
+              >
+                <span aria-hidden="true" className="text-giraffe-700">
+                  •
+                </span>
+                <span className="first-letter:uppercase">{objective}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const MILESTONE_KEYS = [
   'conversationStarted',
+  'observationMade',
   'feelingExpressed',
   'needIdentified',
   'requestMade',
@@ -561,10 +677,14 @@ export function FeedbackPanel({
   skillHint = null,
   isLoading = false,
   messageCount = 0,
-  learningObjectives: _learningObjectives = [],
+  learningObjectives = [],
+  focusArea,
+  retryFocus = null,
   characterMood = 0,
   characterName,
   milestones,
+  onRetryLastTurn,
+  rewindsRemaining = 0,
 }: FeedbackPanelProps) {
   // Milestones earned just now get a one-time ignite pop. The memory lives up
   // here because the turn block below remounts every turn (keyed by
@@ -659,6 +779,7 @@ export function FeedbackPanel({
                 <ProgressSteps
                   milestones={milestones}
                   freshKeys={freshMilestones}
+                  characterName={characterName}
                 />
                 <EmpathyChip
                   earned={!!milestones.empathyShown}
@@ -672,6 +793,20 @@ export function FeedbackPanel({
               <FeedbackNotes feedback={feedback} />
             </div>
 
+            {onRetryLastTurn &&
+              rewindsRemaining > 0 &&
+              (feedback.score.total < 50 || feedback.isJackalLanguage) && (
+                <div
+                  className="animate-step-in"
+                  style={{ animationDelay: '225ms' }}
+                >
+                  <RetryOffer
+                    onRetry={onRetryLastTurn}
+                    rewindsRemaining={rewindsRemaining}
+                  />
+                </div>
+              )}
+
             {skillHint && (
               <div
                 className="animate-step-in"
@@ -682,18 +817,11 @@ export function FeedbackPanel({
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-3 py-6 flex-1 ">
-            <img
-              src="/giraff.png"
-              alt="Giraffe - Your NVC Guide"
-              width={232}
-              height={512}
-              className="mx-auto object-contain h-48 w-auto"
-            />
-            <p className="text-center text-brown-600 text-sm px-2">
-              Send a message and I will give you feedback!
-            </p>
-          </div>
+          <FirstTurnGuide
+            focusArea={focusArea}
+            learningObjectives={learningObjectives}
+            retryFocus={retryFocus}
+          />
         )}
       </div>
     </div>

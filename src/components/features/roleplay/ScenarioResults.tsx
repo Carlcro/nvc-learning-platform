@@ -1,40 +1,83 @@
 /**
  * ScenarioResults Component
  *
- * The success moment after finishing a scenario, told as a journey: a trail
- * draws itself through the four NVC steps the user walked and ends at the
- * connection they made - expressing themselves and being heard. The relational
- * payoff leads; the numeric score is a quiet supporting detail, in keeping with
- * "show growth, not grades."
+ * The moment after finishing a scenario, told as a journey: a trail draws
+ * itself through the NVC steps the user walked and ends where the conversation
+ * actually ended. When the character opened up, that connection is the
+ * celebration. When they did not, the screen says so kindly and points at the
+ * next piece to try, because praise only means something if it is honest.
+ *
+ * Below the trail: how this run compares with the last one, what it earned,
+ * one thing to carry into the next attempt, one message said another way, and
+ * a concrete next step. "Show growth, not grades."
  */
 
 import { useMemo } from 'react'
-import { Award, Ear } from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useQuery } from 'convex/react'
+import { api } from 'convex/_generated/api'
+import { Award, BookOpen, Ear, Flame, Repeat2, TrendingUp } from 'lucide-react'
 import { EmpathyMeter } from './EmpathyMeter'
+import type { Message } from './ConversationView'
 import type { Milestones } from './milestones'
-import type { EarnedAchievement } from '~/hooks/useConversation'
+import type {
+  CompletionSummary,
+  EarnedAchievement,
+} from '~/hooks/useConversation'
+import type { NVCComponent } from '~/lib/conversationInsights'
 import { Button } from '~/components/ui/Button'
+import { StarIcon } from '~/components/ui/Icons'
+import {
+  SKILL_RESOURCES,
+  pickRecommendedScenario,
+  summarizeConversation,
+} from '~/lib/conversationInsights'
 
 interface ScenarioResultsProps {
   finalScore: number
   stars: number
   pointsEarned?: number
   newAchievements?: Array<EarnedAchievement>
+  /** What completing changed (previous best, level, streak). */
+  summary?: CompletionSummary | null
+  /** One of the user's messages said another way, once it has been written. */
+  reflection?: { original: string; rewrite: string; why: string } | null
+  scenarioId: string
   scenarioTitle: string
   characterName: string
   characterHiddenNeeds?: Array<string>
-  messageCount: number
+  /** Where the character's mood stood when the conversation ended. */
+  finalMood: number
+  messages: Array<Message>
   milestones?: Milestones
-  onRetry: () => void
+  onRetry: (focus?: NVCComponent) => void
   onNext: () => void
   onViewTranscript: () => void
 }
 
+// Below this the scenario has not been passed (no star), so another run at it
+// is the most useful next step.
+const PASSING_SCORE = 60
+
 function scoreLabel(score: number): string {
   if (score >= 90) return 'Excellent'
   if (score >= 70) return 'Good'
-  if (score >= 50) return 'Partial'
+  if (score >= 50) return 'Getting there'
   return 'Keep practicing'
+}
+
+/** How this run compares with the best one before it, said plainly. */
+function comparisonLine(finalScore: number, previousBest?: number): string {
+  if (previousBest === undefined) {
+    return 'Your first finished run of this scenario. Now there is something to build on.'
+  }
+  if (finalScore > previousBest) {
+    return `Up from ${previousBest} last time. That is your new best here.`
+  }
+  if (finalScore === previousBest) {
+    return `Level with your best of ${previousBest}. Steady is a skill too.`
+  }
+  return `Your best here is still ${previousBest}. Every run teaches something different.`
 }
 
 function CheckMark() {
@@ -114,25 +157,130 @@ function LightMotes() {
   )
 }
 
+/**
+ * How the conversation actually ended, for the last station of the trail.
+ * Connection is only claimed when the character really opened up.
+ */
+function describeEnding(args: {
+  characterName: string
+  finalMood: number
+  milestones?: Milestones
+}): { connected: boolean; headline: string; label: string; sub: string } {
+  const { characterName, finalMood, milestones } = args
+  const connected = !!milestones?.resolutionReached || finalMood >= 5
+
+  if (connected) {
+    return {
+      connected,
+      headline: 'Look how far you came',
+      label: `You connected with ${characterName}`,
+      sub: 'You expressed yourself and were heard.',
+    }
+  }
+
+  // What they did manage, and the earliest piece still to come.
+  const managed = [
+    milestones?.observationMade && 'a clear observation',
+    milestones?.feelingExpressed && 'a feeling',
+    milestones?.needIdentified && 'a need',
+    milestones?.requestMade && 'a request',
+  ].filter(Boolean) as Array<string>
+  const nextPiece = !milestones?.feelingExpressed
+    ? 'Naming a feeling is the piece to try next time.'
+    : !milestones.needIdentified
+      ? 'The need beneath the feeling is the piece to try next time.'
+      : !milestones.requestMade
+        ? 'A clear request is the piece to try next time.'
+        : !milestones.empathyShown
+          ? `Wondering aloud what ${characterName} was feeling is the piece to try next time.`
+          : 'A little more time might have been all it needed.'
+  const didManage =
+    managed.length > 0
+      ? `You brought ${managed.join(' and ')}, which is the hard part.`
+      : 'You stayed in a hard conversation, which is where it starts.'
+
+  if (finalMood >= 0) {
+    return {
+      connected,
+      headline: 'A real step forward',
+      label: `${characterName} was starting to listen`,
+      sub: `Not fully open yet. ${didManage} ${nextPiece}`,
+    }
+  }
+  return {
+    connected,
+    headline: 'That was a hard one, and you stayed with it',
+    label: `${characterName} was still guarded at the end`,
+    sub: `That happens in real conversations too. ${didManage} ${nextPiece}`,
+  }
+}
+
+function Stars({ stars }: { stars: number }) {
+  return (
+    <span
+      className="inline-flex gap-1"
+      role="img"
+      aria-label={`${stars} of 3 stars`}
+    >
+      {[0, 1, 2].map((i) => (
+        <StarIcon
+          key={i}
+          className={`w-6 h-6 ${i < stars ? 'text-giraffe-700' : 'text-brown-200'}`}
+        />
+      ))}
+    </span>
+  )
+}
+
+/**
+ * The concrete next step. Reads the ladder and the user's progress itself so
+ * the results screen can name a scenario rather than drop people at the hub.
+ */
+function useNextScenario(currentScenarioId: string) {
+  const scenarios = useQuery(api.scenarios.listByOrder)
+  const progress = useQuery(api.scenarioProgress.getUserProgress)
+  const overall = useQuery(api.userProgress.getByUserId)
+  if (!scenarios || !progress) return null
+  return pickRecommendedScenario(
+    scenarios,
+    progress,
+    overall?.level ?? 1,
+    currentScenarioId,
+  )
+}
+
 export function ScenarioResults({
   finalScore,
-  stars: _stars,
+  stars,
   pointsEarned = 0,
   newAchievements = [],
+  summary = null,
+  reflection = null,
+  scenarioId,
   scenarioTitle,
   characterName,
   characterHiddenNeeds = [],
-  messageCount,
+  finalMood,
+  messages,
   milestones,
   onRetry,
   onNext,
   onViewTranscript,
 }: ScenarioResultsProps) {
-  // The four steps walked, then the connection reached. Reaching the results screen
-  // requires completing the arc, so these are normally all true; we still read
-  // the milestones so a partial path would render honestly.
+  const navigate = useNavigate()
+  const nextScenario = useNextScenario(scenarioId)
+  const insights = useMemo(() => summarizeConversation(messages), [messages])
+  const ending = describeEnding({ characterName, finalMood, milestones })
+
+  // Each station is read from the milestones, so a partial path renders
+  // honestly: wrapping up is open to everyone after a few turns, not only to
+  // those who completed the arc.
   const stations = [
     { label: 'You opened the conversation', reached: true },
+    {
+      label: 'You described what happened',
+      reached: !!milestones?.observationMade,
+    },
     { label: 'You named what you felt', reached: !!milestones?.feelingExpressed },
     {
       label: 'You uncovered the need beneath it',
@@ -140,23 +288,54 @@ export function ScenarioResults({
     },
     { label: 'You made a clear request', reached: !!milestones?.requestMade },
     {
-      label: `You connected with ${characterName}`,
-      sub: 'You expressed yourself and were heard.',
-      reached: true,
+      label: ending.label,
+      sub: ending.sub,
+      reached: ending.connected,
       final: true as const,
     },
   ]
 
+  const focus = insights.focus
+  const focusResource = focus ? SKILL_RESOURCES[focus] : null
+  const strongestResource = insights.strongest
+    ? SKILL_RESOURCES[insights.strongest]
+    : null
+  const hasTakeaway =
+    !!focusResource || !!strongestResource || !!insights.bestMessage
+
+  // Below a pass, another run at this scenario is the most useful next step,
+  // so it leads. Otherwise the next scenario on the ladder does.
+  const retryLeads = finalScore < PASSING_SCORE
+  const leveledUp = !!summary && summary.levelAfter > summary.levelBefore
+  const userMessageCount = messages.filter((m) => m.role === 'user').length
+
+  const goToNextScenario = () => {
+    if (!nextScenario) return
+    navigate({ to: `/practice/${nextScenario._id}/brief` })
+  }
+
+  const retryButton = (primary: boolean) => (
+    <Button
+      variant={primary ? 'primary' : 'secondary'}
+      onClick={() => onRetry(focus ?? undefined)}
+      className={primary ? 'w-full' : 'flex-1 whitespace-nowrap'}
+    >
+      {primary && focusResource
+        ? `Practice again, with an eye on ${focusResource.plural}`
+        : 'Practice again'}
+    </Button>
+  )
+
   return (
     <div className="relative min-h-screen bg-linear-to-b from-giraffe-50 to-cream px-4 pt-24 pb-12">
-      <LightMotes />
+      {ending.connected && <LightMotes />}
 
       <div className="relative z-10 mx-auto max-w-md animate-step-in">
         {/* Header - warm and relational, never a grade */}
         <div className="text-center mb-8">
           <p className="text-sm font-medium text-brown-500">{scenarioTitle}</p>
           <h1 className="mt-1 text-3xl font-bold text-brown-800 text-balance">
-            Look how far you came
+            {ending.headline}
           </h1>
         </div>
 
@@ -165,7 +344,7 @@ export function ScenarioResults({
           <ol className="relative">
             {stations.map((s, i) => {
               const last = 'final' in s && s.final
-              const dotDelay = 0.15 + i * 0.55
+              const dotDelay = 0.15 + i * 0.4
 
               return (
                 <li key={i} className="flex gap-4 items-stretch">
@@ -176,9 +355,17 @@ export function ScenarioResults({
                         className="inline-block animate-node-ignite"
                         style={{ animationDelay: `${dotDelay}s` }}
                       >
-                        <span className="animate-connect-glow flex items-center justify-center w-14 h-14 rounded-full bg-empathy-high text-white">
-                          <HeartIcon className="w-6 h-6" />
-                        </span>
+                        {s.reached ? (
+                          <span className="animate-connect-glow flex items-center justify-center w-14 h-14 rounded-full bg-empathy-high text-white">
+                            <HeartIcon className="w-6 h-6" />
+                          </span>
+                        ) : (
+                          // Not there yet: the same heart, waiting rather
+                          // than glowing.
+                          <span className="flex items-center justify-center w-14 h-14 rounded-full bg-giraffe-50 border-2 border-dashed border-giraffe-300 text-giraffe-400">
+                            <HeartIcon className="w-6 h-6" />
+                          </span>
+                        )}
                       </span>
                     ) : (
                       <span
@@ -198,7 +385,7 @@ export function ScenarioResults({
                         {s.reached && (
                           <span
                             className={`animate-connector absolute inset-0 ${
-                              i === stations.length - 2
+                              i === stations.length - 2 && ending.connected
                                 ? 'bg-linear-to-b from-giraffe-400 to-empathy-high'
                                 : 'bg-linear-to-b from-giraffe-300 to-giraffe-400'
                             }`}
@@ -211,22 +398,27 @@ export function ScenarioResults({
 
                   {/* Label */}
                   <div
-                    className={`animate-step-in ${last ? 'pt-1.5 pb-1' : 'pt-2 pb-8'}`}
+                    className={`animate-step-in ${last ? 'pt-1.5 pb-1' : 'pt-2 pb-6'}`}
                     style={{ animationDelay: `${dotDelay + 0.05}s` }}
                   >
                     <p
                       className={`leading-snug ${
                         last
-                          ? 'text-xl font-bold text-brown-800'
+                          ? 'text-xl font-bold text-brown-800 text-balance'
                           : s.reached
                             ? 'text-brown-700 font-medium'
                             : 'text-brown-400 font-medium'
                       }`}
                     >
                       {s.label}
+                      {!last && !s.reached && (
+                        <span className="sr-only"> (not yet)</span>
+                      )}
                     </p>
                     {'sub' in s && s.sub && (
-                      <p className="text-sm text-brown-500 mt-1">{s.sub}</p>
+                      <p className="text-sm text-brown-600 mt-1 leading-relaxed text-pretty">
+                        {s.sub}
+                      </p>
                     )}
                   </div>
                 </li>
@@ -234,31 +426,169 @@ export function ScenarioResults({
             })}
           </ol>
 
-          {/* The score, woven in quietly at the end of the path */}
+          {/* The score, with the comparison that makes it mean something */}
           <div className="mt-2 pt-5 border-t border-giraffe-100">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <Stars stars={stars} />
+              <p className="text-xs text-brown-500 text-right">
+                Empathy{' '}
+                <span className="font-semibold text-brown-700">
+                  {finalScore}
+                </span>{' '}
+                · {scoreLabel(finalScore)} · {userMessageCount}{' '}
+                {userMessageCount === 1 ? 'message' : 'messages'}
+              </p>
+            </div>
             <EmpathyMeter score={finalScore} showLabel={false} size="sm" />
-            <p className="mt-2 text-xs text-brown-500">
-              Empathy {finalScore} · {scoreLabel(finalScore)} · {messageCount}{' '}
-              messages
-              {pointsEarned > 0 && (
-                <>
-                  {' '}
-                  ·{' '}
-                  <span className="font-semibold text-brown-700">
-                    +{pointsEarned} points
-                  </span>
-                </>
-              )}
-            </p>
+            {summary && (
+              <p className="mt-3 flex items-start gap-2 text-sm text-brown-700 leading-relaxed text-pretty">
+                <TrendingUp
+                  className="w-4 h-4 mt-0.5 shrink-0 text-giraffe-700"
+                  aria-hidden="true"
+                />
+                {comparisonLine(finalScore, summary.previousBestScore)}
+              </p>
+            )}
           </div>
         </div>
+
+        {/* What this run added up to: points, level, streak */}
+        {summary && (
+          <div
+            className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
+            style={{ animationDelay: '2.4s' }}
+          >
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-xl font-bold text-brown-800 tabular-nums">
+                  +{pointsEarned}
+                </p>
+                <p className="text-xs text-brown-600">points</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-brown-800 tabular-nums">
+                  {summary.levelAfter}
+                </p>
+                <p className="text-xs text-brown-600">
+                  {leveledUp ? 'new level' : 'level'}
+                </p>
+              </div>
+              <div>
+                <p className="inline-flex items-center gap-1 text-xl font-bold text-brown-800 tabular-nums">
+                  <Flame
+                    className="w-4 h-4 text-giraffe-700"
+                    aria-hidden="true"
+                  />
+                  {summary.currentStreak}
+                </p>
+                <p className="text-xs text-brown-600">
+                  day streak
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 pt-3 border-t border-giraffe-100 text-xs text-brown-600 leading-relaxed text-center text-pretty">
+              {leveledUp
+                ? `You reached Level ${summary.levelAfter}. `
+                : `${summary.pointsToNextLevel} points to Level ${summary.levelAfter + 1}. `}
+              {pointsEarned === 0
+                ? 'Points come from new stars on a scenario, so beating your best here is what earns more.'
+                : summary.challengeBonus > 0
+                  ? `That includes ${summary.challengeBonus} for today's challenge.`
+                  : summary.streakExtended
+                    ? 'Today now counts toward your streak.'
+                    : ''}
+            </p>
+          </div>
+        )}
+
+        {/* One thing to carry into the next conversation */}
+        {hasTakeaway && (
+          <div
+            className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
+            style={{ animationDelay: '2.6s' }}
+          >
+            <h2 className="font-bold text-brown-800 mb-3">
+              What to take with you
+            </h2>
+            <div className="space-y-4">
+              {insights.bestMessage && (
+                <div>
+                  <p className="text-xs font-semibold text-brown-600 mb-1">
+                    Your message that landed best
+                  </p>
+                  <blockquote className="border-l-4 border-empathy-high pl-3 text-sm text-brown-800 leading-relaxed text-pretty">
+                    {insights.bestMessage.content}
+                  </blockquote>
+                </div>
+              )}
+              {strongestResource && (
+                <p className="text-sm text-brown-700 leading-relaxed text-pretty">
+                  <span className="font-semibold text-brown-800">
+                    Your {strongestResource.plural} were the strongest part.
+                  </span>{' '}
+                  That is a skill you can lean on now.
+                </p>
+              )}
+              {focusResource && (
+                <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
+                  <p className="text-xs font-semibold text-brown-600 mb-1">
+                    {insights.focusUntried
+                      ? `Still to try: ${focusResource.plural}`
+                      : `Worth a little attention: ${focusResource.plural}`}
+                  </p>
+                  <p className="text-sm text-brown-800 leading-relaxed font-medium text-pretty">
+                    {focusResource.nudge}
+                  </p>
+                  <Link
+                    to={focusResource.to}
+                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-giraffe-800 hover:text-giraffe-900 underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
+                  >
+                    <BookOpen className="w-4 h-4" aria-hidden="true" />
+                    Open the {focusResource.label}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* One message said another way. During the conversation the coaching
+            only hints, so people find their own words; afterwards a worked
+            example is what helps it stick. */}
+        {reflection && (
+          <div
+            className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-giraffe-100 text-brown-700">
+                <Repeat2 className="w-4 h-4" aria-hidden="true" />
+              </span>
+              <h2 className="font-bold text-brown-800">
+                One message, another way
+              </h2>
+            </div>
+            <p className="text-xs font-semibold text-brown-600 mb-1">You said</p>
+            <p className="text-sm text-brown-600 leading-relaxed text-pretty mb-3">
+              {reflection.original}
+            </p>
+            <p className="text-xs font-semibold text-brown-600 mb-1">
+              It could also sound like
+            </p>
+            <blockquote className="border-l-4 border-empathy-high pl-3 text-sm text-brown-800 font-medium leading-relaxed text-pretty">
+              {reflection.rewrite}
+            </blockquote>
+            <p className="mt-3 text-sm text-brown-600 leading-relaxed text-pretty">
+              {reflection.why}
+            </p>
+          </div>
+        )}
 
         {/* What was underneath - the empathy payoff. Revealing the character's
             hidden needs turns every conversation into a small mystery solved. */}
         {characterHiddenNeeds.length > 0 && (
           <div
             className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
-            style={{ animationDelay: '2.6s' }}
+            style={{ animationDelay: '2.8s' }}
           >
             <div className="flex items-center gap-2 mb-2">
               <span className="flex items-center justify-center w-7 h-7 rounded-full bg-giraffe-100 text-brown-700">
@@ -280,7 +610,9 @@ export function ScenarioResults({
             </div>
             <p className="text-sm text-brown-600 leading-relaxed text-pretty">
               {milestones?.empathyShown
-                ? `You reached toward this during the conversation. That is what helped ${characterName} open up.`
+                ? ending.connected
+                  ? `You reached toward this during the conversation. That is what helped ${characterName} open up.`
+                  : `You reached toward this during the conversation. Keep doing that. It is what opens people up, even when it takes longer than one talk.`
                 : `Next time, try wondering out loud what ${characterName} might be feeling or needing. Guessing at this is what opens people up.`}
             </p>
           </div>
@@ -290,7 +622,7 @@ export function ScenarioResults({
         {newAchievements.length > 0 && (
           <div
             className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
-            style={{ animationDelay: '2.9s' }}
+            style={{ animationDelay: '3s' }}
           >
             <h2 className="font-bold text-brown-800 mb-3">
               {newAchievements.length === 1 ? 'New badge' : 'New badges'}
@@ -329,31 +661,55 @@ export function ScenarioResults({
           </p>
         </div>
 
-        {/* Actions: the forward step leads, the two lighter actions share a row */}
+        {/* Actions: one clear next step leads. Below a pass that is another
+            run at this scenario; otherwise the next one on the ladder. */}
         <div className="mt-6 space-y-3">
-          <Button
-            variant="primary"
-            onClick={onNext}
-            className="w-full whitespace-nowrap"
-          >
-            Keep going
-          </Button>
+          {retryLeads ? (
+            retryButton(true)
+          ) : nextScenario ? (
+            <Button
+              variant="primary"
+              onClick={goToNextScenario}
+              className="w-full"
+            >
+              <span className="text-balance">Next up: {nextScenario.title}</span>
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={onNext} className="w-full">
+              Back to all scenarios
+            </Button>
+          )}
           <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={onViewTranscript}
               className="flex-1 whitespace-nowrap"
             >
-              View transcript
+              Review it turn by turn
             </Button>
-            <Button
-              variant="secondary"
-              onClick={onRetry}
-              className="flex-1 whitespace-nowrap"
-            >
-              Practice again
-            </Button>
+            {retryLeads ? (
+              nextScenario && (
+                <Button
+                  variant="secondary"
+                  onClick={goToNextScenario}
+                  className="flex-1 whitespace-nowrap"
+                >
+                  Try another
+                </Button>
+              )
+            ) : (
+              retryButton(false)
+            )}
           </div>
+          {(retryLeads || nextScenario) && (
+            <button
+              type="button"
+              onClick={onNext}
+              className="block mx-auto text-sm font-semibold text-brown-600 hover:text-brown-900 underline underline-offset-2 cursor-pointer rounded px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
+            >
+              Back to all scenarios
+            </button>
+          )}
         </div>
       </div>
     </div>

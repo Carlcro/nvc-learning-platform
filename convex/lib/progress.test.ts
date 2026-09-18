@@ -221,7 +221,7 @@ describe('pointsForCompletion', () => {
     ).toBe(300)
   })
 
-  it('awards nothing for a first completion that earned no stars', () => {
+  it('still pays a little for a first completion that earned no stars', () => {
     expect(
       pointsForCompletion({
         finalScore: 40,
@@ -230,7 +230,7 @@ describe('pointsForCompletion', () => {
         previousBestStars: 0,
         previousBestScore: 0,
       }),
-    ).toBe(0)
+    ).toBe(25)
   })
 
   it('rewards improvement on a repeat', () => {

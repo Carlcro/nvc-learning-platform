@@ -2,7 +2,7 @@
  * RewindButton Component
  *
  * Allows users to undo their last message and try a different approach
- * Limited to 2 rewinds per conversation to encourage thoughtful responses
+ * Limited per conversation to encourage thoughtful responses
  */
 
 import { useState } from 'react'
@@ -84,9 +84,9 @@ export function RewindButton({
             <div className="p-6 space-y-4">
               <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-200">
                 <p className="text-brown-800 text-sm leading-relaxed">
-                  Feeling stuck? This will remove your last message and the
-                  character's response, giving you a chance to try a different
-                  approach.
+                  Feeling stuck? This takes back your last message and the
+                  reply to it, and puts your words back in the box so you can
+                  reshape them and try a different approach.
                 </p>
               </div>
 

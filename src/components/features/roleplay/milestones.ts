@@ -10,4 +10,6 @@ export interface Milestones {
   resolutionReached: boolean
   // Optional: conversations from before the empathy milestone lack it.
   empathyShown?: boolean
+  // Optional: conversations from before the observation milestone lack it.
+  observationMade?: boolean
 }

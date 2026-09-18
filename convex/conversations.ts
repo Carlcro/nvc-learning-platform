@@ -76,6 +76,50 @@ export const getById = query({
   },
 })
 
+/**
+ * Scenario ids where the current user has a conversation waiting for them.
+ * The practice hub uses this to offer "Continue" instead of "Start". A
+ * conversation only counts once the user has said something: an untouched
+ * opening line is not something to come back to.
+ */
+export const listMyActiveScenarioIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return []
+
+    const active = await ctx.db
+      .query('conversations')
+      .withIndex('by_status', (q) =>
+        q.eq('userId', userId).eq('status', 'in_progress'),
+      )
+      .collect()
+
+    return active
+      .filter((c) => countUserTurns(c) > 0)
+      .map((c) => c.scenarioId)
+  },
+})
+
+/**
+ * The current user's waiting conversation in one scenario, if any, so the
+ * brief can offer to continue it or to start fresh.
+ */
+export const getActiveForScenario = query({
+  args: { scenarioId: v.id('scenarios') },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
+
+    const active = await findActiveConversation(ctx, userId, args.scenarioId)
+    if (!active) return null
+
+    const userTurns = countUserTurns(active)
+    if (userTurns === 0) return null
+    return { conversationId: active._id, userTurns }
+  },
+})
+
 // ============================================================================
 // MUTATIONS
 // ============================================================================
@@ -128,9 +172,12 @@ export const create = mutation({
         requestMade: false,
         resolutionReached: false,
         empathyShown: false,
+        observationMade: false,
       },
       rewindsUsed: 0,
-      maxRewinds: 2,
+      // Trying a message again is the most instructive loop there is, so
+      // the allowance is a little generous rather than a scarce resource.
+      maxRewinds: 3,
       objectivesMetInConversation: [],
       createdAt: now,
       lastMessageAt: now,
@@ -247,10 +294,14 @@ export const recordTurn = internalMutation({
       requestMade: false,
       resolutionReached: false,
       empathyShown: false,
+      observationMade: false,
     }
 
     const milestones = {
       conversationStarted: true,
+      observationMade:
+        (current.observationMade ?? false) ||
+        nvcScore.observation >= MILESTONE_THRESHOLD,
       feelingExpressed:
         current.feelingExpressed || nvcScore.feeling >= MILESTONE_THRESHOLD,
       needIdentified:
@@ -362,6 +413,7 @@ export const complete = mutation({
         pointsEarned: 0,
         challengeBonus: 0,
         newAchievements: [],
+        summary: conversation.resultSummary ?? null,
         alreadyCompleted: true,
       }
     }
@@ -388,6 +440,7 @@ export const complete = mutation({
         pointsEarned: 0,
         challengeBonus: 0,
         newAchievements: [],
+        summary: null,
         alreadyCompleted: false,
       }
     }
@@ -444,6 +497,7 @@ export const complete = mutation({
       scenarioProgress.status !== 'attempted'
     const previousBestStars = scenarioProgress.bestStars
     const previousBestScore = scenarioProgress.bestScore
+    const hasFinishedBefore = scenarioProgress.attempts > 0
 
     const scenarioUpdate: Partial<Doc<'scenarioProgress'>> = {
       status: scenarioStatusForScore(finalScore),
@@ -527,7 +581,10 @@ export const complete = mutation({
     const newTotalPoints = progress.totalPoints + pointsEarned
     const newTotals = {
       totalPoints: newTotalPoints,
-      totalStars: progress.totalStars + finalStars,
+      // Only stars gained over this scenario's previous best, so the star
+      // badges reflect breadth of practice rather than one scenario replayed.
+      totalStars:
+        progress.totalStars + Math.max(0, finalStars - previousBestStars),
       scenariosCompleted:
         progress.scenariosCompleted + (isFirstCompletion ? 1 : 0),
       scenariosPassed:
@@ -576,6 +633,27 @@ export const complete = mutation({
       progress.achievements,
     )
 
+    const newAchievements = achievements.map((a) => ({
+      id: a.id,
+      title: a.title,
+      description: a.description,
+    }))
+
+    // Everything the results screen shows beyond the score itself, kept on
+    // the conversation so the screen can be reopened later as it was.
+    const summary = {
+      pointsEarned,
+      challengeBonus,
+      previousBestScore: hasFinishedBefore ? previousBestScore : undefined,
+      levelBefore: progress.level,
+      levelAfter: levelForPoints(newTotalPoints),
+      pointsToNextLevel: pointsToNextLevel(newTotalPoints),
+      currentStreak: streak.currentStreak,
+      streakExtended: progress.lastPracticeDate !== streak.lastPracticeDate,
+      newAchievements,
+    }
+    await ctx.db.patch(args.conversationId, { resultSummary: summary })
+
     await ctx.db.patch(progress._id, {
       ...newTotals,
       level: levelForPoints(newTotalPoints),
@@ -598,11 +676,8 @@ export const complete = mutation({
       finalStars,
       pointsEarned,
       challengeBonus,
-      newAchievements: achievements.map((a) => ({
-        id: a.id,
-        title: a.title,
-        description: a.description,
-      })),
+      newAchievements,
+      summary,
       alreadyCompleted: false,
     }
   },
@@ -630,7 +705,7 @@ export const abandon = mutation({
 
 /**
  * Rewind the last user message and character response, so the user can try a
- * different approach (limited to 2 rewinds per conversation).
+ * different approach (limited per conversation, see `maxRewinds`).
  */
 export const rewindLastMessages = mutation({
   args: { conversationId: v.id('conversations') },
@@ -662,6 +737,7 @@ export const rewindLastMessages = mutation({
     // Recalculate milestones from the remaining messages. Resolution uses the
     // mood stamped on the character reply that followed each user turn, the
     // same condition the forward path applies (mood >= 5 AND total >= 70).
+    let observationMade = false
     let feelingExpressed = false
     let needIdentified = false
     let requestMade = false
@@ -672,6 +748,7 @@ export const rewindLastMessages = mutation({
       const msg = updatedMessages[i]
       if (msg.role !== 'user' || !msg.nvcScore) continue
 
+      if (msg.nvcScore.observation >= MILESTONE_THRESHOLD) observationMade = true
       if (msg.nvcScore.feeling >= MILESTONE_THRESHOLD) feelingExpressed = true
       if (msg.nvcScore.need >= MILESTONE_THRESHOLD) needIdentified = true
       if (msg.nvcScore.request >= MILESTONE_THRESHOLD) requestMade = true
@@ -698,6 +775,7 @@ export const rewindLastMessages = mutation({
       requestMade,
       resolutionReached,
       empathyShown,
+      observationMade,
     }
 
     // Roll the character's mood back to where it stood before the rewound
@@ -726,5 +804,57 @@ export const rewindLastMessages = mutation({
       rewindsRemaining: maxRewinds - (rewindsUsed + 1),
       messages: updatedMessages,
     }
+  },
+})
+
+// ============================================================================
+// REFLECTION (internal, called by ai.generateReflection)
+// ============================================================================
+
+/**
+ * Internal: what ai.generateReflection needs to write one "said another way"
+ * example. Only a completed conversation qualifies: while it is still running,
+ * finding their own words is the whole exercise.
+ */
+export const getForReflection = internalQuery({
+  args: {
+    conversationId: v.id('conversations'),
+    userId: v.id('users'),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId)
+    if (
+      !conversation ||
+      conversation.userId !== args.userId ||
+      conversation.status !== 'completed'
+    ) {
+      return null
+    }
+    const scenario = await ctx.db.get(conversation.scenarioId)
+    if (!scenario) return null
+    return { conversation, scenario }
+  },
+})
+
+/** Internal: store the reflection. Written once; a second write is ignored. */
+export const saveReflection = internalMutation({
+  args: {
+    conversationId: v.id('conversations'),
+    userId: v.id('users'),
+    reflection: v.object({
+      messageIndex: v.number(),
+      original: v.string(),
+      rewrite: v.string(),
+      why: v.string(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId)
+    if (!conversation || conversation.userId !== args.userId) {
+      userError('Conversation not found')
+    }
+    if (conversation.reflection) return conversation.reflection
+    await ctx.db.patch(args.conversationId, { reflection: args.reflection })
+    return args.reflection
   },
 })

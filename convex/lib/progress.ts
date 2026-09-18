@@ -96,6 +96,14 @@ export function scenarioStatusForScore(
 // ---------------------------------------------------------------------------
 
 /**
+ * Points for finishing a scenario for the first time without earning a star.
+ * Seeing a hard conversation through is worth something on its own, and the
+ * people who score lowest are the ones who most need a reason to come back.
+ * Paid once per scenario, so it cannot be farmed.
+ */
+export const FIRST_FINISH_POINTS = 25
+
+/**
  * Points for a scenario completion. First completions pay in full; repeats
  * reward improvement over the previous best (plus a small practice bonus), so
  * replaying an easy scenario cannot be farmed for unlimited points.
@@ -109,7 +117,7 @@ export function pointsForCompletion(args: {
 }): number {
   let points = 0
   if (args.isFirstCompletion) {
-    points = 100 * args.finalStars
+    points = args.finalStars > 0 ? 100 * args.finalStars : FIRST_FINISH_POINTS
   } else {
     const starsGained = Math.max(0, args.finalStars - args.previousBestStars)
     points =

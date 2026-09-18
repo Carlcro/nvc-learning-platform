@@ -256,10 +256,29 @@ interface NVCScore {
 
 1. Computes `finalScore` and stars from the server-held messages.
 2. Updates `scenarioProgress` (attempts, best score, status).
-3. Awards points: first completion earns `100 * stars`; repeats reward improvement over the previous best (plus a small practice bonus); a perfect 100 earns a one-time +200 bonus; completing a daily challenge adds that challenge's advertised `bonusPoints`.
+3. Awards points: first completion earns `100 * stars`, or a flat 25 (`FIRST_FINISH_POINTS`) when it earned no star, so seeing a hard conversation through always counts for something; repeats reward improvement over the previous best (plus a small practice bonus); a perfect 100 earns a one-time +200 bonus; completing a daily challenge adds that challenge's advertised `bonusPoints`.
 4. Advances the practice streak using the client's local calendar date, validated server-side (see `resolveLocalDate` in `convex/lib/progress.ts`).
 5. Updates true running averages for the four components and overall score.
 6. Awards achievements (catalog in `convex/lib/progress.ts`).
+7. Stores a `resultSummary` on the conversation (points, previous best, level before and after, streak, new achievements) so the results screen can be reopened later with `?view=results`, for example when coming back from the transcript.
+
+`totalStars` only grows by stars gained over a scenario's previous best, so replaying one scenario cannot farm the star achievements.
+
+### What the results screen must stay honest about
+
+`ScenarioResults` only claims "You connected with {name}" when the character really opened up (`resolutionReached`, or a final mood of 5 or more). Wrapping up is open to everyone after `MIN_TURNS_TO_WRAP_UP` turns, so a guarded ending gets its own warm, truthful copy that names what the user did manage and the next piece to try. Never hardcode a station as reached. The takeaways on that screen (strongest component, focus for next time, best message, suggested next scenario) are pure functions in `src/lib/conversationInsights.ts`, computed from stored scores without another model call.
+
+### Milestones
+
+The arc rail is Start, Observe, Feeling, Need, Request, Done (`milestonesAchieved`, each component milestone lights at 15 of 25). `observationMade` and `empathyShown` are optional in the schema because older conversations lack them. Completing the arc (what triggers the character's warm close and the celebrated wrap-up) still means feeling, need, and request; an observation is steered toward early but never required.
+
+### Hints during, a worked example after
+
+During a conversation the coaching gives hints, never scripts (`giraffeAlternative` stays empty). After completion, `ai.generateReflection` writes one of the user's own messages another way (the lowest-scoring turn under 85), stores it once on the conversation as `reflection`, and the results screen and transcript show it. It draws on the same daily turn allowance as a practice turn.
+
+### Coming back to a conversation
+
+A conversation with at least one user message counts as waiting. The hub (`conversations.listMyActiveScenarioIds`) shows "Continue" on its card and leads with it, and the brief (`conversations.getActiveForScenario`) offers "Continue your conversation" or "Start fresh". "Start over" inside a conversation always asks first. A rewind hands the taken-back words back to the composer for reshaping; new conversations get 3 rewinds.
 
 **Levels**: thresholds are 0 / 300 / 700 / 1200 / 1800 / 2500 points, then +800 points per level after level 5.
 

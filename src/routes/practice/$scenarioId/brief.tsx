@@ -49,11 +49,13 @@ const difficultyChip: Record<string, string> = {
   advanced: 'bg-empathy-low text-brown-900',
 }
 
+// The four pieces, as a reference to dip into. Deliberately not a checklist
+// for every message: see the "one piece at a time" note shown above them.
 const TIPS = [
-  'Start with observations: describe what you saw or heard, without judgment.',
-  'Express feelings as emotions, not thoughts or blame.',
-  'Connect those feelings to the needs underneath them. What matters to you?',
-  'Make specific, doable requests that invite collaboration, not demands.',
+  'Observation: describe what you saw or heard, without judgment.',
+  'Feeling: name the emotion itself, not a thought or blame.',
+  'Need: say what matters to you underneath the feeling.',
+  'Request: ask for one specific, doable thing, and leave room for a no.',
 ]
 
 function ScenarioBrief() {
@@ -72,7 +74,15 @@ function ScenarioBrief() {
     scenarioId: scenarioId as Id<'scenarios'>,
   })
 
+  // A conversation already under way here, so the brief can offer to pick it
+  // back up instead of quietly dropping the user into the middle of it.
+  const activeConversation = useQuery(api.conversations.getActiveForScenario, {
+    scenarioId: scenarioId as Id<'scenarios'>,
+  })
+  const isContinuing = !!activeConversation
+
   const createConversation = useMutation(api.conversations.create)
+  const abandonConversation = useMutation(api.conversations.abandon)
   const initializeScenarioProgress = useMutation(
     api.scenarioProgress.initializeScenarioProgress,
   )
@@ -94,12 +104,20 @@ function ScenarioBrief() {
     return () => observer.disconnect()
   }, [scenario])
 
-  const handleStartConversation = async () => {
+  // `fresh` sets the waiting conversation aside first; otherwise starting
+  // returns the waiting one, which is exactly what Continue means.
+  const handleStartConversation = async (fresh = false) => {
     if (!currentUser) return
 
     try {
       setStartError(null)
       setIsCreatingConversation(true)
+
+      if (fresh && activeConversation) {
+        await abandonConversation({
+          conversationId: activeConversation.conversationId,
+        })
+      }
 
       await initializeScenarioProgress({
         scenarioId: scenarioId as Id<'scenarios'>,
@@ -272,10 +290,20 @@ function ScenarioBrief() {
               </section>
             </div>
 
-            {/* Tips - collapsed by default to keep the page short */}
+            {/* The one idea that shapes everything after this page */}
+            <div className="rounded-lg border border-giraffe-200 bg-giraffe-50 px-4 py-3 text-sm text-brown-700 text-pretty">
+              <span className="font-semibold text-brown-800">
+                One piece at a time.
+              </span>{' '}
+              A real conversation unfolds gradually: an observation in one
+              message, a feeling in the next, a request later on. You never
+              need to fit everything into one message.
+            </div>
+
+            {/* The four pieces, collapsed by default to keep the page short */}
             <details className="group rounded-lg border border-giraffe-200 bg-giraffe-50/70">
               <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-4 py-3 font-bold text-brown-800 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2">
-                Tips for success
+                The four pieces, for reference
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -347,20 +375,43 @@ function ScenarioBrief() {
                 <p className="flex-1 text-sm text-empathy-low font-medium">
                   {startError}
                 </p>
+              ) : isContinuing ? (
+                <p className="flex-1 text-sm text-brown-600 text-pretty">
+                  Your conversation with {scenario.characterName} is waiting,{' '}
+                  {activeConversation.userTurns === 1
+                    ? 'one message in'
+                    : `${activeConversation.userTurns} messages in`}
+                  .
+                </p>
               ) : (
                 <p className="flex-1 text-sm text-brown-600">
                   Ready when you are. Take your time.
                 </p>
               )}
+              {isContinuing && (
+                <Button
+                  onClick={() => handleStartConversation(true)}
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  disabled={isCreatingConversation}
+                >
+                  Start fresh
+                </Button>
+              )}
               <Button
-                onClick={handleStartConversation}
+                onClick={() => handleStartConversation()}
                 variant="primary"
                 size="lg"
                 className="px-8 w-full sm:w-auto"
                 isLoading={isCreatingConversation}
                 disabled={isCreatingConversation}
               >
-                {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
+                {isCreatingConversation
+                  ? 'Starting...'
+                  : isContinuing
+                    ? 'Continue your conversation'
+                    : 'Start Conversation'}
               </Button>
             </div>
           </footer>
@@ -385,7 +436,7 @@ function ScenarioBrief() {
         )}
         <button
           type="button"
-          onClick={handleStartConversation}
+          onClick={() => handleStartConversation()}
           disabled={isCreatingConversation}
           tabIndex={footerInView ? -1 : 0}
           className={`inline-flex items-center justify-center gap-2 rounded-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold text-lg px-8 py-3.5 shadow-lg cursor-pointer transition-colors duration-200 motion-safe:active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2 ${
@@ -415,7 +466,11 @@ function ScenarioBrief() {
               />
             </svg>
           )}
-          {isCreatingConversation ? 'Starting...' : 'Start Conversation'}
+          {isCreatingConversation
+            ? 'Starting...'
+            : isContinuing
+              ? 'Continue your conversation'
+              : 'Start Conversation'}
         </button>
       </div>
     </main>

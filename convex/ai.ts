@@ -78,6 +78,7 @@ interface TurnScenario {
 }
 
 interface ArcSoFar {
+  observationMade: boolean
   feelingExpressed: boolean
   needIdentified: boolean
   requestMade: boolean
@@ -273,6 +274,7 @@ export const submitTurn = action({
 
     const milestones = conversation.milestonesAchieved
     const arcSoFar: ArcSoFar = {
+      observationMade: milestones?.observationMade ?? false,
       feelingExpressed: milestones?.feelingExpressed ?? false,
       needIdentified: milestones?.needIdentified ?? false,
       requestMade: milestones?.requestMade ?? false,
@@ -347,14 +349,16 @@ async function analyzeMessage(args: {
       : 'This is the start of a new conversation.'
 
   // Summarise progress so the "next step" can steer toward the earliest NVC
-  // piece they have not yet expressed (feeling, then need, then request).
+  // piece they have not yet expressed (observation, feeling, need, request).
   const landed = args.arcSoFar
   const done = [
+    landed.observationMade && 'an observation',
     landed.feelingExpressed && 'a feeling',
     landed.needIdentified && 'a need',
     landed.requestMade && 'a clear request',
   ].filter(Boolean) as Array<string>
   const todo = [
+    !landed.observationMade && 'an observation',
     !landed.feelingExpressed && 'a feeling',
     !landed.needIdentified && 'a need',
     !landed.requestMade && 'a clear request',
@@ -362,7 +366,7 @@ async function analyzeMessage(args: {
   const progressSummary = [
     done.length
       ? `Already expressed earlier in this conversation: ${done.join(', ')}.`
-      : 'They have not yet clearly expressed a feeling, need, or request.',
+      : 'They have not yet clearly expressed an observation, feeling, need, or request.',
     todo.length
       ? `Still to come: ${todo.join(', ')}.`
       : 'All core pieces are present; help them refine.',
@@ -404,7 +408,7 @@ Anchors:
 Write every text field in plain, warm, spoken English. Do NOT use markdown, asterisks, bold, headings, or bullet characters. Never use em dashes or en dashes; use a comma or a period instead. Keep sentences short and easy to read at a glance.
 
 - whatWentWell: name the single best thing in THIS message, in one specific, encouraging sentence (max 15 words). Always find something genuine, even in a weak message.
-- feedback: the ONE most useful next move, in a single short sentence (max 22 words). This is the heart of the coaching. Give a HINT, not a script: point them in a direction or ask a guiding question (for example "what's underneath that frustration?") so they discover their own words. NEVER hand them a phrase to copy or say. Use the progress summary: steer them toward the earliest piece they have NOT yet expressed in this conversation (feeling, then need, then request); if all three are present, help them sharpen or invite curiosity about the other person. Phrase it as an inviting nudge, never a correction, and do not restate what they already did well.
+- feedback: the ONE most useful next move, in a single short sentence (max 22 words). This is the heart of the coaching. Give a HINT, not a script: point them in a direction or ask a guiding question (for example "what's underneath that frustration?") so they discover their own words. NEVER hand them a phrase to copy or say. Use the progress summary: steer them toward the earliest piece they have NOT yet expressed in this conversation (observation, then feeling, then need, then request). An observation is only worth steering toward early on: once a feeling or need is on the table, move forward rather than back. If all pieces are present, help them sharpen or invite curiosity about the other person. Phrase it as an inviting nudge, never a correction, and do not restate what they already did well.
 - giraffeAlternative: leave this as an empty string. Do not write a suggested phrase; the user should find their own wording.
 - jackalPhrases: short verbatim excerpts from the user's response that read as judgmental or blaming; empty array if none
 - isJackalLanguage: true only if the message leans on blame, judgment, or labels
@@ -569,6 +573,139 @@ IMPORTANT REMINDERS:
 
   return textBlock.text
 }
+
+// ============================================================================
+// REFLECTION (one message said another way, after the conversation)
+// ============================================================================
+
+// A message that already landed this well has nothing useful to contrast.
+const REFLECTION_SCORE_CEILING = 85
+
+const reflectionSchema = {
+  type: 'object',
+  properties: {
+    rewrite: { type: 'string' },
+    why: { type: 'string' },
+  },
+  required: ['rewrite', 'why'],
+  additionalProperties: false,
+} as const
+
+export interface ReflectionResult {
+  messageIndex: number
+  original: string
+  rewrite: string
+  why: string
+}
+
+/**
+ * After a conversation is complete, take the turn that landed least well and
+ * show one way it could have been said. During the conversation the coaching
+ * deliberately gives hints rather than scripts so people find their own words;
+ * afterwards a worked example is exactly what helps the lesson stick.
+ *
+ * Written once per conversation and stored, so reopening the results or the
+ * transcript never calls the model again. Returns null when every message
+ * already landed well.
+ */
+export const generateReflection = action({
+  args: { conversationId: v.id('conversations') },
+  handler: async (ctx, args): Promise<ReflectionResult | null> => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      userError('Not authenticated')
+    }
+
+    const loaded = await ctx.runQuery(internal.conversations.getForReflection, {
+      conversationId: args.conversationId,
+      userId,
+    })
+    if (!loaded) {
+      userError('Conversation not found')
+    }
+    const { conversation, scenario } = loaded
+    if (conversation.reflection) return conversation.reflection
+
+    // The turn with the most room to grow.
+    let targetIndex = -1
+    let lowest = REFLECTION_SCORE_CEILING
+    conversation.messages.forEach((m, i) => {
+      if (m.role !== 'user' || !m.nvcScore) return
+      if (m.nvcScore.total < lowest) {
+        lowest = m.nvcScore.total
+        targetIndex = i
+      }
+    })
+    if (targetIndex === -1) return null
+
+    // Costs a model call, so it draws on the same daily allowance as a turn.
+    await ctx.runMutation(internal.usage.consumeTurn, { userId })
+
+    const target = conversation.messages[targetIndex]
+    const before = conversation.messages
+      .slice(Math.max(0, targetIndex - 4), targetIndex)
+      .map(
+        (m) =>
+          `${m.role === 'user' ? 'User' : scenario.characterName}: ${m.content}`,
+      )
+      .join('\n')
+
+    const systemPrompt = `You are an expert Non-Violent Communication (NVC) coach. A practice conversation has finished, and you are showing the learner ONE of their own messages said another way, as a worked example.
+
+Rules for the rewrite:
+- Keep the learner's intent, facts, and voice. It should sound like them on a good day, not like a textbook.
+- Keep it to one or two natural spoken sentences. Do NOT cram all four NVC components in. Improve what the message was trying to do: swap a judgment for an observation, a pseudo-feeling for a real feeling, a strategy for the need beneath it, or a demand for a request.
+- No blame, labels, "always" or "never", and no "you make me feel".
+
+Rules for the why:
+- One short, warm sentence (max 25 words) naming the single change that matters most and why it lands more gently. Speak to the learner as "you".
+
+Plain spoken English only. No markdown, no quotation marks around the rewrite, and never use em dashes or en dashes.`
+
+    const userPrompt = `### The Scenario
+The learner was talking with ${scenario.characterName}. The setup: ${scenario.situation}
+
+### What was said just before
+${before || 'This was the start of the conversation.'}
+
+### The learner's message to say another way
+"${target.content}"`
+
+    const response = await anthropic.messages.parse({
+      model: MODEL,
+      max_tokens: 512,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+      output_config: {
+        format: {
+          type: 'json_schema',
+          schema: reflectionSchema,
+        },
+      },
+    })
+
+    const parsed = response.parsed_output as {
+      rewrite?: string
+      why?: string
+    } | null
+    const rewrite = parsed?.rewrite?.trim()
+    const why = parsed?.why?.trim()
+    if (!rewrite || !why) {
+      throw new Error('Empty structured response from the model')
+    }
+
+    return await ctx.runMutation(internal.conversations.saveReflection, {
+      conversationId: args.conversationId,
+      userId,
+      reflection: {
+        messageIndex: targetIndex,
+        original: target.content,
+        rewrite,
+        why,
+      },
+    })
+  },
+})
 
 // ============================================================================
 // CUSTOM SCENARIO BUILDER ACTIONS
