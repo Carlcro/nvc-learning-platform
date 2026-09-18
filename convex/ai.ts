@@ -15,6 +15,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
+import { MAX_HISTORY_MESSAGES, MAX_USER_TURNS } from './lib/limits'
 import { action } from './_generated/server'
 import { internal } from './_generated/api'
 
@@ -248,11 +249,23 @@ export const submitTurn = action({
       userError('Conversation not found')
     }
 
-    const { conversation, scenario, userLevel } = turn
+    const { conversation, scenario, userLevel, userTurnCount } = turn
 
-    const history: Array<ConversationMessage> = conversation.messages.map(
-      (m) => ({ role: m.role, content: m.content }),
-    )
+    if (userTurnCount >= MAX_USER_TURNS) {
+      userError(
+        'This conversation has run its course. Wrap it up to see how it went, and you can always start it again.',
+      )
+    }
+
+    // Reserved before the model is called, since that is what actually costs.
+    await ctx.runMutation(internal.usage.consumeTurn, { userId })
+
+    // Only the recent exchanges go to the model. Both calls resend the history,
+    // so an uncapped window makes a long conversation cost quadratically; the
+    // milestones carry the longer arc instead.
+    const history: Array<ConversationMessage> = conversation.messages
+      .slice(-MAX_HISTORY_MESSAGES)
+      .map((m) => ({ role: m.role, content: m.content }))
 
     const milestones = conversation.milestonesAchieved
     const arcSoFar: ArcSoFar = {
@@ -683,6 +696,8 @@ export const generateCustomScenario = action({
     ) {
       userError('Answers are too long')
     }
+
+    await ctx.runMutation(internal.usage.consumeScenarioGeneration, { userId })
 
     const transcript =
       args.answers.length > 0

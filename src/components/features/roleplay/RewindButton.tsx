@@ -98,8 +98,8 @@ export function RewindButton({
               </div>
 
               <p className="text-xs text-brown-600">
-                Using a rewind won't affect your final score - it's here to help
-                you learn!
+                A rewound message is taken out of the conversation, so it
+                will not be part of your final reflection.
               </p>
             </div>
 

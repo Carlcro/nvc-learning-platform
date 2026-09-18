@@ -154,7 +154,7 @@ export function MessageInput({
         {/* Info Text */}
         {characterCount > 0 && (
           <div className="text-xs text-brown-600 w-full">
-            Remember: Express your observation, feeling, need, and request
+            One piece at a time is plenty. Say the next true thing.
           </div>
         )}
       </div>

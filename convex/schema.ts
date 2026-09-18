@@ -510,4 +510,17 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_action', ['action'])
     .index('by_timestamp', ['timestamp']),
+
+  /**
+   * How much model work one account has asked for today, so a single user
+   * cannot run the API bill up without limit. One row per user per day, keyed
+   * on the server's UTC date (never a client-supplied one, since this is a
+   * spend guard rather than a streak).
+   */
+  dailyUsage: defineTable({
+    userId: v.id('users'),
+    date: v.string(), // YYYY-MM-DD, server UTC
+    turns: v.number(),
+    scenarioGenerations: v.number(),
+  }).index('by_user_and_date', ['userId', 'date']),
 })

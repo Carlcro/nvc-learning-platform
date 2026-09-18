@@ -20,10 +20,13 @@ import type * as feelingsProgress from "../feelingsProgress.js";
 import type * as feelingsQuiz from "../feelingsQuiz.js";
 import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
+import type * as lib_errors from "../lib/errors.js";
+import type * as lib_limits from "../lib/limits.js";
 import type * as lib_progress from "../lib/progress.js";
 import type * as scenarioProgress from "../scenarioProgress.js";
 import type * as scenarios from "../scenarios.js";
 import type * as seed from "../seed.js";
+import type * as usage from "../usage.js";
 import type * as userProgress from "../userProgress.js";
 import type * as users from "../users.js";
 
@@ -54,10 +57,13 @@ declare const fullApi: ApiFromModules<{
   feelingsQuiz: typeof feelingsQuiz;
   http: typeof http;
   lessons: typeof lessons;
+  "lib/errors": typeof lib_errors;
+  "lib/limits": typeof lib_limits;
   "lib/progress": typeof lib_progress;
   scenarioProgress: typeof scenarioProgress;
   scenarios: typeof scenarios;
   seed: typeof seed;
+  usage: typeof usage;
   userProgress: typeof userProgress;
   users: typeof users;
 }>;

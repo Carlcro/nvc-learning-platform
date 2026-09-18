@@ -1,3 +1,8 @@
+import {
+  MAX_USER_TURNS,
+  MIN_TURNS_TO_WRAP_UP,
+  TURNS_REMAINING_WARNING,
+} from 'convex/lib/limits'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
@@ -32,7 +37,6 @@ function LoadingScreen({ label }: { label: string }) {
 function ConversationComponent() {
   const { scenarioId, conversationId } = Route.useParams()
   const search = Route.useSearch()
-  const isArchiveMode = search.view === 'archive'
 
   const [mobileFeedbackExpanded, setMobileFeedbackExpanded] = useState(false)
   const [showScenarioContext, setShowScenarioContext] = useState(false)
@@ -107,18 +111,37 @@ function ConversationComponent() {
     )
   }
 
+  // Derived from the conversation's own status, not just the URL: reaching a
+  // finished conversation without the search param used to render a fully
+  // enabled composer that could only fail on send.
+  const isArchiveMode =
+    search.view === 'archive' || conversation.status !== 'in_progress'
+
   const userMessageCount = messages.filter((m) => m.role === 'user').length
 
-  // Finishing is the reward for completing the full arc: the user can only end
-  // once they have expressed a feeling, a need, and a clear request. These
-  // milestones accumulate across the conversation and never reset.
+  // Completing the full arc is the celebrated ending: a feeling, a need, and a
+  // clear request, all expressed. Milestones accumulate and never reset.
   const milestones = conversation.milestonesAchieved
-  const canEndConversation =
-    !isArchiveMode &&
-    !isLoading && // wait until the character's closing reply is on screen
+  const completedArc =
     !!milestones?.feelingExpressed &&
     !!milestones.needIdentified &&
     !!milestones.requestMade
+
+  // Someone who cannot reach the milestones still needs a way out that keeps
+  // what they managed, so wrapping up opens once there is a conversation worth
+  // reflecting on. Without this a struggling beginner, exactly the person who
+  // most needs the results screen, could only abandon and lose everything.
+  const turnsRemaining = MAX_USER_TURNS - userMessageCount
+  const reachedTurnLimit = turnsRemaining <= 0
+  const canEndConversation =
+    !isArchiveMode &&
+    !isLoading && // wait until the character's closing reply is on screen
+    (completedArc || userMessageCount >= MIN_TURNS_TO_WRAP_UP)
+
+  const showTurnsRemaining =
+    !isArchiveMode &&
+    !reachedTurnLimit &&
+    turnsRemaining <= TURNS_REMAINING_WARNING
 
   const characterMood = conversation.currentCharacterMood
 
@@ -189,10 +212,10 @@ function ConversationComponent() {
 
             <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 shrink-0">
               {canEndConversation && (
-                // This button is earned: it only exists once a feeling, a need,
-                // and a request have all been expressed. Let it arrive like the
-                // small win it is.
-                <div className="animate-celebrate-in">
+                // Completing the arc is a small win, so that version arrives
+                // with a flourish. The plain version is a quiet way out for
+                // someone who is stuck, and should not feel like a consolation.
+                <div className={completedArc ? 'animate-celebrate-in' : ''}>
                   <Button
                     onClick={completeScenario}
                     variant="secondary"
@@ -200,17 +223,34 @@ function ConversationComponent() {
                     disabled={isCompleting}
                     isLoading={isCompleting}
                   >
-                    Wrap up and see how it went
+                    {completedArc
+                      ? 'Wrap up and see how it went'
+                      : 'Wrap up here and see how it went'}
                   </Button>
                 </div>
               )}
 
-              <MessageInput
-                onSubmit={sendMessage}
-                isLoading={isLoading}
-                disabled={isLoading || isArchiveMode}
-                onStartOver={startNewConversation}
-              />
+              {reachedTurnLimit && !isArchiveMode ? (
+                <p className="text-center text-sm text-brown-600 py-2">
+                  This is as far as this conversation goes. Wrap it up above to
+                  see how it went, and you can always start it again.
+                </p>
+              ) : (
+                <MessageInput
+                  onSubmit={sendMessage}
+                  isLoading={isLoading}
+                  disabled={isLoading || isArchiveMode}
+                  onStartOver={startNewConversation}
+                />
+              )}
+
+              {showTurnsRemaining && (
+                <p className="text-center text-sm text-brown-500">
+                  {turnsRemaining === 1
+                    ? 'One message left in this conversation.'
+                    : `${turnsRemaining} messages left in this conversation.`}
+                </p>
+              )}
 
               {/* Rewind Button - show after at least one user message */}
               {userMessageCount > 0 && !isArchiveMode && (
@@ -382,9 +422,10 @@ function ConversationComponent() {
                 </div>
 
                 <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg p-4 text-sm text-brown-700">
-                  <strong className="text-brown-800">Tip:</strong> Remember to
-                  express your observations, feelings, needs, and requests
-                  clearly.
+                  <strong className="text-brown-800">Tip:</strong> A real
+                  conversation unfolds a piece at a time. An observation in one
+                  message, a feeling in the next, a request later on. You do not
+                  need to fit all four into every message.
                 </div>
               </div>
 

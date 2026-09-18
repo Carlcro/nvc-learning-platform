@@ -1,6 +1,7 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
+import { MAX_USER_TURNS } from './lib/limits'
 import {
   internalMutation,
   internalQuery,
@@ -185,9 +186,15 @@ export const getForTurn = internalQuery({
       conversation,
       scenario,
       userLevel: progress?.level ?? 1,
+      userTurnCount: countUserTurns(conversation),
     }
   },
 })
+
+/** User messages sent so far, which is what the turn cap counts. */
+function countUserTurns(conversation: Doc<'conversations'>): number {
+  return conversation.messages.filter((m) => m.role === 'user').length
+}
 
 /**
  * Internal: persist one full turn (user message with its analysis, plus the
@@ -224,6 +231,12 @@ export const recordTurn = internalMutation({
     }
     if (conversation.status !== 'in_progress') {
       userError('Conversation is no longer active')
+    }
+    // Checked again inside the transaction: submitTurn checks before spending
+    // on the model, but only this re-read stops two concurrent turns from both
+    // landing on the last allowed slot.
+    if (countUserTurns(conversation) >= MAX_USER_TURNS) {
+      userError('This conversation has run its course.')
     }
 
     const now = Date.now()
