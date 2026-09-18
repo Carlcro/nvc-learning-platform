@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { userError } from "./lib/errors";
 import { internalMutation, mutation, query } from "./_generated/server";
 
 /**
@@ -541,7 +542,7 @@ export const createCustom = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      throw new Error("Not authenticated");
+      userError("Not authenticated");
     }
 
     const now = Date.now();
@@ -591,7 +592,7 @@ export const deleteCustom = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      throw new Error("Not authenticated");
+      userError("Not authenticated");
     }
 
     const scenario = await ctx.db.get(args.scenarioId);
@@ -600,7 +601,7 @@ export const deleteCustom = mutation({
     }
 
     if (scenario.ownerId !== userId) {
-      throw new Error("You can only delete your own scenarios");
+      userError("You can only delete your own scenarios");
     }
 
     // Remove the conversations and progress tied to this scenario so nothing
@@ -670,14 +671,19 @@ export const seedBeginner = internalMutation({
 export const seedAll = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const existingCount = await ctx.db.query("scenarios").collect();
+    // Count only the built-in library. Daily-challenge scenarios (orderIndex
+    // -1) and user-created ones also live in this table, so counting every row
+    // would let the midnight cron permanently block seeding a fresh deployment.
+    const existingBuiltIns = await ctx.db
+      .query("scenarios")
+      .withIndex("by_order", (q) => q.gte("orderIndex", 0))
+      .collect();
 
-    // Only seed if scenarios table is empty
-    if (existingCount.length > 0) {
+    if (existingBuiltIns.length > 0) {
       return {
         success: false,
-        message: `Scenarios table already has ${existingCount.length} scenarios. Skipping seed.`,
-        existingScenarios: existingCount.length,
+        message: `Scenarios table already has ${existingBuiltIns.length} built-in scenarios. Skipping seed.`,
+        existingScenarios: existingBuiltIns.length,
       };
     }
 

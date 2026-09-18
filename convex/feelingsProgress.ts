@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
+import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
 import { daysBetween, resolveLocalDate } from './lib/progress'
 import { getOrCreateFeelingsProgress } from './feelings'
@@ -266,16 +267,16 @@ export const recordCheckIn = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) throw new Error('Not authenticated')
+    if (userId === null) userError('Not authenticated')
 
     if (args.feelings.length === 0) {
-      throw new Error('Pick at least one feeling')
+      userError('Pick at least one feeling')
     }
     if (args.feelings.length > MAX_CHECKIN_FEELINGS) {
-      throw new Error('Too many feelings selected')
+      userError('Too many feelings selected')
     }
     if (args.note && args.note.length > MAX_NOTE_LENGTH) {
-      throw new Error('Note is too long')
+      userError('Note is too long')
     }
 
     const today = resolveLocalDate(args.localDate)

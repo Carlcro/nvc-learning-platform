@@ -14,6 +14,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
+import { userError } from './lib/errors'
 import { action } from './_generated/server'
 import { internal } from './_generated/api'
 
@@ -228,15 +229,15 @@ export const submitTurn = action({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
 
     const message = args.message.trim()
     if (!message) {
-      throw new Error('Message is empty')
+      userError('Message is empty')
     }
     if (message.length > MAX_MESSAGE_LENGTH) {
-      throw new Error('Message is too long')
+      userError('Message is too long')
     }
 
     const turn = await ctx.runQuery(internal.conversations.getForTurn, {
@@ -244,7 +245,7 @@ export const submitTurn = action({
       userId,
     })
     if (!turn) {
-      throw new Error('Conversation not found')
+      userError('Conversation not found')
     }
 
     const { conversation, scenario, userLevel } = turn
@@ -557,16 +558,16 @@ export const assessScenarioReadiness = action({
   handler: async (ctx, args): Promise<ScenarioReadinessResult> => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
     if (args.userDescription.length > MAX_DESCRIPTION_LENGTH) {
-      throw new Error('Description is too long')
+      userError('Description is too long')
     }
     if (
       args.priorAnswers.length > 6 ||
       args.priorAnswers.some((qa) => qa.answer.length > MAX_ANSWER_LENGTH)
     ) {
-      throw new Error('Answers are too long')
+      userError('Answers are too long')
     }
 
     // Hard cap: two rounds of follow-ups, then we always proceed.
@@ -653,16 +654,16 @@ export const generateCustomScenario = action({
   handler: async (ctx, args): Promise<CustomScenarioResult> => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
     if (args.userDescription.length > MAX_DESCRIPTION_LENGTH) {
-      throw new Error('Description is too long')
+      userError('Description is too long')
     }
     if (
       args.answers.length > 6 ||
       args.answers.some((qa) => qa.answer.length > MAX_ANSWER_LENGTH)
     ) {
-      throw new Error('Answers are too long')
+      userError('Answers are too long')
     }
 
     const transcript =

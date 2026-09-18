@@ -19,6 +19,7 @@ import type { Id } from 'convex/_generated/dataModel'
 import type { Message } from '~/components/features/roleplay/ConversationView'
 import type { FeedbackData } from '~/components/features/roleplay/FeedbackPanel'
 import type { Celebration } from '~/components/features/roleplay/MilestoneCelebration'
+import { userFacingMessage } from '~/lib/errorMessage'
 import { localDateString } from '~/lib/localDate'
 
 // ---------------------------------------------------------------------------
@@ -271,7 +272,10 @@ export function useConversation({
       } catch (err) {
         setPending(null)
         setError(
-          'Something went wrong sending your message. Your words are still below, give it another try.',
+          userFacingMessage(
+            err,
+            'Something went wrong sending your message. Your words are still below, give it another try.',
+          ),
         )
         return false
       } finally {
@@ -308,7 +312,9 @@ export function useConversation({
         newAchievements: result.newAchievements,
       })
     } catch (err) {
-      setError('We could not save your results. Please try again.')
+      setError(
+        userFacingMessage(err, 'We could not save your results. Please try again.'),
+      )
     } finally {
       setIsCompleting(false)
     }
@@ -341,7 +347,12 @@ export function useConversation({
         search: { view: undefined, dailyChallengeId },
       })
     } catch (err) {
-      setError('We could not start a new conversation. Please try again.')
+      setError(
+        userFacingMessage(
+          err,
+          'We could not start a new conversation. Please try again.',
+        ),
+      )
     }
   }, [
     currentUser,
@@ -362,7 +373,7 @@ export function useConversation({
       })
       // Rendered messages follow the conversation query, so nothing to set.
     } catch (err) {
-      setError('We could not rewind. Please try again.')
+      setError(userFacingMessage(err, 'We could not rewind. Please try again.'))
     }
   }, [conversationId, rewindMessages])
 

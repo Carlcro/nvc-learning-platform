@@ -1,5 +1,6 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
+import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
 
 /**
@@ -62,7 +63,7 @@ export const initializeScenarioProgress = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
 
     const existing = await ctx.db

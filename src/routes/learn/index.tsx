@@ -66,7 +66,7 @@ function getLessonRoute(lessonId: ValidLessonId): string {
 }
 
 function getLessonImagePath(lessonOrder: number): string {
-  return `/lesson${lessonOrder}.png`
+  return `/lesson${lessonOrder}.webp`
 }
 
 function LearnHub() {

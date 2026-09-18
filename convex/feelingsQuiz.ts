@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
+import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
 import { getOrCreateFeelingsProgress } from './feelings'
 
@@ -70,10 +71,10 @@ export const submitAnswer = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) throw new Error('Not authenticated')
+    if (userId === null) userError('Not authenticated')
 
     const question = await ctx.db.get(args.questionId)
-    if (!question) throw new Error('Question not found')
+    if (!question) userError('Question not found')
 
     const correct = args.answeredRealFeeling === question.isRealFeeling
 

@@ -9,6 +9,7 @@ import { useConvexAuth } from 'convex/react'
 import type { QueryClient } from '@tanstack/react-query'
 import appCss from '~/styles/app.css?url'
 import { FloatingNav } from '~/components/layout/FloatingNav'
+import { NotFoundPage } from '~/components/layout/ErrorStates'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 
 export const Route = createRootRouteWithContext<{
@@ -46,11 +47,11 @@ export const Route = createRootRouteWithContext<{
         sizes: '16x16',
         href: '/favicon-16x16.png',
       },
-      { rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
+      { rel: 'manifest', href: '/site.webmanifest' },
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),
-  notFoundComponent: () => <div>Route not found</div>,
+  notFoundComponent: NotFoundPage,
   component: RootComponent,
 })
 
@@ -67,7 +68,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <html>
+      <html lang="en">
         <head>
           <HeadContent />
         </head>
@@ -96,7 +97,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <html>
+    <html lang="en">
       <head>
         <HeadContent />
       </head>

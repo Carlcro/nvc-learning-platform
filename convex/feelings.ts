@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
+import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
 import type { MutationCtx } from './_generated/server'
 import type { Doc, Id } from './_generated/dataModel'
@@ -147,7 +148,7 @@ export const markFeelingExplored = mutation({
   args: { feelingWord: v.string() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) throw new Error('Not authenticated')
+    if (userId === null) userError('Not authenticated')
 
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
 
@@ -170,7 +171,7 @@ export const saveFeelingToLibrary = mutation({
   args: { feelingWord: v.string() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) throw new Error('Not authenticated')
+    if (userId === null) userError('Not authenticated')
 
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
 
@@ -193,7 +194,7 @@ export const removeFeelingFromLibrary = mutation({
   args: { feelingWord: v.string() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) throw new Error('Not authenticated')
+    if (userId === null) userError('Not authenticated')
 
     const progress = await ctx.db
       .query('userFeelingsProgress')

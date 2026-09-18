@@ -1,5 +1,6 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
+import { userError } from './lib/errors'
 import {
   internalMutation,
   internalQuery,
@@ -99,15 +100,15 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
 
     const scenario = await ctx.db.get(args.scenarioId)
     if (!scenario) {
-      throw new Error('Scenario not found')
+      userError('Scenario not found')
     }
     if (scenario.visibility === 'private' && scenario.ownerId !== userId) {
-      throw new Error('Scenario not found')
+      userError('Scenario not found')
     }
 
     const existing = await findActiveConversation(ctx, userId, args.scenarioId)
@@ -219,10 +220,10 @@ export const recordTurn = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== args.userId) {
-      throw new Error('Conversation not found')
+      userError('Conversation not found')
     }
     if (conversation.status !== 'in_progress') {
-      throw new Error('Conversation is no longer active')
+      userError('Conversation is no longer active')
     }
 
     const now = Date.now()
@@ -342,12 +343,12 @@ export const complete = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
 
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== userId) {
-      throw new Error('Conversation not found')
+      userError('Conversation not found')
     }
 
     if (conversation.status !== 'in_progress') {
@@ -622,7 +623,7 @@ export const abandon = mutation({
   handler: async (ctx, args) => {
     const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
-      throw new Error('Conversation not found')
+      userError('Conversation not found')
     }
     if (conversation.status !== 'in_progress') {
       return { success: true }
@@ -642,23 +643,23 @@ export const rewindLastMessages = mutation({
   handler: async (ctx, args) => {
     const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
-      throw new Error('Conversation not found')
+      userError('Conversation not found')
     }
 
     if (conversation.status !== 'in_progress') {
-      throw new Error('Cannot rewind a completed conversation')
+      userError('Cannot rewind a completed conversation')
     }
 
     const maxRewinds = conversation.maxRewinds ?? 2
     const rewindsUsed = conversation.rewindsUsed ?? 0
 
     if (rewindsUsed >= maxRewinds) {
-      throw new Error('No rewinds remaining')
+      userError('No rewinds remaining')
     }
 
     // Need at least 3 messages (opening + user + assistant) to rewind
     if (conversation.messages.length < 3) {
-      throw new Error('Not enough messages to rewind')
+      userError('Not enough messages to rewind')
     }
 
     // Remove last 2 messages (user message + character response)

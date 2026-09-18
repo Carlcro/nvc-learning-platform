@@ -1,5 +1,6 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
+import { userError } from './lib/errors'
 import { internalMutation, mutation, query } from './_generated/server'
 
 /**
@@ -64,12 +65,12 @@ export const updateUserProfile = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
 
     const user = await ctx.db.get(userId)
     if (!user) {
-      throw new Error('User not found')
+      userError('User not found')
     }
 
     if (args.name !== undefined) {
@@ -91,7 +92,7 @@ export const initializeUserProfile = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      throw new Error('Not authenticated')
+      userError('Not authenticated')
     }
 
     const existing = await ctx.db

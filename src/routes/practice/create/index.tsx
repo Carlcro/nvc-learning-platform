@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
 import type { ReactNode } from 'react'
+import { userFacingMessage } from '~/lib/errorMessage'
 import { Button } from '~/components/ui/Button'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
@@ -307,9 +308,14 @@ function ScenarioCreate() {
       if (isStale(epoch)) return
       setGenerated(scenario)
       setEditedTitle(scenario.title)
-    } catch {
+    } catch (err) {
       if (isStale(epoch)) return
-      setError("We couldn't shape this just now. Take a breath and try again.")
+      setError(
+        userFacingMessage(
+          err,
+          "We couldn't shape this just now. Take a breath and try again.",
+        ),
+      )
     } finally {
       if (!isStale(epoch)) setGenerating(false)
     }
@@ -411,8 +417,13 @@ function ScenarioCreate() {
       navigate({
         to: `/practice/${scenarioId as Id<'scenarios'>}/conversation/${conversationId}`,
       })
-    } catch {
-      setError("That didn't go through. Take a breath and try again.")
+    } catch (err) {
+      setError(
+        userFacingMessage(
+          err,
+          "That didn't go through. Take a breath and try again.",
+        ),
+      )
       setStarting(false)
     }
   }

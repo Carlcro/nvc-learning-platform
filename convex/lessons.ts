@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { userError } from "./lib/errors";
 import { mutation, query } from "./_generated/server";
 
 /**
@@ -637,12 +638,12 @@ export const recordCompletion = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      throw new Error("Not authenticated");
+      userError("Not authenticated");
     }
 
     const lesson = LESSONS.find((l) => l.lessonId === args.lessonId);
     if (!lesson) {
-      throw new Error("Lesson not found");
+      userError("Lesson not found");
     }
 
     const score = Math.max(0, Math.min(100, Math.round(args.score)));

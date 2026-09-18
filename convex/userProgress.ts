@@ -1,4 +1,5 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
+import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
 import { ACHIEVEMENTS } from './lib/progress'
 
@@ -37,7 +38,7 @@ export const getOrCreate = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) {
-      throw new Error('User not authenticated')
+      userError('User not authenticated')
     }
 
     let progress = await ctx.db

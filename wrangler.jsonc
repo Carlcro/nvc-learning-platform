@@ -3,5 +3,9 @@
   "name": "nvc-learning-platform",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  // Without this, a production break is invisible until a user reports it.
+  "observability": {
+    "enabled": true
+  }
 }
