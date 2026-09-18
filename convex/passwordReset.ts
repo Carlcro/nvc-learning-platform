@@ -25,8 +25,12 @@ export const ResendPasswordReset = Email({
 
   generateVerificationToken: () => Promise.resolve(generateCode()),
 
-  sendVerificationRequest: async ({ identifier: email, provider, token }) => {
-    if (!provider.apiKey) {
+  sendVerificationRequest: async ({ identifier: email, token }) => {
+    // Read directly rather than through provider.apiKey: Convex Auth fills
+    // that from AUTH_<PROVIDER_ID>_KEY, which would never match the plainly
+    // named variable this deployment actually sets.
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
       throw new Error('RESEND_API_KEY is not set on the Convex deployment')
     }
     const from = process.env.AUTH_EMAIL_FROM
@@ -34,7 +38,7 @@ export const ResendPasswordReset = Email({
       throw new Error('AUTH_EMAIL_FROM is not set on the Convex deployment')
     }
 
-    const resend = new Resend(provider.apiKey)
+    const resend = new Resend(apiKey)
     const { error } = await resend.emails.send({
       from,
       to: [email],
