@@ -2,10 +2,18 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/intensity')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Feeling Intensity',
+      description:
+        'See how a feeling shifts as its intensity rises and falls.',
+    }),
+  }),
   component: ProtectedIntensityExplorer,
 })
 

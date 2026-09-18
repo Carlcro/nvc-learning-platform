@@ -5,12 +5,20 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { api } from '../../../convex/_generated/api'
 import type { ReactNode } from 'react'
 import type { Id } from 'convex/_generated/dataModel'
+import { pageMeta } from '~/lib/seo'
 import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
 import { Button } from '~/components/ui/Button'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/practice/')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Practice',
+      description:
+        'Rehearse a difficult conversation with a practice partner who answers in character.',
+    }),
+  }),
   component: ProtectedPracticeHub,
 })
 

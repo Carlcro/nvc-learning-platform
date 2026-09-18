@@ -2,11 +2,19 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { Card, CardBody } from '~/components/ui/Card'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 
 export const Route = createFileRoute('/learn/')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Lessons',
+      description:
+        'Six foundational lessons on observations, feelings, needs and requests.',
+    }),
+  }),
   // Open to signed-out visitors, like the lesson pages themselves. Progress
   // falls back to this browser until they sign in, at which point it syncs.
   component: LearnHub,

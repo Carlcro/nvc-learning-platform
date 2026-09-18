@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Unauthenticated } from 'convex/react'
+import { pageMeta } from '~/lib/seo'
 import { Button } from '~/components/ui/Button'
 import { Card, CardBody } from '~/components/ui/Card'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
@@ -7,6 +8,13 @@ import { DailyChallengeCard } from '~/components/features/dashboard/DailyChallen
 import { CheckIcon, XIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Learn Compassionate Communication',
+      description:
+        'Practice the four steps of compassionate communication through guided lessons and lifelike roleplay conversations.',
+    }),
+  }),
   component: Home,
 })
 

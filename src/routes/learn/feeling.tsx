@@ -3,6 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
@@ -11,6 +12,13 @@ import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/feeling')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Identifying and Expressing Feelings',
+      description:
+        'Tell real feelings apart from thoughts, and name your emotions honestly.',
+    }),
+  }),
   pendingComponent: () => (
     <GiraffeLoader message="Opening the lesson…" />
   ),

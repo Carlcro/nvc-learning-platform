@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useEffect } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { ProfileHero } from '~/components/features/profile/ProfileHero'
 import { OverallScoreRing } from '~/components/features/profile/OverallScoreRing'
 import { SkillStats } from '~/components/features/profile/SkillStats'
@@ -10,6 +11,13 @@ import { AchievementsGrid } from '~/components/features/profile/AchievementsGrid
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/profile/')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Your Profile',
+      description:
+        'Your level, streak, achievements and how your skills are growing.',
+    }),
+  }),
   component: ProfilePage,
 })
 

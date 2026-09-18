@@ -3,10 +3,18 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
+import { pageMeta } from '~/lib/seo'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/quiz')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Feelings Quiz',
+      description:
+        'Practice telling real feelings apart from thoughts about other people.',
+    }),
+  }),
   component: ProtectedQuiz,
 })
 

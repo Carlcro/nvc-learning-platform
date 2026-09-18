@@ -2,11 +2,19 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
+import { pageMeta } from '~/lib/seo'
 import { TranscriptView } from '~/components/features/roleplay/TranscriptView'
 
 export const Route = createFileRoute(
   '/practice/$scenarioId/transcript/$conversationId',
 )({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Conversation Transcript',
+      description:
+        'Review how the conversation went, turn by turn.',
+    }),
+  }),
   component: TranscriptPage,
 })
 

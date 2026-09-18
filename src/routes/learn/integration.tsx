@@ -3,6 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
@@ -20,6 +21,13 @@ const FOUNDATION_LESSON_IDS = [
 ]
 
 export const Route = createFileRoute('/learn/integration')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Putting It All Together',
+      description:
+        'Combine observation, feeling, need and request into one clear expression.',
+    }),
+  }),
   pendingComponent: () => (
     <GiraffeLoader message="Opening the lesson…" />
   ),

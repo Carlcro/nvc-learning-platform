@@ -2,10 +2,18 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/wheel')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Feelings Wheel',
+      description:
+        'Explore feelings by family and intensity on an interactive wheel.',
+    }),
+  }),
   component: ProtectedFeelingsWheel,
 })
 

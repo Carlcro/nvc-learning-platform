@@ -3,12 +3,20 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
+import { pageMeta } from '~/lib/seo'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { StarIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Scenario Brief',
+      description:
+        'Read the situation and meet the person you are about to talk with.',
+    }),
+  }),
   // Daily challenges arrive here with their challenge id; keep it through the
   // brief so completing the conversation can credit the challenge.
   validateSearch: (search: Record<string, unknown>) => ({

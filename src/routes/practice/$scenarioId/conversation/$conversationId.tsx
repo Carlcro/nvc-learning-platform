@@ -6,6 +6,7 @@ import {
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import { pageMeta } from '~/lib/seo'
 import { ConversationView } from '~/components/features/roleplay/ConversationView'
 import { FeedbackPanel } from '~/components/features/roleplay/FeedbackPanel'
 import { MessageInput } from '~/components/features/roleplay/MessageInput'
@@ -19,6 +20,13 @@ import { useConversation } from '~/hooks/useConversation'
 export const Route = createFileRoute(
   '/practice/$scenarioId/conversation/$conversationId',
 )({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Conversation',
+      description:
+        'Practice compassionate communication turn by turn, with feedback as you go.',
+    }),
+  }),
   validateSearch: (search: Record<string, unknown>) => ({
     view: (search.view as string | undefined) ?? undefined,
     dailyChallengeId:

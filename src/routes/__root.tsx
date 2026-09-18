@@ -24,9 +24,19 @@ export const Route = createRootRouteWithContext<{
         name: 'viewport',
         content: 'width=device-width, initial-scale=1',
       },
+      // Fallbacks only. Each route supplies its own title and description via
+      // pageMeta, and the route's values win where both are present.
       {
-        title: 'NVC Learning App - Learn Compassionate Communication',
+        title: 'NVC Learning App: Learn Compassionate Communication',
       },
+      {
+        name: 'description',
+        content:
+          'Practice the four steps of compassionate communication through guided lessons and lifelike roleplay conversations.',
+      },
+      { property: 'og:site_name', content: 'NVC Learning App' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },

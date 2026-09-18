@@ -6,8 +6,16 @@ import { DailyChallengeCard } from '../../components/features/challenges/DailyCh
 import { ChallengeStats } from '../../components/features/challenges/ChallengeStats'
 import { GiraffeLoader } from '../../components/ui/GiraffeLoader'
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
+import { pageMeta } from '~/lib/seo'
 
 export const Route = createFileRoute('/challenges/daily')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Daily Challenge',
+      description:
+        'A fresh scenario every day to build fluency.',
+    }),
+  }),
   component: DailyChallengePage,
 })
 

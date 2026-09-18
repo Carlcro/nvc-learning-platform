@@ -2,11 +2,19 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 import { localDateString } from '~/lib/localDate'
 
 export const Route = createFileRoute('/feelings/check-in')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Daily Check In',
+      description:
+        'Notice and name how you are feeling today.',
+    }),
+  }),
   component: ProtectedDailyCheckIn,
 })
 

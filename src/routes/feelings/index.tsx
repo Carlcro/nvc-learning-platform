@@ -1,9 +1,17 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+import { pageMeta } from '~/lib/seo'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 
 export const Route = createFileRoute('/feelings/')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Feelings',
+      description:
+        'Build the vocabulary to name what you feel precisely.',
+    }),
+  }),
   component: FeelingHub,
 })
 

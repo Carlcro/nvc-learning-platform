@@ -1,10 +1,18 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useConvexAuth } from 'convex/react'
+import { pageMeta } from '~/lib/seo'
 import { SignInForm } from '~/components/auth/SignInForm'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 
 export const Route = createFileRoute('/auth')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Sign in',
+      description:
+        'Sign in to save your progress and keep practicing compassionate communication.',
+    }),
+  }),
   component: AuthPage,
 })
 

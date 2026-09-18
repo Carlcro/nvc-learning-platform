@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
 import type { ReactNode } from 'react'
+import { pageMeta } from '~/lib/seo'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { Button } from '~/components/ui/Button'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
@@ -11,6 +12,13 @@ import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/practice/create/')({
+  head: () => ({
+    meta: pageMeta({
+      title: 'Build a Scenario',
+      description:
+        'Shape a scenario from a real situation in your life, then rehearse it.',
+    }),
+  }),
   component: ProtectedCreate,
 })
 
