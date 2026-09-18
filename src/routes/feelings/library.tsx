@@ -3,7 +3,6 @@ import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
-import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/library')({
@@ -14,16 +13,8 @@ export const Route = createFileRoute('/feelings/library')({
         'The feelings you have explored and saved.',
     }),
   }),
-  component: ProtectedLibrary,
+  component: PersonalLibrary,
 })
-
-function ProtectedLibrary() {
-  return (
-    <ProtectedRoute>
-      <PersonalLibrary />
-    </ProtectedRoute>
-  )
-}
 
 function PersonalLibrary() {
   const currentUser = useQuery(api.users.getCurrentUser)

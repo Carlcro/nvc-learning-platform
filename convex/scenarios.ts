@@ -629,40 +629,6 @@ export const deleteCustom = mutation({
 });
 
 /**
- * Seed beginner scenarios into the database
- * Run this once to populate initial data
- *
- * Usage: npx convex run scenarios:seedBeginner
- */
-export const seedBeginner = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const existingCount = await ctx.db.query("scenarios").collect();
-
-    // Only seed if scenarios table is empty
-    if (existingCount.length > 0) {
-      return {
-        success: false,
-        message: `Scenarios table already has ${existingCount.length} scenarios. Skipping seed.`,
-      };
-    }
-
-    const createdIds = [];
-
-    for (const scenario of BEGINNER_SCENARIOS) {
-      const id = await ctx.db.insert("scenarios", scenario);
-      createdIds.push(id);
-    }
-
-    return {
-      success: true,
-      message: `Seeded ${createdIds.length} beginner scenarios`,
-      scenarioIds: createdIds,
-    };
-  },
-});
-
-/**
  * Seed all scenarios (beginner, intermediate, advanced)
  * Run this once to populate complete scenario library
  *

@@ -50,9 +50,9 @@ const difficultyChip: Record<string, string> = {
 }
 
 const TIPS = [
-  'Start with observations - describe what you saw or heard, without judgment.',
+  'Start with observations: describe what you saw or heard, without judgment.',
   'Express feelings as emotions, not thoughts or blame.',
-  'Connect those feelings to the needs underneath them - what matters to you?',
+  'Connect those feelings to the needs underneath them. What matters to you?',
   'Make specific, doable requests that invite collaboration, not demands.',
 ]
 

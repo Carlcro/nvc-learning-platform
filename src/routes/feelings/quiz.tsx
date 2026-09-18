@@ -6,7 +6,6 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { localDateString } from '~/lib/localDate'
 import { pageMeta } from '~/lib/seo'
-import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/quiz')({
@@ -17,7 +16,7 @@ export const Route = createFileRoute('/feelings/quiz')({
         'Practice telling real feelings apart from thoughts about other people.',
     }),
   }),
-  component: ProtectedQuiz,
+  component: QuizGame,
 })
 
 type QuizState = 'level-select' | 'loading' | 'question' | 'feedback' | 'complete'
@@ -38,14 +37,6 @@ interface AnswerFeedback {
   correctFeelings: Array<string>
   pointsEarned: number
   leveledUp: boolean
-}
-
-function ProtectedQuiz() {
-  return (
-    <ProtectedRoute>
-      <QuizGame />
-    </ProtectedRoute>
-  )
 }
 
 function QuizGame() {

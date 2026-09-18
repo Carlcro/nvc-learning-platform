@@ -1,7 +1,7 @@
 /**
  * ConversationView Component
  *
- * Main interface for AI roleplay conversation
+ * Main interface for a roleplay conversation
  * Displays messages, character responses, and feedback
  */
 

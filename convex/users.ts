@@ -1,7 +1,6 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
-import { v } from 'convex/values'
 import { userError } from './lib/errors'
-import { internalMutation, mutation, query } from './_generated/server'
+import { mutation, query } from './_generated/server'
 
 /**
  * Get the current authenticated user
@@ -51,35 +50,6 @@ export const getUserProfile = query({
         longestStreak: progress?.longestStreak ?? 0,
       },
     }
-  },
-})
-
-/**
- * Update user profile (name, email, etc.)
- * Only accessible to the authenticated user themselves
- */
-export const updateUserProfile = mutation({
-  args: {
-    name: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
-    if (userId === null) {
-      userError('Not authenticated')
-    }
-
-    const user = await ctx.db.get(userId)
-    if (!user) {
-      userError('User not found')
-    }
-
-    if (args.name !== undefined) {
-      await ctx.db.patch(userId, {
-        name: args.name,
-      })
-    }
-
-    return await ctx.db.get(userId)
   },
 })
 
@@ -134,18 +104,3 @@ export const initializeUserProfile = mutation({
   },
 })
 
-/**
- * One-off cleanup for the deprecated userProfiles table (stats moved to
- * userProgress). Run via `npx convex run users:clearDeprecatedProfiles`,
- * then the table can be dropped from the schema.
- */
-export const clearDeprecatedProfiles = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const profiles = await ctx.db.query('userProfiles').collect()
-    for (const profile of profiles) {
-      await ctx.db.delete(profile._id)
-    }
-    return { deleted: profiles.length }
-  },
-})

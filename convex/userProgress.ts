@@ -2,6 +2,7 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
 import { ACHIEVEMENTS } from './lib/progress'
+import { getOrCreateUserProgress } from './lib/userProgressWrite'
 
 /**
  * User overall progress: level, points, streaks, averages, achievements.
@@ -30,8 +31,10 @@ export const getByUserId = query({
 })
 
 /**
- * Get or create user progress record
- * Initializes a new record if it doesn't exist
+ * Ensure the signed-in user has a progress record.
+ *
+ * The record itself is created by the shared helper, so this, a conversation
+ * completion and a feelings check-in all bootstrap it identically.
  */
 export const getOrCreate = mutation({
   args: {},
@@ -40,45 +43,7 @@ export const getOrCreate = mutation({
     if (!userId) {
       userError('User not authenticated')
     }
-
-    let progress = await ctx.db
-      .query('userProgress')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
-      .first()
-
-    if (!progress) {
-      const progressId = await ctx.db.insert('userProgress', {
-        userId,
-        level: 1,
-        totalPoints: 0,
-        pointsToNextLevel: 300,
-        scenariosCompleted: 0,
-        scenariosPassed: 0,
-        scenariosMastered: 0,
-        totalStars: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        // Empty until the first completion, so the first practice day
-        // correctly starts the streak at 1.
-        lastPracticeDate: '',
-        averageScores: {
-          observation: 0,
-          feeling: 0,
-          need: 0,
-          request: 0,
-          overall: 0,
-        },
-        scoredCompletions: 0,
-        achievements: [],
-        badges: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
-
-      progress = await ctx.db.get(progressId)
-    }
-
-    return progress
+    return await getOrCreateUserProgress(ctx, userId)
   },
 })
 

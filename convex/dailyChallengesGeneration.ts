@@ -12,6 +12,10 @@ import { internalAction } from './_generated/server'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
+  // A hung request would otherwise sit there burning the action's budget with
+  // nothing to show for it, and one blip should not fail a turn outright.
+  timeout: 60 * 1000,
+  maxRetries: 2,
 })
 
 const MODEL = 'claude-sonnet-4-6'

@@ -41,63 +41,6 @@ export const getFamilies = query({
 })
 
 /**
- * Get a specific feeling by word
- */
-export const getByWord = query({
-  args: { word: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query('feelings')
-      .withIndex('by_word', (q) => q.eq('word', args.word))
-      .first()
-  },
-})
-
-/**
- * Search feelings by partial word match
- */
-export const search = query({
-  args: { query: v.string() },
-  handler: async (ctx, args) => {
-    const searchLower = args.query.toLowerCase()
-    const feelings = await ctx.db.query('feelings').collect()
-    return feelings.filter(
-      (f) =>
-        f.word.toLowerCase().includes(searchLower) ||
-        f.synonyms.some((s) => s.toLowerCase().includes(searchLower)),
-    )
-  },
-})
-
-/**
- * Get all feelings in a category (pleasant or unpleasant)
- */
-export const getByCategory = query({
-  args: { category: v.union(v.literal('pleasant'), v.literal('unpleasant')) },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query('feelings')
-      .withIndex('by_category', (q) => q.eq('category', args.category))
-      .collect()
-  },
-})
-
-/**
- * Get feelings by family and intensity
- */
-export const getByIntensity = query({
-  args: { family: v.string(), intensity: v.number() },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query('feelings')
-      .withIndex('by_intensity', (q) =>
-        q.eq('family', args.family).eq('intensity', args.intensity),
-      )
-      .collect()
-  },
-})
-
-/**
  * Get all feelings (for reference)
  */
 export const getAll = query({
@@ -142,6 +85,26 @@ export async function getOrCreateFeelingsProgress(
 }
 
 /**
+ * Confirm a word is one of the feelings we actually know about.
+ *
+ * These words are stored on the user's record and rendered back, so without
+ * this the mutations would accept arbitrary unbounded strings.
+ */
+async function requireKnownFeeling(
+  ctx: MutationCtx,
+  word: string,
+): Promise<string> {
+  const feeling = await ctx.db
+    .query('feelings')
+    .withIndex('by_word', (q) => q.eq('word', word))
+    .first()
+  if (!feeling) {
+    userError('That is not a feeling we recognise.')
+  }
+  return feeling.word
+}
+
+/**
  * Mark a feeling as explored by the current user
  */
 export const markFeelingExplored = mutation({
@@ -150,11 +113,12 @@ export const markFeelingExplored = mutation({
     const userId = await getAuthUserId(ctx)
     if (userId === null) userError('Not authenticated')
 
+    const word = await requireKnownFeeling(ctx, args.feelingWord)
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
 
     const explored = new Set(progress.feelingsExplored)
-    if (!explored.has(args.feelingWord)) {
-      explored.add(args.feelingWord)
+    if (!explored.has(word)) {
+      explored.add(word)
       await ctx.db.patch(progress._id, {
         feelingsExplored: Array.from(explored),
         updatedAt: Date.now(),
@@ -173,11 +137,12 @@ export const saveFeelingToLibrary = mutation({
     const userId = await getAuthUserId(ctx)
     if (userId === null) userError('Not authenticated')
 
+    const word = await requireKnownFeeling(ctx, args.feelingWord)
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
 
     const saved = new Set(progress.feelingsSaved)
-    if (!saved.has(args.feelingWord)) {
-      saved.add(args.feelingWord)
+    if (!saved.has(word)) {
+      saved.add(word)
       await ctx.db.patch(progress._id, {
         feelingsSaved: Array.from(saved),
         updatedAt: Date.now(),

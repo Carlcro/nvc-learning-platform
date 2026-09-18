@@ -60,19 +60,3 @@ function ProgressInitializer({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-/**
- * Loading skeleton for protected routes
- */
-export function ProtectedRouteLoadingSkeleton() {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
-      <div className="text-center space-y-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-giraffe-100 rounded w-32 mx-auto" />
-          <div className="h-8 bg-giraffe-200 rounded w-48 mx-auto" />
-          <div className="h-4 bg-giraffe-100 rounded w-40 mx-auto" />
-        </div>
-      </div>
-    </div>
-  );
-}

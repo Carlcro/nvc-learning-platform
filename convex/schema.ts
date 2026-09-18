@@ -11,25 +11,6 @@ import { authTables } from '@convex-dev/auth/server'
 
 export default defineSchema({
   ...authTables,
-  // ============================================================================
-  // USERS & AUTHENTICATION
-  // ============================================================================
-
-  /**
-   * DEPRECATED: progress stats live on userProgress now (the single source of
-   * truth written by conversations.complete). Nothing reads or writes this
-   * table anymore. Run `npx convex run users:clearDeprecatedProfiles` on each
-   * deployment, then this declaration can be deleted.
-   */
-  userProfiles: defineTable({
-    userId: v.id('users'), // Reference to Convex Auth user
-    currentStreak: v.number(), // Current daily challenge streak
-    longestStreak: v.number(), // Longest streak achieved
-    totalPoints: v.number(), // Total points earned
-    level: v.number(), // User skill level (1-10)
-    createdAt: v.number(), // Timestamp when profile created
-    updatedAt: v.number(), // Last profile update
-  }).index('by_user_id', ['userId']),
 
   // ============================================================================
   // PROGRESS TRACKING
@@ -499,24 +480,6 @@ export default defineSchema({
   })
     .index('by_lesson_id', ['lessonId'])
     .index('by_order', ['order']),
-
-  // ============================================================================
-  // ANALYTICS & TELEMETRY (Optional - for future analytics)
-  // ============================================================================
-
-  /**
-   * User activity logs for analytics
-   * Tracks user interactions and learning patterns
-   */
-  activityLogs: defineTable({
-    userId: v.id('users'),
-    action: v.string(), // e.g., "lesson_started", "conversation_completed"
-    details: v.optional(v.any()), // Action-specific data
-    timestamp: v.number(),
-  })
-    .index('by_user', ['userId'])
-    .index('by_action', ['action'])
-    .index('by_timestamp', ['timestamp']),
 
   /**
    * How much model work one account has asked for today, so a single user

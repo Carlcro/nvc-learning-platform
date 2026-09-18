@@ -20,6 +20,7 @@ import {
   scenarioStatusForScore,
   starsForScore,
   updateAverages,
+  utcToday,
 } from './lib/progress'
 import type { Doc, Id } from './_generated/dataModel'
 import type { MutationCtx, QueryCtx } from './_generated/server'
@@ -49,19 +50,6 @@ async function getOwnedConversation(
 // ============================================================================
 // QUERIES
 // ============================================================================
-
-/**
- * Get the current user's active conversation for a scenario, or null.
- */
-export const getActive = query({
-  args: { scenarioId: v.id('scenarios') },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
-    if (userId === null) return null
-
-    return await findActiveConversation(ctx, userId, args.scenarioId)
-  },
-})
 
 async function findActiveConversation(
   ctx: QueryCtx | MutationCtx,
@@ -487,7 +475,17 @@ export const complete = mutation({
     const dailyChallenge = args.dailyChallengeId
       ? await ctx.db.get(args.dailyChallengeId)
       : null
-    if (dailyChallenge && dailyChallenge.scenarioId === conversation.scenarioId) {
+    // Yesterday's challenge cannot be cashed in as today's. The date comes
+    // from the server, not the client's calendar, since this is a reward
+    // rather than a streak and must not be nudged by a device clock.
+    const isCurrentChallenge =
+      dailyChallenge !== null && dailyChallenge.date === utcToday()
+
+    if (
+      dailyChallenge &&
+      isCurrentChallenge &&
+      dailyChallenge.scenarioId === conversation.scenarioId
+    ) {
       const existing = await ctx.db
         .query('challengeCompletions')
         .withIndex('by_user_and_challenge', (q) =>

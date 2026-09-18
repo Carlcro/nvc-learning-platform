@@ -22,4 +22,18 @@ crons.daily(
   internal.dailyChallenges.generateDailyChallenge,
 )
 
+/**
+ * Clear out daily challenges past the retention window, an hour after the new
+ * ones are generated. Without this the scenarios table grows by three rows a
+ * night forever.
+ */
+crons.daily(
+  'prune-old-daily-challenges',
+  {
+    hourUTC: 1,
+    minuteUTC: 0,
+  },
+  internal.dailyChallenges.pruneOldChallenges,
+)
+
 export default crons

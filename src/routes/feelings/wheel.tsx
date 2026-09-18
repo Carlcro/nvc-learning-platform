@@ -3,7 +3,6 @@ import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
-import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/wheel')({
@@ -14,18 +13,10 @@ export const Route = createFileRoute('/feelings/wheel')({
         'Explore feelings by family and intensity on an interactive wheel.',
     }),
   }),
-  component: ProtectedFeelingsWheel,
+  component: FeelingsWheel,
 })
 
 type Category = 'all' | 'pleasant' | 'unpleasant'
-
-function ProtectedFeelingsWheel() {
-  return (
-    <ProtectedRoute>
-      <FeelingsWheel />
-    </ProtectedRoute>
-  )
-}
 
 function FeelingsWheel() {
   const currentUser = useQuery(api.users.getCurrentUser)

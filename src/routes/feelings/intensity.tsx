@@ -3,7 +3,6 @@ import { useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
-import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 
 export const Route = createFileRoute('/feelings/intensity')({
@@ -14,16 +13,8 @@ export const Route = createFileRoute('/feelings/intensity')({
         'See how a feeling shifts as its intensity rises and falls.',
     }),
   }),
-  component: ProtectedIntensityExplorer,
+  component: IntensityExplorer,
 })
-
-function ProtectedIntensityExplorer() {
-  return (
-    <ProtectedRoute>
-      <IntensityExplorer />
-    </ProtectedRoute>
-  )
-}
 
 function IntensityExplorer() {
   const [selectedFamily, setSelectedFamily] = useState('angry')

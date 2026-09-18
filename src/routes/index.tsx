@@ -4,7 +4,7 @@ import { pageMeta } from '~/lib/seo'
 import { Button } from '~/components/ui/Button'
 import { Card, CardBody } from '~/components/ui/Card'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
-import { DailyChallengeCard } from '~/components/features/dashboard/DailyChallengeCard'
+import { DailyChallengeTeaser } from '~/components/features/dashboard/DailyChallengeTeaser'
 import { CheckIcon, XIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/')({
@@ -88,7 +88,7 @@ function Home() {
       {/* Daily Challenge Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
         <div className="max-w-3xl mx-auto">
-          <DailyChallengeCard />
+          <DailyChallengeTeaser />
         </div>
       </section>
 

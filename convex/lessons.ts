@@ -596,7 +596,9 @@ export const getAllLessons = query({
   handler: async () => {
     // Return the hardcoded lessons in order
     // In the future, this could query from the database
-    return LESSONS.sort((a, b) => a.order - b.order);
+    // Copied first: sorting in place mutates the module-level array on
+    // every call.
+    return [...LESSONS].sort((a, b) => a.order - b.order);
   },
 });
 

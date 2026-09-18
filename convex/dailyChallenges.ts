@@ -364,3 +364,70 @@ function calculateBonusPoints(difficulty: 'easy' | 'medium' | 'hard'): number {
   }
   return basePoints[difficulty]
 }
+
+/**
+ * Days of daily challenges to keep. Three scenario rows land every night and
+ * nothing ever removed them, so the table grew without bound.
+ */
+const CHALLENGE_RETENTION_DAYS = 30
+
+/**
+ * Remove daily challenges past the retention window, and the scenarios behind
+ * them.
+ *
+ * A generated scenario is only deleted when nobody has a conversation in it,
+ * so an old transcript never loses the scenario it refers to. Completion
+ * records are kept: they are the user's own history, and the stats that read
+ * them never join back to the challenge.
+ */
+export const pruneOldChallenges = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const cutoff = new Date()
+    cutoff.setUTCDate(cutoff.getUTCDate() - CHALLENGE_RETENTION_DAYS)
+    const cutoffDate = cutoff.toISOString().split('T')[0]
+
+    const old = await ctx.db
+      .query('dailyChallenges')
+      .withIndex('by_date', (q) => q.lt('date', cutoffDate))
+      .collect()
+
+    let challengesRemoved = 0
+    let scenariosRemoved = 0
+    let scenariosKept = 0
+
+    for (const challenge of old) {
+      const conversations = await ctx.db
+        .query('conversations')
+        .withIndex('by_scenario', (q) => q.eq('scenarioId', challenge.scenarioId))
+        .first()
+
+      // Another challenge row may point at the same scenario.
+      const otherChallenges = await ctx.db
+        .query('dailyChallenges')
+        .withIndex('by_scenario', (q) =>
+          q.eq('scenarioId', challenge.scenarioId),
+        )
+        .collect()
+
+      await ctx.db.delete(challenge._id)
+      challengesRemoved++
+
+      if (conversations) {
+        scenariosKept++
+        continue
+      }
+      if (otherChallenges.some((c) => c._id !== challenge._id)) {
+        continue
+      }
+
+      const scenario = await ctx.db.get(challenge.scenarioId)
+      if (scenario && scenario.source === 'daily') {
+        await ctx.db.delete(challenge.scenarioId)
+        scenariosRemoved++
+      }
+    }
+
+    return { challengesRemoved, scenariosRemoved, scenariosKept }
+  },
+})

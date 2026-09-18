@@ -291,6 +291,22 @@ export const recordCheckIn = mutation({
       userError('Note is too long')
     }
 
+    // Check-in feelings are stored and rendered back, so they have to be
+    // words we know rather than whatever the client sends.
+    const known = await Promise.all(
+      args.feelings.map(async (word) => {
+        const match = await ctx.db
+          .query('feelings')
+          .withIndex('by_word', (q) => q.eq('word', word))
+          .first()
+        return match?.word
+      }),
+    )
+    if (known.some((word) => word === undefined)) {
+      userError('One of those is not a feeling we recognise.')
+    }
+    const feelings = known as Array<string>
+
     const today = resolveLocalDate(args.localDate)
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
 
@@ -305,7 +321,7 @@ export const recordCheckIn = mutation({
         c.date === today
           ? {
               ...c,
-              feelings: args.feelings,
+              feelings,
               note: args.note,
               timestamp: Date.now(),
             }
@@ -332,7 +348,7 @@ export const recordCheckIn = mutation({
 
     updatedCheckIns.push({
       date: today,
-      feelings: args.feelings,
+      feelings,
       note: args.note,
       timestamp: Date.now(),
     })

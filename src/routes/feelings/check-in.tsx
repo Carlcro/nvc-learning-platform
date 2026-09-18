@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { pageMeta } from '~/lib/seo'
-import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
 import { localDateString } from '~/lib/localDate'
 
@@ -16,16 +15,8 @@ export const Route = createFileRoute('/feelings/check-in')({
         'Notice and name how you are feeling today.',
     }),
   }),
-  component: ProtectedDailyCheckIn,
+  component: DailyCheckIn,
 })
-
-function ProtectedDailyCheckIn() {
-  return (
-    <ProtectedRoute>
-      <DailyCheckIn />
-    </ProtectedRoute>
-  )
-}
 
 function DailyCheckIn() {
   const currentUser = useQuery(api.users.getCurrentUser)
