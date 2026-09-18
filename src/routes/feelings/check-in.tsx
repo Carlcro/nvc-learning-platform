@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
+import { userFacingMessage } from '~/lib/errorMessage'
 import { pageMeta } from '~/lib/seo'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
@@ -55,6 +56,8 @@ function DailyCheckIn() {
 
   // Mutations
   const recordCheckInMutation = useMutation(api.feelingsProgress.recordCheckIn)
+  const [pointsEarned, setPointsEarned] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   // Initialize state from today's check-in if it exists
   useMemo(() => {
@@ -111,15 +114,21 @@ function DailyCheckIn() {
 
     setIsSubmitting(true)
     try {
-      await recordCheckInMutation({
+      const result = await recordCheckInMutation({
         feelings: selectedFeelings,
         note: note,
         localDate: localDateString(),
       })
+      setPointsEarned(result.pointsEarned)
       setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
-    } catch (error) {
-      console.error('Failed to check in:', error)
+      setTimeout(() => setShowSuccess(false), 4000)
+    } catch (err) {
+      setError(
+        userFacingMessage(
+          err,
+          'We could not save your check-in just now. Please try again.',
+        ),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -157,10 +166,10 @@ function DailyCheckIn() {
               </div>
               <div>
                 <div className="text-xs text-brown-700 font-bold">
-                  Streak
+                  Check-In Streak
                 </div>
                 <div className="text-xl font-bold text-brown-800">
-                  {stats.currentStreak} Days
+                  {stats.checkInStreak} Days
                 </div>
               </div>
             </div>
@@ -277,7 +286,15 @@ function DailyCheckIn() {
 
               {showSuccess && (
                 <div className="mt-4 p-4 bg-empathy-high/20 text-brown-800 rounded-lg text-center font-medium animate-in fade-in slide-in-from-top-2">
-                  Check-in saved successfully!
+                  {pointsEarned > 0
+                    ? `Check-in saved. That is ${pointsEarned} points, and today counts toward your streak.`
+                    : 'Check-in updated. Today was already counted.'}
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-4 p-4 bg-empathy-low/15 border-2 border-empathy-low/40 rounded-lg text-center">
+                  <p className="text-brown-800 font-medium">{error}</p>
                 </div>
               )}
             </div>

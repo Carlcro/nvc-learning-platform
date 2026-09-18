@@ -23,6 +23,7 @@ import type * as lessons from "../lessons.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_limits from "../lib/limits.js";
 import type * as lib_progress from "../lib/progress.js";
+import type * as lib_userProgressWrite from "../lib/userProgressWrite.js";
 import type * as passwordReset from "../passwordReset.js";
 import type * as scenarioProgress from "../scenarioProgress.js";
 import type * as scenarios from "../scenarios.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/limits": typeof lib_limits;
   "lib/progress": typeof lib_progress;
+  "lib/userProgressWrite": typeof lib_userProgressWrite;
   passwordReset: typeof passwordReset;
   scenarioProgress: typeof scenarioProgress;
   scenarios: typeof scenarios;

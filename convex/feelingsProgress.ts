@@ -2,7 +2,8 @@ import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
-import { daysBetween, resolveLocalDate } from './lib/progress'
+import { advanceStreak, resolveLocalDate } from './lib/progress'
+import { creditDailyPractice } from './lib/userProgressWrite'
 import { getOrCreateFeelingsProgress } from './feelings'
 
 /**
@@ -82,7 +83,16 @@ export const getStats = query({
       .first()
 
     if (!progress) {
-      return null
+      return {
+        totalCheckIns: 0,
+        checkInStreak: 0,
+        longestCheckInStreak: 0,
+        lastCheckIn: undefined,
+        mostCommonFeelings: [],
+        quizScore: 0,
+        quizLevel: 1,
+        totalFeelingsExplored: 0,
+      }
     }
 
     // Calculate feeling frequency
@@ -101,8 +111,8 @@ export const getStats = query({
 
     return {
       totalCheckIns: progress.dailyCheckIns.length,
-      currentStreak: progress.currentCheckInStreak,
-      longestStreak: progress.longestCheckInStreak,
+      checkInStreak: progress.currentCheckInStreak,
+      longestCheckInStreak: progress.longestCheckInStreak,
       lastCheckIn: progress.lastCheckInDate,
       mostCommonFeelings: topFeelings,
       quizScore: progress.quizScore,
@@ -252,6 +262,8 @@ export const getWeeklyPatterns = query({
 // ============================================================================
 
 const MAX_CHECKIN_FEELINGS = 10
+/** Points for showing up and naming how you feel on a new day. */
+const CHECK_IN_POINTS = 20
 const MAX_NOTE_LENGTH = 1000
 
 /**
@@ -286,11 +298,9 @@ export const recordCheckIn = mutation({
     const existingToday = progress.dailyCheckIns.find((c) => c.date === today)
 
     let updatedCheckIns = [...progress.dailyCheckIns]
-    let newStreak = progress.currentCheckInStreak
-    let newLongestStreak = progress.longestCheckInStreak
 
     if (existingToday) {
-      // Update today's check-in
+      // Revising today's check-in, which earns nothing further.
       updatedCheckIns = updatedCheckIns.map((c) =>
         c.date === today
           ? {
@@ -301,39 +311,55 @@ export const recordCheckIn = mutation({
             }
           : c,
       )
-    } else {
-      // New check-in: update the streak
-      const lastCheckInDate = progress.lastCheckInDate
-      const gap = lastCheckInDate ? daysBetween(lastCheckInDate, today) : NaN
 
-      if (gap === 1) {
-        newStreak = progress.currentCheckInStreak + 1
-      } else if (gap === 0) {
-        newStreak = progress.currentCheckInStreak
-      } else {
-        newStreak = 1
-      }
-
-      if (newStreak > newLongestStreak) {
-        newLongestStreak = newStreak
-      }
-
-      updatedCheckIns.push({
-        date: today,
-        feelings: args.feelings,
-        note: args.note,
-        timestamp: Date.now(),
+      await ctx.db.patch(progress._id, {
+        dailyCheckIns: updatedCheckIns,
+        updatedAt: Date.now(),
       })
+      return { pointsEarned: 0, newAchievements: [] }
     }
+
+    // Shared streak rules rather than a second copy: the version here used to
+    // reset the streak to 1 on a backdated date instead of ignoring it.
+    const checkInStreak = advanceStreak(
+      {
+        currentStreak: progress.currentCheckInStreak,
+        longestStreak: progress.longestCheckInStreak,
+        lastPracticeDate: progress.lastCheckInDate ?? '',
+      },
+      today,
+    )
+
+    updatedCheckIns.push({
+      date: today,
+      feelings: args.feelings,
+      note: args.note,
+      timestamp: Date.now(),
+    })
 
     await ctx.db.patch(progress._id, {
       dailyCheckIns: updatedCheckIns,
-      currentCheckInStreak: newStreak,
-      longestCheckInStreak: newLongestStreak,
+      currentCheckInStreak: checkInStreak.currentStreak,
+      longestCheckInStreak: checkInStreak.longestStreak,
       lastCheckInDate: today,
       updatedAt: Date.now(),
     })
 
-    return progress._id
+    // Naming how you feel is practice, so it counts toward the same points,
+    // level and streak as a conversation does.
+    const credited = await creditDailyPractice(ctx, {
+      userId,
+      points: CHECK_IN_POINTS,
+      today,
+    })
+
+    return {
+      pointsEarned: CHECK_IN_POINTS,
+      newAchievements: credited.newAchievements.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+      })),
+    }
   },
 })

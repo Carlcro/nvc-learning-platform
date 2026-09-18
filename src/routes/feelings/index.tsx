@@ -84,7 +84,7 @@ function FeelingHub() {
                 />
               </svg>
               <span className="text-sm font-semibold text-brown-700">
-                {stats.currentStreak} Day Streak
+                {stats.checkInStreak} Day Check-In Streak
               </span>
             </div>
 
@@ -274,6 +274,39 @@ function FeelingHub() {
                   <p className="text-brown-700 text-sm leading-relaxed">
                     View and manage all the feelings you've saved. Create your
                     personal emotional vocabulary.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Intensity Explorer. Previously reachable only from inside the
+              wheel page, so most people never found it. */}
+          <Link to="/feelings/intensity">
+            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm hover:border-giraffe-200 hover:shadow-md transition-all cursor-pointer h-full">
+              <div className="flex items-start gap-4">
+                <div className="bg-giraffe-100 p-3 rounded-full shrink-0">
+                  <svg
+                    className="w-6 h-6 text-giraffe-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-brown-800 mb-2">
+                    Intensity Explorer
+                  </h3>
+                  <p className="text-brown-700 text-sm leading-relaxed">
+                    See how a feeling shifts as it grows stronger or softer, so
+                    you can name not just what you feel but how much.
                   </p>
                 </div>
               </div>

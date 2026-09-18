@@ -2,6 +2,8 @@ import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { userError } from './lib/errors'
 import { mutation, query } from './_generated/server'
+import { resolveLocalDate } from './lib/progress'
+import { creditDailyPractice } from './lib/userProgressWrite'
 import { getOrCreateFeelingsProgress } from './feelings'
 
 /**
@@ -12,6 +14,13 @@ import { getOrCreateFeelingsProgress } from './feelings'
  * and the server grades it, returns the explanation, and updates progress in
  * one transaction.
  */
+
+/** Points for getting a question right the first time. */
+const CORRECT_ANSWER_POINTS = 5
+/** Levelling up looks at the last N answers, not the lifetime average. */
+const LEVEL_UP_WINDOW = 10
+const LEVEL_UP_CORRECT = 8
+const MAX_QUIZ_LEVEL = 3
 
 /** Deterministic PRNG so the batch is stable per session seed. */
 function mulberry32(seed: number) {
@@ -68,6 +77,9 @@ export const submitAnswer = mutation({
   args: {
     questionId: v.id('feelingsQuizQuestions'),
     answeredRealFeeling: v.boolean(),
+    // The user's local calendar date, so an evening answer counts for their
+    // own day. Validated server-side.
+    localDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -84,19 +96,60 @@ export const submitAnswer = mutation({
     const newCorrect = progress.quizQuestionsCorrect + (correct ? 1 : 0)
     const newScore = Math.round((newCorrect / newTotal) * 100)
 
-    // Auto-level up if 80%+ correct in 10 questions
+    // Level up on the recent window. The old rule compared the lifetime score
+    // against 80% on exact multiples of ten, so a rough start could never be
+    // recovered from however well someone did afterwards.
+    const recentResults = [
+      ...(progress.quizRecentResults ?? []),
+      correct,
+    ].slice(-LEVEL_UP_WINDOW)
+    const recentCorrect = recentResults.filter(Boolean).length
+
     let newLevel = progress.quizLevel
-    if (newTotal % 10 === 0 && newScore >= 80 && newLevel < 3) {
-      newLevel = Math.min(newLevel + 1, 3)
+    if (
+      recentResults.length === LEVEL_UP_WINDOW &&
+      recentCorrect >= LEVEL_UP_CORRECT &&
+      newLevel < MAX_QUIZ_LEVEL
+    ) {
+      newLevel = newLevel + 1
     }
+
+    // Points land once per question. Answering the same one again is useful
+    // practice, so it stays allowed; it just does not pay out twice.
+    const scoredIds = progress.quizScoredQuestionIds ?? []
+    const alreadyScored = scoredIds.includes(args.questionId)
+    const pointsEarned = correct && !alreadyScored ? CORRECT_ANSWER_POINTS : 0
 
     await ctx.db.patch(progress._id, {
       quizQuestionsAnswered: newTotal,
       quizQuestionsCorrect: newCorrect,
       quizScore: newScore,
       quizLevel: newLevel,
+      quizRecentResults: recentResults,
+      quizScoredQuestionIds:
+        pointsEarned > 0 ? [...scoredIds, args.questionId] : scoredIds,
       updatedAt: Date.now(),
     })
+
+    // Building emotional vocabulary counts toward the same progression as a
+    // conversation, instead of living in a separate record nothing reads.
+    let newAchievements: Array<{
+      id: string
+      title: string
+      description: string
+    }> = []
+    if (pointsEarned > 0) {
+      const credited = await creditDailyPractice(ctx, {
+        userId,
+        points: pointsEarned,
+        today: resolveLocalDate(args.localDate),
+      })
+      newAchievements = credited.newAchievements.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+      }))
+    }
 
     return {
       correct,
@@ -106,6 +159,8 @@ export const submitAnswer = mutation({
       quizScore: newScore,
       quizLevel: newLevel,
       leveledUp: newLevel > progress.quizLevel,
+      pointsEarned,
+      newAchievements,
     }
   },
 })

@@ -8,6 +8,7 @@ import { OverallScoreRing } from '~/components/features/profile/OverallScoreRing
 import { SkillStats } from '~/components/features/profile/SkillStats'
 import { ActivityFeed } from '~/components/features/profile/ActivityFeed'
 import { AchievementsGrid } from '~/components/features/profile/AchievementsGrid'
+import { FeelingsStats } from '~/components/features/profile/FeelingsStats'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 
 export const Route = createFileRoute('/profile/')({
@@ -63,6 +64,9 @@ function ProfileContent() {
             <SkillStats stats={stats} />
           </div>
         </div>
+
+        {/* The feelings work, which used to be invisible here */}
+        <FeelingsStats />
 
         {/* Every achievement, earned ones lit up */}
         <AchievementsGrid />

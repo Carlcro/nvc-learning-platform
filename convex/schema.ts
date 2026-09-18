@@ -413,6 +413,13 @@ export default defineSchema({
     quizQuestionsCorrect: v.number(),
     quizScore: v.number(), // Percentage
     quizLevel: v.number(), // 1-3
+    // Questions that have already paid out points. Repeating a question is
+    // good practice, so it stays allowed; it just does not pay twice. Bounded
+    // by the size of the question bank.
+    quizScoredQuestionIds: v.optional(v.array(v.string())),
+    // The last few results, so levelling up reflects how someone is doing now
+    // rather than a lifetime average a weak start can never recover from.
+    quizRecentResults: v.optional(v.array(v.boolean())),
 
     // Daily check-ins
     dailyCheckIns: v.array(

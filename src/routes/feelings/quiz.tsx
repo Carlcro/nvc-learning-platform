@@ -3,6 +3,8 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
+import { userFacingMessage } from '~/lib/errorMessage'
+import { localDateString } from '~/lib/localDate'
 import { pageMeta } from '~/lib/seo'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { BackButton } from '~/components/ui/BackButton'
@@ -34,6 +36,8 @@ interface AnswerFeedback {
   correct: boolean
   explanation: string
   correctFeelings: Array<string>
+  pointsEarned: number
+  leveledUp: boolean
 }
 
 function ProtectedQuiz() {
@@ -50,6 +54,7 @@ function QuizGame() {
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9))
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
+  const [error, setError] = useState<string | null>(null)
   const [answerFeedback, setAnswerFeedback] = useState<AnswerFeedback | null>(
     null,
   )
@@ -94,6 +99,7 @@ function QuizGame() {
       const result = await submitAnswer({
         questionId: currentQuestionData._id as Id<'feelingsQuizQuestions'>,
         answeredRealFeeling: userAnswer,
+        localDate: localDateString(),
       })
 
       if (result.correct) {
@@ -103,10 +109,20 @@ function QuizGame() {
         correct: result.correct,
         explanation: result.explanation,
         correctFeelings: result.correctFeelings,
+        pointsEarned: result.pointsEarned,
+        leveledUp: result.leveledUp,
       })
+      setError(null)
       setQuizState('feedback')
     } catch (err) {
-      console.error('Error submitting answer:', err)
+      // Used to be logged and nothing else, so the page simply froze and the
+      // learner had no idea anything had gone wrong.
+      setError(
+        userFacingMessage(
+          err,
+          'We could not record that answer just now. Please try again.',
+        ),
+      )
     }
   }
 
@@ -261,6 +277,12 @@ function QuizGame() {
           </div>
         )}
 
+        {error && (
+          <div className="mb-6 p-4 bg-empathy-low/15 border-2 border-empathy-low/40 rounded-lg">
+            <p className="text-brown-800 font-medium">{error}</p>
+          </div>
+        )}
+
         {quizState === 'feedback' && answerFeedback && (
           <div className="bg-white rounded-lg border-2 border-giraffe-100 shadow-sm p-6 max-w-2xl mx-auto">
             <div className="mb-6">
@@ -285,6 +307,14 @@ function QuizGame() {
               <p className="text-brown-700 leading-relaxed">
                 {answerFeedback.explanation}
               </p>
+
+              {answerFeedback.pointsEarned > 0 && (
+                <p className="text-brown-800 font-medium mt-3">
+                  {answerFeedback.leveledUp
+                    ? `${answerFeedback.pointsEarned} points, and you have moved up a level.`
+                    : `${answerFeedback.pointsEarned} points.`}
+                </p>
+              )}
             </div>
 
             {answerFeedback.correctFeelings.length > 0 && (

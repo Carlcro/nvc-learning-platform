@@ -2,6 +2,7 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
 import { MAX_USER_TURNS } from './lib/limits'
+import { getOrCreateUserProgress } from './lib/userProgressWrite'
 import {
   internalMutation,
   internalQuery,
@@ -509,42 +510,9 @@ export const complete = mutation({
     }
 
     // ---- Overall user progress -----------------------------------------
-    let progress = await ctx.db
-      .query('userProgress')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
-      .first()
-
-    if (!progress) {
-      const progressId = await ctx.db.insert('userProgress', {
-        userId,
-        level: 1,
-        totalPoints: 0,
-        pointsToNextLevel: 300,
-        scenariosCompleted: 0,
-        scenariosPassed: 0,
-        scenariosMastered: 0,
-        totalStars: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastPracticeDate: '',
-        averageScores: {
-          observation: 0,
-          feeling: 0,
-          need: 0,
-          request: 0,
-          overall: 0,
-        },
-        scoredCompletions: 0,
-        achievements: [],
-        badges: [],
-        createdAt: now,
-        updatedAt: now,
-      })
-      progress = await ctx.db.get(progressId)
-    }
-    if (!progress) {
-      throw new Error('Failed to load user progress')
-    }
+    // Shared with the feelings section, so a first check-in and a first
+    // conversation create the same record the same way.
+    const progress = await getOrCreateUserProgress(ctx, userId)
 
     const scenarioPoints = pointsForCompletion({
       finalScore,
