@@ -74,8 +74,9 @@ export const SKILL_RESOURCES: Record<
   },
 }
 
-// A component averaging at least this (of 25) is a genuine strength; one
-// averaging below FOCUS_BELOW still has clear room to grow.
+// A component scoring at least this (of 25) has genuinely landed: it is the
+// bar the conversation milestones use. One averaging below FOCUS_BELOW still
+// has clear room to grow.
 const STRENGTH_AT = 15
 const FOCUS_BELOW = 20
 
@@ -123,15 +124,20 @@ export function summarizeConversation(
   const best = [...attempted].sort((a, b) => b.avg - a.avg).at(0)
   const strongest = best && best.avg >= STRENGTH_AT ? best.component : null
 
-  // A piece of the arc that never showed up is the clearest next step. Failing
-  // that, the attempted component with the most room to grow.
-  const untried = averages.find((a) => a.avg === null)
+  // The earliest piece of the arc that never landed is the clearest next
+  // step. "Landed" is the same bar the milestones use (one turn at 15 or
+  // more), so this always agrees with the progress rail and the results
+  // trail. Failing that, the component with the most room to grow.
+  const notLanded = NVC_COMPONENTS.find(
+    (component) =>
+      !messages.some((m) => (m.nvcScore?.[component] ?? 0) >= STRENGTH_AT),
+  )
   const weakest = [...attempted].sort((a, b) => a.avg - b.avg).at(0)
   let focus: NVCComponent | null = null
   let focusUntried = false
-  if (messages.length > 0 && untried) {
-    focus = untried.component
-    focusUntried = true
+  if (messages.length > 0 && notLanded) {
+    focus = notLanded
+    focusUntried = !attempted.some((a) => a.component === notLanded)
   } else if (
     weakest &&
     weakest.avg < FOCUS_BELOW &&

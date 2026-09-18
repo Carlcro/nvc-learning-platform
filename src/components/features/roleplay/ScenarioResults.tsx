@@ -165,8 +165,10 @@ function describeEnding(args: {
   characterName: string
   finalMood: number
   milestones?: Milestones
+  /** The piece to work on next, shared with the takeaway card below. */
+  focus: NVCComponent | null
 }): { connected: boolean; headline: string; label: string; sub: string } {
-  const { characterName, finalMood, milestones } = args
+  const { characterName, finalMood, milestones, focus } = args
   const connected = !!milestones?.resolutionReached || finalMood >= 5
 
   if (connected) {
@@ -185,15 +187,18 @@ function describeEnding(args: {
     milestones?.needIdentified && 'a need',
     milestones?.requestMade && 'a request',
   ].filter(Boolean) as Array<string>
-  const nextPiece = !milestones?.feelingExpressed
-    ? 'Naming a feeling is the piece to try next time.'
-    : !milestones.needIdentified
-      ? 'The need beneath the feeling is the piece to try next time.'
-      : !milestones.requestMade
-        ? 'A clear request is the piece to try next time.'
-        : !milestones.empathyShown
-          ? `Wondering aloud what ${characterName} was feeling is the piece to try next time.`
-          : 'A little more time might have been all it needed.'
+  const nextPieceByFocus: Record<NVCComponent, string> = {
+    observation:
+      'Describing what happened, with no verdict on it, is the piece to try next time.',
+    feeling: 'Naming a feeling is the piece to try next time.',
+    need: 'The need beneath the feeling is the piece to try next time.',
+    request: 'A clear request is the piece to try next time.',
+  }
+  const nextPiece = focus
+    ? nextPieceByFocus[focus]
+    : !milestones?.empathyShown
+      ? `Wondering aloud what ${characterName} was feeling is the piece to try next time.`
+      : 'A little more time might have been all it needed.'
   const didManage =
     managed.length > 0
       ? `You brought ${managed.join(' and ')}, which is the hard part.`
@@ -270,7 +275,12 @@ export function ScenarioResults({
   const navigate = useNavigate()
   const nextScenario = useNextScenario(scenarioId)
   const insights = useMemo(() => summarizeConversation(messages), [messages])
-  const ending = describeEnding({ characterName, finalMood, milestones })
+  const ending = describeEnding({
+    characterName,
+    finalMood,
+    milestones,
+    focus: insights.focus,
+  })
 
   // Each station is read from the milestones, so a partial path renders
   // honestly: wrapping up is open to everyone after a few turns, not only to

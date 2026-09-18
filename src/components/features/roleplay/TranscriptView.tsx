@@ -106,7 +106,7 @@ function MoodJourney({
 
         {/* Mood line */}
         <svg
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full overflow-visible"
           style={{ left: '24px', width: 'calc(100% - 24px)' }}
         >
           <polyline

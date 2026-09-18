@@ -68,6 +68,17 @@ describe('summarizeConversation', () => {
     expect(insights.focusUntried).toBe(false)
   })
 
+  it('prefers an earlier piece that never landed over a weaker later one', () => {
+    // Feeling was tried but never reached the milestone bar; need was tried
+    // once and scored lower. The arc order wins, matching the progress rail.
+    const insights = summarizeConversation([
+      userTurn('a', { observation: 18, feeling: 12, total: 55 }),
+      userTurn('b', { feeling: 8, need: 5, total: 30 }),
+    ])
+    expect(insights.focus).toBe('feeling')
+    expect(insights.focusUntried).toBe(false)
+  })
+
   it('quotes the best message only when it genuinely landed', () => {
     const rough = summarizeConversation([
       userTurn('You never listen.', { observation: 4, total: 25 }),

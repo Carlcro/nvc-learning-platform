@@ -274,7 +274,7 @@ The arc rail is Start, Observe, Feeling, Need, Request, Done (`milestonesAchieve
 
 ### Hints during, a worked example after
 
-During a conversation the coaching gives hints, never scripts (`giraffeAlternative` stays empty). After completion, `ai.generateReflection` writes one of the user's own messages another way (the lowest-scoring turn under 85), stores it once on the conversation as `reflection`, and the results screen and transcript show it. It draws on the same daily turn allowance as a practice turn.
+During a conversation the coaching gives hints, never scripts (`giraffeAlternative` stays empty). After completion, `ai.generateReflection` writes one of the user's own messages another way (the lowest-scoring turn under 70, kept to the same components the original attempted), stores it once on the conversation as `reflection`, and the results screen and transcript show it. It draws on the same daily turn allowance as a practice turn.
 
 ### Coming back to a conversation
 

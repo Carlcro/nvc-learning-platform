@@ -88,11 +88,14 @@ interface ArcSoFar {
 const nvcAnalysisSchema = {
   type: 'object',
   properties: {
-    observation: { type: 'integer', minimum: 0, maximum: 25 },
-    feeling: { type: 'integer', minimum: 0, maximum: 25 },
-    need: { type: 'integer', minimum: 0, maximum: 25 },
-    request: { type: 'integer', minimum: 0, maximum: 25 },
-    total: { type: 'integer', minimum: 0, maximum: 100 },
+    // Ranges live in the descriptions: structured outputs reject `minimum` and
+    // `maximum` on integers (a 400 that fails the whole turn). The values are
+    // clamped after parsing, so nothing depends on the model honouring them.
+    observation: { type: 'integer', description: '0 to 25' },
+    feeling: { type: 'integer', description: '0 to 25' },
+    need: { type: 'integer', description: '0 to 25' },
+    request: { type: 'integer', description: '0 to 25' },
+    total: { type: 'integer', description: '0 to 100' },
     feedback: { type: 'string' },
     isJackalLanguage: { type: 'boolean' },
     jackalPhrases: { type: 'array', items: { type: 'string' } },
@@ -578,8 +581,10 @@ IMPORTANT REMINDERS:
 // REFLECTION (one message said another way, after the conversation)
 // ============================================================================
 
-// A message that already landed this well has nothing useful to contrast.
-const REFLECTION_SCORE_CEILING = 85
+// Only a turn below the "good" band (70+) is worth saying another way. A
+// message that landed well has nothing useful to contrast, and "improving" it
+// tends to mean bolting on more components, the opposite of what we teach.
+const REFLECTION_SCORE_CEILING = 70
 
 const reflectionSchema = {
   type: 'object',
@@ -642,6 +647,9 @@ export const generateReflection = action({
     await ctx.runMutation(internal.usage.consumeTurn, { userId })
 
     const target = conversation.messages[targetIndex]
+    const attempted = (['observation', 'feeling', 'need', 'request'] as const)
+      .filter((key) => (target.nvcScore?.[key] ?? 0) > 0)
+      .join(', ')
     const before = conversation.messages
       .slice(Math.max(0, targetIndex - 4), targetIndex)
       .map(
@@ -654,7 +662,8 @@ export const generateReflection = action({
 
 Rules for the rewrite:
 - Keep the learner's intent, facts, and voice. It should sound like them on a good day, not like a textbook.
-- Keep it to one or two natural spoken sentences. Do NOT cram all four NVC components in. Improve what the message was trying to do: swap a judgment for an observation, a pseudo-feeling for a real feeling, a strategy for the need beneath it, or a demand for a request.
+- One piece at a time is what this learner is being taught. The rewrite must do the SAME job as the original and nothing more: if the original was describing what happened, the rewrite is a cleaner observation and adds no feeling, need, or request; if it was voicing a feeling, it stays a feeling; and so on. You are told below which pieces the original attempted. Never add a piece it did not attempt.
+- Keep it to one or two natural spoken sentences. Improve what the message was trying to do: swap a judgment for an observation, a pseudo-feeling for a real feeling, a strategy for the need beneath it, or a demand for a request. If the original was mostly blame with no clear piece, turn it into a plain observation of what happened.
 - No blame, labels, "always" or "never", and no "you make me feel".
 
 Rules for the why:
@@ -669,7 +678,10 @@ The learner was talking with ${scenario.characterName}. The setup: ${scenario.si
 ${before || 'This was the start of the conversation.'}
 
 ### The learner's message to say another way
-"${target.content}"`
+"${target.content}"
+
+### Pieces this message attempted
+${attempted || 'None clearly. It was mostly reaction, so offer a plain observation instead.'}`
 
     const response = await anthropic.messages.parse({
       model: MODEL,
