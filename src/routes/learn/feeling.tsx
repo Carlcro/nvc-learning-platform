@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
 import { useState } from 'react'
@@ -6,10 +6,14 @@ import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { CheckIcon } from '~/components/ui/Icons'
 
 export const Route = createFileRoute('/learn/feeling')({
+  pendingComponent: () => (
+    <GiraffeLoader message="Opening the lesson…" />
+  ),
   component: FeelingLesson,
 })
 
@@ -34,24 +38,6 @@ function FeelingLesson() {
 
   return (
     <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
-      {/* Completion Banner */}
-      {lessonCompleted && (
-        <div className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
-          <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <div className="flex gap-1 text-giraffe-600">
-              <CheckIcon className="w-6 h-6" />
-              <CheckIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">
-                You passed the quiz and completed this lesson.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white pt-28 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex items-center gap-8">
@@ -100,6 +86,24 @@ function FeelingLesson() {
           </div>
         </div>
       </section>
+
+      {/* Completion Banner */}
+      {lessonCompleted && (
+        <div className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-4xl mx-auto flex items-center gap-3">
+            <div className="flex gap-1 text-giraffe-600">
+              <CheckIcon className="w-6 h-6" />
+              <CheckIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-bold text-brown-800">Lesson Completed!</p>
+              <p className="text-sm text-brown-700">
+                You passed the quiz and completed this lesson.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -320,9 +324,11 @@ function FeelingLesson() {
               truly matters to you.
             </p>
             <div className="flex gap-4">
-              <Button variant="primary" size="lg">
-                Next Lesson: Needs
-              </Button>
+              <Link to="/learn/need">
+                <Button variant="primary" size="lg">
+                  Next Lesson: Needs
+                </Button>
+              </Link>
             </div>
           </CardBody>
         </Card>

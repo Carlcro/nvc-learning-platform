@@ -1,7 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
-import { useQuery } from 'convex/react'
+import { useConvexAuth, useQuery } from 'convex/react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { api } from '../../../convex/_generated/api'
 
@@ -9,22 +9,29 @@ interface NavLink {
   to: string
   label: string
   icon: string
+  /** Hidden from signed-out visitors, who would only hit a redirect. */
+  requiresAuth?: boolean
 }
 
 const navLinks: Array<NavLink> = [
   { to: '/', label: 'Home', icon: 'H' },
   { to: '/learn', label: 'Lessons', icon: 'L' },
-  { to: '/practice', label: 'Practice', icon: 'P' },
-  { to: '/challenges/daily', label: 'Daily', icon: 'D' },
-  { to: '/feelings', label: 'Feelings', icon: 'F' },
-  { to: '/profile', label: 'Profile', icon: 'U' },
+  { to: '/practice', label: 'Practice', icon: 'P', requiresAuth: true },
+  { to: '/challenges/daily', label: 'Daily', icon: 'D', requiresAuth: true },
+  { to: '/feelings', label: 'Feelings', icon: 'F', requiresAuth: true },
+  { to: '/profile', label: 'Profile', icon: 'U', requiresAuth: true },
 ]
 
 export function FloatingNav() {
   const location = useLocation()
+  const { isAuthenticated } = useConvexAuth()
   const { signOut } = useAuthActions()
   const userProfile = useQuery(api.users.getUserProfile)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // The nav renders for signed-out visitors too, since the lessons are open to
+  // them. Without it they had no way out of a lesson page but the back button.
+  const links = navLinks.filter((link) => isAuthenticated || !link.requiresAuth)
 
   // Determine if a route is active
   const isActive = (to: string): boolean => {
@@ -45,7 +52,7 @@ export function FloatingNav() {
       <nav className="bg-white/80 backdrop-blur-md rounded-full border border-giraffe-200 shadow-lg px-2 py-2 flex items-center gap-1 sm:gap-2">
         {/* Desktop Navigation Links */}
         <div className="flex items-center gap-1 hidden sm:flex">
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -87,7 +94,7 @@ export function FloatingNav() {
             <>
               <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-giraffe-200 py-1 z-50">
                 {/* Navigation Links */}
-                {navLinks.map((link) => (
+                {links.map((link) => (
                   <Link
                     key={link.to}
                     to={link.to}
@@ -194,7 +201,14 @@ export function FloatingNav() {
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
-        ) : null}
+        ) : (
+          <Link
+            to="/auth"
+            className="px-3 py-2 ml-2 rounded-full text-sm font-semibold bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 transition-colors whitespace-nowrap shrink-0"
+          >
+            Sign in
+          </Link>
+        )}
       </nav>
     </div>
   )

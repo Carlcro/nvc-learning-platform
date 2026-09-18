@@ -6,10 +6,23 @@ import { api } from '../../../convex/_generated/api'
 import { Card, CardBody, CardHeader } from '~/components/ui/Card'
 import { Button } from '~/components/ui/Button'
 import { QuizSection } from '~/components/features/QuizSection'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
 import { CheckIcon } from '~/components/ui/Icons'
 
+const FOUNDATION_LESSON_IDS = [
+  'introduction',
+  'observation',
+  'feeling',
+  'need',
+  'request',
+  'integration',
+]
+
 export const Route = createFileRoute('/learn/integration')({
+  pendingComponent: () => (
+    <GiraffeLoader message="Opening the lesson…" />
+  ),
   component: IntegrationLesson,
 })
 
@@ -19,7 +32,10 @@ function IntegrationLesson() {
   )
 
   const [selectedExample, setSelectedExample] = useState<number>(0)
-  const { isLessonCompleted } = useLessonProgress()
+  const { isLessonCompleted, getCompletedLessonIds } = useLessonProgress()
+  const allLessonsComplete = FOUNDATION_LESSON_IDS.every((id) =>
+    getCompletedLessonIds().includes(id),
+  )
   const lessonCompleted = isLessonCompleted('integration')
 
   if (!lesson) {
@@ -34,24 +50,6 @@ function IntegrationLesson() {
 
   return (
     <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream">
-      {/* Completion Banner */}
-      {lessonCompleted && (
-        <div className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
-          <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <div className="flex gap-1 text-giraffe-600">
-              <CheckIcon className="w-6 h-6" />
-              <CheckIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-bold text-brown-800">Lesson Completed!</p>
-              <p className="text-sm text-brown-700">
-                You passed the quiz and completed this lesson.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <section className="bg-linear-to-r from-giraffe-600 to-giraffe-500 text-white pt-28 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex items-center gap-8">
@@ -100,6 +98,24 @@ function IntegrationLesson() {
           </div>
         </div>
       </section>
+
+      {/* Completion Banner */}
+      {lessonCompleted && (
+        <div className="bg-linear-to-r from-giraffe-100 to-giraffe-50 border-b-2 border-giraffe-300 px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-4xl mx-auto flex items-center gap-3">
+            <div className="flex gap-1 text-giraffe-600">
+              <CheckIcon className="w-6 h-6" />
+              <CheckIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-bold text-brown-800">Lesson Completed!</p>
+              <p className="text-sm text-brown-700">
+                You passed the quiz and completed this lesson.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -305,57 +321,60 @@ function IntegrationLesson() {
           lessonId="integration"
         />
 
-        {/* Completion Celebration */}
-        <Card className="mb-12 bg-linear-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
-          <CardBody className="text-center py-8">
-            <h2 className="text-3xl font-bold text-brown-800 mb-4">
-              Congratulations!
-            </h2>
-            <p className="text-lg text-brown-700 mb-6 max-w-2xl mx-auto">
-              You've completed the 6 foundational lessons of Non-Violent
-              Communication. You now understand all four pillars: Observation,
-              Feeling, Need, and Request. This is the foundation for
-              compassionate, authentic communication.
-            </p>
-            <div className="bg-white rounded-lg p-6 mb-6 max-w-2xl mx-auto">
-              <h3 className="text-lg font-semibold text-brown-800 mb-4">
-                What You've Learned
-              </h3>
-              <ul className="space-y-3 text-left">
-                <li className="flex gap-3">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
-                  <span className="text-brown-700">
-                    How to make observations without judgment
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
-                  <span className="text-brown-700">
-                    How to express feelings authentically
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
-                  <span className="text-brown-700">
-                    How to identify universal human needs
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
-                  <span className="text-brown-700">
-                    How to make clear, compassionate requests
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
-                  <span className="text-brown-700">
-                    How to bring it all together in complete expressions
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </CardBody>
-        </Card>
+        {/* Shown once the foundations are actually finished: it used to
+            congratulate someone who had just opened the page. */}
+        {allLessonsComplete && (
+          <Card className="mb-12 bg-linear-to-br from-giraffe-50 to-giraffe-100 border-2 border-giraffe-200">
+            <CardBody className="text-center py-8">
+              <h2 className="text-3xl font-bold text-brown-800 mb-4">
+                Congratulations!
+              </h2>
+              <p className="text-lg text-brown-700 mb-6 max-w-2xl mx-auto">
+                You've completed the 6 foundational lessons of Non-Violent
+                Communication. You now understand all four pillars: Observation,
+                Feeling, Need, and Request. This is the foundation for
+                compassionate, authentic communication.
+              </p>
+              <div className="bg-white rounded-lg p-6 mb-6 max-w-2xl mx-auto">
+                <h3 className="text-lg font-semibold text-brown-800 mb-4">
+                  What You've Learned
+                </h3>
+                <ul className="space-y-3 text-left">
+                  <li className="flex gap-3">
+                    <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                    <span className="text-brown-700">
+                      How to make observations without judgment
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                    <span className="text-brown-700">
+                      How to express feelings authentically
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                    <span className="text-brown-700">
+                      How to identify universal human needs
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                    <span className="text-brown-700">
+                      How to make clear, compassionate requests
+                    </span>
+                  </li>
+                  <li className="flex gap-3">
+                    <CheckIcon className="w-5 h-5 flex-shrink-0 text-giraffe-600" />
+                    <span className="text-brown-700">
+                      How to bring it all together in complete expressions
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </CardBody>
+          </Card>
+        )}
 
         {/* Next Steps */}
         <Card className="border-2 border-giraffe-200 mb-12">

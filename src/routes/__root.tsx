@@ -64,7 +64,7 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { isLoading, isAuthenticated } = useConvexAuth()
+  const { isLoading } = useConvexAuth()
 
   if (isLoading) {
     return (
@@ -102,7 +102,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {isAuthenticated && <FloatingNav />}
+        <FloatingNav />
         <div>{children}</div>
         <Scripts />
       </body>

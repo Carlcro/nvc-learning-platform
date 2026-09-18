@@ -4,19 +4,16 @@ import { convexQuery } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
 import { Card, CardBody } from '~/components/ui/Card'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 
 export const Route = createFileRoute('/learn/')({
-  component: ProtectedLearnHub,
+  // Open to signed-out visitors, like the lesson pages themselves. Progress
+  // falls back to this browser until they sign in, at which point it syncs.
+  component: LearnHub,
+  pendingComponent: () => (
+    <GiraffeLoader message="Gathering your lessons…" />
+  ),
 })
-
-function ProtectedLearnHub() {
-  return (
-    <ProtectedRoute>
-      <LearnHub />
-    </ProtectedRoute>
-  )
-}
 
 interface Lesson {
   lessonId: string
@@ -80,8 +77,10 @@ function LearnHub() {
   const currentLessonIndex = lessons.findIndex(
     (lesson) => !isLessonCompleted(lesson.lessonId),
   )
-  const currentLesson =
-    currentLessonIndex >= 0 ? lessons[currentLessonIndex] : lessons[0]
+  const allComplete = currentLessonIndex < 0
+  // With everything finished there is no "next" lesson, so the card becomes an
+  // invitation to revisit the first one rather than claiming it is up next.
+  const currentLesson = allComplete ? lessons[0] : lessons[currentLessonIndex]
 
   return (
     <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-20">
@@ -96,7 +95,9 @@ function LearnHub() {
                   <div className="flex-1 bg-linear-to-r from-giraffe-500 to-giraffe-400 text-white p-8">
                     <div className="mb-4">
                       <div className="text-sm font-semibold text-giraffe-50 mb-2">
-                        NEXT LESSON
+                        {allComplete
+                          ? 'YOU HAVE FINISHED THE FOUNDATIONS'
+                          : 'NEXT LESSON'}
                       </div>
                       <div className="text-sm font-semibold text-giraffe-50 mb-2">
                         Lesson {currentLesson.order}
