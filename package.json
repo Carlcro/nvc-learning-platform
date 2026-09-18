@@ -31,7 +31,8 @@
     "convex": "^1.28.0",
     "lucide-react": "^0.561.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "resend": "^6.28.1"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.13.15",
