@@ -629,12 +629,18 @@ export const getMyProgress = query({
 });
 
 /**
- * Record a lesson quiz attempt for the signed-in user. A lesson counts as
- * completed once the score reaches the lesson's passing threshold; a
- * completion is never taken away by a later weaker attempt.
+ * Grade a lesson quiz attempt for the signed-in user and record it.
+ *
+ * The client sends the chosen answers, never a score: the completion gate only
+ * means something if the server decides what a passing answer set is. A lesson
+ * counts as completed once the score reaches the lesson's passing threshold,
+ * and a completion is never taken away by a later weaker attempt.
  */
-export const recordCompletion = mutation({
-  args: { lessonId: v.string(), score: v.number() },
+export const submitQuiz = mutation({
+  args: {
+    lessonId: v.string(),
+    answers: v.array(v.union(v.number(), v.null())),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
@@ -646,7 +652,17 @@ export const recordCompletion = mutation({
       userError("Lesson not found");
     }
 
-    const score = Math.max(0, Math.min(100, Math.round(args.score)));
+    const questions = lesson.quiz.questions;
+    if (args.answers.length !== questions.length) {
+      userError("That quiz submission did not match this lesson.");
+    }
+
+    const correctCount = questions.reduce(
+      (total, question, index) =>
+        total + (args.answers[index] === question.correctAnswer ? 1 : 0),
+      0,
+    );
+    const score = Math.round((correctCount / questions.length) * 100);
     const passingScore = lesson.quiz.passingScore;
     const passed = score >= passingScore;
 
@@ -666,7 +682,14 @@ export const recordCompletion = mutation({
         completedAt:
           existing.completedAt ?? (nowCompleted ? Date.now() : undefined),
       });
-      return { completed: nowCompleted, passingScore };
+      return {
+        completed: nowCompleted,
+        score,
+        passed,
+        passingScore,
+        correctCount,
+        totalQuestions: questions.length,
+      };
     }
 
     await ctx.db.insert("lessonProgress", {
@@ -677,6 +700,13 @@ export const recordCompletion = mutation({
       attempts: 1,
       completedAt: passed ? Date.now() : undefined,
     });
-    return { completed: passed, passingScore };
+    return {
+      completed: passed,
+      score,
+      passed,
+      passingScore,
+      correctCount,
+      totalQuestions: questions.length,
+    };
   },
 });

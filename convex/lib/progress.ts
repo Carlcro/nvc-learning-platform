@@ -129,21 +129,44 @@ export function pointsForCompletion(args: {
 }
 
 const LEVEL_THRESHOLDS = [0, 300, 700, 1200, 1800, 2500]
+/** Points per level once the fixed thresholds run out. */
+const LEVEL_STEP = 800
 
+/**
+ * The last fixed threshold (2500) opens level 6, and every 800 points after it
+ * opens the next. Getting the constant wrong here strands the user on a level
+ * whose "points to next level" counts down to zero and stays there.
+ */
 export function levelForPoints(totalPoints: number): number {
   for (let level = 1; level < LEVEL_THRESHOLDS.length; level++) {
     if (totalPoints < LEVEL_THRESHOLDS[level]) return level
   }
-  return 5 + Math.floor((totalPoints - 2500) / 800)
+  const lastThreshold = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1]
+  return (
+    LEVEL_THRESHOLDS.length +
+    Math.floor((totalPoints - lastThreshold) / LEVEL_STEP)
+  )
+}
+
+/** Total points at which `level` begins. */
+function levelStart(level: number): number {
+  if (level < LEVEL_THRESHOLDS.length) return LEVEL_THRESHOLDS[level - 1]
+  const lastThreshold = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1]
+  return lastThreshold + (level - LEVEL_THRESHOLDS.length) * LEVEL_STEP
 }
 
 export function pointsToNextLevel(totalPoints: number): number {
-  const level = levelForPoints(totalPoints)
-  const nextThreshold =
-    level < LEVEL_THRESHOLDS.length
-      ? LEVEL_THRESHOLDS[level]
-      : 2500 + (level - 4) * 800
-  return Math.max(0, nextThreshold - totalPoints)
+  return levelStart(levelForPoints(totalPoints) + 1) - totalPoints
+}
+
+/**
+ * How many points the given level spans. The profile progress bar needs the
+ * width of the band the user is currently in, and deriving it here keeps the
+ * thresholds in one place.
+ */
+export function pointsInLevel(level: number): number {
+  if (level < 1) return LEVEL_THRESHOLDS[1]
+  return levelStart(level + 1) - levelStart(level)
 }
 
 // ---------------------------------------------------------------------------

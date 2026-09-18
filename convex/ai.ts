@@ -82,11 +82,11 @@ interface ArcSoFar {
 const nvcAnalysisSchema = {
   type: 'object',
   properties: {
-    observation: { type: 'integer' },
-    feeling: { type: 'integer' },
-    need: { type: 'integer' },
-    request: { type: 'integer' },
-    total: { type: 'integer' },
+    observation: { type: 'integer', minimum: 0, maximum: 25 },
+    feeling: { type: 'integer', minimum: 0, maximum: 25 },
+    need: { type: 'integer', minimum: 0, maximum: 25 },
+    request: { type: 'integer', minimum: 0, maximum: 25 },
+    total: { type: 'integer', minimum: 0, maximum: 100 },
     feedback: { type: 'string' },
     isJackalLanguage: { type: 'boolean' },
     jackalPhrases: { type: 'array', items: { type: 'string' } },
@@ -423,7 +423,25 @@ Score this single turn in context (components only for what it attempts, total f
   if (!parsed) {
     throw new Error('Empty structured response from the model')
   }
-  return parsed as NVCAnalysisResult
+
+  // The schema asks for these ranges, but a score that feeds points, stars,
+  // levels and achievements is not something to take on trust: an out-of-range
+  // total would push finalScore past 100 and overflow the meter.
+  const analysis = parsed as NVCAnalysisResult
+  return {
+    ...analysis,
+    observation: clampScore(analysis.observation, 25),
+    feeling: clampScore(analysis.feeling, 25),
+    need: clampScore(analysis.need, 25),
+    request: clampScore(analysis.request, 25),
+    total: clampScore(analysis.total, 100),
+  }
+}
+
+/** Force a model-supplied score into range, treating a non-number as 0. */
+function clampScore(value: number, max: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(max, Math.round(value)))
 }
 
 // ============================================================================

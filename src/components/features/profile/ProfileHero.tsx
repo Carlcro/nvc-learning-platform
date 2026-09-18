@@ -1,3 +1,4 @@
+import { pointsInLevel } from 'convex/lib/progress'
 import type { UserStats } from './types'
 
 interface ProfileHeroProps {
@@ -11,7 +12,7 @@ interface ProfileHeroProps {
  * opens with a person's growth rather than a grid of boxes.
  */
 export function ProfileHero({ stats }: ProfileHeroProps) {
-  const range = levelRange(stats.level)
+  const range = pointsInLevel(stats.level)
   const currentLevelProgress = Math.max(0, range - stats.pointsToNextLevel)
   const percentage = Math.min(100, Math.round((currentLevelProgress / range) * 100))
 
@@ -86,15 +87,6 @@ function Stat({ value, label }: { value: number; label: string }) {
       <dt className="text-sm text-brown-600">{label}</dt>
     </div>
   )
-}
-
-function levelRange(level: number): number {
-  if (level === 1) return 300
-  if (level === 2) return 400
-  if (level === 3) return 500
-  if (level === 4) return 600
-  if (level === 5) return 700
-  return 800
 }
 
 function getLevelTitle(level: number): string {

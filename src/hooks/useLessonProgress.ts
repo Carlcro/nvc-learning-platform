@@ -14,7 +14,10 @@ import { api } from 'convex/_generated/api'
 interface LessonProgress {
   lessonId: string
   completedAt: number // timestamp
-  score: number // percentage
+  score: number // percentage, for signed-out display only
+  // The chosen answers, kept so a completion earned while signed out can be
+  // re-graded by the server on sign-in. The server never trusts `score`.
+  answers?: Array<number | null>
 }
 
 const STORAGE_KEY = 'nvc_lesson_progress'
@@ -34,7 +37,7 @@ export function useLessonProgress() {
   const [isLoading, setIsLoading] = useState(true)
 
   const serverProgress = useQuery(api.lessons.getMyProgress)
-  const recordCompletion = useMutation(api.lessons.recordCompletion)
+  const submitQuizToServer = useMutation(api.lessons.submitQuiz)
 
   // Load local progress on mount
   useEffect(() => {
@@ -53,12 +56,15 @@ export function useLessonProgress() {
     syncedRef.current = true
 
     for (const lesson of missing) {
-      recordCompletion({
+      // Without the stored answers there is nothing for the server to grade,
+      // and a score from this browser is not something it should take.
+      if (!lesson.answers) continue
+      submitQuizToServer({
         lessonId: lesson.lessonId,
-        score: lesson.score,
+        answers: lesson.answers,
       }).catch((error) => console.error('Failed to sync lesson:', error))
     }
-  }, [serverProgress, recordCompletion])
+  }, [serverProgress, submitQuizToServer])
 
   const serverCompleted = (serverProgress ?? []).filter((p) => p.completed)
 
@@ -71,19 +77,29 @@ export function useLessonProgress() {
     : localLessons
 
   /**
-   * Record a passing quiz result. Persists to the account when signed in,
-   * and always to localStorage so signed-out progress is not lost.
+   * Submit a passing quiz attempt. The server re-grades the answers and owns
+   * the recorded result; localStorage keeps a copy so signed-out progress is
+   * not lost and can be synced up later.
    */
-  const completeLesson = (lessonId: string, score: number) => {
+  const submitQuiz = (
+    lessonId: string,
+    answers: Array<number | null>,
+    localScore: number,
+  ) => {
     try {
       const existing = readLocal()
       const index = existing.findIndex((l) => l.lessonId === lessonId)
       const updated =
         index >= 0
           ? existing.map((l, i) =>
-              i === index ? { ...l, score: Math.max(l.score, score) } : l,
+              i === index
+                ? { ...l, score: Math.max(l.score, localScore), answers }
+                : l,
             )
-          : [...existing, { lessonId, completedAt: Date.now(), score }]
+          : [
+              ...existing,
+              { lessonId, completedAt: Date.now(), score: localScore, answers },
+            ]
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
       setLocalLessons(updated)
     } catch (error) {
@@ -91,7 +107,7 @@ export function useLessonProgress() {
     }
 
     if (serverProgress !== null && serverProgress !== undefined) {
-      recordCompletion({ lessonId, score }).catch((error) =>
+      submitQuizToServer({ lessonId, answers }).catch((error) =>
         console.error('Failed to save lesson progress:', error),
       )
     }
@@ -118,7 +134,7 @@ export function useLessonProgress() {
   return {
     completedLessons,
     isLoading: isLoading || serverProgress === undefined,
-    completeLesson,
+    submitQuiz,
     isLessonCompleted,
     getLessonCompletionDate,
     getProgressPercentage,

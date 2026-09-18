@@ -24,6 +24,9 @@ interface QuizState {
   selectedAnswers: Array<number | null>
   submitted: boolean
   showFeedback: boolean
+  // Questions whose answer the learner has revealed. Revealing locks that
+  // question, so peeking is a choice rather than a way past the quiz.
+  revealed: Array<boolean>
 }
 
 export function QuizSection({
@@ -32,16 +35,17 @@ export function QuizSection({
   title = 'Review Your Learning',
   lessonId,
 }: QuizSectionProps) {
-  const { completeLesson, isLessonCompleted } = useLessonProgress()
+  const { submitQuiz, isLessonCompleted } = useLessonProgress()
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestion: 0,
     selectedAnswers: Array(questions.length).fill(null),
     submitted: false,
     showFeedback: false,
+    revealed: Array(questions.length).fill(false),
   })
 
   const handleSelectAnswer = (optionIndex: number) => {
-    if (!quizState.submitted) {
+    if (!quizState.submitted && !quizState.revealed[quizState.currentQuestion]) {
       const updatedAnswers = [...quizState.selectedAnswers]
       updatedAnswers[quizState.currentQuestion] = optionIndex
       setQuizState((prev) => ({
@@ -74,9 +78,10 @@ export function QuizSection({
   const handleSubmit = () => {
     const score = calculateScore()
     // The lesson counts as complete at its passing threshold, not only at a
-    // perfect score. Growth over grades.
+    // perfect score. Growth over grades. The server re-grades these answers
+    // and owns the recorded result.
     if (lessonId && score >= passingScore) {
-      completeLesson(lessonId, score)
+      submitQuiz(lessonId, quizState.selectedAnswers, score)
     }
     setQuizState((prev) => ({
       ...prev,
@@ -88,6 +93,9 @@ export function QuizSection({
     setQuizState((prev) => ({
       ...prev,
       showFeedback: !prev.showFeedback,
+      revealed: prev.revealed.map((wasRevealed, index) =>
+        index === prev.currentQuestion ? true : wasRevealed,
+      ),
     }))
   }
 
@@ -97,6 +105,7 @@ export function QuizSection({
       selectedAnswers: Array(questions.length).fill(null),
       submitted: false,
       showFeedback: false,
+      revealed: Array(questions.length).fill(false),
     })
   }
 
@@ -201,33 +210,53 @@ export function QuizSection({
               <h3 className="text-lg font-semibold text-brown-800 mb-4">
                 Review Your Answers
               </h3>
-              <div className="space-y-2 mb-6">
-                {questions.map((_, index) => {
-                  const isAnswerCorrect =
-                    quizState.selectedAnswers[index] ===
-                    questions[index].correctAnswer
+              <div className="space-y-3 mb-6 text-left">
+                {questions.map((question, index) => {
+                  const chosen = quizState.selectedAnswers[index]
+                  const isAnswerCorrect = chosen === question.correctAnswer
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-giraffe-100"
+                      className="p-4 rounded-lg bg-giraffe-50 border border-giraffe-200"
                     >
-                      <span
-                        className={
-                          isAnswerCorrect
-                            ? 'text-empathy-high'
-                            : 'text-empathy-low'
-                        }
-                        aria-label={isAnswerCorrect ? 'Correct' : 'Incorrect'}
-                      >
-                        {isAnswerCorrect ? (
-                          <CheckIcon className="w-5 h-5" />
-                        ) : (
-                          <XIcon className="w-5 h-5" />
-                        )}
-                      </span>
-                      <span className="text-sm text-brown-700 flex-1">
-                        Question {index + 1}
-                      </span>
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={
+                            isAnswerCorrect
+                              ? 'text-empathy-high shrink-0 mt-0.5'
+                              : 'text-empathy-low shrink-0 mt-0.5'
+                          }
+                          aria-label={isAnswerCorrect ? 'Correct' : 'Incorrect'}
+                        >
+                          {isAnswerCorrect ? (
+                            <CheckIcon className="w-5 h-5" />
+                          ) : (
+                            <XIcon className="w-5 h-5" />
+                          )}
+                        </span>
+                        <div className="flex-1 space-y-2">
+                          <p className="text-sm font-semibold text-brown-800">
+                            {index + 1}. {question.question}
+                          </p>
+                          {!isAnswerCorrect && (
+                            <p className="text-sm text-brown-600">
+                              <span className="font-medium">You chose:</span>{' '}
+                              {chosen === null
+                                ? 'nothing yet'
+                                : question.options[chosen]}
+                            </p>
+                          )}
+                          <p className="text-sm text-brown-700">
+                            <span className="font-medium">
+                              {isAnswerCorrect ? 'You said:' : 'A closer fit:'}
+                            </span>{' '}
+                            {question.options[question.correctAnswer]}
+                          </p>
+                          <p className="text-sm text-brown-600 italic">
+                            {question.explanation}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )
                 })}
@@ -449,6 +478,12 @@ export function QuizSection({
         {quizState.selectedAnswers[quizState.currentQuestion] === null && (
           <p className="text-sm text-brown-500 mt-4">
             Please select an answer to continue
+          </p>
+        )}
+        {quizState.revealed[quizState.currentQuestion] && (
+          <p className="text-sm text-brown-500 mt-4">
+            You have seen the answer to this one, so it stays as you left it.
+            You can always retake the quiz.
           </p>
         )}
       </CardBody>

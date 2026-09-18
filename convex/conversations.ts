@@ -371,13 +371,28 @@ export const complete = mutation({
     const scoredMessages = conversation.messages.filter(
       (m) => m.role === 'user' && m.nvcScore,
     )
-    const finalScore =
-      scoredMessages.length > 0
-        ? Math.round(
-            scoredMessages.reduce((sum, m) => sum + (m.nvcScore?.total ?? 0), 0) /
-              scoredMessages.length,
-          )
-        : 0
+
+    // Nothing was actually said, so there is nothing to reflect on. Settling
+    // the conversation here keeps it out of the way without paying out the
+    // streak and achievements that a real attempt earns.
+    if (scoredMessages.length === 0) {
+      await ctx.db.patch(args.conversationId, {
+        status: 'abandoned',
+        completedAt: now,
+      })
+      return {
+        finalScore: 0,
+        finalStars: 0,
+        pointsEarned: 0,
+        challengeBonus: 0,
+        newAchievements: [],
+        alreadyCompleted: false,
+      }
+    }
+    const finalScore = Math.round(
+      scoredMessages.reduce((sum, m) => sum + (m.nvcScore?.total ?? 0), 0) /
+        scoredMessages.length,
+    )
     const finalStars = starsForScore(finalScore)
     const completionStatus = completionStatusForScore(finalScore)
     const empathyShown =
