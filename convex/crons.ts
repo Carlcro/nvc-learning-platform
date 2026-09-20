@@ -36,4 +36,17 @@ crons.daily(
   internal.dailyChallenges.pruneOldChallenges,
 )
 
+/**
+ * Trim the raw model call log. The daily and lifetime rollups keep the totals,
+ * so only the detail ages out.
+ */
+crons.daily(
+  'prune-old-model-calls',
+  {
+    hourUTC: 2,
+    minuteUTC: 0,
+  },
+  internal.usage.pruneOldModelCalls,
+)
+
 export default crons

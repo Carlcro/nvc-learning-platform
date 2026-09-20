@@ -2,6 +2,9 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { internalAction } from './_generated/server'
+import { internal } from './_generated/api'
+import { MODEL, callRecord } from './lib/modelUsage'
+import type { ActionCtx } from './_generated/server'
 
 /**
  * Daily Challenge Scenario Generation
@@ -17,8 +20,6 @@ const anthropic = new Anthropic({
   timeout: 60 * 1000,
   maxRetries: 2,
 })
-
-const MODEL = 'claude-sonnet-4-6'
 
 interface GeneratedScenario {
   title: string
@@ -42,12 +43,14 @@ interface GeneratedScenario {
  */
 export const generateThreeScenarios = internalAction({
   args: {},
-  handler: async () => {
-    return await generateThreeScenariosFn()
+  handler: async (ctx) => {
+    return await generateThreeScenariosFn(ctx)
   },
 })
 
-async function generateThreeScenariosFn(): Promise<Array<GeneratedScenario>> {
+async function generateThreeScenariosFn(
+  ctx: ActionCtx,
+): Promise<Array<GeneratedScenario>> {
   const prompt = `You are an expert in Non-Violent Communication (NVC) and conflict resolution. Generate 3 distinct daily challenge scenarios for an NVC learning app.
 
 Each scenario should be a realistic interpersonal conflict situation that users can practice NVC communication in.
@@ -104,6 +107,16 @@ Return the scenarios in the required structured format. Produce exactly 3 scenar
         },
       },
     })
+
+    // The cron belongs to no user, so this is logged without one. Bookkeeping
+    // only: a failed write here must not cost us the night's challenges.
+    try {
+      await ctx.runMutation(internal.usage.recordModelCalls, {
+        calls: [callRecord('daily_challenges', MODEL, response.usage)],
+      })
+    } catch (error) {
+      console.error('Failed to record model usage:', error)
+    }
 
     const parsed = response.parsed_output as
       | { scenarios: Array<GeneratedScenario> }

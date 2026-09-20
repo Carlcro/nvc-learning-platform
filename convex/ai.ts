@@ -16,8 +16,12 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
 import { MAX_HISTORY_MESSAGES, MAX_USER_TURNS } from './lib/limits'
+import { MODEL, callRecord } from './lib/modelUsage'
 import { action } from './_generated/server'
 import { internal } from './_generated/api'
+import type { ActionCtx } from './_generated/server'
+import type { Id } from './_generated/dataModel'
+import type { ModelCallRecord } from './lib/modelUsage'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -27,7 +31,27 @@ const anthropic = new Anthropic({
   maxRetries: 2,
 })
 
-const MODEL = 'claude-sonnet-4-6'
+/**
+ * Hand the usage of finished model calls to the cost log. Never throws: what a
+ * call cost is bookkeeping, and losing a row must not fail the turn it paid for.
+ */
+async function recordCalls(
+  ctx: ActionCtx,
+  userId: Id<'users'>,
+  calls: Array<ModelCallRecord>,
+  conversationId?: Id<'conversations'>,
+): Promise<void> {
+  if (calls.length === 0) return
+  try {
+    await ctx.runMutation(internal.usage.recordModelCalls, {
+      userId,
+      conversationId,
+      calls,
+    })
+  } catch (error) {
+    console.error('Failed to record model usage:', error)
+  }
+}
 
 // Matches the UI's input limit; anything longer is rejected, not truncated.
 const MAX_MESSAGE_LENGTH = 1000
@@ -286,13 +310,18 @@ export const submitTurn = action({
     // The analysis and the character's reply are independent by design (the
     // character reads the message itself, plus their current mood), so both
     // model calls run in parallel and a turn costs one round trip.
-    const [analysis, characterResponse] = await Promise.all([
+    //
+    // allSettled rather than all: when one call fails the other has usually
+    // still been billed, and its usage should reach the cost log either way.
+    const calls: Array<ModelCallRecord> = []
+    const [analysisResult, replyResult] = await Promise.allSettled([
       analyzeMessage({
         userMessage: message,
         history,
         userLevel,
         arcSoFar,
         scenario,
+        onUsage: (call) => calls.push(call),
       }),
       generateCharacterReply({
         userMessage: message,
@@ -301,8 +330,15 @@ export const submitTurn = action({
         arcSoFar,
         scenario,
         currentMood: conversation.currentCharacterMood,
+        onUsage: (call) => calls.push(call),
       }),
     ])
+    await recordCalls(ctx, userId, calls, args.conversationId)
+
+    if (analysisResult.status === 'rejected') throw analysisResult.reason
+    if (replyResult.status === 'rejected') throw replyResult.reason
+    const analysis = analysisResult.value
+    const characterResponse = replyResult.value
 
     await ctx.runMutation(internal.conversations.recordTurn, {
       conversationId: args.conversationId,
@@ -340,6 +376,7 @@ async function analyzeMessage(args: {
   userLevel: number
   arcSoFar: ArcSoFar
   scenario: TurnScenario
+  onUsage: (call: ModelCallRecord) => void
 }): Promise<NVCAnalysisResult> {
   const conversationContext =
     args.history.length > 0
@@ -442,6 +479,7 @@ Score this single turn in context (components only for what it attempts, total f
       },
     },
   })
+  args.onUsage(callRecord('analysis', MODEL, response.usage))
 
   const parsed = response.parsed_output as unknown
   if (!parsed) {
@@ -496,6 +534,7 @@ async function generateCharacterReply(args: {
   arcSoFar: ArcSoFar
   scenario: TurnScenario
   currentMood: number
+  onUsage: (call: ModelCallRecord) => void
 }): Promise<string> {
   const patienceGuidance =
     args.userLevel <= 2
@@ -568,6 +607,7 @@ IMPORTANT REMINDERS:
     system: systemPrompt,
     messages: [...history, { role: 'user', content: args.userMessage }],
   })
+  args.onUsage(callRecord('character_reply', MODEL, response.usage))
 
   const textBlock = response.content.find((block) => block.type === 'text')
   if (!textBlock) {
@@ -695,6 +735,12 @@ ${attempted || 'None clearly. It was mostly reaction, so offer a plain observati
         },
       },
     })
+    await recordCalls(
+      ctx,
+      userId,
+      [callRecord('reflection', MODEL, response.usage)],
+      args.conversationId,
+    )
 
     const parsed = response.parsed_output as {
       rewrite?: string
@@ -801,6 +847,9 @@ ${
           },
         },
       })
+      await recordCalls(ctx, userId, [
+        callRecord('scenario_readiness', MODEL, response.usage),
+      ])
 
       const parsed = response.parsed_output as unknown
       if (!parsed) {
@@ -896,6 +945,9 @@ Produce the scenario object that best brings this real situation to life as a pr
           },
         },
       })
+      await recordCalls(ctx, userId, [
+        callRecord('scenario_generation', MODEL, response.usage),
+      ])
 
       const parsed = response.parsed_output as unknown
       if (!parsed) {

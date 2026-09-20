@@ -16,6 +16,7 @@ import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as PracticeIndexRouteImport } from './routes/practice/index'
 import { Route as LearnIndexRouteImport } from './routes/learn/index'
 import { Route as FeelingsIndexRouteImport } from './routes/feelings/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as LearnRequestRouteImport } from './routes/learn/request'
 import { Route as LearnObservationRouteImport } from './routes/learn/observation'
 import { Route as LearnNeedRouteImport } from './routes/learn/need'
@@ -30,6 +31,7 @@ import { Route as FeelingsCheckInRouteImport } from './routes/feelings/check-in'
 import { Route as ChallengesDailyRouteImport } from './routes/challenges/daily'
 import { Route as PracticeCreateIndexRouteImport } from './routes/practice/create/index'
 import { Route as PracticeScenarioIdBriefRouteImport } from './routes/practice/$scenarioId/brief'
+import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
 import { Route as PracticeScenarioIdTranscriptConversationIdRouteImport } from './routes/practice/$scenarioId/transcript/$conversationId'
 import { Route as PracticeScenarioIdConversationConversationIdRouteImport } from './routes/practice/$scenarioId/conversation/$conversationId'
 
@@ -67,6 +69,11 @@ const FeelingsIndexRoute = FeelingsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => FeelingsRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LearnRequestRoute = LearnRequestRouteImport.update({
   id: '/learn/request',
@@ -138,6 +145,11 @@ const PracticeScenarioIdBriefRoute = PracticeScenarioIdBriefRouteImport.update({
   path: '/practice/$scenarioId/brief',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
+  id: '/admin/users/$userId',
+  path: '/admin/users/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeScenarioIdTranscriptConversationIdRoute =
   PracticeScenarioIdTranscriptConversationIdRouteImport.update({
     id: '/practice/$scenarioId/transcript/$conversationId',
@@ -167,10 +179,12 @@ export interface FileRoutesByFullPath {
   '/learn/need': typeof LearnNeedRoute
   '/learn/observation': typeof LearnObservationRoute
   '/learn/request': typeof LearnRequestRoute
+  '/admin': typeof AdminIndexRoute
   '/feelings/': typeof FeelingsIndexRoute
   '/learn': typeof LearnIndexRoute
   '/practice': typeof PracticeIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
   '/practice/create': typeof PracticeCreateIndexRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
@@ -191,10 +205,12 @@ export interface FileRoutesByTo {
   '/learn/need': typeof LearnNeedRoute
   '/learn/observation': typeof LearnObservationRoute
   '/learn/request': typeof LearnRequestRoute
+  '/admin': typeof AdminIndexRoute
   '/feelings': typeof FeelingsIndexRoute
   '/learn': typeof LearnIndexRoute
   '/practice': typeof PracticeIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
   '/practice/create': typeof PracticeCreateIndexRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
@@ -217,10 +233,12 @@ export interface FileRoutesById {
   '/learn/need': typeof LearnNeedRoute
   '/learn/observation': typeof LearnObservationRoute
   '/learn/request': typeof LearnRequestRoute
+  '/admin/': typeof AdminIndexRoute
   '/feelings/': typeof FeelingsIndexRoute
   '/learn/': typeof LearnIndexRoute
   '/practice/': typeof PracticeIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/practice/$scenarioId/brief': typeof PracticeScenarioIdBriefRoute
   '/practice/create/': typeof PracticeCreateIndexRoute
   '/practice/$scenarioId/conversation/$conversationId': typeof PracticeScenarioIdConversationConversationIdRoute
@@ -244,10 +262,12 @@ export interface FileRouteTypes {
     | '/learn/need'
     | '/learn/observation'
     | '/learn/request'
+    | '/admin'
     | '/feelings/'
     | '/learn'
     | '/practice'
     | '/profile'
+    | '/admin/users/$userId'
     | '/practice/$scenarioId/brief'
     | '/practice/create'
     | '/practice/$scenarioId/conversation/$conversationId'
@@ -268,10 +288,12 @@ export interface FileRouteTypes {
     | '/learn/need'
     | '/learn/observation'
     | '/learn/request'
+    | '/admin'
     | '/feelings'
     | '/learn'
     | '/practice'
     | '/profile'
+    | '/admin/users/$userId'
     | '/practice/$scenarioId/brief'
     | '/practice/create'
     | '/practice/$scenarioId/conversation/$conversationId'
@@ -293,10 +315,12 @@ export interface FileRouteTypes {
     | '/learn/need'
     | '/learn/observation'
     | '/learn/request'
+    | '/admin/'
     | '/feelings/'
     | '/learn/'
     | '/practice/'
     | '/profile/'
+    | '/admin/users/$userId'
     | '/practice/$scenarioId/brief'
     | '/practice/create/'
     | '/practice/$scenarioId/conversation/$conversationId'
@@ -314,9 +338,11 @@ export interface RootRouteChildren {
   LearnNeedRoute: typeof LearnNeedRoute
   LearnObservationRoute: typeof LearnObservationRoute
   LearnRequestRoute: typeof LearnRequestRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   LearnIndexRoute: typeof LearnIndexRoute
   PracticeIndexRoute: typeof PracticeIndexRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
+  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
   PracticeScenarioIdBriefRoute: typeof PracticeScenarioIdBriefRoute
   PracticeCreateIndexRoute: typeof PracticeCreateIndexRoute
   PracticeScenarioIdConversationConversationIdRoute: typeof PracticeScenarioIdConversationConversationIdRoute
@@ -373,6 +399,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/feelings/'
       preLoaderRoute: typeof FeelingsIndexRouteImport
       parentRoute: typeof FeelingsRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/learn/request': {
       id: '/learn/request'
@@ -472,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeScenarioIdBriefRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users/$userId': {
+      id: '/admin/users/$userId'
+      path: '/admin/users/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminUsersUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice/$scenarioId/transcript/$conversationId': {
       id: '/practice/$scenarioId/transcript/$conversationId'
       path: '/practice/$scenarioId/transcript/$conversationId'
@@ -522,9 +562,11 @@ const rootRouteChildren: RootRouteChildren = {
   LearnNeedRoute: LearnNeedRoute,
   LearnObservationRoute: LearnObservationRoute,
   LearnRequestRoute: LearnRequestRoute,
+  AdminIndexRoute: AdminIndexRoute,
   LearnIndexRoute: LearnIndexRoute,
   PracticeIndexRoute: PracticeIndexRoute,
   ProfileIndexRoute: ProfileIndexRoute,
+  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
   PracticeScenarioIdBriefRoute: PracticeScenarioIdBriefRoute,
   PracticeCreateIndexRoute: PracticeCreateIndexRoute,
   PracticeScenarioIdConversationConversationIdRoute:

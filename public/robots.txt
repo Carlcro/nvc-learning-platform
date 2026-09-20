@@ -4,5 +4,6 @@ Allow: /
 # Nothing to index behind sign-in, and no value in indexing the form itself.
 Disallow: /auth
 Disallow: /profile
+Disallow: /admin
 
 # Add a Sitemap line here once the site has its real domain.

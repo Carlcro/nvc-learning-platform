@@ -7,7 +7,7 @@ import { mutation, query } from "./_generated/server";
  * The 6 foundational NVC lessons
  * These form the core learning path for Phase 1
  */
-const LESSONS = [
+export const LESSONS = [
   {
     lessonId: "introduction",
     title: "Introduction to Non-Violent Communication",

@@ -126,7 +126,7 @@ npx convex run scenarios:seedAll
 npx convex run dailyChallenges:generateDailyChallenge
 ```
 
-There are no admin or test routes in the app itself.
+There are no test routes in the app itself. The one privileged surface is the admin panel (see "The admin panel and cost tracking" below), which is closed to everyone who is not in the `admins` table.
 
 ```typescript
 // In app code - use generated API
@@ -173,11 +173,11 @@ import { v } from 'convex/values'
 import { action } from './_generated/server'
 import { internal } from './_generated/api'
 
+import { MODEL } from './lib/modelUsage' // 'claude-sonnet-4-6', shared with pricing
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!, // set on the Convex deployment
 })
-
-const MODEL = 'claude-sonnet-4-6'
 
 // Structured output: constrain the response with a JSON schema and
 // use anthropic.messages.parse, then read response.parsed_output.
@@ -281,6 +281,25 @@ During a conversation the coaching gives hints, never scripts (`giraffeAlternati
 A conversation with at least one user message counts as waiting. The hub (`conversations.listMyActiveScenarioIds`) shows "Continue" on its card and leads with it, and the brief (`conversations.getActiveForScenario`) offers "Continue your conversation" or "Start fresh". "Start over" inside a conversation always asks first. A rewind hands the taken-back words back to the composer for reshaping; new conversations get 3 rewinds.
 
 **Levels**: thresholds are 0 / 300 / 700 / 1200 / 1800 / 2500 points, then +800 points per level after level 5.
+
+### The admin panel and cost tracking
+
+`/admin` shows how people use the app and what it costs to run: an overview (growth, activity, spend per day, spend by kind of call, how much of the daily allowance people use), practice (completion, how far along the arc people get, where they stop, which piece is hardest, scenario popularity), engagement (milestones, feature adoption, lessons, levels, achievements), and a sortable list of people with a detail page each. Queries live in `convex/admin.ts`, UI in `src/components/features/admin/` and `src/routes/admin/`.
+
+**Access**: admins are rows in the `admins` table, keyed on user id and only written from the CLI. Never gate on email: a password sign-up does not verify its address, so one email can belong to several accounts.
+
+```bash
+npx convex run admin:grantAdmin '{"email": "you@example.com"}'   # refuses and lists candidates if ambiguous
+npx convex run admin:grantAdmin '{"userId": "..."}'
+npx convex run admin:revokeAdmin '{"userId": "..."}'
+npx convex run admin:listAdmins
+```
+
+Add `--prod` for production; the two deployments have separate users and separate admins. Every admin query calls `requireAdmin` first. The `AdminGate` component only decides what to render (non-admins see the ordinary not-found page); it is not the lock.
+
+**Privacy**: conversations stay owner-only, even from the admin panel. Admin queries return counts, scores and dates, never message content, never check-in feelings or notes, and never the title or text of a custom scenario (those describe real situations in people's lives, so they are counted together as "Custom scenarios"). Keep it that way when adding statistics.
+
+**Cost tracking**: every Claude call reports its token usage through `internal.usage.recordModelCalls`, which prices it (`convex/lib/modelUsage.ts`, in micro-dollars, at write time) and writes the raw `modelCalls` log plus three rollups: `dailyUsage` (per user per day), `userUsageTotals` (per user lifetime) and `dailyModelSpend` (per day per kind, including the nightly cron). The admin panel reads the rollups, never the raw log, which a cron prunes after 90 days. When adding a model call: give it a kind in `MODEL_CALL_KINDS`, record it with `callRecord(kind, MODEL, response.usage)`, and never let a failed record fail the feature. When changing `MODEL`, make sure it is in `MODEL_PRICING` (a test enforces this). Nothing was metered before this shipped, so earlier usage has activity but no cost.
 
 ### Task: Create a New UI Component
 

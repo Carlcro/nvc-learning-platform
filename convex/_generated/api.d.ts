@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as conversations from "../conversations.js";
@@ -20,8 +21,10 @@ import type * as feelingsProgress from "../feelingsProgress.js";
 import type * as feelingsQuiz from "../feelingsQuiz.js";
 import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
+import type * as lib_adminStats from "../lib/adminStats.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_limits from "../lib/limits.js";
+import type * as lib_modelUsage from "../lib/modelUsage.js";
 import type * as lib_progress from "../lib/progress.js";
 import type * as lib_userProgressWrite from "../lib/userProgressWrite.js";
 import type * as passwordReset from "../passwordReset.js";
@@ -47,6 +50,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   ai: typeof ai;
   auth: typeof auth;
   conversations: typeof conversations;
@@ -59,8 +63,10 @@ declare const fullApi: ApiFromModules<{
   feelingsQuiz: typeof feelingsQuiz;
   http: typeof http;
   lessons: typeof lessons;
+  "lib/adminStats": typeof lib_adminStats;
   "lib/errors": typeof lib_errors;
   "lib/limits": typeof lib_limits;
+  "lib/modelUsage": typeof lib_modelUsage;
   "lib/progress": typeof lib_progress;
   "lib/userProgressWrite": typeof lib_userProgressWrite;
   passwordReset: typeof passwordReset;

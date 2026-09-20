@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 import { authTables } from '@convex-dev/auth/server'
+import { modelCallKindValidator } from './lib/modelUsage'
 
 /**
  * NVC Learning App Database Schema
@@ -530,5 +531,75 @@ export default defineSchema({
     date: v.string(), // YYYY-MM-DD, server UTC
     turns: v.number(),
     scenarioGenerations: v.number(),
-  }).index('by_user_and_date', ['userId', 'date']),
+    // Measured spend for the day, added by usage.recordModelCalls. Optional:
+    // rows from before cost tracking lack them, and read as "not measured".
+    modelCalls: v.optional(v.number()),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
+    costMicros: v.optional(v.number()), // millionths of a US dollar
+  })
+    .index('by_user_and_date', ['userId', 'date'])
+    .index('by_date', ['date']),
+
+  // ============================================================================
+  // ADMIN & COST TRACKING
+  // ============================================================================
+
+  /**
+   * Who may open the admin panel. Keyed on the user id, never the email: a
+   * password account can be registered with any unverified address, so an
+   * email allowlist could be claimed by whoever signs up with it first.
+   * Rows are only written from the CLI (admin:grantAdmin).
+   */
+  admins: defineTable({
+    userId: v.id('users'),
+    grantedAt: v.number(),
+  }).index('by_user', ['userId']),
+
+  /**
+   * One row per Claude call, with the tokens it used and what it cost. The raw
+   * log behind the rollups below; pruned after a retention window because the
+   * rollups keep the totals.
+   */
+  modelCalls: defineTable({
+    userId: v.optional(v.id('users')), // absent for the nightly cron
+    conversationId: v.optional(v.id('conversations')),
+    kind: modelCallKindValidator,
+    model: v.string(),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    cacheReadTokens: v.number(),
+    cacheWriteTokens: v.number(),
+    costMicros: v.number(),
+    date: v.string(), // YYYY-MM-DD, server UTC
+  }).index('by_user', ['userId']),
+
+  /**
+   * Lifetime model spend per user, so the admin user list reads one light row
+   * per person instead of summing every day they were ever active.
+   */
+  userUsageTotals: defineTable({
+    userId: v.id('users'),
+    modelCalls: v.number(),
+    turns: v.number(), // practice turns with measured cost
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    costMicros: v.number(),
+    activeDays: v.number(), // distinct UTC days with at least one model call
+    firstCallAt: v.number(),
+    lastCallAt: v.number(),
+  }).index('by_user', ['userId']),
+
+  /**
+   * Spend per day per kind of call, across everyone and including the cron.
+   * Answers "which feature costs what" without scanning the raw log.
+   */
+  dailyModelSpend: defineTable({
+    date: v.string(), // YYYY-MM-DD, server UTC
+    kind: modelCallKindValidator,
+    calls: v.number(),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    costMicros: v.number(),
+  }).index('by_date_and_kind', ['date', 'kind']),
 })

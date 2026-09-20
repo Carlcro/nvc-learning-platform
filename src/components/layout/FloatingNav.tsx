@@ -27,6 +27,7 @@ export function FloatingNav() {
   const { isAuthenticated } = useConvexAuth()
   const { signOut } = useAuthActions()
   const userProfile = useQuery(api.users.getUserProfile)
+  const isAdmin = useQuery(api.admin.amIAdmin)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   // The nav renders for signed-out visitors too, since the lessons are open to
@@ -185,6 +186,19 @@ export function FloatingNav() {
                     </span>
                   </div>
                 </div>
+
+                {/* Admin panel, for the few accounts allowed to open it */}
+                {isAdmin && (
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      to="/admin"
+                      search={{ tab: undefined, days: undefined }}
+                      className="block w-full px-4 py-2 text-left text-sm text-brown-700 hover:bg-giraffe-50 active:bg-giraffe-100 transition-colors font-medium cursor-pointer"
+                    >
+                      Admin
+                    </Link>
+                  </DropdownMenu.Item>
+                )}
 
                 {/* Sign Out */}
                 <DropdownMenu.Item asChild>
