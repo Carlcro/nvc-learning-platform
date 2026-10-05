@@ -1,4 +1,4 @@
-const SITE_NAME = 'NVC Learning App'
+export const SITE_NAME = 'Practice NVC'
 
 /**
  * Meta tags for one page.
@@ -8,8 +8,7 @@ const SITE_NAME = 'NVC Learning App'
  * distinctive page name and their own description; the root route supplies the
  * defaults that apply when a route says nothing.
  *
- * Note: og:image is deliberately absent. It has to be an absolute URL, which
- * needs the real domain rather than the workers.dev host.
+ * Note: og:image is deliberately absent until there is an image worth sharing.
  */
 export function pageMeta({
   title,

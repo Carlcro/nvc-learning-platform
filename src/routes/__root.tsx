@@ -11,6 +11,7 @@ import appCss from '~/styles/app.css?url'
 import { FloatingNav } from '~/components/layout/FloatingNav'
 import { NotFoundPage } from '~/components/layout/ErrorStates'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
+import { SITE_NAME } from '~/lib/seo'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -27,14 +28,14 @@ export const Route = createRootRouteWithContext<{
       // Fallbacks only. Each route supplies its own title and description via
       // pageMeta, and the route's values win where both are present.
       {
-        title: 'NVC Learning App: Learn Compassionate Communication',
+        title: `${SITE_NAME}: Learn Compassionate Communication`,
       },
       {
         name: 'description',
         content:
           'Practice the four steps of compassionate communication through guided lessons and lifelike roleplay conversations.',
       },
-      { property: 'og:site_name', content: 'NVC Learning App' },
+      { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
     ],

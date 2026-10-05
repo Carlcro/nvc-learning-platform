@@ -4,6 +4,15 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  // The public address. Cloudflare manages DNS and the certificate for a
+  // custom domain, so nothing else needs to point here by hand.
+  "routes": [
+    { "pattern": "practicenvc.com", "custom_domain": true },
+    { "pattern": "www.practicenvc.com", "custom_domain": true }
+  ],
+  // Keep the old workers.dev address answering too, so existing links and
+  // bookmarks keep working.
+  "workers_dev": true,
   // Without this, a production break is invisible until a user reports it.
   "observability": {
     "enabled": true
