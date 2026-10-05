@@ -36,6 +36,10 @@ export const MAX_HISTORY_MESSAGES = 16
  * Practice turns one account can take per day, across all conversations, and
  * custom scenarios it can generate. These bound total spend rather than
  * shaping a single conversation.
+ *
+ * Two full conversations' worth of turns. The admin panel showed a typical
+ * practice day well under that, and at 100 a single account could run up
+ * a couple of dollars a day on its own.
  */
-export const MAX_TURNS_PER_DAY = 100
+export const MAX_TURNS_PER_DAY = 30
 export const MAX_SCENARIO_GENERATIONS_PER_DAY = 10

@@ -333,10 +333,11 @@ export const overview = query({
         capHits: turnsPerUserDay.filter((t) => t >= MAX_TURNS_PER_DAY).length,
         buckets: bucketCounts(turnsPerUserDay, [
           { label: '1 to 5', min: 1, max: 5 },
-          { label: '6 to 15', min: 6, max: 15 },
-          { label: '16 to 30', min: 16, max: 30 },
-          { label: '31 to 60', min: 31, max: 60 },
-          { label: '61 and up', min: 61, max: Number.MAX_SAFE_INTEGER },
+          { label: '6 to 10', min: 6, max: 10 },
+          { label: '11 to 20', min: 11, max: 20 },
+          { label: '21 to 30', min: 21, max: 30 },
+          // Days from before the cap was lowered can sit above it.
+          { label: '31 and up', min: 31, max: Number.MAX_SAFE_INTEGER },
         ]),
       },
       topSpenders,
