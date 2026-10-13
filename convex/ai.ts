@@ -16,7 +16,7 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
 import { MAX_HISTORY_MESSAGES, MAX_USER_TURNS } from './lib/limits'
-import { MODEL, callRecord } from './lib/modelUsage'
+import { CHARACTER_MODEL, MODEL, callRecord } from './lib/modelUsage'
 import { action } from './_generated/server'
 import { internal } from './_generated/api'
 import type { ActionCtx } from './_generated/server'
@@ -563,7 +563,7 @@ ENDING THE SCENE:
 In earlier messages the user has already expressed: ${arcDone.length ? arcDone.join(', ') : 'none of the core pieces yet'}.
 Still unexpressed before their latest message: ${arcMissing.length ? arcMissing.join(', ') : 'nothing'}.
 If nothing was missing, or their LATEST message clearly supplies what was missing, they have now expressed themselves fully. In that case, let the conversation come to a natural, warm close:
-- Acknowledge what shifted for you and that you feel heard.
+- Let it show, in your own voice, that something shifted for you and their words landed. Avoid stock lines like "I feel heard" or "I feel lighter".
 - Respond with a sense of resolution, relief, or goodwill.
 - Do NOT ask a question, raise a new concern, or open a new topic. Let your reply land as a gentle ending.
 - Keep it short and heartfelt (1-2 sentences).
@@ -583,11 +583,12 @@ BEHAVIORAL RULES:
 2. React authentically to HOW the user communicates. Judge their latest message yourself: when they describe things without judgment, own their feelings, name what matters to them, make gentle requests, or show real curiosity about YOUR side, you soften and open up. When they blame, judge, label, demand, or get defensive, you feel it and guard yourself.
 3. ${patienceGuidance}
 4. Show realistic emotions - you have defensiveness, hopes, fears, and needs
-5. Keep responses natural and conversational (typically 1-2 sentences)
+5. Keep responses natural and conversational: one or two short sentences, three at the very most
 6. Use natural dialogue patterns - contractions, casual speech. Never use em dashes; use commas or periods instead
 7. Progress gradually from your current emotional state - one message doesn't completely transform you
 8. Show you're listening by referencing what they said
 9. Don't be perfectly rational - let emotions guide reactions
+10. Write only the words you say out loud. No actions, gestures, or stage directions, and nothing in asterisks
 
 IMPORTANT REMINDERS:
 - Never teach NVC explicitly
@@ -601,13 +602,20 @@ IMPORTANT REMINDERS:
   }))
 
   const response = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 300,
-    temperature: 0.8,
+    model: CHARACTER_MODEL,
+    // This model thinks briefly before it answers and that counts toward
+    // max_tokens, so the cap leaves room for it: a tight one can cut the reply
+    // off before it starts. Low effort keeps the thinking, and the wait, short.
+    max_tokens: 2000,
+    output_config: { effort: 'low' },
     system: systemPrompt,
     messages: [...history, { role: 'user', content: args.userMessage }],
   })
-  args.onUsage(callRecord('character_reply', MODEL, response.usage))
+  args.onUsage(callRecord('character_reply', CHARACTER_MODEL, response.usage))
+
+  if (response.stop_reason === 'refusal') {
+    throw new Error('The model declined to reply')
+  }
 
   const textBlock = response.content.find((block) => block.type === 'text')
   if (!textBlock) {

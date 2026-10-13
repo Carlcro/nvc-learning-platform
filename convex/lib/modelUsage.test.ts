@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CHARACTER_MODEL,
   MODEL,
   MODEL_PRICING,
   callRecord,
@@ -20,6 +21,7 @@ describe('model pricing', () => {
     // If MODEL changes and the table is not updated, every cost in the admin
     // panel would silently be an estimate.
     expect(isPricedModel(MODEL)).toBe(true)
+    expect(isPricedModel(CHARACTER_MODEL)).toBe(true)
   })
 
   it('charges list price for plain input and output', () => {

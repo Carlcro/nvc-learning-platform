@@ -8,8 +8,18 @@ import { v } from 'convex/values'
  * Everything is a pure function so it can be tested without a deployment.
  */
 
-/** The one model the app calls. Shared so pricing can never drift from it. */
+/**
+ * The model behind everything except the roleplay character. Shared so pricing
+ * can never drift from it.
+ */
 export const MODEL = 'claude-sonnet-4-6'
+
+/**
+ * The model that plays the roleplay character. Kept apart from MODEL so the
+ * character can move ahead without changing how messages are scored: a
+ * different scorer would shift stars and points for everyone.
+ */
+export const CHARACTER_MODEL = 'claude-sonnet-5-5'
 
 /** What a call was for. Lets the admin panel say which feature costs what. */
 export const MODEL_CALL_KINDS = [
@@ -57,6 +67,7 @@ export const MODEL_PRICING: Record<string, ModelPrice> = {
   'claude-fable-5-1': { input: 10, output: 50 },
   'claude-opus-5': { input: 5, output: 25 },
   'claude-opus-4-8': { input: 5, output: 25 },
+  'claude-sonnet-5-5': { input: 2, output: 10 },
   'claude-sonnet-5': { input: 2, output: 10 },
   'claude-sonnet-4-6': { input: 3, output: 15 },
   'claude-haiku-4-5': { input: 1, output: 5 },

@@ -22,7 +22,7 @@ You are working on an **interactive web application that teaches Non-Violent Com
 ### Tech Stack Quick Look
 - **Frontend**: TanStack Start + React + TypeScript + Tailwind CSS (all frontend code lives in `src/`)
 - **Backend**: Convex (database + serverless functions)
-- **Model**: Anthropic Claude API (`claude-sonnet-4-6`), called only from Convex Node actions
+- **Model**: Anthropic Claude API, called only from Convex Node actions. `claude-sonnet-5-5` plays the roleplay character (`CHARACTER_MODEL`); `claude-sonnet-4-6` does everything else, including scoring (`MODEL`)
 - **Hosting**: Cloudflare Workers (configured in `wrangler.jsonc`) + Convex Cloud (backend)
 
 ---
@@ -299,7 +299,7 @@ Add `--prod` for production; the two deployments have separate users and separat
 
 **Privacy**: conversations stay owner-only, even from the admin panel. Admin queries return counts, scores and dates, never message content, never check-in feelings or notes, and never the title or text of a custom scenario (those describe real situations in people's lives, so they are counted together as "Custom scenarios"). Keep it that way when adding statistics.
 
-**Cost tracking**: every Claude call reports its token usage through `internal.usage.recordModelCalls`, which prices it (`convex/lib/modelUsage.ts`, in micro-dollars, at write time) and writes the raw `modelCalls` log plus three rollups: `dailyUsage` (per user per day), `userUsageTotals` (per user lifetime) and `dailyModelSpend` (per day per kind, including the nightly cron). The admin panel reads the rollups, never the raw log, which a cron prunes after 90 days. When adding a model call: give it a kind in `MODEL_CALL_KINDS`, record it with `callRecord(kind, MODEL, response.usage)`, and never let a failed record fail the feature. When changing `MODEL`, make sure it is in `MODEL_PRICING` (a test enforces this). Nothing was metered before this shipped, so earlier usage has activity but no cost.
+**Cost tracking**: every Claude call reports its token usage through `internal.usage.recordModelCalls`, which prices it (`convex/lib/modelUsage.ts`, in micro-dollars, at write time) and writes the raw `modelCalls` log plus three rollups: `dailyUsage` (per user per day), `userUsageTotals` (per user lifetime) and `dailyModelSpend` (per day per kind, including the nightly cron). The admin panel reads the rollups, never the raw log, which a cron prunes after 90 days. When adding a model call: give it a kind in `MODEL_CALL_KINDS`, record it with `callRecord(kind, MODEL, response.usage)`, and never let a failed record fail the feature. When changing `MODEL` or `CHARACTER_MODEL`, make sure it is in `MODEL_PRICING` (a test enforces this). The two are separate on purpose: a different scorer shifts stars and points for everyone, so move `MODEL` only after comparing score bands on sample messages. Nothing was metered before this shipped, so earlier usage has activity but no cost.
 
 ### Task: Create a New UI Component
 

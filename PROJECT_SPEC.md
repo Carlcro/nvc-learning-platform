@@ -23,7 +23,7 @@ Create a fun, interactive learning platform that teaches users to communicate us
 - **Scheduled Tasks**: Convex crons (`convex/crons.ts`)
 
 ### Model Integration
-- **Provider**: Anthropic Claude API, model `claude-sonnet-4-6`, via `@anthropic-ai/sdk` inside Convex actions only
+- **Provider**: Anthropic Claude API, model `claude-sonnet-4-6` (`claude-sonnet-5-5` for the roleplay character's replies), via `@anthropic-ai/sdk` inside Convex actions only
 - **API key**: `ANTHROPIC_API_KEY`, set on the Convex deployment
 - **Use Cases**:
   - In-character roleplay replies
