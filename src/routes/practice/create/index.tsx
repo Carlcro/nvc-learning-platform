@@ -504,7 +504,7 @@ function ScenarioCreate() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         <BackLink label={backLabel} onClick={handleBack} />
 

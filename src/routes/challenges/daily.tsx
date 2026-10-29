@@ -56,7 +56,7 @@ function DailyChallengeContent() {
 
   if (myChallenge === null) {
     return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
         <section className="py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto px-8">
             <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
@@ -95,7 +95,7 @@ function DailyChallengeContent() {
   const characterName = scenario?.characterName || 'Character'
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 pb-16">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24 pb-16">
       {/* Header */}
       <section className="py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">

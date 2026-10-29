@@ -15,6 +15,7 @@ colors:
   bark-brown-400: "#8B6F47"
   bark-brown-200: "#D4C2A0"
   soft-cream: "#F5F3E8"
+  paper: "#FDF6E3"
   surface-white: "#FFFFFF"
   gentle-coral: "#E07856"
   growth-green: "#7FB069"
@@ -128,7 +129,8 @@ A warm, committed earth palette: one gold carries identity and action, brown car
 - **Bark Brown 600** (#573619): The secondary-button fill (with cream text), and the grounding mid-brown for less prominent headings.
 
 ### Tertiary
-- **Soft Cream** (#F5F3E8): The page ground. Warm, low-glare, calming. Also the text color *on* dark brown surfaces (secondary buttons, future dark panels).
+- **Paper** (#FDF6E3): The page ground. A sunlit off-white that sits beside the gold without reading as grey. Use `bg-paper` for page and section backgrounds.
+- **Soft Cream** (#F5F3E8): The text color *on* dark brown surfaces (secondary buttons, dark panels). No longer used as a page background, because next to the gold it reads as grey.
 - **Surface White** (#FFFFFF): The content surface — cards, nav pill, speech bubbles — floating gently above the cream ground.
 - **Giraffe Tint 50 / 100 / 200** (#FFF4D6 / #FFEDB3 / #FFE390): The tonal-layering ladder. Tint-50 fills card headers/footers and inset panels; tint-100 is the default card border and badge fill; tint-200 deepens hover borders. This ladder is how the flat system gets its depth.
 
@@ -165,7 +167,7 @@ A warm, committed earth palette: one gold carries identity and action, brown car
 
 ## 4. Elevation
 
-This is a **flat-by-default** system. Depth is conveyed first by warm tonal layering — a `giraffe-tint-50` header inside a `surface-white` card on a `soft-cream` page is three legible planes with not a single shadow — and second by quiet 1–2px tinted borders. Shadows are a faint accent reserved for genuinely floating elements, never a default applied to every card. When a shadow appears, it is soft, low, and warm-neutral; it should be felt, not seen.
+This is a **flat-by-default** system. Depth is conveyed first by warm tonal layering — a `giraffe-tint-50` header inside a `surface-white` card on a `paper` page is three legible planes with not a single shadow — and second by quiet 1–2px tinted borders. Shadows are a faint accent reserved for genuinely floating elements, never a default applied to every card. When a shadow appears, it is soft, low, and warm-neutral; it should be felt, not seen.
 
 ### Shadow Vocabulary
 - **Rest lift** (`box-shadow: 0 1px 2px rgba(45,30,17,0.06)` — Tailwind `shadow-sm`): The maximum elevation for an at-rest card or button. Barely-there separation from the cream ground.

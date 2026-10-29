@@ -57,7 +57,7 @@ function AdminContent() {
   const usesRange = tab === 'overview' || tab === 'practice'
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-6">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-brown-800 tracking-tight">

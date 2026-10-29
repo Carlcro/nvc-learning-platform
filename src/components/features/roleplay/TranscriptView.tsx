@@ -317,7 +317,7 @@ ${transcript}
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24 sm:pt-28">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24 sm:pt-28">
       {/* Wayfinding row. It sits in the page flow under the floating nav (the
           same shell as the brief), rather than a bar pinned over it. */}
       <div>

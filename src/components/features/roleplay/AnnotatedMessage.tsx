@@ -150,7 +150,7 @@ export function AnnotatedMessage({
             className={`text-xs font-semibold px-2 py-1 rounded-full ${
               isUser
                 ? 'bg-giraffe-100 text-brown-800'
-                : 'bg-cream text-brown-700 border border-giraffe-200'
+                : 'bg-paper text-brown-700 border border-giraffe-200'
             }`}
           >
             {isUser ? 'You' : characterName}

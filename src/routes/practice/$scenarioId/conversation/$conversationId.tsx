@@ -105,7 +105,7 @@ function ConversationComponent() {
   // foreign scenario/conversation should not spin forever.
   if (scenario === null || conversation === null) {
     return (
-      <main className="min-h-screen bg-cream pt-28 px-6">
+      <main className="min-h-screen bg-paper pt-28 px-6">
         <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
           <h1 className="text-2xl font-bold text-brown-800 mb-3">
             We could not find this conversation
@@ -200,7 +200,7 @@ function ConversationComponent() {
   )
 
   return (
-    <div className="h-screen bg-cream flex flex-col pt-24">
+    <div className="h-screen bg-paper flex flex-col pt-24">
       <MilestoneCelebration
         celebration={celebration}
         onDismiss={dismissCelebration}
@@ -265,7 +265,7 @@ function ConversationComponent() {
               />
             </div>
 
-            <div className="border-t border-giraffe-200 bg-cream px-6 py-4 space-y-3 shrink-0">
+            <div className="border-t border-giraffe-200 bg-paper px-6 py-4 space-y-3 shrink-0">
               {canEndConversation && (
                 // Completing the arc is a small win, so that version arrives
                 // with a flourish. The plain version is a quiet way out for
@@ -497,7 +497,7 @@ function ConversationComponent() {
                 </div>
               </div>
 
-              <div className="border-t border-giraffe-200 bg-cream px-6 py-4">
+              <div className="border-t border-giraffe-200 bg-paper px-6 py-4">
                 <Dialog.Close asChild>
                   <button className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2">
                     Continue Conversation

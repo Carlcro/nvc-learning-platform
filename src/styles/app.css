@@ -28,12 +28,15 @@
   --color-empathy-high: #7FB069;
 
   --color-cream: #F5F3E8;
+  /* Warm page paper: a sunlit off-white that sits beside the gold without
+     reading as grey, which the flatter cream does. */
+  --color-paper: #FDF6E3;
 }
 
 @layer base {
   html,
   body {
-    @apply text-brown-800 bg-cream;
+    @apply text-brown-800 bg-paper;
   }
 
   .dark {

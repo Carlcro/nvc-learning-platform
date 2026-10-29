@@ -1,5 +1,4 @@
-import { Card, CardBody } from '~/components/ui/Card'
-import { Button } from '~/components/ui/Button'
+import { Card } from '~/components/ui/Card'
 import { StarIcon } from '~/components/ui/Icons'
 
 export interface ScenarioProgress {
@@ -40,14 +39,6 @@ const categoryLabels: Record<string, string> = {
   family: 'Family',
   friendship: 'Friendship',
   self_expression: 'Self-Expression',
-}
-
-// Difficulty reads as a warm ramp: calm green (easy) -> gold (mid) -> coral
-// (intense). Every chip carries dark text for guaranteed legibility.
-const difficultyChip: Record<string, string> = {
-  beginner: 'bg-empathy-high text-brown-900',
-  intermediate: 'bg-giraffe-300 text-brown-900',
-  advanced: 'bg-empathy-low text-brown-900',
 }
 
 const difficultyLabels: Record<string, string> = {
@@ -96,25 +87,18 @@ function getStatus(
   return { status: 'start', bestStars }
 }
 
-// The status strip is glanceable by color and always legible by dark text.
-// Gold = active / mastered, green = passed, coral = keep practicing, brown =
-// not yet begun. One meaning per color, every one on the warm palette.
-const statusStrip: Record<ScenarioStatus, { label: string; className: string }> =
-  {
-    start: { label: 'Start', className: 'bg-brown-700 text-cream' },
-    in_progress: {
-      label: 'In progress',
-      className: 'bg-giraffe-400 text-brown-800',
-    },
-    attempted: {
-      label: 'Attempted',
-      className: 'bg-empathy-low text-brown-900',
-    },
-    completed: {
-      label: 'Completed',
-      className: 'bg-empathy-high text-brown-900',
-    },
-  }
+/**
+ * One quiet line of status. Text carries the meaning, the small dot only
+ * echoes it, so nothing here relies on color and nothing reads as a grade.
+ */
+const statusLine: Record<
+  Exclude<ScenarioStatus, 'start'>,
+  { label: string; dot: string }
+> = {
+  in_progress: { label: 'In progress', dot: 'bg-giraffe-500' },
+  attempted: { label: 'Tried once', dot: 'bg-brown-300' },
+  completed: { label: 'Completed', dot: 'bg-empathy-high' },
+}
 
 export function ScenarioCard({
   id,
@@ -136,15 +120,20 @@ export function ScenarioCard({
   const hasPassed =
     progress?.status === 'passed' || progress?.status === 'mastered'
   const isCompleted = status === 'completed'
-  const isMastered = isCompleted && bestStars === 3
-  // Scenarios are never blocked - we simply suggest a level so users know what
-  // to expect. They can always jump in.
+  // Scenarios are never blocked. The level only says what to expect.
   const isAboveLevel = userLevel < minLevel
+  const showStars = isCompleted || (status === 'in_progress' && hasPassed)
 
-  // Mastery is the gold celebration; an ordinary pass stays calm green.
-  const strip = isMastered
-    ? { label: 'Mastered', className: 'bg-giraffe-400 text-brown-800' }
-    : statusStrip[status]
+  const action =
+    status === 'in_progress'
+      ? 'Continue'
+      : isCompleted
+        ? bestStars < 3
+          ? 'Improve'
+          : 'Try again'
+        : status === 'attempted'
+          ? 'Try again'
+          : 'Start'
 
   const handleViewBest = () => {
     if (progress?.bestConversationId && onViewBest) {
@@ -153,128 +142,106 @@ export function ScenarioCard({
   }
 
   return (
-    <Card className="flex flex-col h-full hover:shadow-md transition-all duration-200">
-      {/* Status strip - color is glanceable, dark text is always legible */}
-      <div
-        className={`${strip.className} px-6 py-2 text-sm font-bold rounded-t-md flex items-center justify-between gap-2`}
-      >
-        <span>{strip.label}</span>
-        {isRecommended && status !== 'in_progress' && (
-          <span className="rounded-full bg-cream text-brown-800 px-2.5 py-0.5 text-xs font-semibold">
-            Suggested next
-          </span>
-        )}
-      </div>
-
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-giraffe-100">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-brown-600 mb-1">
-              {categoryLabels[category]}
-            </div>
-            <h3 className="text-xl font-bold text-brown-800 text-balance break-words">
-              {title}
-            </h3>
-          </div>
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${difficultyChip[difficulty]}`}
-            >
-              {difficultyLabels[difficulty]}
-            </span>
-            {onDelete && (
-              <button
-                type="button"
-                onClick={() => onDelete(id)}
-                aria-label={`Delete ${title}`}
-                title="Delete"
-                className="grid place-items-center p-2 -mr-1 rounded-lg text-brown-400 hover:text-empathy-low hover:bg-empathy-low/10 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-empathy-low/40 focus-visible:ring-offset-1"
-              >
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  className="w-4 h-4"
-                >
-                  <path d="M3.5 5.5h13M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5M6 5.5l.6 9a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4l.6-9M8.5 8.5v5M11.5 8.5v5" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Best result for scenarios that have been passed */}
-        {(isCompleted || (status === 'in_progress' && hasPassed)) && (
-          <div className="flex items-center gap-2 mt-3 text-sm font-semibold text-brown-700">
-            <span>Best: {progress?.bestScore}/100</span>
-            {renderStars(bestStars)}
-          </div>
-        )}
-      </div>
-
-      {/* Body */}
-      <CardBody className="flex-grow flex flex-col gap-4 justify-between">
-        {/* Recommended-level note (non-blocking) */}
-        {isAboveLevel && (
-          <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg px-3 py-2">
-            <p className="text-xs text-brown-700">
-              <span className="font-semibold text-brown-800">
-                Recommended at Level {minLevel}.
-              </span>{' '}
-              You can still try it now - it may be more of a stretch.
-            </p>
-          </div>
-        )}
-
-        {/* Description */}
-        <p className="text-brown-700 text-sm leading-relaxed break-words">
-          {description}
+    // The whole card is the start target: the action button's ::after
+    // stretches over the card, and the smaller controls sit above it.
+    <Card
+      className={`group relative flex flex-col h-full p-6 cursor-pointer transition-colors duration-200 hover:border-giraffe-300 has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-giraffe-400 has-[button:focus-visible]:ring-offset-2 ${
+        isRecommended && status !== 'in_progress' ? 'border-giraffe-300' : ''
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <p className="text-sm text-brown-600">
+          {categoryLabels[category]}, {difficultyLabels[difficulty].toLowerCase()}
         </p>
-
-        {/* Character Info */}
-        <div className="bg-giraffe-50 rounded-lg p-3 border border-giraffe-100">
-          <div className="text-xs font-semibold text-brown-700 mb-1">
-            Character
-          </div>
-          <div className="font-semibold text-brown-800 break-words">
-            {characterName}
-          </div>
-        </div>
-      </CardBody>
-
-      {/* Footer */}
-      <div className="px-6 py-4 border-t border-giraffe-100 bg-giraffe-50 flex gap-2">
-        {status === 'in_progress' ? (
-          <Button onClick={() => onStart(id)} className="w-full" variant="primary">
-            Continue
-          </Button>
-        ) : isCompleted ? (
-          <>
-            <Button
-              onClick={() => onStart(id)}
-              className="flex-1"
-              variant="primary"
+        {onDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(id)}
+            aria-label={`Delete ${title}`}
+            title="Delete"
+            className="relative z-10 grid place-items-center p-2 -m-2 rounded-lg text-brown-400 hover:text-brown-800 hover:bg-giraffe-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
+          >
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="w-4 h-4"
             >
-              {bestStars < 3 ? 'Improve' : 'Try Again'}
-            </Button>
-            <Button onClick={handleViewBest} variant="outline" className="flex-1">
-              View Best
-            </Button>
-          </>
-        ) : status === 'attempted' ? (
-          <Button onClick={() => onStart(id)} className="w-full" variant="primary">
-            Try Again
-          </Button>
-        ) : (
-          <Button onClick={() => onStart(id)} className="w-full" variant="primary">
-            Start
-          </Button>
+              <path d="M3.5 5.5h13M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5M6 5.5l.6 9a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4l.6-9M8.5 8.5v5M11.5 8.5v5" />
+            </svg>
+          </button>
         )}
+      </div>
+
+      <h3 className="text-xl font-bold text-brown-800 text-balance break-words">
+        {title}
+      </h3>
+      <p className="mt-1 text-sm font-semibold text-brown-700 break-words">
+        with {characterName}
+      </p>
+
+      <p className="mt-3 text-brown-700 text-sm leading-relaxed break-words line-clamp-4">
+        {description}
+      </p>
+
+      {isAboveLevel && (
+        <p className="mt-3 text-xs text-brown-600">
+          Usually tried from level {minLevel}. Open to you now if you want a
+          stretch.
+        </p>
+      )}
+
+      <div className="mt-auto pt-5 flex items-center justify-between gap-3">
+        <div className="min-w-0 text-sm text-brown-700">
+          {status !== 'start' && (
+            <span className="inline-flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className={`h-2 w-2 rounded-full ${statusLine[status].dot}`}
+              />
+              {statusLine[status].label}
+            </span>
+          )}
+          {status === 'start' && isRecommended && (
+            <span className="font-semibold text-giraffe-800">
+              Suggested next
+            </span>
+          )}
+          {showStars && <span className="ml-2">{renderStars(bestStars)}</span>}
+          {isCompleted && progress?.bestConversationId && onViewBest && (
+            <button
+              type="button"
+              onClick={handleViewBest}
+              className="relative z-10 block mt-1 text-sm font-semibold text-brown-700 underline decoration-giraffe-400 decoration-2 underline-offset-4 hover:text-brown-900 cursor-pointer"
+            >
+              View your best
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => onStart(id)}
+          className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg px-1 py-2 font-semibold text-brown-800 cursor-pointer focus-visible:outline-none after:absolute after:inset-0 after:rounded-lg after:content-['']"
+        >
+          {action}
+          <span className="sr-only">: {title}</span>
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+            className="w-4 h-4 text-giraffe-700 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:translate-x-0"
+          >
+            <path
+              fillRule="evenodd"
+              d="M7.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L11.58 10 7.3 5.7a1 1 0 0 1 0-1.4Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
       </div>
     </Card>
   )

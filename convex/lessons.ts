@@ -12,12 +12,12 @@ export const LESSONS = [
     lessonId: "introduction",
     title: "Introduction to Non-Violent Communication",
     description:
-      "Learn what NVC is and why it matters. Discover how compassionate communication can transform your relationships.",
+      "What NVC is, where it comes from, and the four pieces it asks you to bring into a hard moment.",
     component: "introduction",
     order: 1,
     estimatedDuration: 8,
     content:
-      "Non-Violent Communication (NVC) is a framework for peaceful, empathetic communication created by Marshall Rosenberg. In this lesson, you'll learn the philosophy behind NVC and how it can help you communicate more authentically.",
+      "Non-Violent Communication (NVC) is a way of speaking and listening developed by the psychologist Marshall Rosenberg. Its starting idea is that behind every action, including the ones that hurt, is a person trying to meet a need. When you say what you saw, how you felt, what you need, and what would help, the other person has far less to defend against.",
     examples: [
       {
         title: "From blame to understanding",
@@ -78,19 +78,19 @@ export const LESSONS = [
           ],
           correctAnswer: 1,
           explanation:
-            "The 4 pillars of NVC are: Observation, Feeling, Need, and Request. Judgment is the opposite of what NVC teaches—observations should be free of judgment.",
+            "The 4 pillars of NVC are: Observation, Feeling, Need, and Request. Judgment is what NVC sets aside, which is why observations are kept free of it.",
         },
         {
-          question: "What is the key difference between a Feeling and a Pseudo-feeling in NVC?",
+          question: "Which of these is jackal language?",
           options: [
-            "Feelings are more important than pseudo-feelings",
-            "Feelings are emotions, while pseudo-feelings contain thoughts or judgments",
-            "Pseudo-feelings are more honest and authentic",
-            "There is no difference between them",
+            "I felt worried when I didn't hear from you.",
+            "Would you be willing to call me tomorrow?",
+            "You never think about anyone but yourself.",
+            "Rest is really important to me right now.",
           ],
-          correctAnswer: 1,
+          correctAnswer: 2,
           explanation:
-            "A feeling is a genuine emotion (sad, happy, anxious), while a pseudo-feeling often contains a judgment or thought. For example, 'I feel like you don't respect me' is a pseudo-feeling because it's actually a thought. The genuine feeling might be 'I feel sad and hurt.'",
+            "'You never think about anyone but yourself' is a judgment wrapped in a generalization. The other three each offer one giraffe piece: a feeling, a request, and a need.",
         },
       ],
       passingScore: 60,
@@ -100,12 +100,12 @@ export const LESSONS = [
     lessonId: "observation",
     title: "Observations Without Evaluation",
     description:
-      "Learn to describe what you see and hear without judgment. Master the foundation of clear communication.",
+      "Say what happened the way a camera would see it, so the other person can hear you without bracing.",
     component: "observation",
     order: 2,
     estimatedDuration: 7,
     content:
-      "Observation is the first pillar of NVC. It means describing observable facts without adding judgment, interpretation, or evaluation. In this lesson, you'll learn to separate what you actually see from what you think about it.",
+      "An observation describes what happened without adding a verdict about it. 'You came home at eleven' is an observation. 'You're so inconsiderate' is an evaluation, and evaluations invite people to argue about whether they are true instead of hearing what you need.",
     examples: [
       {
         title: "Facts vs. judgment",
@@ -195,12 +195,12 @@ export const LESSONS = [
     lessonId: "feeling",
     title: "Identifying and Expressing Feelings",
     description:
-      "Discover real feelings vs. pseudo-feelings. Learn to express your emotions authentically.",
+      "Name the emotion itself, and notice when a thought about the other person is dressed up as a feeling.",
     component: "feeling",
     order: 3,
     estimatedDuration: 8,
     content:
-      "Feeling is the second pillar of NVC. It means naming actual emotions (sad, joyful, anxious) rather than thoughts disguised as feelings. In this lesson, you'll learn to identify and own your feelings without blame.",
+      "A feeling is an emotion you notice in yourself: sad, joyful, anxious, relieved. Many sentences that start with 'I feel' are really thoughts about someone else, like 'I feel ignored' or 'I feel like you don't care'. Naming the emotion itself keeps it yours, and makes it easier for the other person to stay with you.",
     examples: [
       {
         title: "Real feelings vs. pseudo-feelings",
@@ -289,12 +289,12 @@ export const LESSONS = [
     lessonId: "need",
     title: "Connecting Feelings to Needs",
     description:
-      "Explore universal human needs. Learn to identify what's truly important to you.",
+      "Find what matters to you underneath the feeling, and keep it apart from the strategy for getting it.",
     component: "need",
     order: 4,
     estimatedDuration: 9,
     content:
-      "Need is the third pillar of NVC. It means identifying the universal human needs behind your feelings. In this lesson, you'll learn the difference between needs and strategies, and discover universal needs that apply to all humans.",
+      "Underneath every feeling is a need: something every person shares, like rest, respect, connection or safety. A need is different from a strategy, the specific way you hope to meet it. Saying the need opens up many ways forward, while insisting on one strategy often starts a tug of war.",
     examples: [
       {
         title: "Need vs. strategy",
@@ -342,16 +342,16 @@ export const LESSONS = [
             "'Autonomy and respect' are universal human needs that apply to all people. The others are specific strategies or demands for particular behaviors.",
         },
         {
-          question: "How many universal human needs are there in NVC?",
+          question: "Your friend cancels plans for the third time and you feel disappointed. Which is the need underneath?",
           options: [
-            "About 3-5",
-            "Exactly 10",
-            "About 15-20 major categories",
-            "It varies from person to person",
+            "For them to stop cancelling",
+            "Reliability and connection",
+            "An apology",
+            "For them to text earlier next time",
           ],
-          correctAnswer: 2,
+          correctAnswer: 1,
           explanation:
-            "Marshall Rosenberg identified approximately 15-20 major universal human needs including connection, autonomy, safety, meaning, creativity, rest, and many others that apply across all cultures.",
+            "Reliability and connection are needs anyone could share. The others are strategies, specific ways of meeting those needs, and many different strategies could meet the same need.",
         },
         {
           question: "What's the best way to identify your underlying need?",
@@ -385,12 +385,12 @@ export const LESSONS = [
     lessonId: "request",
     title: "Making Clear Requests",
     description:
-      "Learn to ask for what you need. Master the art of requests (not demands).",
+      "Ask for one concrete, doable thing, in a way that leaves the other person free to say no.",
     component: "request",
     order: 5,
     estimatedDuration: 8,
     content:
-      "Request is the fourth pillar of NVC. It means asking for a concrete, actionable, positive action—and leaving room for the other person to say no. In this lesson, you'll learn to transform demands into genuine requests.",
+      "A request asks for a concrete action someone could do, phrased as what you want rather than what you don't want. It leaves the other person free to say no. If a no is met with blame or pressure, it was a demand all along, and people can usually feel the difference.",
     examples: [
       {
         title: "Request vs. demand",
@@ -479,12 +479,12 @@ export const LESSONS = [
     lessonId: "integration",
     title: "Putting It All Together",
     description:
-      "Integrate all 4 components into complete NVC expressions. Master compassionate communication.",
+      "Bring the four pieces together into one message, and see how it changes a real conflict.",
     component: "integration",
     order: 6,
     estimatedDuration: 10,
     content:
-      "Integration is where NVC comes alive. In this lesson, you'll learn to combine all 4 components into complete, compassionate expressions. You'll practice translating everyday conflicts into NVC language.",
+      "Put together, the four pieces make one message: when I saw this, I felt this, because I need this. Would you be willing to do this? In real conversations they rarely arrive in one breath, and they don't need to. Knowing the full shape helps you notice which piece is still missing.",
     examples: [
       {
         title: "Complete NVC expression",
