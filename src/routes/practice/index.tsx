@@ -8,7 +8,6 @@ import type { Id } from 'convex/_generated/dataModel'
 import { pageMeta } from '~/lib/seo'
 import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
 import { Button } from '~/components/ui/Button'
-import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { pickRecommendedScenario } from '~/lib/conversationInsights'
 
@@ -35,11 +34,10 @@ type Category = 'workplace' | 'family' | 'friendship' | 'self_expression'
 type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 
 /**
- * Shows the user's current level and how far they are from the next one.
- * Levels gently signal which scenarios will feel like a stretch - nothing is
- * ever blocked.
+ * The user's level as one quiet line beside the library heading. Levels only
+ * hint at which scenarios may feel like a stretch; nothing is ever blocked.
  */
-function LevelIndicator({
+function LevelNote({
   level,
   pointsToNext,
 }: {
@@ -47,18 +45,12 @@ function LevelIndicator({
   pointsToNext?: number
 }) {
   return (
-    <div className="inline-flex items-center gap-4 bg-white rounded-lg border-2 border-giraffe-100 px-5 py-3 shadow-sm">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-brown-600">Your Level</span>
-        <span className="text-2xl font-bold text-giraffe-700">{level}</span>
-      </div>
+    <p className="text-sm text-brown-600">
+      Level {level}
       {pointsToNext !== undefined && pointsToNext > 0 && (
-        <div className="border-l border-giraffe-200 pl-4 text-sm text-brown-600">
-          <span className="font-semibold text-brown-800">{pointsToNext}</span>{' '}
-          points to Level {level + 1}
-        </div>
+        <span>, {pointsToNext} points to the next</span>
       )}
-    </div>
+    </p>
   )
 }
 
@@ -174,7 +166,7 @@ function PracticeHub() {
     value: Category | 'all'
     label: string
   }> = [
-    { value: 'all', label: 'All' },
+    { value: 'all', label: 'All topics' },
     { value: 'workplace', label: 'Workplace' },
     { value: 'family', label: 'Family' },
     { value: 'friendship', label: 'Friendship' },
@@ -189,81 +181,16 @@ function PracticeHub() {
   ]
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
-      {/* Header: intro + filters in one column, giraffe guide in the other */}
-      <section className="pt-6 pb-4 sm:pt-8 sm:pb-6 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-giraffe-50 pt-24">
+      <section className="pt-6 pb-6 sm:pt-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left - Title, description, level, and the filters */}
-            <div className="text-center md:text-left">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 mb-3 text-balance tracking-tight">
-                Practice <span className="text-giraffe-700">Your Skills</span>
-              </h1>
-
-              <p className="text-base sm:text-lg text-brown-700 mb-5 leading-relaxed max-w-prose mx-auto md:mx-0">
-                Engage in realistic conversations. Each scenario presents a
-                different communication challenge where you can apply what
-                you've learned.
-              </p>
-
-              <LevelIndicator
-                level={userLevel}
-                pointsToNext={overallProgress?.pointsToNextLevel}
-              />
-
-              {/* Filters - grouped with the intro so the giraffe can stand tall */}
-              <div className="mt-6 space-y-3 text-left">
-                <div role="group" aria-label="Filter scenarios by category">
-                  <h2 className="text-sm font-semibold text-brown-800 mb-2">
-                    By Category
-                  </h2>
-                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    {categories.map((cat) => (
-                      <FilterChip
-                        key={cat.value}
-                        selected={selectedCategory === cat.value}
-                        onClick={() => setSelectedCategory(cat.value)}
-                      >
-                        {cat.label}
-                      </FilterChip>
-                    ))}
-                  </div>
-                </div>
-
-                <div role="group" aria-label="Filter scenarios by difficulty">
-                  <h2 className="text-sm font-semibold text-brown-800 mb-2">
-                    By Difficulty
-                  </h2>
-                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    {difficulties.map((diff) => (
-                      <FilterChip
-                        key={diff.value}
-                        selected={selectedDifficulty === diff.value}
-                        onClick={() => setSelectedDifficulty(diff.value)}
-                      >
-                        {diff.label}
-                      </FilterChip>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right - Giraffe guide (decorative; desktop only) */}
-            <div className="hidden md:flex flex-col items-center">
-              <SpeechBubble className="mb-6 max-w-sm">
-                <p className="text-base lg:text-lg text-brown-800 text-center font-medium text-pretty">
-                  Practice Non-Violent Communication in realistic scenarios.
-                  Learn by doing in a safe, judgment-free environment.
-                </p>
-              </SpeechBubble>
-              <img
-                src="/giraff.png"
-                alt="Your compassionate communication guide"
-                className="object-contain h-52 lg:h-64 w-auto drop-shadow-xl mb-6"
-              />
-            </div>
-          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 mb-3 text-balance tracking-tight">
+            Who would you like to practice with?
+          </h1>
+          <p className="text-base sm:text-lg text-brown-700 leading-relaxed max-w-prose text-pretty">
+            Every scenario is open. Pick someone whose situation feels close to
+            yours, or start with the suggestion below.
+          </p>
         </div>
       </section>
 
@@ -302,7 +229,7 @@ function PracticeHub() {
           <button
             type="button"
             onClick={() => navigate({ to: '/practice/create' })}
-            className="group relative w-full overflow-hidden text-left rounded-lg border-2 border-giraffe-200 bg-linear-to-br from-white to-giraffe-50 hover:border-giraffe-300 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
+            className="group relative w-full overflow-hidden text-left rounded-lg border-2 border-giraffe-200 bg-white hover:border-giraffe-300 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
           >
             <div className="flex items-center gap-4 sm:gap-6 px-5 sm:px-8 py-5">
               <div className="min-w-0 flex-1">
@@ -387,11 +314,52 @@ function PracticeHub() {
           with the filters above (max-width inner, padding outer). */}
       <section className="px-4 sm:px-6 lg:px-8 pt-2 pb-8">
         <div className="max-w-6xl mx-auto">
-          {myScenarios.length > 0 && (
-            <h2 className="text-sm font-semibold text-brown-800 mb-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mt-6 mb-3">
+            <h2 className="text-xl font-bold text-brown-800">
               Scenario library
             </h2>
-          )}
+            <LevelNote
+              level={userLevel}
+              pointsToNext={overallProgress?.pointsToNextLevel}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <div
+              role="group"
+              aria-label="Filter scenarios by category"
+              className="flex flex-wrap gap-2"
+            >
+              {categories.map((cat) => (
+                <FilterChip
+                  key={cat.value}
+                  selected={selectedCategory === cat.value}
+                  onClick={() => setSelectedCategory(cat.value)}
+                >
+                  {cat.label}
+                </FilterChip>
+              ))}
+            </div>
+            <span
+              aria-hidden="true"
+              className="hidden sm:block h-6 w-0.5 mx-2 bg-giraffe-200"
+            />
+            <div
+              role="group"
+              aria-label="Filter scenarios by difficulty"
+              className="flex flex-wrap gap-2"
+            >
+              {difficulties.map((diff) => (
+                <FilterChip
+                  key={diff.value}
+                  selected={selectedDifficulty === diff.value}
+                  onClick={() => setSelectedDifficulty(diff.value)}
+                >
+                  {diff.label}
+                </FilterChip>
+              ))}
+            </div>
+          </div>
           {isLoadingScenarios ? (
             <div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -415,7 +383,8 @@ function PracticeHub() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-brown-700">
-                  No scenarios are available yet. Check back soon!
+                  No scenarios are here yet. You can still rehearse one of your
+                  own above.
                 </p>
               </div>
             )
@@ -444,34 +413,16 @@ function PracticeHub() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-linear-to-b from-cream to-giraffe-50 py-12 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 mt-12">
-        <div className="max-w-3xl mx-auto text-center space-y-4">
-          <h2 className="text-2xl font-bold text-brown-800">
+      <section className="border-t border-giraffe-200 mt-8 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-lg font-bold text-brown-800 mb-1">
             One piece at a time
           </h2>
-          <p className="text-sm text-brown-700 max-w-prose mx-auto text-pretty">
-            A real conversation unfolds gradually. One of these per message is
-            plenty, and the others can wait for their turn.
+          <p className="text-sm text-brown-700 max-w-prose text-pretty">
+            A real conversation unfolds gradually. Say what you saw, then how
+            you felt, what matters to you, and what you would like. One of these
+            per message is plenty, and the others can wait for their turn.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { name: 'Observe', hint: 'Describe facts without judgment' },
-              { name: 'Feel', hint: 'Name the actual emotion' },
-              { name: 'Need', hint: 'Say what matters underneath' },
-              { name: 'Request', hint: 'Ask for one doable thing' },
-            ].map((tip) => (
-              <div
-                key={tip.name}
-                className="bg-white rounded-lg p-4 border-2 border-giraffe-100"
-              >
-                <p className="text-sm text-brown-700 font-semibold">
-                  {tip.name}
-                </p>
-                <p className="text-xs text-brown-600 mt-1">{tip.hint}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -621,20 +572,15 @@ function SkeletonCard() {
   return (
     <div
       aria-hidden="true"
-      className="rounded-lg border-2 border-giraffe-100 bg-white overflow-hidden motion-safe:animate-pulse"
+      className="rounded-lg border-2 border-giraffe-100 bg-white p-6 space-y-3 motion-safe:animate-pulse"
     >
-      <div className="h-8 bg-giraffe-100" />
-      <div className="px-6 py-4 border-b border-giraffe-100 space-y-2">
-        <div className="h-3 w-20 bg-giraffe-100 rounded" />
-        <div className="h-5 w-3/4 bg-giraffe-200 rounded" />
-      </div>
-      <div className="px-6 py-4 space-y-3">
-        <div className="h-3 w-full bg-giraffe-100 rounded" />
-        <div className="h-3 w-5/6 bg-giraffe-100 rounded" />
-        <div className="h-16 bg-giraffe-50 rounded-lg" />
-      </div>
-      <div className="px-6 py-4 border-t border-giraffe-100 bg-giraffe-50">
-        <div className="h-10 bg-giraffe-200 rounded-lg" />
+      <div className="h-3 w-28 bg-giraffe-100 rounded" />
+      <div className="h-5 w-3/4 bg-giraffe-200 rounded" />
+      <div className="h-3 w-20 bg-giraffe-100 rounded" />
+      <div className="h-3 w-full bg-giraffe-100 rounded" />
+      <div className="h-3 w-5/6 bg-giraffe-100 rounded" />
+      <div className="flex justify-end pt-4">
+        <div className="h-10 w-24 bg-giraffe-200 rounded-lg" />
       </div>
     </div>
   )

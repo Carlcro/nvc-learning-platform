@@ -148,7 +148,7 @@ function ScenarioBrief() {
   // Loaded but not found (deleted, or someone else's private scenario).
   if (scenario === null) {
     return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 px-6">
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-32 px-6">
         <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
           <h1 className="text-2xl font-bold text-brown-800 mb-3">
             We could not find this scenario
@@ -168,7 +168,7 @@ function ScenarioBrief() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 sm:pt-36 pb-16 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-32 sm:pt-36 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Back link - breathing room under the nav, plus wayfinding */}
         <button

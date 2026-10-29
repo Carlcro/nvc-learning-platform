@@ -40,7 +40,7 @@ function ProfileContent() {
 
   if (!stats) {
     return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
         <div className="flex items-center justify-center py-24" role="status">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-giraffe-600"></div>
           <span className="sr-only">Loading your progress</span>
@@ -50,7 +50,7 @@ function ProfileContent() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-6">
         {/* Focal band: who you are and how far you've come */}
         <ProfileHero stats={stats} />

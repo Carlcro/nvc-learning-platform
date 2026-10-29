@@ -60,7 +60,7 @@ function TranscriptPage() {
   // Loaded but not found (deleted, or not this person's conversation).
   if (scenario === null || conversation === null) {
     return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-32 px-6">
+      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-32 px-6">
         <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
           <h1 className="text-2xl font-bold text-brown-800 mb-3">
             We could not find this conversation

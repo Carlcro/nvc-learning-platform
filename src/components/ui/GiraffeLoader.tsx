@@ -10,14 +10,15 @@ interface GiraffeLoaderProps {
  * preparing your space, "thinking" via the calm typing dots. Replaces the bare
  * spinner so even the wait feels warm and unhurried (the Patient Mentor).
  *
- * Motion (float + dots) is disabled under prefers-reduced-motion via the
- * animation utilities in app.css.
+ * The typing dots are the only motion, and they stop under
+ * prefers-reduced-motion via the animation utilities in app.css. The giraffe
+ * itself never moves.
  */
 export function GiraffeLoader({
   message = 'Getting things ready for you…',
 }: GiraffeLoaderProps) {
   return (
-    <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream flex items-center justify-center px-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div
         className="flex flex-col items-center gap-6"
         role="status"
@@ -45,7 +46,7 @@ export function GiraffeLoader({
           src="/giraff.png"
           alt=""
           aria-hidden="true"
-          className="h-56 w-auto object-contain drop-shadow-xl"
+          className="h-56 w-auto object-contain"
         />
       </div>
     </div>

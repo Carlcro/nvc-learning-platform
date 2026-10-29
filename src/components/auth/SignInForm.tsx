@@ -16,7 +16,7 @@ const inputClasses =
   'w-full px-5 py-3.5 border-2 border-giraffe-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-giraffe-500 focus:border-transparent bg-giraffe-50 text-base transition-all'
 
 const submitClasses =
-  'w-full bg-giraffe-600 hover:bg-giraffe-700 text-white py-3.5 rounded-xl font-semibold transition-colors text-base shadow-md mt-8'
+  'w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 py-3.5 rounded-xl font-semibold transition-colors text-base mt-8'
 
 /**
  * Maps raw Convex Auth errors to encouraging, human-friendly messages.
@@ -62,11 +62,11 @@ function friendlyAuthError(err: unknown, mode: Mode): string {
 const headings: Record<Mode, { title: string; subtitle: string }> = {
   signIn: {
     title: 'Sign in',
-    subtitle: 'Continue practicing compassionate communication',
+    subtitle: 'Your conversations and progress are saved to your account',
   },
   signUp: {
     title: 'Create Your Account',
-    subtitle: 'Join our community of compassionate communicators',
+    subtitle: 'Your practice stays private to you',
   },
   resetRequest: {
     title: 'Reset your password',
@@ -80,9 +80,9 @@ const headings: Record<Mode, { title: string; subtitle: string }> = {
 
 const welcomeMessages: Record<Mode, string> = {
   signIn:
-    "Welcome back! I'm glad you're continuing your practice in compassionate communication. You're building something beautiful.",
+    "Practice conversations are saved to your account, so you can come back to them. New here? Create an account at the bottom, it only takes a moment.",
   signUp:
-    "Welcome! I'm excited to help you develop more compassionate communication skills. Let's get started on this meaningful journey together.",
+    "Glad you're here. Once you have an account, you can rehearse any scenario as many times as you like.",
   resetRequest:
     "It happens to everyone. Give me the address you signed up with and I'll send you a code so you can get back to your practice.",
   resetVerify:
@@ -203,18 +203,18 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50 p-4 py-12">
       <div className="w-full max-w-5xl">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
           {/* Left side - Giraffe & Welcome Message */}
-          <div className="flex flex-col items-center md:items-center space-y-10">
+          <div className="flex flex-col items-center space-y-10">
             <SpeechBubble className="w-full">
               <p className="text-brown-800 text-center font-medium leading-relaxed text-lg">
                 {welcomeMessages[mode]}
               </p>
             </SpeechBubble>
-            <div className="w-full">
+            <div className="hidden md:block w-full">
               <img
                 src="/giraff.png"
-                alt="Your Compassionate Communication Guide"
+                alt="The giraffe, your guide"
                 className="h-80 w-auto object-contain mx-auto md:mx-0 scale-x-[-1]"
               />
             </div>
@@ -223,7 +223,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
           {/* Right side - Form */}
           <div className="w-full">
             <Card className="w-full shadow-md">
-              <div className="p-10 space-y-1">
+              <div className="p-6 sm:p-10 space-y-1">
                 <div className="space-y-4 text-center md:text-left">
                   <h1 className="text-4xl font-bold text-brown-800">
                     {headings[mode].title}
@@ -251,7 +251,8 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                       <Button
                         onClick={handleGitHub}
                         disabled={isLoading}
-                        className="w-full bg-giraffe-600 hover:bg-giraffe-700 text-white py-3.5 rounded-xl font-medium transition-colors text-base shadow-md"
+                        variant="secondary"
+                        className="w-full py-3.5 rounded-xl font-medium text-base"
                       >
                         {githubLoading
                           ? 'Connecting...'
@@ -327,7 +328,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                             type="button"
                             onClick={() => goTo('resetRequest')}
                             disabled={isLoading}
-                            className="text-giraffe-600 hover:text-giraffe-700 font-semibold text-sm transition-colors underline-offset-2 hover:underline"
+                            className="text-giraffe-800 hover:text-brown-800 font-semibold text-sm transition-colors underline-offset-2 hover:underline"
                           >
                             Forgot your password?
                           </button>
@@ -406,7 +407,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                           setEmail('')
                           setPassword('')
                         }}
-                        className="text-giraffe-600 hover:text-giraffe-700 font-bold text-base transition-colors underline-offset-2 hover:underline"
+                        className="text-giraffe-800 hover:text-brown-800 font-bold text-base transition-colors underline-offset-2 hover:underline"
                         disabled={isLoading}
                       >
                         {mode === 'signUp' ? 'Sign in' : 'Create account'}
@@ -424,7 +425,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                               setCode('')
                               setNewPassword('')
                             }}
-                            className="text-giraffe-600 hover:text-giraffe-700 font-bold text-base transition-colors underline-offset-2 hover:underline"
+                            className="text-giraffe-800 hover:text-brown-800 font-bold text-base transition-colors underline-offset-2 hover:underline"
                             disabled={isLoading}
                           >
                             Send another
@@ -439,7 +440,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                             setCode('')
                             setNewPassword('')
                           }}
-                          className="text-giraffe-600 hover:text-giraffe-700 font-bold text-base transition-colors underline-offset-2 hover:underline"
+                          className="text-giraffe-800 hover:text-brown-800 font-bold text-base transition-colors underline-offset-2 hover:underline"
                           disabled={isLoading}
                         >
                           Back to sign in

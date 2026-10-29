@@ -1,11 +1,9 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Unauthenticated } from 'convex/react'
 import { pageMeta } from '~/lib/seo'
 import { Button } from '~/components/ui/Button'
-import { Card, CardBody } from '~/components/ui/Card'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { DailyChallengeTeaser } from '~/components/features/dashboard/DailyChallengeTeaser'
-import { CheckIcon, XIcon } from '~/components/ui/Icons'
+import { PracticePreview } from '~/components/features/landing/PracticePreview'
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -18,440 +16,281 @@ export const Route = createFileRoute('/')({
   component: Home,
 })
 
+/**
+ * One message said two ways. Line by line, each jackal move sits beside the
+ * giraffe piece that replaces it, so the four parts read as a translation.
+ */
+const JACKAL_LINES = [
+  { move: 'Judgment', line: 'You always ignore me.' },
+  { move: 'Mind reading', line: "I feel like you don't care." },
+  { move: 'Criticism', line: 'I need you to be better at this.' },
+  { move: 'Demand', line: 'Just text me next time.' },
+] as const
+
+const GIRAFFE_LINES = [
+  { move: 'Observation', line: "When I didn't hear from you last night," },
+  { move: 'Feeling', line: 'I felt worried,' },
+  { move: 'Need', line: "because knowing you're safe matters to me." },
+  {
+    move: 'Request',
+    line: "Would you be willing to send a quick text if you're out late?",
+  },
+] as const
+
 function Home() {
   return (
     <main className="w-full">
-      {/* Sign In Button - Top Right (only show when logged out) */}
-      <Unauthenticated>
-        <div className="fixed top-6 right-6 z-50">
-          <Link to="/auth">
-            <Button size="md" variant="primary">
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </Unauthenticated>
-
-      {/* Hero Section */}
-      <section className="min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto py-20">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left side - Giraffe Mascot */}
-            <div className="flex flex-col items-center">
-              <SpeechBubble className="mb-8 max-w-sm">
-                <p className="text-lg text-brown-800 text-center font-medium text-pretty">
-                  Hi there! I'm your compassionate communication guide.
-                  Together, we'll learn to express ourselves authentically and
-                  truly listen to others. Ready to begin?
-                </p>
-              </SpeechBubble>
-
-              {/* Giraffe Image */}
-              <img
-                src="/giraff.png"
-                alt="Your compassionate communication guide"
-                className="mx-auto object-contain h-80 w-auto scale-x-[-1] drop-shadow-xl"
-              />
+      {/* Hero */}
+      <section className="bg-giraffe-100 px-4 sm:px-6 lg:px-8 pt-28 pb-16 md:pt-32 md:pb-24">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-14 items-center">
+          <div className="text-center md:text-left">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-brown-800 mb-6 text-balance tracking-tight leading-[1.08]">
+              Rehearse the hard conversation before you have it.
+            </h1>
+            <p className="text-lg sm:text-xl text-brown-700 mb-8 leading-relaxed max-w-prose mx-auto md:mx-0 text-pretty">
+              Learn the four parts of Non-Violent Communication, then try them
+              out loud with someone who answers back. When the real talk comes,
+              the words will already feel like yours.
+            </p>
+            <div className="flex flex-col gap-4 items-center md:items-start">
+              <Link to="/practice">
+                <Button
+                  size="lg"
+                  variant="primary"
+                  className="px-8 whitespace-nowrap"
+                >
+                  Try a practice conversation
+                </Button>
+              </Link>
+              <Link
+                to="/learn"
+                className="font-semibold text-brown-700 underline decoration-giraffe-500 decoration-2 underline-offset-4 hover:text-brown-900 hover:decoration-brown-700 transition-colors"
+              >
+                Or start with a short lesson
+              </Link>
             </div>
+          </div>
 
-            {/* Right side - Content */}
-            <div className="text-center md:text-left">
-              <h1 className="text-5xl sm:text-6xl font-bold text-brown-800 mb-6 text-balance tracking-tight">
-                Learn to Communicate{' '}
-                <span className="text-giraffe-700">with Compassion</span>
-              </h1>
-
-              <p className="text-xl text-brown-700 mb-8 leading-relaxed max-w-prose mx-auto md:mx-0">
-                Master Non-Violent Communication (NVC) through interactive
-                lessons and conversations. Learn to express yourself
-                authentically while truly understanding others.
+          <div className="flex flex-col items-center">
+            <SpeechBubble className="mb-6 max-w-xs">
+              <p className="text-lg text-brown-800 text-center font-medium text-pretty">
+                Had a talk go sideways? Let's try it again, slowly.
               </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center md:items-start">
-                <Link to="/learn">
-                  <Button size="lg" variant="primary" className="px-8">
-                    Start Learning
-                  </Button>
-                </Link>
-                <Link to="/practice">
-                  <Button size="lg" variant="secondary" className="px-8">
-                    Start Practicing
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            </SpeechBubble>
+            <img
+              src="/giraff.png"
+              alt="The giraffe, your guide"
+              className="h-56 sm:h-72 md:h-80 w-auto object-contain scale-x-[-1]"
+            />
           </div>
         </div>
       </section>
 
-      {/* Daily Challenge Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
+      {/* The product, shown rather than described */}
+      <section className="bg-white px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_1.15fr] gap-10 md:gap-16 items-center">
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-brown-800 mb-5 text-balance tracking-tight">
+              Say it, see how it lands, try again.
+            </h2>
+            <div className="space-y-4 text-lg text-brown-700 leading-relaxed max-w-prose text-pretty">
+              <p>
+                Each practice partner has a history and a mood. Blame makes
+                them guarded. Honesty about what you saw and felt helps them
+                soften.
+              </p>
+              <p>
+                After every message you get a hint, never a script, and the
+                arc fills in as you bring each piece into the conversation. One
+                piece per message is plenty.
+              </p>
+            </div>
+          </div>
+          <PracticePreview />
+        </div>
+      </section>
+
+      {/* Giraffe and jackal, with the four pieces as one rewritten message */}
+      <section className="bg-paper px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="max-w-3xl mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-brown-800 mb-5 text-balance tracking-tight">
+              Every hard moment has two voices.
+            </h2>
+            <p className="text-lg text-brown-700 leading-relaxed max-w-prose text-pretty">
+              Marshall Rosenberg called them the jackal and the giraffe. The
+              jackal judges, blames and demands, and people defend themselves
+              against it. The giraffe, the land animal with the largest heart,
+              says what happened, how it felt, what mattered, and what would
+              help.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+            <VoicePanel
+              voice="jackal"
+              name="The jackal"
+              image="/jakyll.webp"
+              lines={JACKAL_LINES}
+              outcome="Sam hears an attack, and starts defending."
+            />
+            <VoicePanel
+              voice="giraffe"
+              name="The giraffe"
+              image="/giraff.png"
+              lines={GIRAFFE_LINES}
+              outcome="Sam hears that you were worried, and softens."
+            />
+          </div>
+
+          <p className="mt-10 max-w-prose text-brown-700 text-pretty">
+            Nobody speaks all four at once in real life, and you don't have to
+            either. The lessons take each piece in turn, with a short quiz at
+            the end of each.{' '}
+            <Link
+              to="/learn"
+              className="font-semibold text-brown-800 underline decoration-giraffe-500 decoration-2 underline-offset-4 hover:decoration-brown-700"
+            >
+              See the lessons
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      {/* Today's challenge */}
+      <section className="bg-giraffe-50 px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-3xl mx-auto">
           <DailyChallengeTeaser />
         </div>
       </section>
 
-      {/* Key Benefits Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left side - Benefits */}
-            <div className="space-y-4">
-              <BenefitCard
-                title="4 Core Skills"
-                description="Learn observation, feeling, need, and request: the foundation of compassionate communication."
-              />
-              <BenefitCard
-                title="Practice in Real Scenarios"
-                description="Have meaningful conversations with characters and get instant feedback on your communication."
-              />
-              <BenefitCard
-                title="See Your Progress"
-                description="Track your growth as you develop your ability to communicate with empathy and clarity."
-              />
-            </div>
-
-            {/* Right side - Giraffe with Speech Bubble */}
-            <div className="flex flex-col items-center">
-              <SpeechBubble className="mb-8 max-w-sm">
-                <p className="text-lg text-brown-800 text-center font-medium text-pretty">
-                  Here's what you'll master on your journey with me! Each skill
-                  builds on the others to help you communicate with true
-                  compassion.
-                </p>
-              </SpeechBubble>
-
-              {/* Giraffe Image */}
-              <img
-                src="/giraff.png"
-                alt="Your compassionate communication guide"
-                className="mx-auto object-contain h-72 w-auto drop-shadow-xl"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* What is NVC Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-brown-800 mb-6 text-center text-balance tracking-tight">
-            What is Non-Violent Communication?
+      {/* Closing */}
+      <section className="bg-brown-800 px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-cream mb-5 text-balance tracking-tight">
+            Bring the conversation you're dreading.
           </h2>
-
-          <p className="text-lg text-brown-700 mb-12 leading-relaxed text-center max-w-prose mx-auto text-pretty">
-            Non-Violent Communication (NVC) is a communication framework created
-            by Marshall Rosenberg. It's based on the idea that all humans share
-            the same universal needs, like understanding, respect, and
-            connection. When we communicate with this in mind, we can resolve
-            conflicts peacefully and build deeper relationships.
+          <p className="text-lg text-giraffe-100 mb-8 max-w-prose mx-auto text-pretty">
+            Pick a ready-made scenario, or describe a situation from your own
+            life and rehearse it there. Your practice conversations are private
+            to you.
           </p>
-
-          {/* The 4 Components */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <NVCComponent
-              number="1"
-              title="Observation"
-              description="Describe what you see or hear without judgment. Focus on facts, not interpretations."
-              example="'You didn't text me back' (not 'You always ignore me')"
-            />
-            <NVCComponent
-              number="2"
-              title="Feeling"
-              description="Express your actual emotions, not thoughts disguised as feelings."
-              example="'I felt worried' (not 'I felt like you don't care')"
-            />
-            <NVCComponent
-              number="3"
-              title="Need"
-              description="Connect your feelings to universal human needs that matter to you."
-              example="'because connection is important to me'"
-            />
-            <NVCComponent
-              number="4"
-              title="Request"
-              description="Ask for a concrete action, not a demand. Leave room for 'no'."
-              example="'Would you be willing to text me if you're running late?'"
-            />
-          </div>
-
-          <GuideNote heading="Why it works">
-            When we communicate our observations, feelings, and needs clearly, we
-            help others understand us. When we listen for others' feelings and
-            needs, we build empathy. This creates conversations where everyone
-            feels heard.
-          </GuideNote>
+          <Link to="/practice">
+            <Button size="lg" variant="primary" className="px-8">
+              Start practicing
+            </Button>
+          </Link>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-brown-800 mb-12 text-center text-balance tracking-tight">
-            How the App Works
-          </h2>
-
-          <ol className="space-y-8">
-            <StepCard
-              step="1"
-              title="Learn the Foundations"
-              description="Start with bite-sized lessons about each NVC component. Understand the concepts and see real-world examples."
-            />
-            <StepCard
-              step="2"
-              title="Practice with Scenarios"
-              description="Engage in realistic conversations. Each scenario presents a different communication challenge."
-            />
-            <StepCard
-              step="3"
-              title="Get Thoughtful Feedback"
-              description="After each message, see instant feedback on your use of NVC: what you're doing well, and what to explore next."
-            />
-            <StepCard
-              step="4"
-              title="Build Your Skill"
-              description="Complete daily challenges, track your progress, and watch your communication skills grow over time."
-            />
-          </ol>
+      <footer className="bg-brown-900 px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between text-sm">
+          <p className="text-brown-200">
+            Practice NVC. Based on the work of Marshall Rosenberg and the{' '}
+            <a
+              href="https://www.cnvc.org"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:text-cream"
+            >
+              Center for Nonviolent Communication
+            </a>
+            .
+          </p>
+          <nav aria-label="Footer" className="flex gap-6 text-brown-200">
+            <Link to="/learn" className="hover:text-cream">
+              Lessons
+            </Link>
+            <Link to="/practice" className="hover:text-cream">
+              Practice
+            </Link>
+            <Link to="/feelings" className="hover:text-cream">
+              Feelings
+            </Link>
+          </nav>
         </div>
-      </section>
-
-      {/* Giraffe vs Jackal */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-giraffe-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-brown-800 mb-12 text-center text-balance tracking-tight">
-            Giraffe Language vs Jackal Language
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Giraffe Language Card */}
-            <div className="bg-white rounded-lg overflow-hidden border-2 border-giraffe-300 shadow-sm">
-              <div className="bg-giraffe-100 p-6 flex items-center justify-center h-48">
-                <img
-                  src="/giraff.png"
-                  alt="The giraffe, a symbol of compassionate communication"
-                  className="h-40 w-auto object-contain drop-shadow-md"
-                />
-              </div>
-
-              <div className="p-8">
-                <h3 className="text-2xl font-bold text-brown-900 mb-2">
-                  Giraffe Language
-                </h3>
-                <p className="text-brown-700 mb-6 font-medium">
-                  Compassionate, empathetic communication
-                </p>
-                <ul className="space-y-3 text-brown-700">
-                  <TraitItem positive>Focuses on facts without judgment</TraitItem>
-                  <TraitItem positive>
-                    Expresses feelings and needs openly
-                  </TraitItem>
-                  <TraitItem positive>Makes requests, not demands</TraitItem>
-                  <TraitItem positive>
-                    Creates understanding and connection
-                  </TraitItem>
-                </ul>
-              </div>
-            </div>
-
-            {/* Jackal Language Card */}
-            <div className="bg-white rounded-lg overflow-hidden border-2 border-brown-200 shadow-sm">
-              <div className="bg-brown-100 p-6 flex items-center justify-center h-48">
-                <img
-                  src="/jakyll.webp"
-                  alt="The jackal, a symbol of reactive communication"
-                  className="h-40 w-auto object-contain drop-shadow-md"
-                />
-              </div>
-
-              <div className="p-8">
-                <h3 className="text-2xl font-bold text-brown-900 mb-2">
-                  Jackal Language
-                </h3>
-                <p className="text-brown-700 mb-6 font-medium">
-                  Judgmental, reactive communication
-                </p>
-                <ul className="space-y-3 text-brown-700">
-                  <TraitItem>Uses judgment and blame</TraitItem>
-                  <TraitItem>Makes demands and ultimatums</TraitItem>
-                  <TraitItem>Criticizes or diagnoses</TraitItem>
-                  <TraitItem>Creates defensiveness and distance</TraitItem>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <GuideNote heading="Our goal">
-              Help you become more fluent in giraffe language. We're not here to
-              judge; we're here to celebrate your growth and help you communicate
-              more authentically.
-            </GuideNote>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-brown-800">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-[auto_1fr] gap-10 items-center">
-            {/* Giraffe guide, encouraging the final step */}
-            <img
-              src="/giraff.png"
-              alt="Your compassionate communication guide"
-              className="h-56 w-auto object-contain mx-auto drop-shadow-2xl"
-            />
-
-            <div className="text-center md:text-left">
-              <h2 className="text-4xl font-bold text-cream mb-4 text-balance tracking-tight">
-                Ready to Transform Your Communication?
-              </h2>
-              <p className="text-xl text-giraffe-100 mb-8 max-w-prose mx-auto md:mx-0 text-pretty">
-                Start your journey toward more compassionate, authentic
-                conversations today. Let your giraffe guide you.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
-                <Link to="/learn">
-                  <Button size="lg" variant="primary" className="px-8">
-                    Begin Your Learning Journey
-                  </Button>
-                </Link>
-                <Link to="/practice">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="px-8 border-cream text-cream hover:bg-cream hover:text-brown-800"
-                  >
-                    Practice with Real Scenarios
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </footer>
     </main>
   )
 }
 
-interface BenefitCardProps {
-  title: string
-  description: string
-}
-
-function BenefitCard({ title, description }: BenefitCardProps) {
-  return (
-    <Card hoverable>
-      <CardBody className="py-6">
-        <h3 className="text-xl font-bold text-brown-800 mb-2">{title}</h3>
-        <p className="text-brown-700">{description}</p>
-      </CardBody>
-    </Card>
-  )
-}
-
-interface NVCComponentProps {
-  number: string
-  title: string
-  description: string
-  example: string
-}
-
-function NVCComponent({
-  number,
-  title,
-  description,
-  example,
-}: NVCComponentProps) {
-  return (
-    <Card hoverable>
-      <CardBody>
-        <div className="flex items-start gap-4">
-          <span className="flex-shrink-0 grid place-items-center w-11 h-11 rounded-full bg-giraffe-400 text-brown-800 font-bold text-lg">
-            {number}
-          </span>
-          <div className="flex-grow">
-            <h3 className="text-xl font-bold text-brown-800 mb-2">{title}</h3>
-            <p className="text-brown-700 mb-3">{description}</p>
-            <p className="text-sm text-brown-600 italic">{example}</p>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  )
-}
-
-interface StepCardProps {
-  step: string
-  title: string
-  description: string
-}
-
-function StepCard({ step, title, description }: StepCardProps) {
-  return (
-    <li className="flex gap-6 items-start">
-      <span className="bg-giraffe-400 text-brown-800 rounded-full w-14 h-14 grid place-items-center flex-shrink-0 font-bold text-xl">
-        {step}
-      </span>
-      <div className="flex-grow pt-1">
-        <h3 className="text-2xl font-bold text-brown-800 mb-2">{title}</h3>
-        <p className="text-brown-700 text-lg">{description}</p>
-      </div>
-    </li>
-  )
-}
-
-interface GuideNoteProps {
-  heading: string
-  children: React.ReactNode
+interface VoicePanelProps {
+  voice: 'jackal' | 'giraffe'
+  name: string
+  image: string
+  lines: ReadonlyArray<{ move: string; line: string }>
+  outcome: string
 }
 
 /**
- * A warm aside in the guide's voice. Replaces the old side-stripe callouts with
- * a full-bordered tinted panel led by the giraffe avatar, the Patient Mentor
- * speaking directly to the learner.
+ * One voice saying the whole message. The animal stands at the top like the
+ * speaker; each line carries a small label naming the move it makes.
  */
-function GuideNote({ heading, children }: GuideNoteProps) {
+function VoicePanel({ voice, name, image, lines, outcome }: VoicePanelProps) {
+  const isGiraffe = voice === 'giraffe'
   return (
-    <div className="flex items-start gap-4 bg-white border-2 border-giraffe-100 rounded-lg p-6">
-      <img
-        src="/giraff.png"
-        alt=""
-        aria-hidden="true"
-        className="hidden sm:block flex-shrink-0 w-14 h-14 rounded-full object-cover object-top bg-giraffe-100 ring-2 ring-giraffe-200"
-      />
-      <div>
-        <h3 className="font-bold text-brown-800 mb-1">{heading}</h3>
-        <p className="text-brown-700 text-pretty">{children}</p>
-      </div>
-    </div>
-  )
-}
-
-interface TraitItemProps {
-  positive?: boolean
-  children: React.ReactNode
-}
-
-function TraitItem({ positive = false, children }: TraitItemProps) {
-  return (
-    <li className="flex items-start gap-3">
-      <span
-        aria-hidden="true"
-        className={`mt-0.5 flex-shrink-0 grid place-items-center w-5 h-5 rounded-full text-xs font-bold ${
-          positive
-            ? 'bg-giraffe-100 text-giraffe-700'
-            : 'bg-empathy-low/15 text-empathy-low'
+    <figure
+      className={`flex flex-col rounded-lg border-2 overflow-hidden ${
+        isGiraffe
+          ? 'bg-white border-giraffe-300'
+          : 'bg-brown-50 border-brown-100'
+      }`}
+    >
+      <div
+        className={`flex items-end gap-5 px-6 sm:px-8 pt-6 border-b-2 ${
+          isGiraffe
+            ? 'bg-giraffe-100 border-giraffe-200'
+            : 'bg-brown-100 border-brown-200'
         }`}
       >
-        {positive ? (
-          <CheckIcon className="w-3 h-3" />
-        ) : (
-          <XIcon className="w-3 h-3" />
-        )}
-      </span>
-      <span>{children}</span>
-    </li>
+        <img
+          src={image}
+          alt=""
+          aria-hidden="true"
+          className="h-32 sm:h-40 w-auto object-contain object-bottom"
+        />
+        <figcaption className="pb-5">
+          <p className="text-xl font-bold text-brown-900">{name}</p>
+          <p className="text-sm text-brown-700">
+            {isGiraffe
+              ? 'Says what happened and what would help'
+              : 'Judges, blames and demands'}
+          </p>
+        </figcaption>
+      </div>
+
+      <ol className="flex-1 px-6 sm:px-8 py-6 space-y-5">
+        {lines.map((item) => (
+          <li key={item.move}>
+            <p
+              className={`text-xs font-semibold mb-1 ${
+                isGiraffe ? 'text-giraffe-800' : 'text-brown-600'
+              }`}
+            >
+              {item.move}
+            </p>
+            <p
+              className={`text-pretty ${
+                isGiraffe
+                  ? 'text-lg font-semibold text-brown-900'
+                  : 'text-lg text-brown-700'
+              }`}
+            >
+              {item.line}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      <p
+        className={`px-6 sm:px-8 py-4 text-sm border-t-2 ${
+          isGiraffe
+            ? 'border-giraffe-100 text-brown-800'
+            : 'border-brown-100 text-brown-600'
+        }`}
+      >
+        {outcome}
+      </p>
+    </figure>
   )
 }

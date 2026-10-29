@@ -3,10 +3,11 @@
  *
  * Right-side panel showing NVC analysis, progress steps, and coaching feedback.
  *
- * The header holds the live "how the character feels" meter; mood is carried by
- * the chip and the bar fill, warm and gentle, never an alarming red. The turn's
- * score arrives inside a warm halo that breathes once and settles. Everything
- * holds still and legible under reduced motion.
+ * One calm column: the header holds the live "how the character feels" track,
+ * then how the message landed, the four-piece arc, and the single next step,
+ * which is the only highlighted surface. Mood and score colours stay warm and
+ * gentle, never an alarming red, and everything holds still and legible under
+ * reduced motion.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -16,9 +17,8 @@ import {
   Check,
   Ear,
   Eye,
-  Handshake,
   Heart,
-  MessageCircle,
+  MessageCircleQuestion,
   RotateCcw,
   Sprout,
   Star,
@@ -112,94 +112,101 @@ function useCountUp(target: number, turnKey: number): number {
   return value
 }
 
-function getMoodLabel(mood: number): { label: string; color: string } {
-  if (mood >= 6)
-    return {
-      label: 'Open',
-      color: 'bg-empathy-high/25 text-brown-900 border-empathy-high/50',
-    }
-  if (mood >= 3)
-    return {
-      label: 'Warming',
-      color: 'bg-white/70 text-brown-800 border-giraffe-500/40',
-    }
-  if (mood >= 0)
-    return {
-      label: 'Neutral',
-      color: 'bg-white/60 text-brown-800 border-brown-900/15',
-    }
-  if (mood >= -6)
-    return {
-      label: 'Guarded',
-      color: 'bg-empathy-low/20 text-brown-900 border-empathy-low/40',
-    }
-  return {
-    label: 'Defensive',
-    color: 'bg-empathy-low/30 text-brown-900 border-empathy-low/55',
-  }
+type MoodTone = 'low' | 'mid' | 'high'
+
+function getMood(mood: number): { label: string; tone: MoodTone } {
+  if (mood >= 6) return { label: 'Open', tone: 'high' }
+  if (mood >= 3) return { label: 'Warming', tone: 'mid' }
+  if (mood >= 0) return { label: 'Neutral', tone: 'mid' }
+  if (mood >= -6) return { label: 'Guarded', tone: 'low' }
+  return { label: 'Defensive', tone: 'low' }
 }
 
-// Mood bar fill, warm and gentle: green when open, gold while warming, soft
-// coral when guarded - never an alarming red.
-function getMoodFill(mood: number): string {
-  if (mood >= 6) return 'bg-empathy-high'
-  if (mood >= 3) return 'bg-giraffe-500'
-  if (mood >= 0) return 'bg-giraffe-400'
-  if (mood >= -6) return 'bg-empathy-low/70'
-  return 'bg-empathy-low'
+// Warm and gentle at every step: sage when open, gold in between, soft coral
+// when guarded. Never an alarming red.
+const MOOD_FILL: Record<MoodTone, string> = {
+  low: 'bg-empathy-low',
+  mid: 'bg-giraffe-400',
+  high: 'bg-empathy-high',
+}
+const MOOD_RING: Record<MoodTone, string> = {
+  low: 'border-empathy-low',
+  mid: 'border-giraffe-500',
+  high: 'border-empathy-high',
 }
 
 /**
- * The panel header: holds the live connection meter, so this whole strip is
- * "how the conversation feels right now". A calm, flat gold surface; the mood
- * itself is carried by the chip and the bar fill.
+ * The panel header: who the user is talking to and how they feel right now.
+ * The track runs from guarded to open and ends at the star, which lights when
+ * the character really opens up, so the meter reads as the goal.
  */
-function AmbientHeader({
+function MoodHeader({
   mood,
   characterName,
+  opened,
 }: {
   mood: number
   characterName?: string
+  opened: boolean
 }) {
   const clampedMood = Math.max(-10, Math.min(10, mood))
   const percent = ((clampedMood + 10) / 20) * 100
-  const moodInfo = getMoodLabel(clampedMood)
+  const { label, tone } = getMood(clampedMood)
   const who = characterName || 'They'
 
   return (
-    <div className="shrink-0 bg-giraffe-300">
-      <div className="px-5 pt-4 pb-4">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-semibold text-brown-900">Feedback</h2>
+    <div className="shrink-0 bg-giraffe-50 border-b border-giraffe-100 px-5 pt-4 pb-4">
+      <h2 className="sr-only">Feedback</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm text-brown-600">
+          How <span className="font-semibold text-brown-900">{who}</span>{' '}
+          feels
+        </p>
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-brown-900">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold border ${moodInfo.color}`}
-          >
-            {moodInfo.label}
-          </span>
-        </div>
+            aria-hidden="true"
+            className={`h-2 w-2 rounded-full ${MOOD_FILL[tone]} transition-colors duration-700`}
+          />
+          {label}
+        </p>
+      </div>
 
-        <div
-          className="mt-3 space-y-1.5"
-          role="img"
-          aria-label={`How ${who} feels: ${moodInfo.label}`}
-        >
-          <div className="flex items-center justify-between text-xs font-medium text-brown-800/90">
-            <span>How {who} feels</span>
-          </div>
-          <div className="relative h-2.5 rounded-full bg-brown-900/12 overflow-hidden">
+      <div
+        className="mt-3 flex items-center gap-2.5"
+        role="img"
+        aria-label={`How ${who} feels: ${label}${
+          opened ? `. ${who} has opened up.` : ''
+        }`}
+      >
+        {/* Inset by the marker's radius so it never pokes past either end */}
+        <div className="relative flex-1 h-1.5 rounded-full bg-brown-900/10">
+          <div
+            className={`absolute inset-y-0 left-0 rounded-full ${MOOD_FILL[tone]} opacity-60 transition-[width,background-color] duration-700 ease-out`}
+            style={{ width: `${percent}%` }}
+          />
+          <div className="absolute inset-y-0 left-1.5 right-1.5">
             <div
-              className={`absolute inset-y-0 left-0 rounded-full ${getMoodFill(
-                clampedMood,
-              )} transition-[width,background-color] duration-700 ease-out`}
-              style={{ width: `${percent}%` }}
+              className={`absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] bg-white shadow-[0_1px_2px_rgba(45,30,17,0.2)] ${MOOD_RING[tone]} transition-[left,border-color] duration-700 ease-out`}
+              style={{ left: `${percent}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] font-medium text-brown-700">
-            <span>Guarded</span>
-            <span>Open</span>
-          </div>
         </div>
+        <Star
+          aria-hidden="true"
+          className={`h-4 w-4 shrink-0 transition-colors duration-500 ${
+            opened
+              ? 'fill-giraffe-400 text-giraffe-600'
+              : 'text-brown-300'
+          }`}
+        />
       </div>
+
+      {!opened && (
+        <p className="mt-2 text-xs text-brown-500 text-pretty">
+          The star lights when {characterName || 'they'} opens up. People open
+          up when they feel heard.
+        </p>
+      )}
     </div>
   )
 }
@@ -213,44 +220,168 @@ export function getScoreMessage(score: number): string {
   return 'Beautifully said'
 }
 
-// Warm halo colour behind the score, by band. Mirrors the empathy bands; the
-// low band is the gentle coral, never an alarming red. Built from the theme
-// tokens so a palette change carries through.
-function scoreGlow(score: number): string {
-  if (score >= 80)
-    return 'color-mix(in srgb, var(--color-empathy-high) 60%, transparent)'
-  if (score >= 60)
-    return 'color-mix(in srgb, var(--color-giraffe-400) 62%, transparent)'
-  if (score >= 30)
-    return 'color-mix(in srgb, var(--color-giraffe-300) 58%, transparent)'
-  return 'color-mix(in srgb, var(--color-empathy-low) 45%, transparent)'
+function scoreBand(score: number): number {
+  if (score < 50) return 0
+  if (score < 70) return 1
+  if (score < 90) return 2
+  return 3
 }
 
-// The score bar speaks the same band language as the halo and the
-// EmpathyMeter: green when it lands, gold in the middle, gentle coral when
-// there is more jackal than giraffe.
-function scoreBarFill(score: number): string {
-  if (score >= 80) return 'bg-empathy-high'
-  if (score >= 60) return 'bg-giraffe-500'
-  if (score >= 30) return 'bg-giraffe-400'
-  return 'bg-empathy-low'
+// One colour per band, in the same warm language as the mood track.
+const BAND_FILL = [
+  'bg-empathy-low',
+  'bg-giraffe-400',
+  'bg-giraffe-500',
+  'bg-empathy-high',
+]
+
+/**
+ * How the message landed: the band's words lead, the number follows quietly,
+ * and four steps show which stage of the journey this turn reached, so it
+ * reads as a place on a path rather than a grade.
+ */
+function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) {
+  const shown = useCountUp(score.total, turnKey)
+  const band = scoreBand(score.total)
+
+  return (
+    <section className="space-y-2.5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-bold text-brown-900 text-balance">
+            {getScoreMessage(score.total)}
+          </h3>
+          <p className="text-xs text-brown-500 mt-0.5">
+            How this message landed
+          </p>
+        </div>
+        <p className="shrink-0 pt-1 text-brown-600 tabular-nums">
+          <span className="text-base font-semibold text-brown-800">{shown}</span>
+          <span className="text-xs">/100</span>
+        </p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-1" aria-hidden="true">
+        {BAND_FILL.map((_, i) => (
+          <div
+            key={i}
+            className={`h-1.5 rounded-full transition-colors duration-500 ${
+              i <= band ? BAND_FILL[band] : 'bg-giraffe-100'
+            }`}
+            style={{ transitionDelay: `${i * 80}ms` }}
+          />
+        ))}
+      </div>
+    </section>
+  )
 }
 
-const steps = [
-  { key: 'conversationStarted', label: 'Start', Icon: MessageCircle },
-  { key: 'observationMade', label: 'Observe', Icon: Eye },
-  { key: 'feelingExpressed', label: 'Feeling', Icon: Heart },
-  { key: 'needIdentified', label: 'Need', Icon: Sprout },
-  { key: 'requestMade', label: 'Request', Icon: Handshake },
-  { key: 'resolutionReached', label: 'Done', Icon: Star },
+const ARC = [
+  { key: 'observationMade', scoreKey: 'observation', label: 'Observe', Icon: Eye },
+  { key: 'feelingExpressed', scoreKey: 'feeling', label: 'Feeling', Icon: Heart },
+  { key: 'needIdentified', scoreKey: 'need', label: 'Need', Icon: Sprout },
+  { key: 'requestMade', scoreKey: 'request', label: 'Request', Icon: MessageCircleQuestion },
 ] as const
 
 /**
- * Standing chip under the progress rail for the empathy milestone. Unlike the
- * arc steps it has no fixed order - it lights up whenever the user tunes into
- * the character's side, and hints at the mechanic until then.
+ * The four NVC pieces as one connected arc. A green node with a check is a
+ * piece reached over the conversation; the gold ring is the next to reach for. The
+ * small number under a piece is what this message gave it. Pieces a message
+ * did not attempt show nothing, because that is healthy, not a gap.
  */
-function EmpathyChip({
+function ArcSection({
+  milestones,
+  score,
+  freshKeys,
+}: {
+  milestones: Milestones
+  score: NVCScore
+  freshKeys: ReadonlyArray<string>
+}) {
+  const reached = ARC.filter((p) => milestones[p.key]).length
+  const nextIndex = ARC.findIndex((p) => !milestones[p.key])
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-semibold text-brown-800">Your arc</h3>
+        <span className="text-xs text-brown-500 tabular-nums">
+          {reached} of {ARC.length} reached
+        </span>
+      </div>
+
+      <ol className="grid grid-cols-4">
+        {ARC.map((piece, index) => {
+          const isReached = !!milestones[piece.key]
+          const isNext = index === nextIndex
+          const isFresh = isReached && freshKeys.includes(piece.key)
+          const value = score[piece.scoreKey]
+          const following = index < ARC.length - 1 ? ARC[index + 1] : null
+          const linkLit = isReached && !!following && !!milestones[following.key]
+          const PieceIcon = piece.Icon
+
+          return (
+            <li
+              key={piece.key}
+              className="relative flex flex-col items-center text-center"
+              aria-label={`${piece.label}: ${
+                isReached ? 'reached' : isNext ? 'next to reach' : 'not yet'
+              }${value > 0 ? `, ${value} of 25 in this message` : ''}`}
+            >
+              {index < ARC.length - 1 && (
+                <div
+                  aria-hidden="true"
+                  className={`absolute top-5 left-1/2 w-full h-0.5 -translate-y-1/2 transition-colors duration-500 ${
+                    linkLit ? 'bg-empathy-high' : 'bg-brown-100'
+                  }`}
+                />
+              )}
+              <div
+                aria-hidden="true"
+                className={`relative z-10 h-10 w-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
+                  isReached
+                    ? 'bg-[color-mix(in_srgb,var(--color-empathy-high)_22%,white)] text-brown-800 border-2 border-empathy-high'
+                    : isNext
+                      ? 'bg-giraffe-50 text-brown-800 border-2 border-giraffe-400 ring-4 ring-giraffe-100'
+                      : 'bg-white text-brown-400 border-[1.5px] border-brown-200'
+                } ${isFresh ? 'animate-node-ignite' : ''}`}
+              >
+                <PieceIcon className="h-4.5 w-4.5" strokeWidth={1.75} />
+                {isReached && (
+                  <span className="absolute -right-1 -bottom-1 h-4.5 w-4.5 rounded-full bg-empathy-high ring-2 ring-white flex items-center justify-center">
+                    <Check className="h-3 w-3 text-brown-900" strokeWidth={3} />
+                  </span>
+                )}
+              </div>
+              <span
+                aria-hidden="true"
+                className={`mt-1.5 text-xs font-medium ${
+                  isReached || isNext ? 'text-brown-800' : 'text-brown-500'
+                }`}
+              >
+                {piece.label}
+              </span>
+              <span
+                aria-hidden="true"
+                className="h-4 text-xs font-semibold text-giraffe-700 tabular-nums"
+                title={value > 0 ? `This message: ${value} of 25` : undefined}
+              >
+                {value > 0 ? `${value}/25` : ''}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
+}
+
+/**
+ * The empathy milestone has no place in the arc's order: it lights whenever
+ * the user tunes into the character's side, and hints at the mechanic until
+ * then. A quiet line, not another card.
+ */
+function EmpathyLine({
   earned,
   justEarned = false,
   characterName,
@@ -261,25 +392,21 @@ function EmpathyChip({
 }) {
   const who = characterName || 'they'
   return (
-    <div
-      className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors duration-300 ${
-        earned
-          ? 'bg-empathy-high/15 border-empathy-high/40'
-          : 'bg-giraffe-50 border-giraffe-100'
-      }`}
-    >
+    <div className="flex items-start gap-2.5">
       <div
-        className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-          earned ? 'bg-empathy-high text-brown-900' : 'bg-giraffe-100 text-brown-400'
+        className={`shrink-0 mt-px h-6 w-6 rounded-full flex items-center justify-center transition-colors duration-300 ${
+          earned
+            ? 'bg-empathy-high text-brown-900'
+            : 'bg-giraffe-100 text-brown-600'
         } ${justEarned ? 'animate-node-ignite' : ''}`}
       >
-        <Ear className="h-3.5 w-3.5" />
+        <Ear className="h-3.5 w-3.5" aria-hidden="true" />
       </div>
-      <p className="text-xs text-brown-700 leading-snug">
+      <p className="text-sm text-brown-700 leading-snug pt-0.5">
         {earned ? (
-          <span className="font-semibold">
-            You heard them. You tuned into {who === 'they' ? 'their' : `${who}'s`}{' '}
-            side.
+          <span className="font-semibold text-brown-800">
+            You heard them. You tuned into{' '}
+            {who === 'they' ? 'their' : `${who}'s`} side.
           </span>
         ) : (
           <>Wondering what {who} might be feeling? Asking counts too.</>
@@ -294,197 +421,24 @@ function EmpathyChip({
  * point to the matching lesson or the feelings library. Opens in a new tab so
  * the conversation stays right where it is.
  */
-function SkillHintCard({ hint }: { hint: SkillHint }) {
+function SkillHintLine({ hint }: { hint: SkillHint }) {
   const resource = SKILL_RESOURCES[hint.component]
   return (
-    <div className="flex items-start gap-2.5 p-3 bg-white rounded-lg border border-giraffe-200">
-      <div className="shrink-0 w-5 h-5 rounded-full bg-giraffe-100 flex items-center justify-center mt-0.5">
-        <BookOpen className="h-3 w-3 text-brown-700" />
+    <div className="flex items-start gap-2.5">
+      <div className="shrink-0 mt-px h-6 w-6 rounded-full bg-giraffe-100 flex items-center justify-center">
+        <BookOpen className="h-3.5 w-3.5 text-brown-600" aria-hidden="true" />
       </div>
-      <p className="text-xs text-brown-700 leading-relaxed">
+      <p className="text-sm text-brown-700 leading-snug pt-0.5">
         {resource.invite}{' '}
         <Link
           to={resource.to}
           target="_blank"
-          className="font-semibold text-giraffe-800 hover:text-giraffe-900 underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
+          className="font-semibold text-giraffe-800 hover:text-giraffe-900 underline underline-offset-2 decoration-giraffe-400 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-400"
         >
           Open the {resource.label}
         </Link>{' '}
         in a new tab; this conversation will wait for you.
       </p>
-    </div>
-  )
-}
-
-function ProgressSteps({
-  milestones,
-  freshKeys,
-  characterName,
-}: {
-  milestones: Milestones
-  freshKeys: ReadonlyArray<string>
-  characterName?: string
-}) {
-  const completedCount = steps.filter((s) => milestones[s.key]).length
-  const totalSteps = steps.length
-
-  // Find current step (first incomplete one)
-  let currentStepIndex = steps.findIndex((s) => !milestones[s.key])
-  if (currentStepIndex === -1) currentStepIndex = steps.length
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-brown-800">Progress</span>
-        <span className="text-xs text-brown-500">
-          {completedCount}/{totalSteps}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between relative">
-        {/* Background Progress Line */}
-        <div className="absolute top-5 left-0 right-0 h-1 rounded-full bg-giraffe-200 mx-6" />
-        {/* Active Progress Line - traces the contiguous journey from the
-            start; steps earned out of order still read from their circles */}
-        <div
-          className="absolute top-5 left-6 h-1 rounded-full bg-empathy-high transition-[width] duration-500"
-          style={{
-            width:
-              currentStepIndex > 0
-                ? `calc(${((currentStepIndex - 1) / (totalSteps - 1)) * 100}% - 0px)`
-                : '0%',
-          }}
-        />
-
-        {steps.map((step, index) => {
-          const isCompleted = milestones[step.key]
-          const isCurrent = index === currentStepIndex
-          const isFresh = isCompleted && freshKeys.includes(step.key)
-          const StepIcon = step.Icon
-
-          return (
-            <div
-              key={step.key}
-              className="flex flex-col items-center gap-1.5 relative z-10"
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                  isCompleted
-                    ? 'bg-empathy-high text-brown-900 shadow-sm'
-                    : isCurrent
-                      ? 'bg-giraffe-100 text-brown-800 border-2 border-giraffe-400'
-                      : 'bg-giraffe-50 text-brown-400'
-                } ${isFresh ? 'animate-node-ignite' : ''}`}
-              >
-                {isCompleted ? (
-                  <Check className="h-4 w-4" strokeWidth={2.5} />
-                ) : (
-                  <StepIcon className="h-4 w-4" />
-                )}
-              </div>
-              <span
-                className={`text-[10px] font-medium ${
-                  isCompleted
-                    ? 'text-brown-700'
-                    : isCurrent
-                      ? 'text-brown-700'
-                      : 'text-brown-500'
-                }`}
-              >
-                {step.label}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* What the last step means, so the mood meter reads as a goal */}
-      {!milestones.resolutionReached && (
-        <p className="text-[11px] text-brown-500 text-center text-pretty">
-          The star lights when {characterName || 'they'} opens up. People open
-          up when they feel heard.
-        </p>
-      )}
-    </div>
-  )
-}
-
-function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) {
-  const scorePercentage = score.total
-  const shown = useCountUp(score.total, turnKey)
-  const glow = scoreGlow(score.total)
-
-  const metrics = [
-    { label: 'Observation', value: score.observation },
-    { label: 'Feeling', value: score.feeling },
-    { label: 'Need', value: score.need },
-    { label: 'Request', value: score.request },
-  ]
-
-  return (
-    <div className="relative">
-      {/* Warm, band-coloured halo breathing softly behind the score */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-3 rounded-2xl opacity-50 animate-score-bloom"
-        style={{
-          background: `radial-gradient(60% 60% at 50% 40%, ${glow}, transparent 70%)`,
-        }}
-      />
-
-      <div className="relative bg-giraffe-50 rounded-lg p-3.5 space-y-3 border border-giraffe-100">
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-lg font-bold text-giraffe-700">
-              {getScoreMessage(score.total)}
-            </p>
-            <p className="text-xs text-brown-500 mt-0.5">
-              How this message landed
-            </p>
-          </div>
-          <div className="flex items-baseline gap-0.5 text-brown-700">
-            <span className="text-2xl font-bold tabular-nums">{shown}</span>
-            <span className="text-xs text-brown-500">/100</span>
-          </div>
-        </div>
-
-        {/* Score Progress Bar */}
-        <div className="h-2.5 bg-giraffe-200 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-[width,background-color] duration-700 ease-out ${scoreBarFill(
-              score.total,
-            )}`}
-            style={{ width: `${scorePercentage}%` }}
-          />
-        </div>
-
-        {/* Metrics Grid. A zero simply means the component was not part of
-            this message (which is healthy), so it renders as a quiet dot
-            rather than a failing number. */}
-        <div className="grid grid-cols-2 gap-2">
-          {metrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-giraffe-100"
-            >
-              <span className="text-xs text-brown-500">{metric.label}</span>
-              {metric.value > 0 ? (
-                <span className="font-semibold text-sm text-brown-800">
-                  {metric.value}
-                </span>
-              ) : (
-                <span
-                  className="text-sm text-brown-400"
-                  title="Not part of this message"
-                  aria-label={`${metric.label}: not part of this message`}
-                >
-                  ·
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
@@ -505,75 +459,97 @@ function cleanText(text: string): string {
     .trim()
 }
 
-function FeedbackNotes({ feedback }: { feedback: FeedbackData }) {
-  const strength = cleanText(feedback.whatWentWell)
-  const nextStep = cleanText(feedback.feedback)
+interface RetryProps {
+  onRetry: () => void
+  rewindsRemaining: number
+}
 
-  if (!strength && !nextStep) {
-    return (
-      <div className="p-3 bg-giraffe-50 rounded border border-giraffe-100">
-        <p className="text-sm text-brown-600 text-center">
-          Keep going. Try naming a feeling and the need underneath it.
-        </p>
-      </div>
-    )
-  }
-
+/**
+ * When a turn lands roughly, trying it again is the most instructive thing
+ * there is, so the offer sits right under the next step it would act on.
+ */
+function RetryRow({ onRetry, rewindsRemaining }: RetryProps) {
   return (
-    <div className="space-y-3">
-      {/* What they did well this turn - a light, affirming line */}
-      {strength && (
-        <div className="flex gap-2.5 items-start">
-          <div className="shrink-0 w-5 h-5 rounded-full bg-empathy-high flex items-center justify-center mt-0.5">
-            <Check className="h-3 w-3 text-brown-900" strokeWidth={2.5} />
-          </div>
-          <p className="text-sm text-brown-700 leading-relaxed">{strength}</p>
-        </div>
-      )}
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={onRetry}
+        className="shrink-0 inline-flex items-center gap-1.5 min-h-9 px-3.5 py-1.5 rounded-lg bg-giraffe-400 hover:bg-giraffe-500 text-brown-900 text-sm font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2 focus-visible:ring-offset-giraffe-50"
+      >
+        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+        Try again
+      </button>
+      <p className="text-xs text-brown-600 leading-snug text-pretty">
+        Your words come back to the box.{' '}
+        {rewindsRemaining === 1
+          ? 'One rewind left.'
+          : `${rewindsRemaining} rewinds left.`}
+      </p>
+    </div>
+  )
+}
 
-      {/* The single next step - the heart of the coaching, given prominence */}
-      {nextStep && (
-        <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
-          <p className="text-xs font-semibold text-brown-600 mb-1">Try next</p>
-          <p className="text-sm text-brown-800 leading-relaxed font-medium">
-            {nextStep}
-          </p>
+function PraiseLine({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="shrink-0 mt-px h-6 w-6 rounded-full bg-empathy-high flex items-center justify-center">
+        <Check
+          className="h-3.5 w-3.5 text-brown-900"
+          strokeWidth={2.5}
+          aria-hidden="true"
+        />
+      </div>
+      <p className="text-sm text-brown-700 leading-snug pt-0.5">{text}</p>
+    </div>
+  )
+}
+
+/**
+ * The single next step is the heart of the coaching, so it is the one
+ * highlighted surface in the panel, and carries the retry offer with it.
+ */
+function NextStepCard({
+  text,
+  retry,
+}: {
+  text: string
+  retry: RetryProps | null
+}) {
+  return (
+    <div className="rounded-xl bg-giraffe-50 border border-giraffe-200 p-4">
+      <p className="text-xs font-semibold text-giraffe-800">Try next</p>
+      <p className="mt-1 text-base leading-relaxed font-medium text-brown-900 text-pretty">
+        {text}
+      </p>
+      {retry && (
+        <div className="mt-3.5 pt-3.5 border-t border-giraffe-200">
+          <RetryRow {...retry} />
         </div>
       )}
     </div>
   )
 }
 
-/**
- * When a turn lands roughly, trying it again is the most instructive thing
- * there is. Offered right beside the feedback, as an invitation.
- */
-function RetryOffer({
-  onRetry,
-  rewindsRemaining,
+function FeedbackNotes({
+  feedback,
+  retry,
 }: {
-  onRetry: () => void
-  rewindsRemaining: number
+  feedback: FeedbackData
+  retry: RetryProps | null
 }) {
+  const strength = cleanText(feedback.whatWentWell)
+  const nextStep =
+    cleanText(feedback.feedback) ||
+    (strength ? '' : 'Try naming a feeling and the need underneath it.')
+
   return (
-    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-giraffe-200">
-      <p className="flex-1 text-xs text-brown-700 leading-relaxed text-pretty">
-        Want to try that one again? Your words come back to the box so you can
-        reshape them.{' '}
-        <span className="text-brown-500">
-          {rewindsRemaining === 1
-            ? 'One rewind left.'
-            : `${rewindsRemaining} rewinds left.`}
-        </span>
-      </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="shrink-0 inline-flex items-center gap-1.5 min-h-9 px-3 py-1.5 rounded-lg bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
-      >
-        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-        Try again
-      </button>
+    <div className="space-y-4">
+      {strength && <PraiseLine text={strength} />}
+      {nextStep ? (
+        <NextStepCard text={nextStep} retry={retry} />
+      ) : (
+        retry && <RetryRow {...retry} />
+      )}
     </div>
   )
 }
@@ -719,13 +695,25 @@ export function FeedbackPanel({
   }
   const freshMilestones = milestoneMemory.current.fresh
 
+  const retry: RetryProps | null =
+    feedback &&
+    onRetryLastTurn &&
+    rewindsRemaining > 0 &&
+    (feedback.score.total < 50 || feedback.isJackalLanguage)
+      ? { onRetry: onRetryLastTurn, rewindsRemaining }
+      : null
+
   return (
-    <div className="w-full rounded-2xl overflow-hidden bg-giraffe-50 shadow-lg border border-giraffe-100 flex flex-col max-h-full">
-      <AmbientHeader mood={characterMood} characterName={characterName} />
+    <div className="w-full rounded-2xl overflow-hidden bg-white shadow-sm border border-giraffe-100 flex flex-col max-h-full">
+      <MoodHeader
+        mood={characterMood}
+        characterName={characterName}
+        opened={!!milestones?.resolutionReached}
+      />
 
       {/* Content - hugs its content, scrolls internally only when it would
           otherwise run past the available height */}
-      <div className="min-h-0 p-4 space-y-4 overflow-y-auto">
+      <div className="min-h-0 px-5 py-5 overflow-y-auto">
         {/* Persistent status line for assistive tech: the loading state below
             announces itself, but the result would otherwise arrive silently.
             This sentence updates when a new score lands. */}
@@ -766,53 +754,38 @@ export function FeedbackPanel({
           </div>
         ) : feedback ? (
           // Keyed by turn so each new result eases up the panel as it arrives.
-          <div key={messageCount} className="space-y-4">
+          <div key={messageCount} className="space-y-6">
             <div className="animate-step-in">
               <ScoreSection score={feedback.score} turnKey={messageCount} />
             </div>
 
             {milestones && (
-              <div
-                className="animate-step-in space-y-3"
-                style={{ animationDelay: '90ms' }}
-              >
-                <ProgressSteps
+              <div className="animate-step-in" style={{ animationDelay: '90ms' }}>
+                <ArcSection
                   milestones={milestones}
+                  score={feedback.score}
                   freshKeys={freshMilestones}
-                  characterName={characterName}
-                />
-                <EmpathyChip
-                  earned={!!milestones.empathyShown}
-                  justEarned={freshMilestones.includes('empathyShown')}
-                  characterName={characterName}
                 />
               </div>
             )}
 
             <div className="animate-step-in" style={{ animationDelay: '180ms' }}>
-              <FeedbackNotes feedback={feedback} />
+              <FeedbackNotes feedback={feedback} retry={retry} />
             </div>
 
-            {onRetryLastTurn &&
-              rewindsRemaining > 0 &&
-              (feedback.score.total < 50 || feedback.isJackalLanguage) && (
-                <div
-                  className="animate-step-in"
-                  style={{ animationDelay: '225ms' }}
-                >
-                  <RetryOffer
-                    onRetry={onRetryLastTurn}
-                    rewindsRemaining={rewindsRemaining}
-                  />
-                </div>
-              )}
-
-            {skillHint && (
+            {(milestones || skillHint) && (
               <div
-                className="animate-step-in"
+                className="animate-step-in space-y-3 pt-5 border-t border-giraffe-100"
                 style={{ animationDelay: '270ms' }}
               >
-                <SkillHintCard hint={skillHint} />
+                {milestones && (
+                  <EmpathyLine
+                    earned={!!milestones.empathyShown}
+                    justEarned={freshMilestones.includes('empathyShown')}
+                    characterName={characterName}
+                  />
+                )}
+                {skillHint && <SkillHintLine hint={skillHint} />}
               </div>
             )}
           </div>

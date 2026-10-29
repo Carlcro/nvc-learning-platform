@@ -208,7 +208,7 @@ export function ConversationView({
   }, [messages])
 
   return (
-    <div className="flex flex-col w-full h-full bg-cream">
+    <div className="flex flex-col w-full h-full bg-paper">
       {/* Conversation Messages */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-8 space-y-6 scrollbar-thin scrollbar-thumb-giraffe-400 scrollbar-track-cream">
         {/* A conversation always opens with the character's first line, so

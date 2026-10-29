@@ -337,7 +337,7 @@ export function ScenarioResults({
   )
 
   return (
-    <div className="relative min-h-screen bg-linear-to-b from-giraffe-50 to-cream px-4 pt-24 pb-12">
+    <div className="relative min-h-screen bg-linear-to-b from-giraffe-50 to-paper px-4 pt-24 pb-12">
       {ending.connected && <LightMotes />}
 
       <div className="relative z-10 mx-auto max-w-md animate-step-in">

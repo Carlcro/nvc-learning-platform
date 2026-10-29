@@ -65,7 +65,7 @@ function AdminUserContent() {
   })
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-6">
         <BackButton to="/admin" search={{ tab: 'users' }} label="Everyone" />
 

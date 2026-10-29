@@ -139,7 +139,7 @@ function QuizGame() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
       {/* Header */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
         <BackButton to="/feelings" label="Feelings" />

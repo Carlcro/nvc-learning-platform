@@ -23,7 +23,7 @@ function FeelingHub() {
   )
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-cream pt-24">
+    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
       {/* Header with Giraffe Speaking */}
       <section className="py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-8">
@@ -316,7 +316,7 @@ function FeelingHub() {
       </section>
 
       {/* Tips Section */}
-      <section className="bg-linear-to-b from-cream to-giraffe-50 py-8 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 mt-6">
+      <section className="bg-linear-to-b from-paper to-giraffe-50 py-8 px-4 sm:px-6 lg:px-8 border-t border-giraffe-200 mt-6">
         <div className="max-w-3xl mx-auto text-center space-y-4">
           <h2 className="text-2xl font-bold text-brown-800">
             Why Learn Feelings?
