@@ -10,6 +10,11 @@ function andList(items: ReadonlyArray<string>): string {
   return `${items.slice(0, -1).join(', ')} et ${items[items.length - 1]}`
 }
 
+/** "que Sam", "qu'Anna": elided before a vowel or a mute h. */
+function que(name: string): string {
+  return /^[aeiouyhàâäéèêëîïôöûüœ]/i.test(name) ? `qu'${name}` : `que ${name}`
+}
+
 /**
  * `label` is lowercase with no article: it is only shown after "Ouvrir la",
  * so every label names something feminine (leçon, bibliothèque).
@@ -106,7 +111,7 @@ export const results: Messages['results'] = {
         request: 'La prochaine fois, essaie de formuler une demande claire.',
       } satisfies Record<NVCComponent, string>,
       nextPieceEmpathy: (name: string) =>
-        `La prochaine fois, essaie de te demander à voix haute ce que ${name} ressentait.`,
+        `La prochaine fois, essaie de te demander à voix haute ce ${que(name)} ressentait.`,
       nextPieceTime: 'Un peu plus de temps aurait peut-être suffi.',
     },
 
@@ -139,7 +144,10 @@ export const results: Messages['results'] = {
         days <= 1 ? 'jour de série' : 'jours de série',
       reachedLevel: (level: number) => `Tu passes au niveau ${level}. `,
       toNextLevel: (points: number, level: number) =>
-        `Encore ${points} points avant le niveau ${level}. `,
+        plural(points, {
+          one: `Encore ${points} point avant le niveau ${level}. `,
+          other: `Encore ${points} points avant le niveau ${level}. `,
+        }),
       noPoints:
         "Les points viennent des nouvelles étoiles sur un scénario : c'est en battant ton record ici que tu en gagnes davantage.",
       challengeBonus: (bonus: number) => `Dont ${bonus} pour le défi du jour.`,
@@ -172,7 +180,7 @@ export const results: Messages['results'] = {
       reachedNotConnected:
         "Tu as cherché à rejoindre ce besoin pendant la conversation. Continue comme ça. C'est ce qui aide les gens à s'ouvrir, même quand il faut plus d'une discussion.",
       nextTime: (name: string) =>
-        `La prochaine fois, essaie de te demander à voix haute ce que ${name} pourrait ressentir, ou ce dont ${name} pourrait avoir besoin. Ce sont ces suppositions qui aident les gens à s'ouvrir.`,
+        `La prochaine fois, essaie de te demander à voix haute ce ${que(name)} pourrait ressentir, ou ce dont ${name} pourrait avoir besoin. Ce sont ces suppositions qui aident les gens à s'ouvrir.`,
     },
 
     badges: (count: number) =>

@@ -618,7 +618,7 @@ function FirstTurnGuide({
   const t = useT()
   const locale = useLocale()
   const copy = t.roleplay.feedback.firstTurn
-  const focusLabel = focusArea ? focusAreaLabel(focusArea, locale) : null
+  const focusLabel = focusArea ? focusAreaLabel(focusArea, t.practice.focusAreas, locale) : null
   const focus = retryFocus ? skillResource(retryFocus, t.results.skills) : null
 
   return (

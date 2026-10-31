@@ -401,7 +401,7 @@ export const lessonsEs: LessonTranslationTable = {
           'Dar por hecho que no le importas',
         ],
         explanation:
-          'En la CNV, un no es una oportunidad para dialogar. Escuchas las necesidades y los límites de la otra persona, y luego exploran juntos otras formas de satisfacer tus necesidades.',
+          'En la CNV, un no es una oportunidad para dialogar. Escuchas las necesidades y los límites de la otra persona, y luego exploran en conjunto otras formas de satisfacer tus necesidades.',
       },
       {
         question: '¿Qué frase es el mejor ejemplo de una petición en la CNV?',
@@ -482,7 +482,7 @@ export const lessonsEs: LessonTranslationTable = {
       },
       {
         question:
-          '¿Cómo traducirías esta frase chacal a una expresión completa de CNV? «Siempre llegas tarde, eres un irresponsable.»',
+          '¿Cómo traducirías esta frase chacal a una expresión completa de CNV? «Siempre llegas tarde, eres un irresponsable»',
         options: [
           'Eres mala persona por llegar tarde.',
           'Cuando llegas 15 minutos después de la hora acordada, siento inquietud, porque la confianza y el respeto son importantes para mí. ¿Podrías llamarme si vas a llegar tarde?',

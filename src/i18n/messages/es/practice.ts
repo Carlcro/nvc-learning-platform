@@ -4,9 +4,25 @@ import type { Messages } from '..'
 const plural = pluralFor('es')
 
 export const practice: Messages['practice'] = {
+  focusAreas: {
+      boundary_setting: 'poner límites',
+      conflict_resolution: 'resolver un conflicto',
+      feedback_response: 'responder a una crítica',
+      feedback_and_sensitivity: 'críticas y sensibilidad',
+      appreciation: 'expresar gratitud',
+      apology: 'pedir perdón',
+      request_making: 'hacer peticiones',
+      empathy: 'empatía',
+      emotional_intimacy: 'intimidad emocional',
+      friendship_and_reliability: 'amistad y confianza',
+      parental_independence: 'autonomía frente a la familia',
+      parenting_partnership: 'criar en equipo',
+      responsibility_and_fairness: 'responsabilidad y equidad',
+      workplace_conflict: 'conflicto en el trabajo',
+  },
   meta: {
     hub: {
-      title: 'Practicar',
+      title: 'Práctica',
       description:
         'Ensaya una conversación difícil con alguien que responde sin salirse de su papel.',
     },

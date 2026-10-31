@@ -146,7 +146,10 @@ export const results = {
       streakLabel: (_days: number) => 'day streak',
       reachedLevel: (level: number) => `You reached Level ${level}. `,
       toNextLevel: (points: number, level: number) =>
-        `${points} points to Level ${level}. `,
+        plural(points, {
+          one: `${points} point to Level ${level}. `,
+          other: `${points} points to Level ${level}. `,
+        }),
       noPoints:
         'Points come from new stars on a scenario, so beating your best here is what earns more.',
       challengeBonus: (bonus: number) =>

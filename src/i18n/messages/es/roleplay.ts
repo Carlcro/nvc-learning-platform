@@ -79,7 +79,7 @@ export const roleplay: Messages['roleplay'] = {
     notFound: {
       title: 'No encontramos esta conversación',
       body: 'Puede que se haya eliminado o que el enlace ya no sea válido.',
-      back: 'Volver a practicar',
+      back: 'Volver a Práctica',
     },
     dismissError: 'Cerrar',
     archive: {

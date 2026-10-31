@@ -8,6 +8,22 @@ const plural = pluralFor('sv')
  * and the custom scenario builder.
  */
 export const practice: Messages['practice'] = {
+  focusAreas: {
+      boundary_setting: 'sätta gränser',
+      conflict_resolution: 'lösa en konflikt',
+      feedback_response: 'ta emot kritik',
+      feedback_and_sensitivity: 'kritik och lyhördhet',
+      appreciation: 'visa uppskattning',
+      apology: 'be om ursäkt',
+      request_making: 'uttrycka önskemål',
+      empathy: 'empati',
+      emotional_intimacy: 'känslomässig närhet',
+      friendship_and_reliability: 'vänskap och pålitlighet',
+      parental_independence: 'självständighet gentemot föräldrar',
+      parenting_partnership: 'föräldraskap tillsammans',
+      responsibility_and_fairness: 'ansvar och rättvisa',
+      workplace_conflict: 'konflikt på jobbet',
+  },
   meta: {
     hub: {
       title: 'Öva',

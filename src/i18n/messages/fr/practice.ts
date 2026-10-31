@@ -9,6 +9,22 @@ function de(name: string): string {
 }
 
 export const practice: Messages['practice'] = {
+  focusAreas: {
+      boundary_setting: 'poser une limite',
+      conflict_resolution: 'résoudre un conflit',
+      feedback_response: 'répondre à une critique',
+      feedback_and_sensitivity: 'critique et sensibilité',
+      appreciation: 'exprimer sa gratitude',
+      apology: 'présenter des excuses',
+      request_making: 'formuler une demande',
+      empathy: 'empathie',
+      emotional_intimacy: 'intimité émotionnelle',
+      friendship_and_reliability: 'amitié et fiabilité',
+      parental_independence: "autonomie face à ses parents",
+      parenting_partnership: 'élever un enfant à deux',
+      responsibility_and_fairness: 'responsabilité et équité',
+      workplace_conflict: 'conflit au travail',
+  },
   meta: {
     hub: {
       title: 'Pratique',

@@ -36,6 +36,17 @@ export function useApplyLocale() {
   )
 }
 
+/**
+ * Set once the person picks a language in this tab. Their pick is the newest
+ * word on the matter, so the sign-in sync must not replace it with the
+ * account's older saved choice if that arrives a moment later.
+ */
+let pickedThisSession = false
+
+export function localePickedThisSession(): boolean {
+  return pickedThisSession
+}
+
 /** Switch language and, when signed in, remember the choice on the account. */
 export function useSetLocale() {
   const applyLocale = useApplyLocale()
@@ -44,6 +55,7 @@ export function useSetLocale() {
 
   return useCallback(
     async (locale: Locale) => {
+      pickedThisSession = true
       await applyLocale(locale)
       if (isAuthenticated) {
         // The page has already switched; a failed save only means the next

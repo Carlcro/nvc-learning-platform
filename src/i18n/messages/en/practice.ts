@@ -8,6 +8,26 @@ const plural = pluralFor('en')
  * scenario enums by value and are shared with other areas.
  */
 export const practice = {
+  /**
+   * Scenario focus areas by their stored code. A custom scenario can carry
+   * a code that is not here; it is then shown only in English, as words.
+   */
+  focusAreas: {
+      boundary_setting: 'setting a boundary',
+      conflict_resolution: 'resolving a conflict',
+      feedback_response: 'responding to feedback',
+      feedback_and_sensitivity: 'feedback and sensitivity',
+      appreciation: 'expressing appreciation',
+      apology: 'apologizing',
+      request_making: 'making requests',
+      empathy: 'empathy',
+      emotional_intimacy: 'emotional intimacy',
+      friendship_and_reliability: 'friendship and reliability',
+      parental_independence: 'independence from parents',
+      parenting_partnership: 'parenting together',
+      responsibility_and_fairness: 'responsibility and fairness',
+      workplace_conflict: 'conflict at work',
+  },
   meta: {
     hub: {
       title: 'Practice',

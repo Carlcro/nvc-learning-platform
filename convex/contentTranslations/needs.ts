@@ -14,7 +14,7 @@ export const NEED_WORDS: Record<
     predictability: 'prévisibilité',
     ease: 'facilité',
     efficiency: 'efficacité',
-    progress: 'avancer',
+    progress: 'progression',
     respect: 'respect',
     fairness: 'équité',
     autonomy: 'autonomie',

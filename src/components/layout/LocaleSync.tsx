@@ -2,7 +2,11 @@ import { useEffect, useRef } from 'react'
 import { useConvexAuth, useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { SELECTABLE_LOCALES, isSelectable } from '~/i18n/config'
-import { useApplyLocale, useLocale } from '~/i18n/useT'
+import {
+  localePickedThisSession,
+  useApplyLocale,
+  useLocale,
+} from '~/i18n/useT'
 
 /**
  * Keep the page's language and the account's saved language in step, once
@@ -22,6 +26,10 @@ export function LocaleSync() {
     if (SELECTABLE_LOCALES.length < 2) return
     if (!user || syncedFor.current === user._id) return
     syncedFor.current = user._id
+
+    // A language picked in this tab was already saved by the picker, and is
+    // newer than whatever the account query returned.
+    if (localePickedThisSession()) return
 
     const saved = user.preferredLocale
     if (saved && isSelectable(saved)) {

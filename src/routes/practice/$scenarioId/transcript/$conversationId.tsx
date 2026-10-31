@@ -7,7 +7,7 @@ import { TranscriptView } from '~/components/features/roleplay/TranscriptView'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createFileRoute(
   '/practice/$scenarioId/transcript/$conversationId',
@@ -29,6 +29,7 @@ function TranscriptPage() {
   const { from } = Route.useSearch()
   const navigate = useNavigate()
   const t = useT()
+  const locale = useLocale()
   const copy = t.results.transcript
 
   const conversation = useQuery(
@@ -38,16 +39,12 @@ function TranscriptPage() {
       : 'skip',
   )
 
-  // Read in the conversation's language, so names match what was said.
-  const scenario = useQuery(
-    api.scenarios.getById,
-    conversation === undefined
-      ? 'skip'
-      : {
-          scenarioId: scenarioId as Id<'scenarios'>,
-          locale: conversation?.locale ?? 'en',
-        },
-  )
+  // Read in the conversation's language, so names match what was said;
+  // the interface language stands in while the conversation loads.
+  const scenario = useQuery(api.scenarios.getById, {
+    scenarioId: scenarioId as Id<'scenarios'>,
+    locale: conversation ? (conversation.locale ?? 'en') : locale,
+  })
 
   const fromResults = from === 'results'
   const handleBack = () => {

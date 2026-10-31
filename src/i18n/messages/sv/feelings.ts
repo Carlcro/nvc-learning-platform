@@ -175,7 +175,8 @@ export const feelings: Messages['feelings'] = {
     searchLabel: 'Sök bland dina sparade känslor',
     familyLabel: 'Familj',
     allFamilies: 'Alla familjer',
-    savedCount: (n: number) => `${n} sparade`,
+    savedCount: (n: number) =>
+      plural(n, { one: `${n} sparad`, other: `${n} sparade` }),
     showing: (shown: number, total: number) => `Visar ${shown} av ${total}`,
     findMore: 'Hitta fler ord',
     detail: (description: string, family: string) =>

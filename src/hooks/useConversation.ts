@@ -164,18 +164,14 @@ export function useConversation({
 
   // The scenario is read in the conversation's own language, so the
   // character's name and the setup match what is said, whatever language
-  // the interface is in now.
-  const conversationLocale = conversationId
-    ? conversation === undefined
-      ? undefined
-      : (conversation?.locale ?? 'en')
-    : locale
-  const scenario = useQuery(
-    api.scenarios.getById,
-    conversationLocale
-      ? { scenarioId: scenarioId as Id<'scenarios'>, locale: conversationLocale }
-      : 'skip',
-  )
+  // the interface is in now. Until the conversation arrives it is read in
+  // the interface language, which is almost always the same, so both
+  // queries load at once instead of one after the other.
+  const conversationLocale = conversation ? (conversation.locale ?? 'en') : locale
+  const scenario = useQuery(api.scenarios.getById, {
+    scenarioId: scenarioId as Id<'scenarios'>,
+    locale: conversationLocale,
+  })
 
   const submitTurn = useAction(api.ai.submitTurn)
   const generateReflection = useAction(api.ai.generateReflection)

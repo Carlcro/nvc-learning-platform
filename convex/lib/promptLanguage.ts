@@ -22,6 +22,8 @@ interface LanguageGuide {
   characterAddress: string
   /** Punctuation and style notes beyond the shared no-dash rule. */
   style: string
+  /** The words the app uses for the four components, so coaching matches it. */
+  terms: string
 }
 
 const GUIDES: Record<Locale, LanguageGuide> = {
@@ -32,6 +34,7 @@ const GUIDES: Record<Locale, LanguageGuide> = {
     learnerAddress: 'Speak to the learner as "you".',
     characterAddress: 'Use contractions and casual speech.',
     style: '',
+    terms: 'observation, feeling, need, request (as against a demand)',
   },
   fr: {
     name: 'French',
@@ -44,6 +47,8 @@ const GUIDES: Record<Locale, LanguageGuide> = {
       'Use "tu" or "vous" the way this relationship naturally would in France (tu between family, friends, partners and most colleagues). Speak the way people really talk, including everyday contractions where natural. You do not know the user\'s gender: avoid adjectives and participles that would have to agree with them.',
     style:
       'Never use dialogue dashes (tirets). Follow normal French punctuation.',
+    terms:
+      'observation, sentiment, besoin, demande (as against an exigence)',
   },
   es: {
     name: 'Spanish',
@@ -56,16 +61,19 @@ const GUIDES: Record<Locale, LanguageGuide> = {
       'Use "tú" unless "usted" is clearly what this relationship would use. Speak the way people really talk. You do not know the user\'s gender: avoid adjectives and participles that would have to agree with them.',
     style:
       'Write neutral Spanish that reads naturally in Spain and Latin America, without vosotros or strongly regional slang. Use the opening marks ¿ and ¡. Never use dialogue dashes (raya).',
+    terms:
+      'observación, sentimiento, necesidad, petición (as against an exigencia)',
   },
   sv: {
     name: 'Swedish',
     pseudoFeelings:
-      '"jag känner att...", "det känns som att...", "jag känner mig som att..."',
+      '"jag känner att...", "det känns som att...", "jag känner mig som om..."',
     blameFeelings: '"du får mig att känna", "du gör mig (ledsen, arg...)"',
     learnerAddress: 'Address the learner as "du", warmly.',
     characterAddress:
       'Use "du", as everyone does in Sweden. Speak relaxed, everyday Swedish the way people really talk, without anglicisms.',
-    style: 'Never use tankstreck (dashes).',
+    style: 'Never use tankstreck (dashes). Quote with ”like this”.',
+    terms: 'observation, känsla, behov, önskemål (as against a krav)',
   },
 }
 
@@ -101,6 +109,7 @@ This conversation is held in ${guide.name}.${other}
 - Pseudo-feelings in ${guide.name} include ${guide.pseudoFeelings}: these introduce a thought or a judgment, not a feeling.
 - Blame phrasing in ${guide.name} includes ${guide.blameFeelings}.
 - ${guide.learnerAddress}
+- When the feedback names a component, use the app's words for them: ${guide.terms}.
 - writtenInConversationLanguage: true unless the message is mostly written in a language other than ${guide.name}. A message in another language is scored on its NVC merits exactly as if it were in ${guide.name}: never lower a score for the language it is written in.`
 }
 

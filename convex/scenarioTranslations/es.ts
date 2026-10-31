@@ -5,7 +5,7 @@ export const es: ScenarioTranslationTable = {
     title: 'La crítica de un compañero',
     description:
       'Un compañero te criticó en plena reunión de equipo y te tomó por sorpresa. Practica cómo expresar lo que sientes sin culpar.',
-    situation: `En la reunión diaria del equipo, Javier dijo: «Tu proceso de revisión de código es demasiado lento. Está frenando a todo el equipo.»
+    situation: `En la reunión diaria del equipo, Javier dijo: «Tu proceso de revisión de código es demasiado lento. Está frenando a todo el equipo».
 
 Sentiste vergüenza y te dolió que lo dijera delante de todos. Esta es tu oportunidad de responderle a Javier y expresar cómo te sentiste, qué necesitas y qué podría funcionar mejor de aquí en adelante.`,
     characterName: 'Javier',
@@ -128,7 +128,7 @@ Valoras esta amistad y no crees que Lucía quisiera ser cruel, pero necesitas qu
     title: 'Tu padre cuestiona tus decisiones',
     description:
       'Tu padre cuestiona tu decisión profesional. Defiende tu autonomía y cuida a la vez la relación.',
-    situation: `Tu padre, Antonio, sigue cuestionando tu decisión de dejar tu trabajo en una gran empresa por algo con más sentido, aunque menos estable. En una conversación reciente te dijo: «No entiendo por qué vas a tirar por la borda tu estabilidad por el sueño de una startup. Me preocupa tu futuro.»
+    situation: `Tu padre, Antonio, sigue cuestionando tu decisión de dejar tu trabajo en una gran empresa por algo con más sentido, aunque menos estable. En una conversación reciente te dijo: «No entiendo por qué vas a tirar por la borda tu estabilidad por el sueño de una startup. Me preocupa tu futuro».
 
 Llevas meses escuchando esta crítica de distintas maneras. Quieres que entienda y respete tu decisión, y también hablar de lo que sientes cuando no notas su apoyo.`,
     characterName: 'Antonio',
@@ -173,7 +173,7 @@ Es la tercera vez este mes. Sientes rabia y que tu trabajo pasa desapercibido, p
       'Tú y Marta, con quien compartes la crianza de tu hijo, no están de acuerdo en cómo poner disciplina. Habla de sus valores distintos poniendo primero el bienestar de su hijo.',
     situation: `Has notado que a tu hijo le angustia equivocarse en el colegio. Cuando algo le sale mal, se cierra emocionalmente. Marta, con quien compartes la crianza, cree que hace falta una disciplina firme, pero tú has visto que tu hijo responde mejor cuando se le comprende y se buscan soluciones juntos.
 
-Te cansa ser siempre quien «consiente» mientras a Marta se le reconoce el mérito de la disciplina. Necesitas tener una conversación de verdad sobre sus valores distintos y encontrar un camino que funcione para los dos y para su hijo.`,
+Te cansa ser siempre quien «consiente» mientras a Marta se le reconoce el mérito de la disciplina. Necesitas tener una conversación de verdad sobre sus valores distintos y encontrar un camino que funcione para ti, para Marta y para su hijo.`,
     characterName: 'Marta',
     characterPersonality:
       'Estilo de crianza autoritario, cree en las consecuencias y la disciplina, quiere respeto y obediencia, se pone a la defensiva con sus decisiones como madre',

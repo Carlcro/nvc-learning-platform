@@ -19,7 +19,10 @@ export function userFacingMessage(
   if (typeof data === 'object' && data !== null) {
     const payload = data as { kind?: unknown; code?: unknown; message?: unknown }
     if (payload.kind !== 'user') return fallback
-    if (typeof payload.code === 'string' && payload.code in messages) {
+    if (
+      typeof payload.code === 'string' &&
+      Object.hasOwn(messages, payload.code)
+    ) {
       return messages[payload.code as UserErrorCode]
     }
     if (typeof payload.message === 'string') {

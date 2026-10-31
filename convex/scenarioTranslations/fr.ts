@@ -107,7 +107,7 @@ Tu décides qu'il faut avoir cette conversation. Tu veux exprimer clairement tes
     title: 'Une remarque blessante sur ton physique',
     description:
       "Une amie proche a fait une remarque maladroite sur ton apparence. Parle de ce qui t'a fait de la peine, tout en lui accordant le bénéfice du doute.",
-    situation: `Hier, devant d'autres amis, Léa t'a dit : « T'as pris un peu de poids depuis la dernière fois, non ? » Sur le moment, tu as ressenti de la peine et de la gêne. Elle l'a dit l'air de rien, comme si elle parlait de la météo, mais ça ne t'a pas quitté.
+    situation: `Hier, devant d'autres amis, Léa t'a dit : « T'as pris un peu de poids depuis la dernière fois, non ? » Sur le moment, tu as ressenti de la peine et de la gêne. Elle l'a dit l'air de rien, comme si elle parlait de la météo, mais tu n'arrêtes pas d'y repenser.
 
 Tu tiens à cette amitié et tu ne penses pas que Léa voulait être méchante, mais tu as besoin qu'elle comprenne pourquoi cette remarque t'a fait autant d'effet. Tu veux en parler sans te fermer ni l'attaquer.`,
     characterName: 'Léa',

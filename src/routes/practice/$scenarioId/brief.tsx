@@ -275,13 +275,13 @@ function ScenarioBrief() {
                 </ol>
 
                 {scenario.focusArea &&
-                  focusAreaLabel(scenario.focusArea, locale) && (
+                  focusAreaLabel(scenario.focusArea, t.practice.focusAreas, locale) && (
                     <p className="mt-3 text-sm text-brown-700">
                       <span className="font-semibold text-brown-800">
                         {copy.focus}{' '}
                       </span>
                       <span className="inline-block first-letter:uppercase">
-                        {focusAreaLabel(scenario.focusArea, locale)}
+                        {focusAreaLabel(scenario.focusArea, t.practice.focusAreas, locale)}
                       </span>
                     </p>
                   )}

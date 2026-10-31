@@ -8,6 +8,11 @@ function de(name: string): string {
   return /^[aeiouyhàâäéèêëîïôöûüœ]/i.test(name) ? `d'${name}` : `de ${name}`
 }
 
+/** "que Sam", "qu'Anna": the conjunction, elided the same way. */
+function que(name: string): string {
+  return /^[aeiouyhàâäéèêëîïôöûüœ]/i.test(name) ? `qu'${name}` : `que ${name}`
+}
+
 /** Capitalises the first letter, for a fallback that starts a sentence. */
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
@@ -73,7 +78,7 @@ export const roleplay: Messages['roleplay'] = {
     empathyShown: {
       title: 'Tu as su écouter',
       message: (name: string) =>
-        `Tu as prêté attention à ce que ${name} ressent peut-être.`,
+        `Tu as prêté attention à ce ${que(name)} ressent peut-être.`,
     },
     resolutionReached: {
       title: 'Un vrai déclic',
@@ -211,7 +216,7 @@ export const roleplay: Messages['roleplay'] = {
     empathyEarned: (name: string | undefined) =>
       `Tu as su écouter. Tu as pris en compte le point de vue ${name ? de(name) : "de l'autre"}.`,
     empathyInvite: (name: string | undefined) =>
-      `Tu te demandes ce que ${name || OTHER} ressent ? Poser la question, ça compte aussi.`,
+      `Tu te demandes ce ${que(name || OTHER)} ressent ? Poser la question, ça compte aussi.`,
     skillHintLink: (label: string) => `Ouvrir la ${label}`,
     skillHintAfter: " dans un nouvel onglet, cette conversation va t'attendre.",
     tryAgain: 'Réessayer',

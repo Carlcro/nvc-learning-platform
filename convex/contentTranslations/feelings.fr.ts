@@ -136,7 +136,7 @@ export const feelingsFr: FeelingsTranslation = {
       examples: [
         'Elle voyait les choses de façon optimiste malgré les difficultés.',
         'Il était optimiste quant à ses chances de réussir.',
-        'Je suis optimiste: on peut trouver une solution à ce problème.',
+        'Je suis optimiste : on peut trouver une solution à ce problème.',
       ],
       synonyms: ["plein d'espoir", 'confiant', 'positif'],
       relatedFeelings: ["plein d'espoir", 'confiant', 'apaisé', 'joyeux'],
@@ -321,7 +321,7 @@ export const feelingsFr: FeelingsTranslation = {
       definition:
         "De l'amertume face à quelque chose d'injuste. Une rancœur qui reste.",
       examples: [
-        "J'ai gardé du ressentiment quand on m'a écarté de la réunion.",
+        "J'ai gardé du ressentiment quand la réunion s'est tenue sans moi.",
         "Elle en voulait à sa direction pour le travail supplémentaire qu'on lui avait confié.",
         'Il gardait de la rancœur après cette décision injuste.',
       ],
@@ -344,7 +344,7 @@ export const feelingsFr: FeelingsTranslation = {
       definition:
         "Une émotion qui dérange et attriste. Le sentiment d'être troublé.",
       examples: [
-        "Ces remarques blessantes m'ont beaucoup remué.",
+        'Ces remarques blessantes me remuent encore.',
         'Elle était bouleversée quand sa confiance a été trahie.',
         "Il avait l'air contrarié par l'annulation.",
       ],
