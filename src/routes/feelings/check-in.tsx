@@ -6,7 +6,9 @@ import { api } from '../../../convex/_generated/api'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { pageMeta } from '~/lib/seo'
 import { getMessages } from '~/i18n/messages'
-import { useFormat, useT } from '~/i18n/useT'
+import { useFormat, useLocale, useT } from '~/i18n/useT'
+import { upperFirst } from '~/lib/text'
+import { useFeelingLabels } from '~/hooks/useFeelingLabels'
 import { localDateString } from '~/lib/localDate'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
@@ -44,10 +46,6 @@ const COMMON_FEELINGS_LIST = [
 
 const MAX_SEARCH_RESULTS = 8
 
-function capitalize(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1)
-}
-
 function DailyCheckIn() {
   const t = useT()
   const copy = t.feelings.checkIn
@@ -61,7 +59,9 @@ function DailyCheckIn() {
   const [error, setError] = useState<string | null>(null)
 
   // Queries
-  const allFeelings = useQuery(api.feelings.getAll)
+  const locale = useLocale()
+  const allFeelings = useQuery(api.feelings.getAll, { locale })
+  const labelOf = useFeelingLabels()
   const todayCheckIn = useQuery(
     api.feelingsProgress.getTodayCheckIn,
     currentUser ? { localDate: localDateString() } : 'skip',
@@ -72,7 +72,7 @@ function DailyCheckIn() {
   )
   const weeklyPatterns = useQuery(
     api.feelingsProgress.getWeeklyPatterns,
-    currentUser ? {} : 'skip',
+    currentUser ? { locale } : 'skip',
   )
 
   const recordCheckInMutation = useMutation(api.feelingsProgress.recordCheckIn)
@@ -105,7 +105,8 @@ function DailyCheckIn() {
     return allFeelings
       .filter(
         (f) =>
-          f.word.toLowerCase().includes(term) &&
+          (f.label.toLowerCase().includes(term) ||
+            f.word.toLowerCase().includes(term)) &&
           !selectedFeelings.includes(f.word),
       )
       .slice(0, MAX_SEARCH_RESULTS)
@@ -168,13 +169,13 @@ function DailyCheckIn() {
                 {selectedFeelings.map((word) => (
                   <li
                     key={word}
-                    className="inline-flex items-center rounded-lg border-2 border-brown-700 bg-giraffe-100 pl-3 text-brown-900 font-medium capitalize"
+                    className="inline-flex items-center rounded-lg border-2 border-brown-700 bg-giraffe-100 pl-3 text-brown-900 font-medium"
                   >
-                    {word}
+                    {upperFirst(labelOf(word))}
                     <button
                       type="button"
                       onClick={() => handleToggleFeeling(word)}
-                      aria-label={copy.remove(word)}
+                      aria-label={copy.remove(labelOf(word))}
                       className={`ml-1 grid h-11 w-11 place-items-center rounded-md text-brown-700 hover:text-brown-900 cursor-pointer ${focusRing}`}
                     >
                       <X aria-hidden="true" className="h-4 w-4" />
@@ -202,9 +203,9 @@ function DailyCheckIn() {
                   key={feeling.word}
                   pressed={selectedFeelings.includes(feeling.word)}
                   onClick={() => handleToggleFeeling(feeling.word)}
-                  className="capitalize"
+                 
                 >
-                  {feeling.word}
+                  {upperFirst(feeling.label)}
                 </OptionButton>
               ))}
             </div>
@@ -239,9 +240,9 @@ function DailyCheckIn() {
                         <button
                           type="button"
                           onClick={() => handleToggleFeeling(feeling.word)}
-                          className="w-full min-h-11 px-4 py-2 text-left text-brown-800 capitalize hover:bg-giraffe-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-giraffe-400"
+                          className="w-full min-h-11 px-4 py-2 text-left text-brown-800 hover:bg-giraffe-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-giraffe-400"
                         >
-                          {feeling.word}
+                          {upperFirst(feeling.label)}
                         </button>
                       </li>
                     ))}
@@ -336,7 +337,9 @@ function DailyCheckIn() {
                       })}
                     </p>
                     <p className="text-brown-900">
-                      {checkIn.feelings.map(capitalize).join(', ')}
+                      {checkIn.feelings
+                        .map((word) => upperFirst(labelOf(word)))
+                        .join(', ')}
                     </p>
                     {checkIn.note && (
                       <p className="mt-1 text-sm text-brown-700 text-pretty">
@@ -369,7 +372,7 @@ function DailyCheckIn() {
                       <p className="text-pretty">
                         {cameUp.before}
                         <span className="font-semibold">
-                          {capitalize(insight.feeling)}
+                          {upperFirst(insight.label)}
                         </span>
                         {cameUp.after}
                       </p>

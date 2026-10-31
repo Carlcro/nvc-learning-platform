@@ -1,6 +1,8 @@
 import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { userError } from './lib/errors'
+import { DEFAULT_LOCALE, localeValidator } from './lib/locale'
+import { localizeQuizQuestion } from './lib/localizeContent'
 import { mutation, query } from './_generated/server'
 import { resolveLocalDate } from './lib/progress'
 import { creditDailyPractice } from './lib/userProgressWrite'
@@ -40,7 +42,12 @@ function mulberry32(seed: number) {
  * re-subscription of the same session keeps the same batch.
  */
 export const getQuizBatch = query({
-  args: { level: v.number(), count: v.number(), seed: v.number() },
+  args: {
+    level: v.number(),
+    count: v.number(),
+    seed: v.number(),
+    locale: v.optional(localeValidator),
+  },
   handler: async (ctx, args) => {
     const questions = await ctx.db
       .query('feelingsQuizQuestions')
@@ -62,7 +69,8 @@ export const getQuizBatch = query({
       .slice(0, Math.min(Math.max(1, args.count), shuffled.length))
       .map((q) => ({
         _id: q._id,
-        sentence: q.sentence,
+        sentence: localizeQuizQuestion(q, args.locale ?? DEFAULT_LOCALE)
+          .sentence,
         level: q.level,
         category: q.category,
       }))
@@ -80,13 +88,16 @@ export const submitAnswer = mutation({
     // The user's local calendar date, so an evening answer counts for their
     // own day. Validated server-side.
     localDate: v.optional(v.string()),
+    // The language the explanation is shown in.
+    locale: v.optional(localeValidator),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) userError('notAuthenticated')
 
-    const question = await ctx.db.get(args.questionId)
-    if (!question) userError('questionNotFound')
+    const stored = await ctx.db.get(args.questionId)
+    if (!stored) userError('questionNotFound')
+    const question = localizeQuizQuestion(stored, args.locale ?? DEFAULT_LOCALE)
 
     const correct = args.answeredRealFeeling === question.isRealFeeling
 

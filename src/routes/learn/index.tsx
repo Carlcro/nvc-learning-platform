@@ -9,7 +9,7 @@ import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { CheckIcon } from '~/components/ui/Icons'
 import { LESSON_IMAGES } from '~/components/features/learn/lessonPages'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/learn/')({
   head: ({ match }) => {
@@ -29,8 +29,9 @@ function LearnHubLoader() {
 
 function LearnHub() {
   const t = useT()
+  const locale = useLocale()
   const { data: lessons } = useSuspenseQuery(
-    convexQuery(api.lessons.getAllLessons, {}),
+    convexQuery(api.lessons.getAllLessons, { locale }),
   )
   const { isLessonCompleted } = useLessonProgress()
 

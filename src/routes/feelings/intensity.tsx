@@ -5,7 +5,9 @@ import { ChevronRight } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
+import { upperFirst } from '~/lib/text'
+import { useFeelingLabels } from '~/hooks/useFeelingLabels'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { FeelingsPage } from '~/components/features/feelings/FeelingsPage'
 import { OptionButton } from '~/components/features/feelings/OptionButton'
@@ -31,9 +33,12 @@ function IntensityExplorer() {
   // A word chosen from the spectrum list, when several share one step.
   const [chosenWord, setChosenWord] = useState<string | null>(null)
 
+  const locale = useLocale()
+  const labelOf = useFeelingLabels()
   const families = useQuery(api.feelings.getFamilies)
   const familyFeelings = useQuery(api.feelings.listByFamily, {
     family: selectedFamily,
+    locale,
   })
 
   const sortedFeelings = useMemo(() => {
@@ -76,9 +81,9 @@ function IntensityExplorer() {
                   setSelectedFamily(family)
                   setChosenWord(null)
                 }}
-                className="capitalize"
+               
               >
-                {family}
+                {upperFirst(labelOf(family))}
               </OptionButton>
             ))}
           </div>
@@ -94,8 +99,8 @@ function IntensityExplorer() {
               className="text-xl font-bold text-brown-800 mb-6"
             >
               {copy.scaleHeading(
-                selectedFamily.charAt(0).toUpperCase() +
-                  selectedFamily.slice(1),
+                labelOf(selectedFamily).charAt(0).toUpperCase() +
+                  labelOf(selectedFamily).slice(1),
               )}
             </h2>
 
@@ -114,7 +119,7 @@ function IntensityExplorer() {
               value={intensityLevel}
               aria-valuetext={
                 currentFeeling
-                  ? copy.sliderValue(levelWord, currentFeeling.word)
+                  ? copy.sliderValue(levelWord, currentFeeling.label)
                   : levelWord
               }
               onChange={(e) => {
@@ -147,8 +152,8 @@ function IntensityExplorer() {
                   <p className="text-sm font-semibold text-brown-700">
                     {levelWord}
                   </p>
-                  <p className="text-4xl sm:text-5xl font-bold text-brown-800 capitalize tracking-tight">
-                    {currentFeeling.word}
+                  <p className="text-4xl sm:text-5xl font-bold text-brown-800 tracking-tight">
+                    {upperFirst(currentFeeling.label)}
                   </p>
                   <p className="mt-4 text-lg text-brown-700 text-pretty">
                     {currentFeeling.definition}
@@ -188,12 +193,12 @@ function IntensityExplorer() {
                         setChosenWord(feeling.word)
                       }}
                       aria-label={copy.spectrumItem(
-                        feeling.word,
+                        feeling.label,
                         intensityWord(feeling.intensity, scale),
                       )}
-                      className="capitalize"
+                     
                     >
-                      {feeling.word}
+                      {upperFirst(feeling.label)}
                     </OptionButton>
                     {idx < sortedFeelings.length - 1 && (
                       <ChevronRight

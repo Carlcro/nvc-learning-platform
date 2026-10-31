@@ -9,7 +9,7 @@ import { userFacingMessage } from '~/lib/errorMessage'
 import { localDateString } from '~/lib/localDate'
 import { pageMeta } from '~/lib/seo'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 import { Button } from '~/components/ui/Button'
 import {
   FeelingsPage,
@@ -74,6 +74,7 @@ function verdict(
 
 function QuizGame() {
   const t = useT()
+  const locale = useLocale()
   const copy = t.feelings.quiz
   const [quizState, setQuizState] = useState<QuizState>('level-select')
   const [selectedLevel, setSelectedLevel] = useState(1)
@@ -88,7 +89,7 @@ function QuizGame() {
   const quizBatch = useQuery(
     api.feelingsQuiz.getQuizBatch,
     quizState === 'loading'
-      ? { level: selectedLevel, count: 10, seed }
+      ? { level: selectedLevel, count: 10, seed, locale }
       : 'skip',
   )
 
@@ -132,6 +133,7 @@ function QuizGame() {
         questionId: currentQuestionData._id as Id<'feelingsQuizQuestions'>,
         answeredRealFeeling,
         localDate: localDateString(),
+        locale,
       })
       setResults((prev) => [
         ...prev,

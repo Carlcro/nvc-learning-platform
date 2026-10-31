@@ -322,6 +322,13 @@ The app is being made available in English, French, Spanish and Swedish. The cod
 - Someone who writes in another language than the conversation's is scored as usual; the analysis reports `writtenInConversationLanguage`, and when it is false the server shows the fixed `languageNudge` instead of the usual hint.
 - After changing a scoring prompt, check that the same message still scores the same in every language: `npx convex run scoreCalibration:run` (about twenty model calls).
 
+**Lessons and feelings in each language**:
+- English stays the source (`LESSONS` in `convex/lessons.ts`, `feelingsData` and `quizQuestionsData` in `convex/feelings/seed.ts`). Other languages live in `convex/contentTranslations/` and are merged by `convex/lib/localizeContent.ts`. Only words change: ids, order, families, answers and scores are shared, so grading never depends on the language.
+- A lesson translation has the same examples, questions and options in the same order (the correct answer is an index). One that does not line up is ignored and the lesson shows in English. Tests check this.
+- A feeling is stored and referred to by its English `word` everywhere (saved library, check-ins, explored). Queries return `label` and `familyLabel` to show; the client turns a stored word into its label with `useFeelingLabels()`. Families are feeling words, so they translate the same way. Feelings quiz sentences are keyed by the English sentence and keep the same real-or-not answer.
+- Lesson, feeling and quiz queries take an optional `locale`; pass `useLocale()`.
+- Terms used so far: Swedish calls a request "önskemål" and the jackal "varg"; Spanish uses "petición" against "exigencia". Keep the interface copy consistent with them.
+
 ### Task: Create a New UI Component
 
 1. **Check if a similar component exists** in `src/components/`

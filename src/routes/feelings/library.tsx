@@ -5,7 +5,9 @@ import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
+import { upperFirst } from '~/lib/text'
+import { useFeelingLabels } from '~/hooks/useFeelingLabels'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import {
@@ -35,7 +37,9 @@ function PersonalLibrary() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
 
-  const allFeelings = useQuery(api.feelings.getAll)
+  const locale = useLocale()
+  const allFeelings = useQuery(api.feelings.getAll, { locale })
+  const labelOf = useFeelingLabels()
   const userProgress = useQuery(
     api.feelingsProgress.getUserProgress,
     currentUser ? {} : 'skip',
@@ -58,6 +62,7 @@ function PersonalLibrary() {
       const familyMatch = filterFamily === 'all' || f.family === filterFamily
       const searchMatch =
         !term ||
+        f.label.toLowerCase().includes(term) ||
         f.word.toLowerCase().includes(term) ||
         f.definition.toLowerCase().includes(term)
       return familyMatch && searchMatch
@@ -122,12 +127,12 @@ function PersonalLibrary() {
                 id="library-family"
                 value={filterFamily}
                 onChange={(e) => setFilterFamily(e.target.value)}
-                className={`${fieldClass} capitalize cursor-pointer`}
+                className={`${fieldClass} cursor-pointer`}
               >
                 <option value="all">{copy.allFamilies}</option>
                 {families?.map((family) => (
                   <option key={family} value={family}>
-                    {family}
+                    {upperFirst(labelOf(family))}
                   </option>
                 ))}
               </select>
@@ -154,8 +159,8 @@ function PersonalLibrary() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h2 className="text-xl font-bold text-brown-800 capitalize">
-                        {feeling.word}
+                      <h2 className="text-xl font-bold text-brown-800">
+                        {upperFirst(feeling.label)}
                       </h2>
                       <p className="mt-0.5 flex items-center gap-2 text-sm text-brown-700">
                         <span
@@ -164,14 +169,14 @@ function PersonalLibrary() {
                         />
                         {copy.detail(
                           describeFeeling(feeling, t.feelings.scale),
-                          feeling.family,
+                          feeling.familyLabel,
                         )}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => void handleRemove(feeling.word)}
-                      aria-label={copy.remove(feeling.word)}
+                      aria-label={copy.remove(feeling.label)}
                       className={`-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brown-700 hover:text-brown-900 hover:bg-giraffe-50 cursor-pointer ${focusRing}`}
                     >
                       <X aria-hidden="true" className="h-5 w-5" />

@@ -1,6 +1,8 @@
 import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { userError } from './lib/errors'
+import { DEFAULT_LOCALE, localeValidator } from './lib/locale'
+import { localizeFeeling } from './lib/localizeContent'
 import { mutation, query } from './_generated/server'
 import type { MutationCtx } from './_generated/server'
 import type { Doc, Id } from './_generated/dataModel'
@@ -20,12 +22,14 @@ import type { Doc, Id } from './_generated/dataModel'
  * Get all feelings organized by family
  */
 export const listByFamily = query({
-  args: { family: v.string() },
+  args: { family: v.string(), locale: v.optional(localeValidator) },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const feelings = await ctx.db
       .query('feelings')
       .withIndex('by_family', (q) => q.eq('family', args.family))
       .collect()
+    const locale = args.locale ?? DEFAULT_LOCALE
+    return feelings.map((f) => localizeFeeling(f, locale))
   },
 })
 
@@ -41,12 +45,15 @@ export const getFamilies = query({
 })
 
 /**
- * Get all feelings (for reference)
+ * Get all feelings (for reference). `word` is the English word, the key that
+ * saved feelings and check-ins store; show `label` and `familyLabel`.
  */
 export const getAll = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query('feelings').collect()
+  args: { locale: v.optional(localeValidator) },
+  handler: async (ctx, args) => {
+    const feelings = await ctx.db.query('feelings').collect()
+    const locale = args.locale ?? DEFAULT_LOCALE
+    return feelings.map((f) => localizeFeeling(f, locale))
   },
 })
 

@@ -1,6 +1,8 @@
 import { v } from 'convex/values'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { userError } from './lib/errors'
+import { DEFAULT_LOCALE, localeValidator } from './lib/locale'
+import { feelingLabel, needLabel } from './lib/localizeContent'
 import { mutation, query } from './_generated/server'
 import { advanceStreak, resolveLocalDate } from './lib/progress'
 import { creditDailyPractice } from './lib/userProgressWrite'
@@ -151,8 +153,9 @@ export const getTodayCheckIn = query({
  * Get weekly patterns and insights for the current user
  */
 export const getWeeklyPatterns = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { locale: v.optional(localeValidator) },
+  handler: async (ctx, args) => {
+    const locale = args.locale ?? DEFAULT_LOCALE
     const userId = await getAuthUserId(ctx)
     if (userId === null) return null
 
@@ -213,11 +216,11 @@ export const getWeeklyPatterns = query({
     // Generate insights
     const insights = frequentFeelings.map(([feeling, count]) => ({
       feeling,
+      label: feelingLabel(feeling, locale),
       count,
-      relatedNeeds: feelingToNeeds[feeling.toLowerCase()] ?? [
-        'understanding',
-        'connection',
-      ],
+      relatedNeeds: (
+        feelingToNeeds[feeling.toLowerCase()] ?? ['understanding', 'connection']
+      ).map((need) => needLabel(need, locale)),
     }))
 
     // Count pleasant vs unpleasant

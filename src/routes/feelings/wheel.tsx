@@ -6,7 +6,9 @@ import { api } from '../../../convex/_generated/api'
 import type { Messages } from '~/i18n/messages'
 import { pageMeta } from '~/lib/seo'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
+import { upperFirst } from '~/lib/text'
+import { useFeelingLabels } from '~/hooks/useFeelingLabels'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
@@ -65,7 +67,9 @@ function BrowseFeelings() {
 
   // Queries
   const families = useQuery(api.feelings.getFamilies)
-  const allFeelings = useQuery(api.feelings.getAll)
+  const locale = useLocale()
+  const allFeelings = useQuery(api.feelings.getAll, { locale })
+  const labelOf = useFeelingLabels()
   const userProgress = useQuery(
     api.feelingsProgress.getUserProgress,
     currentUser ? {} : 'skip',
@@ -87,7 +91,8 @@ function BrowseFeelings() {
       const categoryMatch =
         showCategory === 'all' || f.category === showCategory
       const searchMatch = term
-        ? f.word.toLowerCase().includes(term) ||
+        ? f.label.toLowerCase().includes(term) ||
+          f.word.toLowerCase().includes(term) ||
           f.definition.toLowerCase().includes(term)
         : true
       return familyMatch && categoryMatch && searchMatch
@@ -157,7 +162,7 @@ function BrowseFeelings() {
   const gridHeading = term
     ? copy.gridHeadingSearch(searchTerm.trim())
     : copy.gridHeadingFamily(
-        `${selectedFamily.charAt(0).toUpperCase()}${selectedFamily.slice(1)}`,
+        `${labelOf(selectedFamily).charAt(0).toUpperCase()}${labelOf(selectedFamily).slice(1)}`,
       )
 
   return (
@@ -228,9 +233,9 @@ function BrowseFeelings() {
                       setSelectedFamily(family)
                       setSearchTerm('')
                     }}
-                    className="capitalize"
+                   
                   >
-                    {family}
+                    {upperFirst(labelOf(family))}
                   </OptionButton>
                 ))}
               </div>
@@ -268,8 +273,8 @@ function BrowseFeelings() {
                         className={`h-3 w-3 shrink-0 rounded-full ${CATEGORY_SWATCH[feeling.category]}`}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block font-semibold capitalize text-brown-900">
-                          {feeling.word}
+                        <span className="block font-semibold text-brown-900">
+                          {upperFirst(feeling.label)}
                         </span>
                         <span className="block text-sm font-normal text-brown-700">
                           {describeFeeling(feeling, t.feelings.scale)}
@@ -295,9 +300,9 @@ function BrowseFeelings() {
                     id="detail-heading"
                     ref={detailHeadingRef}
                     tabIndex={-1}
-                    className="text-2xl sm:text-3xl font-bold text-brown-800 capitalize scroll-mt-28 focus:outline-none"
+                    className="text-2xl sm:text-3xl font-bold text-brown-800 scroll-mt-28 focus:outline-none"
                   >
-                    {selectedFeelingDetail.word}
+                    {upperFirst(selectedFeelingDetail.label)}
                   </h2>
                   <p className="mt-1 flex items-center gap-2 text-sm text-brown-700">
                     <span
@@ -306,14 +311,14 @@ function BrowseFeelings() {
                     />
                     {copy.detail(
                       describeFeeling(selectedFeelingDetail, t.feelings.scale),
-                      selectedFeelingDetail.family,
+                      selectedFeelingDetail.familyLabel,
                     )}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedFeeling(null)}
-                  aria-label={copy.close(selectedFeelingDetail.word)}
+                  aria-label={copy.close(selectedFeelingDetail.label)}
                   className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brown-700 hover:text-brown-900 hover:bg-giraffe-50 cursor-pointer ${focusRing}`}
                 >
                   <X aria-hidden="true" className="h-5 w-5" />

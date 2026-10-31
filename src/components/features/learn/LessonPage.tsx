@@ -16,7 +16,7 @@ import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { CheckIcon } from '~/components/ui/Icons'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 interface Example {
   scenario: string
@@ -42,8 +42,9 @@ export function LessonLoader() {
  */
 export function LessonPage({ lessonId }: { lessonId: LessonId }) {
   const t = useT()
+  const locale = useLocale()
   const { data: lesson } = useSuspenseQuery(
-    convexQuery(api.lessons.getLessonById, { lessonId }),
+    convexQuery(api.lessons.getLessonById, { lessonId, locale }),
   )
   const { isLessonCompleted, getCompletedLessonIds } = useLessonProgress()
 
