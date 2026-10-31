@@ -103,7 +103,7 @@ export function QuizSection({
     return (
       <section
         aria-labelledby="quiz-heading"
-        className="rounded-lg border-2 border-giraffe-300 bg-white p-6 sm:p-8"
+        className="rounded-lg border-2 border-brown-100 bg-white p-6 sm:p-8"
       >
         <h2
           id="quiz-heading"
@@ -139,7 +139,7 @@ export function QuizSection({
   return (
     <section
       aria-labelledby="quiz-heading"
-      className="rounded-lg border-2 border-giraffe-200 bg-white p-6 sm:p-8"
+      className="rounded-lg border-2 border-brown-100 bg-white p-6 sm:p-8"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-6">
         <h2 id="quiz-heading" className="text-2xl font-bold text-brown-800">
@@ -172,12 +172,12 @@ export function QuizSection({
                   isFound
                     ? 'border-empathy-high bg-[color-mix(in_srgb,var(--color-empathy-high)_14%,white)] text-brown-900'
                     : isMiss
-                      ? 'border-brown-300 bg-brown-50 text-brown-700'
+                      ? 'border-brown-200 bg-brown-50 text-brown-600'
                       : isChosen
-                        ? 'border-giraffe-500 bg-giraffe-50 text-brown-900'
+                        ? 'border-brown-700 bg-giraffe-50 text-brown-900'
                         : step === 'found'
-                          ? 'border-giraffe-100 text-brown-500'
-                          : 'border-giraffe-200 text-brown-800 hover:border-giraffe-400 cursor-pointer'
+                          ? 'border-transparent bg-paper text-brown-500'
+                          : 'border-transparent bg-paper text-brown-800 hover:border-brown-200 hover:bg-giraffe-50 cursor-pointer'
                 }`}
               >
                 <span
@@ -186,15 +186,15 @@ export function QuizSection({
                     isFound
                       ? 'border-empathy-high bg-empathy-high'
                       : isChosen
-                        ? 'border-giraffe-600'
-                        : 'border-brown-300'
+                        ? 'border-brown-700 bg-white'
+                        : 'border-brown-300 bg-white'
                   }`}
                 >
                   {isFound ? (
                     <CheckIcon className="h-3 w-3 text-brown-900" />
                   ) : (
                     isChosen && (
-                      <span className="h-2.5 w-2.5 rounded-full bg-giraffe-600" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-brown-700" />
                     )
                   )}
                 </span>
@@ -207,7 +207,7 @@ export function QuizSection({
 
       <div aria-live="polite" className="mt-5 empty:hidden">
         {step === 'missed' && (
-          <div className="rounded-lg bg-giraffe-50 border-2 border-giraffe-100 px-4 py-3">
+          <div className="rounded-lg bg-paper border-2 border-brown-100 px-4 py-3">
             <p className="font-semibold text-brown-800">
               Not quite this one.
             </p>
@@ -260,7 +260,12 @@ export function QuizSection({
             {isLast ? 'Finish' : 'Next question'}
           </Button>
         ) : (
-          <Button variant="primary" onClick={check} disabled={chosen === null}>
+          <Button
+            variant="primary"
+            onClick={check}
+            disabled={chosen === null}
+            className="disabled:opacity-100 disabled:bg-brown-100 disabled:text-brown-500 disabled:shadow-none"
+          >
             Check my answer
           </Button>
         )}
