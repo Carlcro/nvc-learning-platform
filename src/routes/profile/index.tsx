@@ -1,15 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
 import { ProfileHero } from '~/components/features/profile/ProfileHero'
-import { OverallScoreRing } from '~/components/features/profile/OverallScoreRing'
-import { SkillStats } from '~/components/features/profile/SkillStats'
+import { GrowthSummary } from '~/components/features/profile/GrowthSummary'
 import { ActivityFeed } from '~/components/features/profile/ActivityFeed'
 import { AchievementsGrid } from '~/components/features/profile/AchievementsGrid'
 import { FeelingsStats } from '~/components/features/profile/FeelingsStats'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
+import { Button } from '~/components/ui/Button'
 
 export const Route = createFileRoute('/profile/')({
   head: () => ({
@@ -33,51 +34,62 @@ function ProfilePage() {
 function ProfileContent() {
   const stats = useQuery(api.userProgress.getStats)
   const getOrCreateProgress = useMutation(api.userProgress.getOrCreate)
+  const [setupFailed, setSetupFailed] = useState(false)
 
-  useEffect(() => {
-    getOrCreateProgress()
+  // Make sure a progress record exists. getStats is null until it does, so a
+  // failure here would otherwise leave the loader up forever.
+  const ensureProgress = useCallback(() => {
+    setSetupFailed(false)
+    getOrCreateProgress().catch(() => setSetupFailed(true))
   }, [getOrCreateProgress])
 
+  useEffect(() => {
+    ensureProgress()
+  }, [ensureProgress])
+
   if (!stats) {
-    return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-        <div className="flex items-center justify-center py-24" role="status">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-giraffe-600"></div>
-          <span className="sr-only">Loading your progress</span>
-        </div>
-      </main>
-    )
+    if (setupFailed) {
+      return (
+        <main className="min-h-screen bg-paper flex items-center justify-center px-4">
+          <div className="max-w-md text-center" role="alert">
+            <h1 className="text-2xl font-bold text-brown-800 text-balance">
+              Your progress is taking a moment
+            </h1>
+            <p className="mt-3 text-brown-700 text-pretty">
+              We could not load it just now. Your practice is safe, and trying
+              again usually helps.
+            </p>
+            <Button
+              variant="primary"
+              size="lg"
+              className="mt-6"
+              onClick={ensureProgress}
+            >
+              Try again
+            </Button>
+          </div>
+        </main>
+      )
+    }
+    return <GiraffeLoader message="Gathering your progress..." />
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-6">
-        {/* Focal band: who you are and how far you've come */}
-        <ProfileHero stats={stats} />
+    <main className="min-h-screen bg-paper">
+      <ProfileHero stats={stats} />
 
-        {/* The heart of NVC practice: overall empathy + the four skills */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-1">
-            <OverallScoreRing score={stats.averageScores.overall} />
-          </div>
-          <div className="md:col-span-2">
-            <SkillStats stats={stats} />
-          </div>
+      <div className="px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="max-w-3xl mx-auto divide-y divide-brown-100 [&>*]:py-10 [&>*:first-child]:pt-0 [&>*:last-child]:pb-0">
+          <GrowthSummary stats={stats} />
+          <ActivityFeed
+            completedScenarios={stats.scenariosCompleted}
+            threeStarScenarios={stats.scenariosMastered}
+            totalStars={stats.totalStars}
+          />
+          <FeelingsStats />
+          <AchievementsGrid />
         </div>
-
-        {/* The feelings work, which used to be invisible here */}
-        <FeelingsStats />
-
-        {/* Every achievement, earned ones lit up */}
-        <AchievementsGrid />
-
-        {/* Milestones earned, and the next step */}
-        <ActivityFeed
-          completedScenarios={stats.scenariosCompleted}
-          masteredScenarios={stats.scenariosMastered}
-          totalStars={stats.totalStars}
-        />
-      </section>
+      </div>
     </main>
   )
 }

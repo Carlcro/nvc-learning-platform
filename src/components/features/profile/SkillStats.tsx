@@ -1,67 +1,46 @@
+import { COMPONENT_NAMES, growthWord } from './growth'
 import type { UserStats } from './types'
-import { Card, CardBody } from '~/components/ui/Card'
+import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 
 interface SkillStatsProps {
-  stats: UserStats
+  averages: UserStats['averageScores']
 }
 
-// Warm, on-palette band color for a skill score (0-25), mirroring the
-// EmpathyMeter: the hue reflects how close the skill is to giraffe, never an
-// arbitrary per-skill color. Coral signals "keep practicing", never alarm.
-function bandColor(score: number): string {
-  const pct = (score / 25) * 100
-  if (pct >= 90) return 'bg-empathy-high'
-  if (pct >= 70) return 'bg-giraffe-400'
-  if (pct >= 50) return 'bg-giraffe-300'
-  return 'bg-empathy-low'
-}
-
-export function SkillStats({ stats }: SkillStatsProps) {
-  const skills = [
-    { label: 'Observation', score: stats.averageScores.observation },
-    { label: 'Feeling', score: stats.averageScores.feeling },
-    { label: 'Need', score: stats.averageScores.need },
-    { label: 'Request', score: stats.averageScores.request },
-  ]
-
+/**
+ * The four pieces as quiet bars with a word each. One neutral colour for
+ * every bar: the length shows movement, the word names it, and nothing is
+ * marked as a failure.
+ */
+export function SkillStats({ averages }: SkillStatsProps) {
   return (
-    <Card className="overflow-hidden h-full">
-      {/* Header */}
-      <div className="bg-giraffe-50 px-6 py-3 border-b border-giraffe-100">
-        <h2 className="text-sm font-semibold text-brown-700">
-          Skill breakdown
-        </h2>
-      </div>
-
-      <CardBody>
-        <div className="space-y-5">
-          {skills.map((skill) => (
-            <div key={skill.label}>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium text-brown-700">
-                  {skill.label}
-                </span>
-                <span className="font-bold text-brown-800">
-                  {Math.round(skill.score)}/25
-                </span>
-              </div>
-              <div
-                className="h-3 bg-giraffe-100 rounded-full overflow-hidden border border-giraffe-200"
-                role="progressbar"
-                aria-valuenow={Math.round(skill.score)}
-                aria-valuemin={0}
-                aria-valuemax={25}
-                aria-label={`${skill.label} score`}
-              >
-                <div
-                  className={`h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none ${bandColor(skill.score)}`}
-                  style={{ width: `${(skill.score / 25) * 100}%` }}
-                />
-              </div>
+    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
+      {NVC_COMPONENTS.map((component) => {
+        const average = Math.max(0, Math.min(25, averages[component]))
+        const word = growthWord(average)
+        const name = COMPONENT_NAMES[component]
+        return (
+          <li key={component}>
+            <div className="flex items-baseline justify-between gap-3 text-sm mb-2">
+              <span className="font-semibold text-brown-800">{name}</span>
+              <span className="text-brown-600">{word}</span>
             </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
+            <div
+              className="h-2 bg-giraffe-100 rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(average)}
+              aria-valuemin={0}
+              aria-valuemax={25}
+              aria-valuetext={word}
+              aria-label={name}
+            >
+              <div
+                className="h-full bg-giraffe-400 rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+                style={{ width: `${(average / 25) * 100}%` }}
+              />
+            </div>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

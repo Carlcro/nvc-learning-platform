@@ -1,111 +1,49 @@
+import { Link } from '@tanstack/react-router'
+import { QUIET_LINK_CLASS } from './challengeDisplay'
+
 interface ChallengeStatsProps {
-  currentStreak: number
-  longestStreak: number
   completedCount: number
-  averageScore: number
-  totalPoints: number
-  level: number
+  longestStreak: number
 }
 
+/**
+ * A short, warm note about the daily challenges so far. A sentence or two
+ * rather than a scoreboard: it counts what was done, never how well.
+ */
 export function ChallengeStats({
-  currentStreak,
-  longestStreak,
   completedCount,
-  averageScore,
-  totalPoints,
-  level,
+  longestStreak,
 }: ChallengeStatsProps) {
-  const showStreakFire = currentStreak >= 7
+  const finished =
+    completedCount === 0
+      ? 'The daily challenges you finish will gather on your profile.'
+      : completedCount === 1
+        ? 'You have finished one daily challenge so far.'
+        : `You have finished ${completedCount} daily challenges so far.`
+
+  const run =
+    longestStreak > 1
+      ? ` Your longest run of practice days is ${longestStreak}.`
+      : ''
 
   return (
-    <div className="bg-gradient-to-br from-giraffe-50 to-giraffe-100 border border-giraffe-200 rounded-lg p-6">
-      <h3 className="text-lg font-bold text-brown-900 mb-4">Your Challenge Stats</h3>
-
-      {/* Streak Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        {/* Current Streak */}
-        <div className="bg-white rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-giraffe-600 mb-1">
-            {currentStreak}
-          </div>
-          <p className="text-xs font-medium text-brown-600">
-            Current Streak
-          </p>
-          {showStreakFire && (
-            <p className="text-xs text-giraffe-600 font-semibold mt-1">
-              Keep it up!
-            </p>
-          )}
-        </div>
-
-        {/* Longest Streak */}
-        <div className="bg-white rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-brown-700 mb-1">
-            {longestStreak}
-          </div>
-          <p className="text-xs font-medium text-brown-600">
-            Best Streak
-          </p>
-        </div>
-
-        {/* Completed */}
-        <div className="bg-white rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-giraffe-700 mb-1">
-            {completedCount}
-          </div>
-          <p className="text-xs font-medium text-brown-600">
-            Completed
-          </p>
-        </div>
-
-        {/* Average Score */}
-        <div className="bg-white rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-giraffe-700 mb-1">
-            {averageScore}%
-          </div>
-          <p className="text-xs font-medium text-brown-600">
-            Avg Score
-          </p>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="h-px bg-giraffe-200 my-4" />
-
-      {/* Points and Level Row */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Total Points */}
-        <div className="bg-white rounded-lg p-4">
-          <p className="text-xs font-medium text-brown-600 mb-1">
-            Total Points
-          </p>
-          <p className="text-2xl font-bold text-giraffe-600">{totalPoints}</p>
-        </div>
-
-        {/* Level */}
-        <div className="bg-white rounded-lg p-4">
-          <p className="text-xs font-medium text-brown-600 mb-1">
-            Level
-          </p>
-          <span className="text-2xl font-bold text-brown-800">{level}</span>
-        </div>
-      </div>
-
-      {/* Milestone Celebrations */}
-      {(currentStreak === 7 ||
-        currentStreak === 30 ||
-        currentStreak === 100) && (
-        <div className="mt-4 p-4 bg-giraffe-50 border border-giraffe-200 rounded-lg text-center">
-          <p className="text-sm font-bold text-brown-800">
-            Milestone Achievement Unlocked!
-          </p>
-          <p className="text-xs text-brown-700 mt-1">
-            {currentStreak === 7 && 'You are on a 7-day streak!'}
-            {currentStreak === 30 && 'You have maintained a 30-day streak!'}
-            {currentStreak === 100 && 'You have an incredible 100-day streak!'}
-          </p>
-        </div>
-      )}
-    </div>
+    <section
+      aria-labelledby="challenge-history-heading"
+      className="border-t-2 border-giraffe-100 pt-8"
+    >
+      <h2
+        id="challenge-history-heading"
+        className="text-lg font-bold text-brown-800"
+      >
+        Your practice so far
+      </h2>
+      <p className="mt-2 max-w-prose text-brown-700 text-pretty">
+        {finished}
+        {run}{' '}
+        <Link to="/profile" className={QUIET_LINK_CLASS}>
+          See your profile
+        </Link>
+      </p>
+    </section>
   )
 }

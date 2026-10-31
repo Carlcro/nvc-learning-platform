@@ -1,16 +1,27 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
-import { BackButton } from '~/components/ui/BackButton'
+import { userFacingMessage } from '~/lib/errorMessage'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
+import {
+  FeelingsPage,
+  fieldClass,
+  focusRing,
+  textLinkClass,
+} from '~/components/features/feelings/FeelingsPage'
+import {
+  CATEGORY_SWATCH,
+  describeFeeling,
+} from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/library')({
   head: () => ({
     meta: pageMeta({
-      title: 'Your Feelings Library',
-      description:
-        'The feelings you have explored and saved.',
+      title: 'Your saved feelings',
+      description: 'The feelings you have explored and saved.',
     }),
   }),
   component: PersonalLibrary,
@@ -20,8 +31,8 @@ function PersonalLibrary() {
   const currentUser = useQuery(api.users.getCurrentUser)
   const [filterFamily, setFilterFamily] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
 
-  // Queries
   const allFeelings = useQuery(api.feelings.getAll)
   const userProgress = useQuery(
     api.feelingsProgress.getUserProgress,
@@ -29,198 +40,172 @@ function PersonalLibrary() {
   )
   const families = useQuery(api.feelings.getFamilies)
 
-  // Mutations
   const removeFeelingMutation = useMutation(
     api.feelings.removeFeelingFromLibrary,
   )
 
-  // Get details of saved feelings
   const savedFeelings = useMemo(() => {
     if (!allFeelings || !userProgress) return []
     const savedSet = new Set(userProgress.feelingsSaved)
     return allFeelings.filter((f) => savedSet.has(f.word))
   }, [allFeelings, userProgress])
 
-  // Filter saved feelings
+  const term = searchTerm.trim().toLowerCase()
   const filteredFeelings = useMemo(() => {
     return savedFeelings.filter((f) => {
       const familyMatch = filterFamily === 'all' || f.family === filterFamily
       const searchMatch =
-        !searchTerm ||
-        f.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.definition.toLowerCase().includes(searchTerm.toLowerCase())
+        !term ||
+        f.word.toLowerCase().includes(term) ||
+        f.definition.toLowerCase().includes(term)
       return familyMatch && searchMatch
     })
-  }, [savedFeelings, filterFamily, searchTerm])
+  }, [savedFeelings, filterFamily, term])
 
   const handleRemove = async (word: string) => {
     if (!currentUser) return
-    await removeFeelingMutation({ feelingWord: word })
+    try {
+      await removeFeelingMutation({ feelingWord: word })
+      setStatusMessage(`Removed ${word} from your library.`)
+    } catch (err) {
+      setStatusMessage(
+        userFacingMessage(err, `We could not remove ${word} just now.`),
+      )
+    }
   }
 
   if (allFeelings === undefined || userProgress === undefined) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper flex items-center justify-center">
-        <p className="text-brown-700">Loading library...</p>
-      </div>
-    )
+    return <GiraffeLoader message="Opening your library..." />
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-      {/* Header */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
-        <BackButton to="/feelings" label="Feelings" />
-        <div className="flex items-end justify-between gap-4 mt-2">
-          <div>
-            <h1 className="text-3xl font-bold text-brown-800 mb-2">
-              My Feelings Library
-            </h1>
-            <p className="text-brown-700">
-              Your personal collection of feelings to remember and practice
-            </p>
-          </div>
-          <Link
-            to="/feelings/wheel"
-            className="px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors shadow-sm whitespace-nowrap"
-          >
-            + Add More
-          </Link>
-        </div>
-      </section>
+    <FeelingsPage
+      title="Your saved feelings"
+      intro={
+        <p>
+          The words you have kept to come back to. Reading them now and then
+          makes them easier to reach for when it matters.
+        </p>
+      }
+    >
+      <p role="status" className="sr-only">
+        {statusMessage}
+      </p>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {savedFeelings.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border-2 border-giraffe-100 border-dashed">
-            <div className="mb-4 flex justify-center">
-              <div className="bg-giraffe-100 p-6 rounded-full">
-                <svg className="w-12 h-12 text-giraffe-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
+      {savedFeelings.length === 0 ? (
+        <p className="max-w-prose text-lg text-brown-700 text-pretty">
+          Nothing saved yet. When a word fits something you have felt, save it
+          while you{' '}
+          <Link to="/feelings/wheel" className={textLinkClass}>
+            browse feelings
+          </Link>{' '}
+          and it will wait for you here.
+        </p>
+      ) : (
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+            <div className="flex-1">
+              <label
+                htmlFor="library-search"
+                className="block text-sm font-semibold text-brown-700 mb-2"
+              >
+                Search your saved feelings
+              </label>
+              <input
+                id="library-search"
+                type="search"
+                autoComplete="off"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={fieldClass}
+              />
             </div>
-            <h2 className="text-2xl font-bold text-brown-800 mb-2">
-              Your library is empty
-            </h2>
-            <p className="text-brown-700 mb-8 max-w-md mx-auto">
-              Explore the Feelings Wheel and save feelings you want to add to
-              your personal vocabulary.
+            <div className="sm:w-56">
+              <label
+                htmlFor="library-family"
+                className="block text-sm font-semibold text-brown-700 mb-2"
+              >
+                Family
+              </label>
+              <select
+                id="library-family"
+                value={filterFamily}
+                onChange={(e) => setFilterFamily(e.target.value)}
+                className={`${fieldClass} capitalize cursor-pointer`}
+              >
+                <option value="all">All families</option>
+                {families?.map((family) => (
+                  <option key={family} value={family}>
+                    {family}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm text-brown-700">
+            <p>
+              {filteredFeelings.length === savedFeelings.length
+                ? `${savedFeelings.length} saved`
+                : `Showing ${filteredFeelings.length} of ${savedFeelings.length}`}
             </p>
-            <Link
-              to="/feelings/wheel"
-              className="px-6 py-3 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors"
-            >
-              Go to Feelings Wheel
+            <Link to="/feelings/wheel" className={textLinkClass}>
+              Find more words
             </Link>
           </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Search your library..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border-2 border-giraffe-200 focus:border-giraffe-400 focus:ring-0"
-                />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-                <button
-                  onClick={() => setFilterFamily('all')}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all
-                    ${
-                      filterFamily === 'all'
-                        ? 'bg-giraffe-400 text-brown-800 shadow-md'
-                        : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:bg-giraffe-50'
-                    }
-                  `}
-                >
-                  All Families
-                </button>
-                {families?.map((family) => (
-                  <button
-                    key={family}
-                    onClick={() => setFilterFamily(family)}
-                    className={`
-                      px-4 py-2 rounded-lg font-medium whitespace-nowrap capitalize transition-all
-                      ${
-                        filterFamily === family
-                          ? 'bg-giraffe-400 text-brown-800 shadow-md'
-                          : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:bg-giraffe-50'
-                      }
-                    `}
-                  >
-                    {family}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredFeelings.length > 0 ? (
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredFeelings.map((feeling) => (
-                <div
+                <li
                   key={feeling.word}
-                  className="bg-white rounded-lg border-2 border-giraffe-100 p-6 hover:border-giraffe-200 transition-all shadow-sm hover:shadow-md group relative"
+                  className="rounded-lg border-2 border-giraffe-200 bg-white p-5"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-brown-800 capitalize">
-                      {feeling.word}
-                    </h3>
-                    <button
-                      onClick={() => handleRemove(feeling.word)}
-                      className="text-brown-400 hover:text-empathy-low transition-colors p-1"
-                      title="Remove from library"
-                    >
-                      <span className="sr-only">Remove</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="text-xl font-bold text-brown-800 capitalize">
+                        {feeling.word}
+                      </h2>
+                      <p className="mt-0.5 flex items-center gap-2 text-sm text-brown-700">
+                        <span
+                          aria-hidden="true"
+                          className={`h-3 w-3 shrink-0 rounded-full ${CATEGORY_SWATCH[feeling.category]}`}
                         />
-                      </svg>
+                        {describeFeeling(feeling)}, {feeling.family}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleRemove(feeling.word)}
+                      aria-label={`Remove ${feeling.word}`}
+                      className={`-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brown-700 hover:text-brown-900 hover:bg-giraffe-50 cursor-pointer ${focusRing}`}
+                    >
+                      <X aria-hidden="true" className="h-5 w-5" />
                     </button>
                   </div>
 
-                  <div className="flex gap-2 mb-4">
-                    <span className="text-xs px-2 py-1 bg-giraffe-100 text-brown-700 rounded-full font-medium capitalize">
-                      {feeling.family}
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-giraffe-100 text-brown-800 rounded-full font-medium">
-                      Intensity: {feeling.intensity}/5
-                    </span>
-                  </div>
-
-                  <p className="text-brown-700 text-sm mb-4 line-clamp-3">
+                  <p className="mt-3 text-brown-700 text-pretty">
                     {feeling.definition}
                   </p>
 
                   {feeling.examples.length > 0 && (
-                    <div className="text-xs text-brown-600 italic bg-giraffe-50 p-3 rounded-lg">
-                      "{feeling.examples[0]}"
-                    </div>
+                    <p className="mt-3 text-sm text-brown-700 text-pretty">
+                      <span className="font-semibold text-brown-800">
+                        In a sentence:{' '}
+                      </span>
+                      {feeling.examples[0]}
+                    </p>
                   )}
-                </div>
+                </li>
               ))}
-            </div>
-
-            {filteredFeelings.length === 0 && savedFeelings.length > 0 && (
-              <div className="text-center py-12 text-brown-700">
-                No feelings found matching your filters.
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </main>
+            </ul>
+          ) : (
+            <p className="text-brown-700">
+              None of your saved feelings match. Try another search or family.
+            </p>
+          )}
+        </div>
+      )}
+    </FeelingsPage>
   )
 }

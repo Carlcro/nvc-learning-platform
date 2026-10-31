@@ -1,126 +1,92 @@
 import { useQuery } from 'convex/react'
 import { Link } from '@tanstack/react-router'
 import { api } from '../../../../convex/_generated/api'
-import { Card, CardBody } from '~/components/ui/Card'
-import { Button } from '~/components/ui/Button'
-import { CheckIcon } from '~/components/ui/Icons'
+import { Card } from '~/components/ui/Card'
+import {
+  PRIMARY_LINK_CLASS,
+  QUIET_LINK_CLASS,
+  challengeDifficultyLabel,
+  useNextChallengeTime,
+} from '~/components/features/challenges/challengeDisplay'
 
+/**
+ * Today's challenge as one calm block on the landing page: a heading, the
+ * situation, one quiet line of detail and one action. Works signed out too;
+ * the action then leads into sign-in.
+ */
 export function DailyChallengeTeaser() {
   const challenge = useQuery(api.dailyChallenges.getDailyChallenge)
+  const nextTime = useNextChallengeTime()
 
   if (challenge === undefined) {
+    // Holds the block's space without announcing a wait.
     return (
-      <Card className="animate-pulse h-48">
-        <CardBody className="flex items-center justify-center">
-          <div className="text-brown-400">Loading daily challenge...</div>
-        </CardBody>
+      <Card className="p-6 sm:p-8" aria-busy="true">
+        <h2 className="text-2xl font-bold text-brown-800 text-balance">
+          Today's practice
+        </h2>
+        <div aria-hidden="true" className="mt-4 space-y-2">
+          <div className="h-5 w-full rounded bg-giraffe-50" />
+          <div className="h-5 w-4/5 rounded bg-giraffe-50" />
+        </div>
       </Card>
     )
   }
 
   if (challenge === null) {
     return (
-      <Card className="bg-linear-to-br from-giraffe-50 to-white border-2 border-giraffe-200">
-        <CardBody className="text-center py-8">
-          <h3 className="text-xl font-bold text-brown-800 mb-2">
-            No Challenge for Today
-          </h3>
-          <p className="text-brown-600">
-            A new challenge arrives every day. Check back soon!
-          </p>
-        </CardBody>
+      <Card className="p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-brown-800 text-balance">
+          Today's practice
+        </h2>
+        <p className="mt-3 max-w-prose text-brown-700 text-pretty">
+          Today's situation is still on its way. In the meantime, every
+          practice scenario is open to you.
+        </p>
+        <Link to="/practice" className={`${QUIET_LINK_CLASS} mt-4 inline-block`}>
+          Browse practice scenarios
+        </Link>
       </Card>
     )
   }
 
+  const difficulty = challengeDifficultyLabel(challenge.difficulty)
+
   return (
-    <Card
-      className={`border-2 transition-colors duration-200 ${
-        challenge.completed
-          ? 'border-empathy-high/40 bg-empathy-high/10'
-          : 'border-giraffe-200 bg-white'
-      }`}
-    >
-      <CardBody className="py-6">
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-giraffe-800 bg-giraffe-100 px-2.5 py-1 rounded-full">
-              Daily focus
-            </span>
-            <DifficultyBadge difficulty={challenge.difficulty} />
-            {challenge.completed && (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-brown-800 bg-empathy-high/20 px-2.5 py-1 rounded-full">
-                <CheckIcon className="w-3.5 h-3.5" /> Completed
-                {challenge.completedScore !== null &&
-                  ` with ${challenge.completedScore}/100`}
-              </span>
-            )}
-          </div>
+    <Card className="p-6 sm:p-8">
+      <h2 className="text-2xl font-bold text-brown-800 text-balance">
+        Today's practice
+      </h2>
+      <p className="mt-3 max-w-prose text-lg text-brown-700 leading-relaxed text-pretty break-words">
+        {challenge.description}
+      </p>
 
-          {/* Reward chip: a contained, warm marker, not floating text */}
-          <div className="inline-flex items-baseline gap-1 rounded-full bg-giraffe-100 px-3 py-1">
-            <span className="text-base font-bold text-giraffe-800 leading-none">
-              +{challenge.bonusPoints}
-            </span>
-            <span className="text-xs font-medium text-giraffe-700 leading-none">
-              pts
-            </span>
-          </div>
-        </div>
-
-        <h3 className="text-xl font-bold text-brown-800 mb-2">
-          Daily Challenge
-        </h3>
-
-        <p className="text-brown-700 mb-6 text-lg leading-relaxed">
-          {challenge.description}
+      {challenge.completed ? (
+        <p className="mt-6 text-brown-700">
+          <span className="font-semibold text-brown-800">
+            You finished today's challenge.
+          </span>
+          {nextTime && ` A new one arrives at ${nextTime}.`}{' '}
+          <Link to="/challenges/daily" className={QUIET_LINK_CLASS}>
+            See today's challenges
+          </Link>
         </p>
-
-        <div className="flex flex-wrap gap-3 justify-between items-center">
-          <div className="text-sm text-brown-500">Expires at midnight</div>
-
-          {challenge.completed ? (
-            <Button
-              variant="secondary"
-              disabled
-              className="opacity-60 cursor-default"
-            >
-              Challenge complete
-            </Button>
-          ) : (
-            <Link
-              to="/practice/$scenarioId/brief"
-              params={{ scenarioId: challenge.scenarioId }}
-              search={{ dailyChallengeId: challenge._id }}
-            >
-              <Button variant="primary">Start Practice</Button>
-            </Link>
-          )}
+      ) : (
+        <div className="mt-6 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-brown-600">
+            {difficulty}, worth {challenge.bonusPoints} bonus points
+            {nextTime ? `. New challenge at ${nextTime}.` : '.'}
+          </p>
+          <Link
+            to="/practice/$scenarioId/brief"
+            params={{ scenarioId: challenge.scenarioId }}
+            search={{ dailyChallengeId: challenge._id }}
+            className={`${PRIMARY_LINK_CLASS} w-full sm:w-auto`}
+          >
+            Start today's practice
+          </Link>
         </div>
-      </CardBody>
+      )}
     </Card>
-  )
-}
-
-const DIFFICULTY_STYLES: Record<string, string> = {
-  easy: 'text-brown-700 bg-empathy-high/15',
-  medium: 'text-giraffe-800 bg-giraffe-100',
-  hard: 'text-brown-700 bg-brown-100',
-}
-
-/**
- * A gentle difficulty marker: a calm, on-palette pill in warm tints only,
- * never an alarming signal color.
- */
-function DifficultyBadge({ difficulty }: { difficulty: string }) {
-  const tone = DIFFICULTY_STYLES[difficulty] ?? DIFFICULTY_STYLES.medium
-  const label = difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
-
-  return (
-    <span
-      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tone}`}
-    >
-      {label}
-    </span>
   )
 }

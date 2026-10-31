@@ -1,14 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { useMemo, useState } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
-import { BackButton } from '~/components/ui/BackButton'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
+import { FeelingsPage } from '~/components/features/feelings/FeelingsPage'
+import { OptionButton } from '~/components/features/feelings/OptionButton'
+import {
+  INTENSITY_WORDS,
+  intensityWord,
+} from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/intensity')({
   head: () => ({
     meta: pageMeta({
-      title: 'Feeling Intensity',
+      title: 'Feeling intensity',
       description:
         'See how a feeling shifts as its intensity rises and falls.',
     }),
@@ -19,176 +26,190 @@ export const Route = createFileRoute('/feelings/intensity')({
 function IntensityExplorer() {
   const [selectedFamily, setSelectedFamily] = useState('angry')
   const [intensityLevel, setIntensityLevel] = useState(3)
+  // A word chosen from the spectrum list, when several share one step.
+  const [chosenWord, setChosenWord] = useState<string | null>(null)
 
-  // Queries
   const families = useQuery(api.feelings.getFamilies)
   const familyFeelings = useQuery(api.feelings.listByFamily, {
     family: selectedFamily,
   })
 
-  // Find feeling at current intensity
-  const currentFeeling = useMemo(() => {
-    if (!familyFeelings) return null
-    // Find feeling with closest intensity to selected level
-    // If multiple exist, pick the first one (or could be random)
-    return (
-      familyFeelings.find((f) => f.intensity === intensityLevel) ||
-      familyFeelings.find(
-        (f) => Math.abs(f.intensity - intensityLevel) === 0.5,
-      ) || // Handle potential half steps if any
-      null
-    )
-  }, [familyFeelings, intensityLevel])
-
-  // Get all feelings in this family sorted by intensity for the spectrum view
   const sortedFeelings = useMemo(() => {
     if (!familyFeelings) return []
     return [...familyFeelings].sort((a, b) => a.intensity - b.intensity)
   }, [familyFeelings])
 
+  const currentFeeling = useMemo(() => {
+    const atLevel = sortedFeelings.filter((f) => f.intensity === intensityLevel)
+    if (atLevel.length === 0) return null
+    return atLevel.find((f) => f.word === chosenWord) ?? atLevel[0]
+  }, [sortedFeelings, intensityLevel, chosenWord])
+
   if (families === undefined) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper flex items-center justify-center">
-        <p className="text-brown-700">Loading...</p>
-      </div>
-    )
+    return <GiraffeLoader message="Gathering feelings..." />
   }
 
+  const levelWord = intensityWord(intensityLevel)
+
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-      {/* Header */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
-        <BackButton to="/feelings/wheel" label="Wheel" />
-        <h1 className="text-3xl font-bold text-brown-800 mb-2 mt-2">
-          Intensity Explorer
-        </h1>
-        <p className="text-brown-700">
-          Understand how feelings exist on a spectrum from mild to intense
+    <FeelingsPage
+      title="How strong is it?"
+      intro={
+        <p>
+          The same feeling can be faint or intense. Choose a family, then move
+          along the scale to find the word that matches how much you feel.
         </p>
-      </section>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left: Family Selector */}
-          <div className="md:col-span-1 space-y-4">
-            <h3 className="text-lg font-bold text-brown-800">
-              Select a Family
-            </h3>
-            <div className="flex flex-col gap-2">
-              {families.map((family) => (
-                <button
-                  key={family}
-                  onClick={() => setSelectedFamily(family)}
-                  className={`
-                    px-4 py-3 rounded-lg font-medium capitalize text-left transition-all
-                    ${
-                      selectedFamily === family
-                        ? 'bg-giraffe-400 text-brown-800 shadow-md transform scale-105'
-                        : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:border-giraffe-300 hover:bg-giraffe-50'
-                    }
-                  `}
-                >
-                  {family}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: Intensity Slider & Display */}
-          <div className="md:col-span-2 space-y-8">
-            {/* Visualization of Spectrum */}
-            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-brown-800 mb-8 capitalize text-center">
-                {selectedFamily} Spectrum
-              </h2>
-
-              {/* Slider Component */}
-              <div className="relative mb-12 px-4">
-                <div className="h-4 bg-gradient-to-r from-giraffe-100 via-giraffe-300 to-empathy-low rounded-full w-full absolute top-1/2 -translate-y-1/2 left-0 right-0 -z-0" />
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  value={intensityLevel}
-                  onChange={(e) => setIntensityLevel(parseInt(e.target.value))}
-                  className="w-full h-4 bg-transparent appearance-none cursor-pointer relative z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-giraffe-500 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
-                />
-                <div className="flex justify-between mt-4 text-sm font-semibold text-brown-700">
-                  <span>Mild</span>
-                  <span>Moderate</span>
-                  <span>Intense</span>
-                </div>
-              </div>
-
-              {/* Selected Feeling Display */}
-              <div className="text-center transition-all duration-300">
-                {currentFeeling ? (
-                  <div className="space-y-4 animate-in fade-in zoom-in duration-300">
-                    <div className="inline-block px-6 py-2 bg-giraffe-100 rounded-full text-brown-700 font-semibold mb-2">
-                      Intensity Level: {intensityLevel}
-                    </div>
-                    <h3 className="text-5xl font-bold text-brown-800 capitalize mb-4">
-                      {currentFeeling.word}
-                    </h3>
-                    <p className="text-xl text-brown-700 italic max-w-lg mx-auto">
-                      "{currentFeeling.definition}"
-                    </p>
-                    {currentFeeling.examples.length > 0 && (
-                      <div className="mt-6 p-4 bg-giraffe-50 rounded-lg border border-giraffe-100 text-left">
-                        <p className="font-semibold text-brown-800 mb-2">
-                          Example:
-                        </p>
-                        <p className="text-brown-700">
-                          "{currentFeeling.examples[0]}"
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="py-12 text-brown-600 italic">
-                    No feeling found for this intensity level.
-                    <br />
-                    Try moving the slider!
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Full Spectrum List */}
-            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
-              <h3 className="font-bold text-brown-800 mb-4">
-                Full Spectrum for {selectedFamily}
-              </h3>
-              <div className="flex flex-wrap gap-2 items-center justify-center">
-                {sortedFeelings.map((feeling, idx) => (
-                  <div
-                    key={feeling.word}
-                    className="flex items-center"
-                    onClick={() => setIntensityLevel(feeling.intensity)}
-                  >
-                    <div
-                      className={`
-                        cursor-pointer px-3 py-1.5 rounded-lg transition-all
-                        ${
-                          feeling.intensity === intensityLevel
-                            ? 'bg-giraffe-400 text-brown-800 font-bold shadow-md transform scale-110'
-                            : 'bg-giraffe-50 text-brown-700 hover:bg-giraffe-100'
-                        }
-                      `}
-                    >
-                      {feeling.word}
-                    </div>
-                    {idx < sortedFeelings.length - 1 && (
-                      <span className="mx-2 text-brown-400">→</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+      }
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-1">
+          <h2
+            id="family-heading"
+            className="text-sm font-semibold text-brown-700 mb-2"
+          >
+            Families
+          </h2>
+          <div
+            role="group"
+            aria-labelledby="family-heading"
+            className="grid grid-cols-2 md:grid-cols-1 gap-2"
+          >
+            {families.map((family) => (
+              <OptionButton
+                key={family}
+                pressed={selectedFamily === family}
+                onClick={() => {
+                  setSelectedFamily(family)
+                  setChosenWord(null)
+                }}
+                className="capitalize"
+              >
+                {family}
+              </OptionButton>
+            ))}
           </div>
         </div>
+
+        <div className="md:col-span-2 space-y-8">
+          <section
+            aria-labelledby="scale-heading"
+            className="rounded-lg border-2 border-giraffe-200 bg-white p-5 sm:p-8"
+          >
+            <h2
+              id="scale-heading"
+              className="text-xl font-bold text-brown-800 mb-6"
+            >
+              {selectedFamily.charAt(0).toUpperCase() + selectedFamily.slice(1)}
+              , from faint to intense
+            </h2>
+
+            <label
+              htmlFor="intensity-slider"
+              className="block text-sm font-semibold text-brown-700 mb-3"
+            >
+              How strong
+            </label>
+            <input
+              id="intensity-slider"
+              type="range"
+              min={1}
+              max={5}
+              step={1}
+              value={intensityLevel}
+              aria-valuetext={
+                currentFeeling
+                  ? `${levelWord}: ${currentFeeling.word}`
+                  : levelWord
+              }
+              onChange={(e) => {
+                setIntensityLevel(parseInt(e.target.value, 10))
+                setChosenWord(null)
+              }}
+              className="w-full h-3 rounded-full bg-giraffe-200 appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-400 focus-visible:ring-offset-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brown-700 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brown-700 [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white"
+            />
+            <div
+              aria-hidden="true"
+              className="mt-3 flex justify-between text-xs sm:text-sm text-brown-700"
+            >
+              {INTENSITY_WORDS.map((word, index) => (
+                <span
+                  key={word}
+                  className={
+                    index + 1 === intensityLevel
+                      ? 'font-bold text-brown-900'
+                      : ''
+                  }
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+
+            <div aria-live="polite" className="mt-10">
+              {currentFeeling ? (
+                <div className="max-w-prose">
+                  <p className="text-sm font-semibold text-brown-700">
+                    {levelWord}
+                  </p>
+                  <p className="text-4xl sm:text-5xl font-bold text-brown-800 capitalize tracking-tight">
+                    {currentFeeling.word}
+                  </p>
+                  <p className="mt-4 text-lg text-brown-700 text-pretty">
+                    {currentFeeling.definition}
+                  </p>
+                  {currentFeeling.examples.length > 0 && (
+                    <p className="mt-4 text-brown-700 text-pretty">
+                      <span className="font-semibold text-brown-800">
+                        In a sentence:{' '}
+                      </span>
+                      {currentFeeling.examples[0]}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-brown-700 text-pretty">
+                  No word in this family sits at {levelWord.toLowerCase()} yet.
+                  Try a step softer or stronger.
+                </p>
+              )}
+            </div>
+          </section>
+
+          {sortedFeelings.length > 0 && (
+            <section aria-labelledby="spectrum-heading">
+              <h2
+                id="spectrum-heading"
+                className="text-lg font-bold text-brown-800 mb-3"
+              >
+                Every word in this family, softest first
+              </h2>
+              <ol className="flex flex-wrap items-center gap-x-1 gap-y-2">
+                {sortedFeelings.map((feeling, idx) => (
+                  <li key={feeling.word} className="flex items-center gap-1">
+                    <OptionButton
+                      pressed={currentFeeling?.word === feeling.word}
+                      onClick={() => {
+                        setIntensityLevel(feeling.intensity)
+                        setChosenWord(feeling.word)
+                      }}
+                      aria-label={`${feeling.word}, ${intensityWord(feeling.intensity).toLowerCase()}`}
+                      className="capitalize"
+                    >
+                      {feeling.word}
+                    </OptionButton>
+                    {idx < sortedFeelings.length - 1 && (
+                      <ChevronRight
+                        aria-hidden="true"
+                        className="h-4 w-4 text-brown-500"
+                      />
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
       </div>
-    </main>
+    </FeelingsPage>
   )
 }
