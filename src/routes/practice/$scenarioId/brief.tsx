@@ -10,7 +10,7 @@ import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { StarIcon } from '~/components/ui/Icons'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
   head: ({ match }) => {
@@ -61,8 +61,10 @@ function ScenarioBrief() {
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
 
+  const locale = useLocale()
   const scenario = useQuery(api.scenarios.getById, {
     scenarioId: scenarioId as Id<'scenarios'>,
+    locale,
   })
 
   const userProgress = useQuery(api.scenarioProgress.getScenarioProgress, {
@@ -120,6 +122,7 @@ function ScenarioBrief() {
 
       const conversationId = await createConversation({
         scenarioId: scenarioId as Id<'scenarios'>,
+        locale,
       })
 
       navigate({

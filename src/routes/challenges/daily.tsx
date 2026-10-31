@@ -14,7 +14,7 @@ import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { pageMeta } from '~/lib/seo'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/challenges/daily')({
   head: ({ match }) => {
@@ -57,7 +57,8 @@ function DailyShell({ children }: { children: ReactNode }) {
 
 function DailyChallengeContent() {
   const t = useT()
-  const myChallenge = useQuery(api.dailyChallenges.getMyChallenge)
+  const locale = useLocale()
+  const myChallenge = useQuery(api.dailyChallenges.getMyChallenge, { locale })
   const stats = useQuery(api.dailyChallenges.getUserChallengeStats)
   const getOrCreateProgress = useMutation(api.userProgress.getOrCreate)
 
@@ -70,7 +71,9 @@ function DailyChallengeContent() {
 
   const scenario = useQuery(
     api.scenarios.getById,
-    myChallenge?.scenarioId ? { scenarioId: myChallenge.scenarioId } : 'skip',
+    myChallenge?.scenarioId
+      ? { scenarioId: myChallenge.scenarioId, locale }
+      : 'skip',
   )
 
   if (myChallenge === undefined) {

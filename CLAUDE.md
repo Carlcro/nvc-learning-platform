@@ -314,6 +314,14 @@ The app is being made available in English, French, Spanish and Swedish. The cod
 - **Achievements** are shown from `t.achievements[id]`; a test keeps them in step with the server catalog.
 - The admin panel stays English only.
 
+**Roleplay in the chosen language**:
+- A conversation's language is fixed when it starts (`conversations.locale`, absent means English). `conversations.create` takes the reader's `locale` and holds the conversation in it when the scenario exists in that language, otherwise in the scenario's own (`conversationLocaleFor`). The character, the coaching and the reflection all follow `conversation.locale`, never the current interface language, and the conversation and transcript screens read the scenario in that same language so names match.
+- Scenario words that change with the language are `ScenarioText` (`convex/lib/scenarioText.ts`); `localizeScenario(scenario, locale)` returns them plus `contentLocale`. Built-in scenarios keep their translations in code, in `convex/scenarioTranslations/{fr,es,sv}.ts`, keyed by English title (a test checks every built-in has every language). Daily challenges store `translations` on the row: the cron writes them in English, then adapts them into each language in parallel; a language that fails plays in English that day. A custom scenario is written in its creator's language (`scenarios.locale`) and stays in it.
+- Scenario queries (`getById`, `listByOrder`, `listMine`, the daily challenge queries) take an optional `locale`; pass `useLocale()`.
+- Prompts stay in English. The per-language notes (which language to write in, how that language disguises a thought as a feeling, tu or du, gender-neutral phrasing toward the learner, punctuation) live in `convex/lib/promptLanguage.ts`. Characters get local names. In French and Spanish we address the learner as tu and tú.
+- Someone who writes in another language than the conversation's is scored as usual; the analysis reports `writtenInConversationLanguage`, and when it is false the server shows the fixed `languageNudge` instead of the usual hint.
+- After changing a scoring prompt, check that the same message still scores the same in every language: `npx convex run scoreCalibration:run` (about twenty model calls).
+
 ### Task: Create a New UI Component
 
 1. **Check if a similar component exists** in `src/components/`

@@ -11,7 +11,7 @@ import { Button } from '~/components/ui/Button'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { pickRecommendedScenario } from '~/lib/conversationInsights'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/practice/')({
   head: ({ match }) => {
@@ -71,12 +71,13 @@ function PracticeHub() {
   // Fetch scenarios ordered by index. Keep the raw value so we can tell
   // "still loading" (undefined) apart from "loaded, but empty" ([]) - otherwise
   // the empty-state copy flashes before data arrives.
-  const scenariosResult = useConvexQuery(api.scenarios.listByOrder)
+  const locale = useLocale()
+  const scenariosResult = useConvexQuery(api.scenarios.listByOrder, { locale })
   const isLoadingScenarios = scenariosResult === undefined
   const scenarios = scenariosResult ?? []
 
   // Fetch the user's own scenarios (shaped from real situations in their life)
-  const myScenarios = useConvexQuery(api.scenarios.listMine) ?? []
+  const myScenarios = useConvexQuery(api.scenarios.listMine, { locale }) ?? []
 
   // Fetch user's per-scenario progress (status, best scores, stars)
   const userProgress =

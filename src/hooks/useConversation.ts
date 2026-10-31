@@ -22,7 +22,7 @@ import type { Celebration } from '~/components/features/roleplay/MilestoneCelebr
 import type { NVCComponent } from '~/lib/conversationInsights'
 import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 import { userFacingMessage } from '~/lib/errorMessage'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 import { localDateString } from '~/lib/localDate'
 
 // ---------------------------------------------------------------------------
@@ -148,20 +148,32 @@ export function useConversation({
 }: UseConversationArgs) {
   const navigate = useNavigate()
   const t = useT()
+  const locale = useLocale()
 
   // --- Data --------------------------------------------------------------
   const currentUser = useQuery(api.users.getCurrentUser)
   const overallProgress = useQuery(api.userProgress.getByUserId)
   const userLevel = overallProgress?.level ?? 1
 
-  const scenario = useQuery(api.scenarios.getById, {
-    scenarioId: scenarioId as Id<'scenarios'>,
-  })
-
   const conversation = useQuery(
     api.conversations.getById,
     conversationId
       ? { conversationId: conversationId as Id<'conversations'> }
+      : 'skip',
+  )
+
+  // The scenario is read in the conversation's own language, so the
+  // character's name and the setup match what is said, whatever language
+  // the interface is in now.
+  const conversationLocale = conversationId
+    ? conversation === undefined
+      ? undefined
+      : (conversation?.locale ?? 'en')
+    : locale
+  const scenario = useQuery(
+    api.scenarios.getById,
+    conversationLocale
+      ? { scenarioId: scenarioId as Id<'scenarios'>, locale: conversationLocale }
       : 'skip',
   )
 
@@ -372,6 +384,7 @@ export function useConversation({
 
         const newConversationId = await createConversation({
           scenarioId: scenarioId as Id<'scenarios'>,
+          locale,
         })
 
         // Resetting these here keeps the results screen from flashing before the

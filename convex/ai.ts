@@ -15,6 +15,15 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
+import { DEFAULT_LOCALE, localeValidator } from './lib/locale'
+import {
+  characterLanguageNotes,
+  coachLanguageNotes,
+  languageName,
+  languageNudge,
+  scenarioLanguageNotes,
+  writingRules,
+} from './lib/promptLanguage'
 import { MAX_HISTORY_MESSAGES, MAX_USER_TURNS } from './lib/limits'
 import { CHARACTER_MODEL, MODEL, callRecord } from './lib/modelUsage'
 import { action } from './_generated/server'
@@ -22,6 +31,7 @@ import { internal } from './_generated/api'
 import type { ActionCtx } from './_generated/server'
 import type { Id } from './_generated/dataModel'
 import type { ModelCallRecord } from './lib/modelUsage'
+import type { Locale } from './lib/locale'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -82,6 +92,7 @@ export interface NVCAnalysisResult {
   giraffeAlternative: string
   whatWentWell: string
   empathyShown: boolean
+  writtenInConversationLanguage: boolean
 }
 
 interface ConversationMessage {
@@ -126,6 +137,7 @@ const nvcAnalysisSchema = {
     giraffeAlternative: { type: 'string' },
     whatWentWell: { type: 'string' },
     empathyShown: { type: 'boolean' },
+    writtenInConversationLanguage: { type: 'boolean' },
   },
   required: [
     'observation',
@@ -139,6 +151,7 @@ const nvcAnalysisSchema = {
     'giraffeAlternative',
     'whatWentWell',
     'empathyShown',
+    'writtenInConversationLanguage',
   ],
   additionalProperties: false,
 } as const
@@ -281,7 +294,7 @@ export const submitTurn = action({
       userError('conversationNotFound')
     }
 
-    const { conversation, scenario, userLevel, userTurnCount } = turn
+    const { conversation, locale, scenario, userLevel, userTurnCount } = turn
 
     if (userTurnCount >= MAX_USER_TURNS) {
       userError('conversationAtTurnLimit')
@@ -319,6 +332,7 @@ export const submitTurn = action({
         userLevel,
         arcSoFar,
         scenario,
+        locale,
         onUsage: (call) => calls.push(call),
       }),
       generateCharacterReply({
@@ -327,6 +341,7 @@ export const submitTurn = action({
         userLevel,
         arcSoFar,
         scenario,
+        locale,
         currentMood: conversation.currentCharacterMood,
         onUsage: (call) => calls.push(call),
       }),
@@ -368,12 +383,13 @@ export const submitTurn = action({
 // NVC ANALYSIS (internal helper)
 // ============================================================================
 
-async function analyzeMessage(args: {
+export async function analyzeMessage(args: {
   userMessage: string
   history: Array<ConversationMessage>
   userLevel: number
   arcSoFar: ArcSoFar
   scenario: TurnScenario
+  locale: Locale
   onUsage: (call: ModelCallRecord) => void
 }): Promise<NVCAnalysisResult> {
   const conversationContext =
@@ -442,8 +458,10 @@ Anchors:
 - 50-69: mixed, real effort but noticeable jackal elements or a stalled move
 - 0-49: mostly jackal, blame, judgment, demands, or defensiveness dominate
 
+${coachLanguageNotes(args.locale)}
+
 ### Writing the Feedback (read carefully)
-Write every text field in plain, warm, spoken English. Do NOT use markdown, asterisks, bold, headings, or bullet characters. Never use em dashes or en dashes; use a comma or a period instead. Keep sentences short and easy to read at a glance.
+${writingRules(args.locale)} Keep sentences short and easy to read at a glance.
 
 - whatWentWell: name the single best thing in THIS message, in one specific, encouraging sentence (max 15 words). Always find something genuine, even in a weak message.
 - feedback: the ONE most useful next move, in a single short sentence (max 22 words). This is the heart of the coaching. Give a HINT, not a script: point them in a direction or ask a guiding question (for example "what's underneath that frustration?") so they discover their own words. NEVER hand them a phrase to copy or say. Use the progress summary: steer them toward the earliest piece they have NOT yet expressed in this conversation (observation, then feeling, then need, then request). An observation is only worth steering toward early on: once a feeling or need is on the table, move forward rather than back. If all pieces are present, help them sharpen or invite curiosity about the other person. Phrase it as an inviting nudge, never a correction, and do not restate what they already did well.
@@ -490,6 +508,11 @@ Score this single turn in context (components only for what it attempts, total f
   const analysis = parsed as NVCAnalysisResult
   return {
     ...analysis,
+    // Someone who drifts into another language is invited back, gently and
+    // the same way every time, rather than coached past it.
+    feedback: analysis.writtenInConversationLanguage
+      ? analysis.feedback
+      : languageNudge(args.locale, args.scenario.characterName),
     observation: clampScore(analysis.observation, 25),
     feeling: clampScore(analysis.feeling, 25),
     need: clampScore(analysis.need, 25),
@@ -525,12 +548,13 @@ function describeMood(mood: number): string {
  * level. Deliberately independent of the NVC analysis so both model calls can
  * run in parallel.
  */
-async function generateCharacterReply(args: {
+export async function generateCharacterReply(args: {
   userMessage: string
   history: Array<ConversationMessage>
   userLevel: number
   arcSoFar: ArcSoFar
   scenario: TurnScenario
+  locale: Locale
   currentMood: number
   onUsage: (call: ModelCallRecord) => void
 }): Promise<string> {
@@ -582,7 +606,7 @@ BEHAVIORAL RULES:
 3. ${patienceGuidance}
 4. Show realistic emotions - you have defensiveness, hopes, fears, and needs
 5. Keep responses natural and conversational: one or two short sentences, three at the very most
-6. Use natural dialogue patterns - contractions, casual speech. Never use em dashes; use commas or periods instead
+6. Use natural, casual dialogue. Never use em dashes; use commas or periods instead
 7. Progress gradually from your current emotional state - one message doesn't completely transform you
 8. Show you're listening by referencing what they said
 9. Don't be perfectly rational - let emotions guide reactions
@@ -592,7 +616,9 @@ IMPORTANT REMINDERS:
 - Never teach NVC explicitly
 - Never acknowledge any scoring system
 - Show character growth through openness, not through explaining yourself
-- React to both what they say AND how they say it${closingGuidance}`
+- React to both what they say AND how they say it
+
+${characterLanguageNotes(args.locale)}${closingGuidance}`
 
   const history: Array<Anthropic.MessageParam> = args.history.map((msg) => ({
     role: msg.role === 'assistant' ? 'assistant' : 'user',
@@ -674,7 +700,7 @@ export const generateReflection = action({
     if (!loaded) {
       userError('conversationNotFound')
     }
-    const { conversation, scenario } = loaded
+    const { conversation, locale, scenario } = loaded
     if (conversation.reflection) return conversation.reflection
 
     // The turn with the most room to grow.
@@ -713,9 +739,9 @@ Rules for the rewrite:
 - No blame, labels, "always" or "never", and no "you make me feel".
 
 Rules for the why:
-- One short, warm sentence (max 25 words) naming the single change that matters most and why it lands more gently. Speak to the learner as "you".
+- One short, warm sentence (max 25 words) naming the single change that matters most and why it lands more gently, spoken directly to the learner.
 
-Plain spoken English only. No markdown, no quotation marks around the rewrite, and never use em dashes or en dashes.`
+The conversation was held in ${languageName(locale)}: write both the rewrite and the why in ${languageName(locale)}. ${writingRules(locale)} No quotation marks around the rewrite.`
 
     const userPrompt = `### The Scenario
 The learner was talking with ${scenario.characterName}. The setup: ${scenario.situation}
@@ -790,6 +816,8 @@ export const assessScenarioReadiness = action({
       v.object({ question: v.string(), answer: v.string() }),
     ),
     roundsSoFar: v.number(),
+    // The language the person is using the app in; the questions follow it.
+    locale: v.optional(localeValidator),
   },
   handler: async (ctx, args): Promise<ScenarioReadinessResult> => {
     const userId = await getAuthUserId(ctx)
@@ -826,7 +854,9 @@ Your only job right now is to decide whether you have enough concrete detail to 
 
 If any of these is thin or missing, write up to 3 short, specific, gentle follow-up questions that fill exactly those gaps. Never ask about something they already shared. Keep questions plain and human, the way a caring friend would ask. Do not give advice, do not teach, and do not name any communication method.
 
-If you already have enough to build a realistic partner, say it is ready and return no questions.`
+If you already have enough to build a realistic partner, say it is ready and return no questions.
+
+Write the questions in ${languageName(args.locale ?? DEFAULT_LOCALE)}. ${writingRules(args.locale ?? DEFAULT_LOCALE)}`
 
     const userPrompt = `The person described their situation:
 "${args.userDescription}"
@@ -889,6 +919,8 @@ export const generateCustomScenario = action({
   args: {
     userDescription: v.string(),
     answers: v.array(v.object({ question: v.string(), answer: v.string() })),
+    // The language to write the scenario in: the person's own.
+    locale: v.optional(localeValidator),
   },
   handler: async (ctx, args): Promise<CustomScenarioResult> => {
     const userId = await getAuthUserId(ctx)
@@ -928,7 +960,8 @@ Guidelines:
 - Choose category, difficulty, learningObjectives (a subset of observation, feeling, need, request), and a short snake_case focusArea that best fit.
 - Write "description" and "title" warmly and encouragingly.
 - Never invent graphic, abusive, or unsafe specifics the person did not provide. If the situation is emotionally heavy, keep the character firm but never cruel, and keep everything safe and non-judgmental.
-- Never use emojis. Never mention any communication method, coaching, or that this is generated.`
+- Never use emojis. Never use em dashes or en dashes. Never mention any communication method, coaching, or that this is generated.
+${scenarioLanguageNotes(args.locale ?? DEFAULT_LOCALE)}`
 
     const userPrompt = `The person wants to rehearse this conversation:
 "${args.userDescription}"

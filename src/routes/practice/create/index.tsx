@@ -12,7 +12,7 @@ import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { getMessages } from '~/i18n/messages'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/practice/create/')({
   head: ({ match }) => {
@@ -250,6 +250,7 @@ function buildSeedAnswers(
 
 function ScenarioCreate() {
   const t = useT()
+  const locale = useLocale()
   const copy = t.practice.create
   const navigate = useNavigate()
   const currentUser = useQuery(api.users.getCurrentUser)
@@ -310,6 +311,7 @@ function ScenarioCreate() {
       const scenario = (await generateScenario({
         userDescription,
         answers: [...buildSeedAnswers(answers, copy), ...clarify],
+        locale,
       })) as GeneratedScenario
       if (isStale(epoch)) return
       setGenerated(scenario)
@@ -344,6 +346,7 @@ function ScenarioCreate() {
         userDescription,
         priorAnswers: buildSeedAnswers(answers, copy),
         roundsSoFar: 0,
+        locale,
       })
       if (isStale(epoch)) return
       setRounds(1)
@@ -385,6 +388,7 @@ function ScenarioCreate() {
         userDescription,
         priorAnswers: [...buildSeedAnswers(answers, copy), ...newThread],
         roundsSoFar: rounds,
+        locale,
       })
       if (isStale(epoch)) return
       setRounds(rounds + 1)
@@ -416,10 +420,11 @@ function ScenarioCreate() {
       const scenarioId = await createCustom({
         ...rest,
         title: editedTitle.trim() || generated.title,
+        locale,
       })
 
       await initializeScenarioProgress({ scenarioId })
-      const conversationId = await createConversation({ scenarioId })
+      const conversationId = await createConversation({ scenarioId, locale })
 
       navigate({
         to: `/practice/${scenarioId as Id<'scenarios'>}/conversation/${conversationId}`,

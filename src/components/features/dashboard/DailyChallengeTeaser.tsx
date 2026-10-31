@@ -8,7 +8,7 @@ import {
   challengeDifficultyLabel,
   useNextChallengeTime,
 } from '~/components/features/challenges/challengeDisplay'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 /**
  * Today's challenge as one calm block on the landing page: a heading, the
@@ -18,7 +18,8 @@ import { useT } from '~/i18n/useT'
 export function DailyChallengeTeaser() {
   const t = useT()
   const teaser = t.home.dailyTeaser
-  const challenge = useQuery(api.dailyChallenges.getDailyChallenge)
+  const locale = useLocale()
+  const challenge = useQuery(api.dailyChallenges.getDailyChallenge, { locale })
   const nextTime = useNextChallengeTime()
 
   if (challenge === undefined) {

@@ -31,15 +31,22 @@ function TranscriptPage() {
   const t = useT()
   const copy = t.results.transcript
 
-  const scenario = useQuery(api.scenarios.getById, {
-    scenarioId: scenarioId as Id<'scenarios'>,
-  })
-
   const conversation = useQuery(
     api.conversations.getById,
     conversationId
       ? { conversationId: conversationId as Id<'conversations'> }
       : 'skip',
+  )
+
+  // Read in the conversation's language, so names match what was said.
+  const scenario = useQuery(
+    api.scenarios.getById,
+    conversation === undefined
+      ? 'skip'
+      : {
+          scenarioId: scenarioId as Id<'scenarios'>,
+          locale: conversation?.locale ?? 'en',
+        },
   )
 
   const fromResults = from === 'results'

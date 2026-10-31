@@ -4,6 +4,10 @@ import Anthropic from '@anthropic-ai/sdk'
 import { internalAction } from './_generated/server'
 import { internal } from './_generated/api'
 import { MODEL, callRecord } from './lib/modelUsage'
+import { LOCALES } from './lib/locale'
+import { adaptationNotes } from './lib/promptLanguage'
+import type { Locale } from './lib/locale'
+import type { ScenarioText, ScenarioTranslations } from './lib/scenarioText'
 import type { ActionCtx } from './_generated/server'
 
 /**
@@ -35,6 +39,8 @@ interface GeneratedScenario {
   aiOpeningMessage: string
   learningObjectives: Array<string>
   focusArea: string
+  /** The same scenario in the other languages, where adapting it worked. */
+  translations?: ScenarioTranslations
 }
 
 /**
@@ -44,9 +50,154 @@ interface GeneratedScenario {
 export const generateThreeScenarios = internalAction({
   args: {},
   handler: async (ctx) => {
-    return await generateThreeScenariosFn(ctx)
+    const scenarios = await generateThreeScenariosFn(ctx)
+    return await addTranslations(ctx, scenarios)
   },
 })
+
+async function recordCronCall(
+  ctx: ActionCtx,
+  usage: Anthropic.Messages.Usage,
+): Promise<void> {
+  // The cron belongs to no user, so this is logged without one. Bookkeeping
+  // only: a failed write here must not cost us the night's challenges.
+  try {
+    await ctx.runMutation(internal.usage.recordModelCalls, {
+      calls: [callRecord('daily_challenges', MODEL, usage)],
+    })
+  } catch (error) {
+    console.error('Failed to record model usage:', error)
+  }
+}
+
+// ============================================================================
+// TRANSLATION
+// ============================================================================
+
+const TEXT_FIELDS = [
+  'title',
+  'description',
+  'situation',
+  'characterName',
+  'characterPersonality',
+  'characterBackground',
+  'characterHiddenNeeds',
+  'aiOpeningMessage',
+] as const
+
+const scenarioTextSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    description: { type: 'string' },
+    situation: { type: 'string' },
+    characterName: { type: 'string' },
+    characterPersonality: { type: 'string' },
+    characterBackground: { type: 'string' },
+    characterHiddenNeeds: { type: 'array', items: { type: 'string' } },
+    aiOpeningMessage: { type: 'string' },
+  },
+  required: [...TEXT_FIELDS],
+  additionalProperties: false,
+} as const
+
+const translationBatchSchema = {
+  type: 'object',
+  properties: {
+    scenarios: { type: 'array', items: scenarioTextSchema },
+  },
+  required: ['scenarios'],
+  additionalProperties: false,
+} as const
+
+function textOf(scenario: GeneratedScenario): ScenarioText {
+  return {
+    title: scenario.title,
+    description: scenario.description,
+    situation: scenario.situation,
+    characterName: scenario.characterName,
+    characterPersonality: scenario.characterPersonality,
+    characterBackground: scenario.characterBackground,
+    characterHiddenNeeds: scenario.characterHiddenNeeds,
+    aiOpeningMessage: scenario.aiOpeningMessage,
+  }
+}
+
+function isCompleteText(text: ScenarioText | undefined): text is ScenarioText {
+  return (
+    text !== undefined &&
+    TEXT_FIELDS.every((field) => {
+      const value = text[field]
+      return Array.isArray(value) ? value.length > 0 : Boolean(value?.trim())
+    })
+  )
+}
+
+/**
+ * Adapt the day's three scenarios into one other language, in one call. Fails
+ * soft: a language that does not come back simply plays in English that day.
+ */
+async function translateScenarios(
+  ctx: ActionCtx,
+  scenarios: Array<GeneratedScenario>,
+  locale: Exclude<Locale, 'en'>,
+): Promise<Array<ScenarioText> | null> {
+  try {
+    const response = await anthropic.messages.parse({
+      model: MODEL,
+      max_tokens: 4000,
+      system: `You adapt roleplay practice scenarios for an app where people rehearse difficult conversations with compassion. Each scenario has a situation the learner reads and a character they talk with.
+
+${adaptationNotes(locale)}
+
+Return the scenarios in the same order you received them, with every field filled in.`,
+      messages: [
+        {
+          role: 'user',
+          content: JSON.stringify({ scenarios: scenarios.map(textOf) }),
+        },
+      ],
+      output_config: {
+        format: { type: 'json_schema', schema: translationBatchSchema },
+      },
+    })
+    await recordCronCall(ctx, response.usage)
+
+    const parsed = response.parsed_output as
+      | { scenarios: Array<ScenarioText> }
+      | null
+    const texts = parsed?.scenarios
+    if (texts?.length !== scenarios.length || !texts.every(isCompleteText)) {
+      throw new Error('Incomplete translation')
+    }
+    return texts
+  } catch (error) {
+    console.error(`Error adapting daily challenges into ${locale}:`, error)
+    return null
+  }
+}
+
+/** Every other language at once, so the night's job takes one round trip more. */
+async function addTranslations(
+  ctx: ActionCtx,
+  scenarios: Array<GeneratedScenario>,
+): Promise<Array<GeneratedScenario>> {
+  const targets = LOCALES.filter(
+    (l): l is Exclude<Locale, 'en'> => l !== 'en',
+  )
+  const results = await Promise.all(
+    targets.map((locale) => translateScenarios(ctx, scenarios, locale)),
+  )
+
+  return scenarios.map((scenario, index) => {
+    const translations: ScenarioTranslations = {}
+    targets.forEach((locale, i) => {
+      const text = results[i]?.[index]
+      if (text) translations[locale] = text
+    })
+    return { ...scenario, translations }
+  })
+}
 
 async function generateThreeScenariosFn(
   ctx: ActionCtx,
@@ -108,15 +259,7 @@ Return the scenarios in the required structured format. Produce exactly 3 scenar
       },
     })
 
-    // The cron belongs to no user, so this is logged without one. Bookkeeping
-    // only: a failed write here must not cost us the night's challenges.
-    try {
-      await ctx.runMutation(internal.usage.recordModelCalls, {
-        calls: [callRecord('daily_challenges', MODEL, response.usage)],
-      })
-    } catch (error) {
-      console.error('Failed to record model usage:', error)
-    }
+    await recordCronCall(ctx, response.usage)
 
     const parsed = response.parsed_output as
       | { scenarios: Array<GeneratedScenario> }
@@ -275,7 +418,7 @@ function generateFallbackScenarios(): Array<GeneratedScenario> {
       situation:
         'In a team meeting, Alex said your recent project proposal "lacks clear structure and seems rushed." You felt embarrassed and defensive. The feedback stung because you worked hard on it. Now Alex is walking by your desk and pauses.',
       aiOpeningMessage:
-        "Hey, I noticed you seemed upset after the meeting. I want to clarify what I meant. I wasn't trying to dismiss your work—I see potential in the idea.",
+        "Hey, I noticed you seemed upset after the meeting. I want to clarify what I meant. I wasn't trying to dismiss your work. I see potential in the idea.",
       learningObjectives: ['observation', 'need', 'request'],
       focusArea: 'conflict_resolution',
     },

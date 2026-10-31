@@ -34,7 +34,7 @@ import {
   skillResource,
   summarizeConversation,
 } from '~/lib/conversationInsights'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
 
 type ScreenCopy = Messages['results']['screen']
 
@@ -247,7 +247,8 @@ function Stars({ stars }: { stars: number }) {
  * the results screen can name a scenario rather than drop people at the hub.
  */
 function useNextScenario(currentScenarioId: string) {
-  const scenarios = useQuery(api.scenarios.listByOrder)
+  const locale = useLocale()
+  const scenarios = useQuery(api.scenarios.listByOrder, { locale })
   const progress = useQuery(api.scenarioProgress.getUserProgress)
   const overall = useQuery(api.userProgress.getByUserId)
   if (!scenarios || !progress) return null
