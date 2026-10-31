@@ -12,11 +12,20 @@ import { FloatingNav } from '~/components/layout/FloatingNav'
 import { NotFoundPage } from '~/components/layout/ErrorStates'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { SITE_NAME } from '~/lib/seo'
+import { LocaleSync } from '~/components/layout/LocaleSync'
+import { getMessages } from '~/i18n/messages'
+import { resolveLocale } from '~/i18n/resolveLocale'
+import { useLocale, useT } from '~/i18n/useT'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
-  head: () => ({
+  // Runs on the server for the first render and in the browser after that,
+  // so every route below can read the language from its context.
+  beforeLoad: () => ({ locale: resolveLocale() }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return {
     meta: [
       {
         charSet: 'utf-8',
@@ -27,14 +36,8 @@ export const Route = createRootRouteWithContext<{
       },
       // Fallbacks only. Each route supplies its own title and description via
       // pageMeta, and the route's values win where both are present.
-      {
-        title: `${SITE_NAME}: Learn Compassionate Communication`,
-      },
-      {
-        name: 'description',
-        content:
-          'Practice the four steps of compassionate communication through guided lessons and lifelike roleplay conversations.',
-      },
+      { title: t.common.defaultMeta.title },
+      { name: 'description', content: t.common.defaultMeta.description },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
@@ -61,7 +64,8 @@ export const Route = createRootRouteWithContext<{
       { rel: 'manifest', href: '/site.webmanifest' },
       { rel: 'icon', href: '/favicon.ico' },
     ],
-  }),
+    }
+  },
   notFoundComponent: NotFoundPage,
   component: RootComponent,
 })
@@ -76,10 +80,12 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading } = useConvexAuth()
+  const locale = useLocale()
+  const t = useT()
 
   if (isLoading) {
     return (
-      <html lang="en">
+      <html lang={locale}>
         <head>
           <HeadContent />
         </head>
@@ -89,14 +95,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               {/* Speech Bubble */}
               <SpeechBubble className="max-w-sm">
                 <p className="text-lg text-brown-800 text-center font-medium">
-                  Getting ready to help you discover your authentic voice...
+                  {t.common.appLoading}
                 </p>
               </SpeechBubble>
 
               {/* Giraffe Image */}
               <img
                 src="/giraff.png"
-                alt="Your compassionate communication guide"
+                alt={t.common.giraffeAlt}
                 className="h-64 w-auto object-contain"
               />
             </div>
@@ -108,11 +114,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <HeadContent />
       </head>
       <body>
+        <LocaleSync />
         <FloatingNav />
         <div>{children}</div>
         <Scripts />

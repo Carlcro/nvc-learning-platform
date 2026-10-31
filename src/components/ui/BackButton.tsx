@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useT } from '~/i18n/useT'
 
 interface BackButtonProps {
   to: string
@@ -7,7 +8,8 @@ interface BackButtonProps {
   search?: Record<string, string>
 }
 
-export function BackButton({ to, label = 'Back', search }: BackButtonProps) {
+export function BackButton({ to, label, search }: BackButtonProps) {
+  const t = useT()
   return (
     <Link
       to={to}
@@ -27,7 +29,7 @@ export function BackButton({ to, label = 'Back', search }: BackButtonProps) {
           d="M15 19l-7-7 7-7"
         />
       </svg>
-      {label}
+      {label ?? t.layout.backButton.default}
     </Link>
   )
 }

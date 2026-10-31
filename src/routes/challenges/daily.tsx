@@ -13,14 +13,14 @@ import {
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { pageMeta } from '~/lib/seo'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/challenges/daily')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Daily Challenge',
-      description: 'A new practice situation each day, if you would like one.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.challenges.meta) }
+  },
   component: DailyChallengePage,
 })
 
@@ -34,17 +34,17 @@ function DailyChallengePage() {
 
 /** The page shell shared by every state: paper, with a giraffe-100 band. */
 function DailyShell({ children }: { children: ReactNode }) {
+  const t = useT()
+
   return (
     <main className="min-h-screen bg-paper">
       <section className="bg-giraffe-100 px-4 sm:px-6 lg:px-8 pt-28 pb-10 md:pb-12">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 text-balance tracking-tight">
-            One conversation for today.
+            {t.challenges.hero.title}
           </h1>
           <p className="mt-4 text-lg text-brown-700 max-w-prose text-pretty">
-            A new situation each day, if you would like one. It plays like any
-            other practice conversation, and finishing it adds a few bonus
-            points.
+            {t.challenges.hero.body}
           </p>
         </div>
       </section>
@@ -56,6 +56,7 @@ function DailyShell({ children }: { children: ReactNode }) {
 }
 
 function DailyChallengeContent() {
+  const t = useT()
   const myChallenge = useQuery(api.dailyChallenges.getMyChallenge)
   const stats = useQuery(api.dailyChallenges.getUserChallengeStats)
   const getOrCreateProgress = useMutation(api.userProgress.getOrCreate)
@@ -73,7 +74,7 @@ function DailyChallengeContent() {
   )
 
   if (myChallenge === undefined) {
-    return <GiraffeLoader message="Finding today's challenge for you..." />
+    return <GiraffeLoader message={t.challenges.loading} />
   }
 
   if (myChallenge === null) {
@@ -81,14 +82,13 @@ function DailyChallengeContent() {
       <DailyShell>
         <section className="rounded-lg border-2 border-giraffe-100 bg-white p-6 sm:p-8">
           <h2 className="text-xl font-bold text-brown-800">
-            Today's situation is still on its way.
+            {t.challenges.pending.title}
           </h2>
           <p className="mt-2 max-w-prose text-brown-700 text-pretty">
-            A new one is prepared every day. In the meantime, every practice
-            scenario is open to you.
+            {t.challenges.pending.body}
           </p>
           <Link to="/practice" className={`${PRIMARY_LINK_CLASS} mt-6`}>
-            Browse practice scenarios
+            {t.challenges.pending.browse}
           </Link>
         </section>
       </DailyShell>
@@ -102,16 +102,13 @@ function DailyChallengeContent() {
   return (
     <DailyShell>
       <section aria-labelledby="suggested-heading">
-        <h2
-          id="suggested-heading"
-          className="text-lg font-bold text-brown-800"
-        >
-          Suggested for you
+        <h2 id="suggested-heading" className="text-lg font-bold text-brown-800">
+          {t.challenges.suggested.title}
         </h2>
         <p className="mt-1 mb-4 text-sm text-brown-600">
-          Chosen for level {myChallenge.userLevel}.
+          {t.challenges.suggested.chosenFor(myChallenge.userLevel)}
           {myChallenge.alternatives.length > 0 &&
-            ' The others below are just as open to you.'}
+            t.challenges.suggested.othersOpen}
         </p>
         <DailyChallengeCard
           title={scenarioLoaded ? scenario.title : undefined}
@@ -134,26 +131,31 @@ function DailyChallengeContent() {
             id="alternatives-heading"
             className="text-lg font-bold text-brown-800"
           >
-            Or choose another
+            {t.challenges.alternatives.title}
           </h2>
           <ul className="mt-2 divide-y-2 divide-giraffe-100">
             {myChallenge.alternatives.map((alt) => {
-              const label = challengeDifficultyLabel(alt.difficulty)
+              const label = challengeDifficultyLabel(
+                alt.difficulty,
+                t.challenges.difficulty,
+              )
               return (
                 <li key={alt._id} className="py-5">
                   <p className="max-w-prose text-brown-700 leading-relaxed text-pretty break-words">
                     {alt.description}
                   </p>
                   <p className="mt-2 text-sm text-brown-600">
-                    {label}, worth {alt.bonusPoints} bonus points.{' '}
+                    {t.challenges.alternatives.worth(label, alt.bonusPoints)}{' '}
                     <Link
                       to="/practice/$scenarioId/brief"
                       params={{ scenarioId: alt.scenarioId }}
                       search={{ dailyChallengeId: alt._id }}
                       className={QUIET_LINK_CLASS}
                     >
-                      Choose this one
-                      <span className="sr-only">: the {label} challenge</span>
+                      {t.challenges.alternatives.choose}
+                      <span className="sr-only">
+                        {t.challenges.alternatives.chooseLabel(label)}
+                      </span>
                     </Link>
                   </p>
                 </li>

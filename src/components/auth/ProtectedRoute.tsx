@@ -5,6 +5,7 @@ import { api } from "../../../convex/_generated/api";
 import { GiraffeLoader } from "../ui/GiraffeLoader";
 import { SignInForm } from "./SignInForm";
 import type { ReactNode } from "react";
+import { useT } from "~/i18n/useT";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,11 +18,12 @@ interface ProtectedRouteProps {
  * Ensures the user's progress record exists on first login
  */
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
+  const t = useT();
   const userProfile = useQuery(api.users.getUserProfile);
   const location = useLocation();
 
   if (userProfile === undefined) {
-    return <GiraffeLoader message="Getting your space ready..." />;
+    return <GiraffeLoader message={t.auth.protectedLoading} />;
   }
 
   return (

@@ -1,5 +1,6 @@
 import { Card } from '~/components/ui/Card'
 import { StarIcon } from '~/components/ui/Icons'
+import { useT } from '~/i18n/useT'
 
 export interface ScenarioProgress {
   status?:
@@ -34,26 +35,9 @@ export interface ScenarioCardProps {
   onDelete?: (scenarioId: string | unknown) => void
 }
 
-const categoryLabels: Record<string, string> = {
-  workplace: 'Workplace',
-  family: 'Family',
-  friendship: 'Friendship',
-  self_expression: 'Self-Expression',
-}
-
-const difficultyLabels: Record<string, string> = {
-  beginner: 'Beginner',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
-}
-
-function renderStars(stars: number) {
+function renderStars(stars: number, label: string) {
   return (
-    <span
-      className="inline-flex gap-0.5"
-      role="img"
-      aria-label={`${stars} of 3 stars`}
-    >
+    <span className="inline-flex gap-0.5" role="img" aria-label={label}>
       {[0, 1, 2].map((i) => (
         <StarIcon
           key={i}
@@ -91,13 +75,10 @@ function getStatus(
  * One quiet line of status. Text carries the meaning, the small dot only
  * echoes it, so nothing here relies on color and nothing reads as a grade.
  */
-const statusLine: Record<
-  Exclude<ScenarioStatus, 'start'>,
-  { label: string; dot: string }
-> = {
-  in_progress: { label: 'In progress', dot: 'bg-giraffe-500' },
-  attempted: { label: 'Tried once', dot: 'bg-brown-300' },
-  completed: { label: 'Completed', dot: 'bg-empathy-high' },
+const statusDot: Record<Exclude<ScenarioStatus, 'start'>, string> = {
+  in_progress: 'bg-giraffe-500',
+  attempted: 'bg-brown-300',
+  completed: 'bg-empathy-high',
 }
 
 export function ScenarioCard({
@@ -116,6 +97,8 @@ export function ScenarioCard({
   onViewBest,
   onDelete,
 }: ScenarioCardProps) {
+  const t = useT()
+  const copy = t.practice.card
   const { status, bestStars } = getStatus(progress, hasActiveConversation)
   const hasPassed =
     progress?.status === 'passed' || progress?.status === 'mastered'
@@ -126,14 +109,14 @@ export function ScenarioCard({
 
   const action =
     status === 'in_progress'
-      ? 'Continue'
+      ? copy.actions.continue
       : isCompleted
         ? bestStars < 3
-          ? 'Improve'
-          : 'Try again'
+          ? copy.actions.improve
+          : copy.actions.tryAgain
         : status === 'attempted'
-          ? 'Try again'
-          : 'Start'
+          ? copy.actions.tryAgain
+          : copy.actions.start
 
   const handleViewBest = () => {
     if (progress?.bestConversationId && onViewBest) {
@@ -151,14 +134,17 @@ export function ScenarioCard({
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <p className="text-sm text-brown-600">
-          {categoryLabels[category]}, {difficultyLabels[difficulty].toLowerCase()}
+          {copy.categoryAndDifficulty(
+            t.practice.categories[category],
+            t.practice.difficulties[difficulty],
+          )}
         </p>
         {onDelete && (
           <button
             type="button"
             onClick={() => onDelete(id)}
-            aria-label={`Delete ${title}`}
-            title="Delete"
+            aria-label={copy.deleteLabel(title)}
+            title={copy.deleteTitle}
             className="relative z-10 grid place-items-center p-2 -m-2 rounded-lg text-brown-400 hover:text-brown-800 hover:bg-giraffe-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
           >
             <svg
@@ -181,7 +167,7 @@ export function ScenarioCard({
         {title}
       </h3>
       <p className="mt-1 text-sm font-semibold text-brown-700 break-words">
-        with {characterName}
+        {copy.withCharacter(characterName)}
       </p>
 
       <p className="mt-3 text-brown-700 text-sm leading-relaxed break-words line-clamp-4">
@@ -190,8 +176,7 @@ export function ScenarioCard({
 
       {isAboveLevel && (
         <p className="mt-3 text-xs text-brown-600">
-          Usually tried from level {minLevel}. Open to you now if you want a
-          stretch.
+          {copy.aboveLevel(minLevel)}
         </p>
       )}
 
@@ -201,24 +186,24 @@ export function ScenarioCard({
             <span className="inline-flex items-center gap-2">
               <span
                 aria-hidden="true"
-                className={`h-2 w-2 rounded-full ${statusLine[status].dot}`}
+                className={`h-2 w-2 rounded-full ${statusDot[status]}`}
               />
-              {statusLine[status].label}
+              {copy.status[status]}
             </span>
           )}
           {status === 'start' && isRecommended && (
             <span className="font-semibold text-giraffe-800">
-              Suggested next
+              {copy.suggestedNext}
             </span>
           )}
-          {showStars && <span className="ml-2">{renderStars(bestStars)}</span>}
+          {showStars && <span className="ml-2">{renderStars(bestStars, t.practice.starsLabel(bestStars))}</span>}
           {isCompleted && progress?.bestConversationId && onViewBest && (
             <button
               type="button"
               onClick={handleViewBest}
               className="relative z-10 block mt-1 text-sm font-semibold text-brown-700 underline decoration-giraffe-400 decoration-2 underline-offset-4 hover:text-brown-900 cursor-pointer"
             >
-              View your best
+              {copy.viewBest}
             </button>
           )}
         </div>

@@ -99,7 +99,7 @@ async function requireKnownFeeling(
     .withIndex('by_word', (q) => q.eq('word', word))
     .first()
   if (!feeling) {
-    userError('That is not a feeling we recognise.')
+    userError('feelingNotRecognised')
   }
   return feeling.word
 }
@@ -111,7 +111,7 @@ export const markFeelingExplored = mutation({
   args: { feelingWord: v.string() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) userError('Not authenticated')
+    if (userId === null) userError('notAuthenticated')
 
     const word = await requireKnownFeeling(ctx, args.feelingWord)
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
@@ -135,7 +135,7 @@ export const saveFeelingToLibrary = mutation({
   args: { feelingWord: v.string() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) userError('Not authenticated')
+    if (userId === null) userError('notAuthenticated')
 
     const word = await requireKnownFeeling(ctx, args.feelingWord)
     const progress = await getOrCreateFeelingsProgress(ctx, userId)
@@ -159,7 +159,7 @@ export const removeFeelingFromLibrary = mutation({
   args: { feelingWord: v.string() },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) userError('Not authenticated')
+    if (userId === null) userError('notAuthenticated')
 
     const progress = await ctx.db
       .query('userFeelingsProgress')

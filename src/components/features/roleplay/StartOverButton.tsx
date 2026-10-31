@@ -8,6 +8,7 @@
 
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import { useT } from '~/i18n/useT'
 
 interface StartOverButtonProps {
   onStartOver: () => Promise<void>
@@ -21,6 +22,8 @@ export function StartOverButton({
   canWrapUp,
   disabled = false,
 }: StartOverButtonProps) {
+  const t = useT()
+  const copy = t.roleplay.startOver
   const [isOpen, setIsOpen] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
 
@@ -42,7 +45,7 @@ export function StartOverButton({
           disabled={disabled}
           className="px-3 py-2 text-sm rounded-lg text-brown-600 hover:text-brown-900 hover:bg-giraffe-100 transition-colors cursor-pointer disabled:text-brown-400 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
         >
-          Start over
+          {copy.button}
         </button>
       </Dialog.Trigger>
 
@@ -52,19 +55,16 @@ export function StartOverButton({
           <div className="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
             <div className="bg-giraffe-400 text-brown-800 px-6 py-4">
               <Dialog.Title className="text-lg font-bold">
-                Start this conversation over?
+                {copy.title}
               </Dialog.Title>
             </div>
 
             <div className="p-6 space-y-3">
               <Dialog.Description className="text-brown-800 text-sm leading-relaxed text-pretty">
-                Everything said so far will be set aside and the scenario
-                begins again from the first line. This cannot be undone.
+                {copy.body}
               </Dialog.Description>
               <p className="text-xs text-brown-600 text-pretty">
-                {canWrapUp
-                  ? 'If you would rather keep what you have practiced, you can wrap up instead and see how it went.'
-                  : 'If only your last message felt off, a rewind takes back just that one.'}
+                {canWrapUp ? copy.canWrapUp : copy.suggestRewind}
               </p>
             </div>
 
@@ -75,7 +75,7 @@ export function StartOverButton({
                   disabled={isStarting}
                   className="px-4 py-2 text-sm font-semibold text-brown-700 hover:bg-giraffe-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  Keep going
+                  {copy.keepGoing}
                 </button>
               </Dialog.Close>
               <button
@@ -84,7 +84,7 @@ export function StartOverButton({
                 disabled={isStarting}
                 className="px-4 py-2 text-sm font-semibold text-cream bg-brown-600 hover:bg-brown-700 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {isStarting ? 'Starting over…' : 'Start over'}
+                {isStarting ? copy.starting : copy.confirm}
               </button>
             </div>
           </div>

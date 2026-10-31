@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 import { authTables } from '@convex-dev/auth/server'
 import { modelCallKindValidator } from './lib/modelUsage'
+import { localeValidator } from './lib/locale'
 
 /**
  * NVC Learning App Database Schema
@@ -12,6 +13,19 @@ import { modelCallKindValidator } from './lib/modelUsage'
 
 export default defineSchema({
   ...authTables,
+
+  /**
+   * Convex Auth's users table, plus the person's chosen language. The auth
+   * fields and indexes are kept exactly as Convex Auth defines them.
+   */
+  users: defineTable({
+    ...authTables.users.validator.fields,
+    // Absent until the person picks a language or first signs in, at which
+    // point the language they were browsing in is saved.
+    preferredLocale: v.optional(localeValidator),
+  })
+    .index('email', ['email'])
+    .index('phone', ['phone']),
 
   // ============================================================================
   // PROGRESS TRACKING

@@ -134,15 +134,15 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const scenario = await ctx.db.get(args.scenarioId)
     if (!scenario) {
-      userError('Scenario not found')
+      userError('scenarioNotFound')
     }
     if (scenario.visibility === 'private' && scenario.ownerId !== userId) {
-      userError('Scenario not found')
+      userError('scenarioNotFound')
     }
 
     const existing = await findActiveConversation(ctx, userId, args.scenarioId)
@@ -263,16 +263,16 @@ export const recordTurn = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== args.userId) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     if (conversation.status !== 'in_progress') {
-      userError('Conversation is no longer active')
+      userError('conversationNotActive')
     }
     // Checked again inside the transaction: submitTurn checks before spending
     // on the model, but only this re-read stops two concurrent turns from both
     // landing on the last allowed slot.
     if (countUserTurns(conversation) >= MAX_USER_TURNS) {
-      userError('This conversation has run its course.')
+      userError('conversationAtTurnLimit')
     }
 
     const now = Date.now()
@@ -396,12 +396,12 @@ export const complete = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== userId) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
 
     if (conversation.status !== 'in_progress') {
@@ -692,7 +692,7 @@ export const abandon = mutation({
   handler: async (ctx, args) => {
     const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     if (conversation.status !== 'in_progress') {
       return { success: true }
@@ -712,23 +712,23 @@ export const rewindLastMessages = mutation({
   handler: async (ctx, args) => {
     const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
 
     if (conversation.status !== 'in_progress') {
-      userError('Cannot rewind a completed conversation')
+      userError('cannotRewindCompleted')
     }
 
     const maxRewinds = conversation.maxRewinds ?? 2
     const rewindsUsed = conversation.rewindsUsed ?? 0
 
     if (rewindsUsed >= maxRewinds) {
-      userError('No rewinds remaining')
+      userError('noRewindsLeft')
     }
 
     // Need at least 3 messages (opening + user + assistant) to rewind
     if (conversation.messages.length < 3) {
-      userError('Not enough messages to rewind')
+      userError('notEnoughMessagesToRewind')
     }
 
     // Remove last 2 messages (user message + character response)
@@ -851,7 +851,7 @@ export const saveReflection = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== args.userId) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     if (conversation.reflection) return conversation.reflection
     await ctx.db.patch(args.conversationId, { reflection: args.reflection })

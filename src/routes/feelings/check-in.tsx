@@ -5,6 +5,8 @@ import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { pageMeta } from '~/lib/seo'
+import { getMessages } from '~/i18n/messages'
+import { useFormat, useT } from '~/i18n/useT'
 import { localDateString } from '~/lib/localDate'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
@@ -17,12 +19,10 @@ import { OptionButton } from '~/components/features/feelings/OptionButton'
 import { CATEGORY_FILL } from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/check-in')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Daily check in',
-      description: 'Notice and name how you are feeling today.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.feelings.checkIn.meta) }
+  },
   component: DailyCheckIn,
 })
 
@@ -44,25 +44,14 @@ const COMMON_FEELINGS_LIST = [
 
 const MAX_SEARCH_RESULTS = 8
 
-/** "once", "twice", "a few times": how often a feeling came up, in words. */
-function howOften(count: number): string {
-  if (count <= 1) return 'once'
-  if (count === 2) return 'twice'
-  if (count <= 4) return 'a few times'
-  return 'often'
-}
-
-/** "rest, connection or support" */
-function joinWithOr(words: ReadonlyArray<string>): string {
-  if (words.length <= 1) return words.join('')
-  return `${words.slice(0, -1).join(', ')} or ${words[words.length - 1]}`
-}
-
 function capitalize(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1)
 }
 
 function DailyCheckIn() {
+  const t = useT()
+  const copy = t.feelings.checkIn
+  const format = useFormat()
   const currentUser = useQuery(api.users.getCurrentUser)
   const [selectedFeelings, setSelectedFeelings] = useState<Array<string>>([])
   const [note, setNote] = useState('')
@@ -145,31 +134,18 @@ function DailyCheckIn() {
       })
       setSaved(true)
     } catch (err) {
-      setError(
-        userFacingMessage(
-          err,
-          'We could not save your check-in just now. Please try again.',
-        ),
-      )
+      setError(userFacingMessage(err, copy.saveError, t.errors))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   if (allFeelings === undefined) {
-    return <GiraffeLoader message="Gathering words for feelings..." />
+    return <GiraffeLoader message={copy.loading} />
   }
 
   return (
-    <FeelingsPage
-      title="How are you today?"
-      intro={
-        <p>
-          Take a moment to notice what is here, and pick the words that fit.
-          There is no right answer, and you can change it later in the day.
-        </p>
-      }
-    >
+    <FeelingsPage title={copy.title} intro={<p>{copy.intro}</p>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Check-in form */}
         <section
@@ -180,13 +156,13 @@ function DailyCheckIn() {
             id="checkin-heading"
             className="text-xl font-bold text-brown-800 mb-5"
           >
-            What are you feeling?
+            {copy.formHeading}
           </h2>
 
           {selectedFeelings.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-brown-700 mb-2">
-                Your words for today
+                {copy.selectedHeading}
               </h3>
               <ul className="flex flex-wrap gap-2">
                 {selectedFeelings.map((word) => (
@@ -198,7 +174,7 @@ function DailyCheckIn() {
                     <button
                       type="button"
                       onClick={() => handleToggleFeeling(word)}
-                      aria-label={`Remove ${word}`}
+                      aria-label={copy.remove(word)}
                       className={`ml-1 grid h-11 w-11 place-items-center rounded-md text-brown-700 hover:text-brown-900 cursor-pointer ${focusRing}`}
                     >
                       <X aria-hidden="true" className="h-4 w-4" />
@@ -214,7 +190,7 @@ function DailyCheckIn() {
               id="common-heading"
               className="text-sm font-semibold text-brown-700 mb-3"
             >
-              Some common feelings
+              {copy.commonHeading}
             </h3>
             <div
               role="group"
@@ -239,26 +215,20 @@ function DailyCheckIn() {
               htmlFor="checkin-search"
               className="block text-sm font-semibold text-brown-700 mb-2"
             >
-              Find another word
+              {copy.searchLabel}
             </label>
             <input
               id="checkin-search"
               type="search"
               autoComplete="off"
-              placeholder="For example, restless"
+              placeholder={copy.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               aria-describedby="checkin-search-count"
               className={fieldClass}
             />
-            <p
-              id="checkin-search-count"
-              aria-live="polite"
-              className="sr-only"
-            >
-              {searchTerm.trim()
-                ? `${searchResults.length} ${searchResults.length === 1 ? 'match' : 'matches'}`
-                : ''}
+            <p id="checkin-search-count" aria-live="polite" className="sr-only">
+              {searchTerm.trim() ? copy.matches(searchResults.length) : ''}
             </p>
             {searchTerm.trim() && (
               <div className="mt-2">
@@ -277,9 +247,7 @@ function DailyCheckIn() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-brown-700">
-                    No word matches that yet. Try a shorter part of it.
-                  </p>
+                  <p className="text-sm text-brown-700">{copy.noMatches}</p>
                 )}
               </div>
             )}
@@ -290,7 +258,7 @@ function DailyCheckIn() {
               htmlFor="checkin-note"
               className="block text-sm font-semibold text-brown-700 mb-2"
             >
-              Add a note, if you like
+              {copy.noteLabel}
             </label>
             <textarea
               id="checkin-note"
@@ -300,14 +268,14 @@ function DailyCheckIn() {
                 setSaved(false)
               }}
               aria-describedby="checkin-note-privacy"
-              placeholder="What is happening today?"
+              placeholder={copy.notePlaceholder}
               className={`${fieldClass} min-h-28`}
             />
             <p
               id="checkin-note-privacy"
               className="mt-2 text-sm text-brown-700"
             >
-              Only you can see your check-ins.
+              {copy.notePrivacy}
             </p>
           </div>
 
@@ -320,21 +288,19 @@ function DailyCheckIn() {
             className={`w-full sm:w-auto px-8 min-h-12 ${focusRing}`}
           >
             {isSubmitting
-              ? 'Saving...'
+              ? copy.saving
               : todayCheckIn
-                ? 'Update check-in'
-                : 'Save check-in'}
+                ? copy.update
+                : copy.save}
           </Button>
           {selectedFeelings.length === 0 && (
-            <p className="mt-2 text-sm text-brown-700">
-              Choose at least one word to save.
-            </p>
+            <p className="mt-2 text-sm text-brown-700">{copy.chooseOne}</p>
           )}
 
           <div role="status" className="empty:hidden mt-4">
             {saved && (
               <p className="rounded-lg border-2 border-giraffe-200 bg-giraffe-50 px-4 py-3 text-brown-800 font-medium text-pretty">
-                Saved. Thank you for pausing to notice how you are.
+                {copy.saved}
               </p>
             )}
           </div>
@@ -356,14 +322,14 @@ function DailyCheckIn() {
               id="history-heading"
               className="text-lg font-bold text-brown-800 mb-4"
             >
-              Recent days
+              {copy.historyHeading}
             </h2>
             {history && history.length > 0 ? (
               <ol className="space-y-5 border-l-2 border-giraffe-200 pl-5">
                 {history.map((checkIn) => (
                   <li key={checkIn.date}>
                     <p className="text-sm font-semibold text-brown-700">
-                      {new Date(checkIn.date).toLocaleDateString(undefined, {
+                      {format.date(checkIn.date, {
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',
@@ -382,7 +348,7 @@ function DailyCheckIn() {
               </ol>
             ) : (
               <p className="text-brown-700 text-sm text-pretty">
-                Your check-ins will gather here, one line per day.
+                {copy.historyEmpty}
               </p>
             )}
           </section>
@@ -393,33 +359,35 @@ function DailyCheckIn() {
                 id="week-heading"
                 className="text-lg font-bold text-brown-800 mb-4"
               >
-                This week
+                {copy.weekHeading}
               </h2>
               <ul className="space-y-4">
-                {weeklyPatterns.frequentFeelings.map((insight) => (
-                  <li key={insight.feeling} className="text-brown-800">
-                    <p className="text-pretty">
-                      <span className="font-semibold">
-                        {capitalize(insight.feeling)}
-                      </span>{' '}
-                      came up {howOften(insight.count)} this week.
-                    </p>
-                    {insight.relatedNeeds.length > 0 && (
-                      <p className="mt-1 text-sm text-brown-700 text-pretty">
-                        It often points to a need for{' '}
-                        {joinWithOr(
-                          insight.relatedNeeds.map((n) => n.toLowerCase()),
-                        )}
-                        .
+                {weeklyPatterns.frequentFeelings.map((insight) => {
+                  const cameUp = copy.cameUp(insight.count)
+                  return (
+                    <li key={insight.feeling} className="text-brown-800">
+                      <p className="text-pretty">
+                        {cameUp.before}
+                        <span className="font-semibold">
+                          {capitalize(insight.feeling)}
+                        </span>
+                        {cameUp.after}
                       </p>
-                    )}
-                  </li>
-                ))}
+                      {insight.relatedNeeds.length > 0 && (
+                        <p className="mt-1 text-sm text-brown-700 text-pretty">
+                          {copy.pointsToNeeds(
+                            insight.relatedNeeds.map((n) => n.toLowerCase()),
+                          )}
+                        </p>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
 
               <div className="mt-6 pt-4 border-t-2 border-brown-100">
                 <p className="text-sm text-brown-700 mb-2">
-                  Pleasant and unpleasant feelings this week
+                  {copy.balanceLabel}
                 </p>
                 <div
                   aria-hidden="true"
@@ -440,29 +408,29 @@ function DailyCheckIn() {
                       aria-hidden="true"
                       className={`h-2.5 w-2.5 rounded-full ${CATEGORY_FILL.pleasant}`}
                     />
-                    Pleasant {weeklyPatterns.pleasantPercent}%
+                    {copy.pleasantPercent(weeklyPatterns.pleasantPercent)}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <span
                       aria-hidden="true"
                       className={`h-2.5 w-2.5 rounded-full ${CATEGORY_FILL.unpleasant}`}
                     />
-                    Unpleasant {weeklyPatterns.unpleasantPercent}%
+                    {copy.unpleasantPercent(weeklyPatterns.unpleasantPercent)}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-brown-700 text-pretty">
-                  Both kinds are welcome. Each one points to something that
-                  matters to you.
+                  {copy.balanceNote}
                 </p>
               </div>
             </section>
           )}
 
           <aside className="border-t-2 border-brown-100 pt-6">
-            <h2 className="font-bold text-brown-800 mb-1">Did you know</h2>
+            <h2 className="font-bold text-brown-800 mb-1">
+              {copy.didYouKnowHeading}
+            </h2>
             <p className="text-brown-700 text-sm text-pretty">
-              Putting a feeling into words can soften it a little and help you
-              think more clearly about what you need.
+              {copy.didYouKnowText}
             </p>
           </aside>
         </div>

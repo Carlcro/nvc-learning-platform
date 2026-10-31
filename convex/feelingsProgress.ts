@@ -279,16 +279,16 @@ export const recordCheckIn = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) userError('Not authenticated')
+    if (userId === null) userError('notAuthenticated')
 
     if (args.feelings.length === 0) {
-      userError('Pick at least one feeling')
+      userError('pickAtLeastOneFeeling')
     }
     if (args.feelings.length > MAX_CHECKIN_FEELINGS) {
-      userError('Too many feelings selected')
+      userError('tooManyFeelings')
     }
     if (args.note && args.note.length > MAX_NOTE_LENGTH) {
-      userError('Note is too long')
+      userError('noteTooLong')
     }
 
     // Check-in feelings are stored and rendered back, so they have to be
@@ -303,7 +303,7 @@ export const recordCheckIn = mutation({
       }),
     )
     if (known.some((word) => word === undefined)) {
-      userError('One of those is not a feeling we recognise.')
+      userError('someFeelingNotRecognised')
     }
     const feelings = known as Array<string>
 

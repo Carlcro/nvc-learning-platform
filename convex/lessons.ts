@@ -646,17 +646,17 @@ export const submitQuiz = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      userError("Not authenticated");
+      userError('notAuthenticated');
     }
 
     const lesson = LESSONS.find((l) => l.lessonId === args.lessonId);
     if (!lesson) {
-      userError("Lesson not found");
+      userError('lessonNotFound');
     }
 
     const questions = lesson.quiz.questions;
     if (args.answers.length !== questions.length) {
-      userError("That quiz submission did not match this lesson.");
+      userError('quizSubmissionMismatch');
     }
 
     const correctCount = questions.reduce(

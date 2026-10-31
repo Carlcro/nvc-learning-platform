@@ -542,7 +542,7 @@ export const createCustom = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      userError("Not authenticated");
+      userError('notAuthenticated');
     }
 
     const now = Date.now();
@@ -592,7 +592,7 @@ export const deleteCustom = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      userError("Not authenticated");
+      userError('notAuthenticated');
     }
 
     const scenario = await ctx.db.get(args.scenarioId);
@@ -601,7 +601,7 @@ export const deleteCustom = mutation({
     }
 
     if (scenario.ownerId !== userId) {
-      userError("You can only delete your own scenarios");
+      userError('notYourScenario');
     }
 
     // Remove the conversations and progress tied to this scenario so nothing

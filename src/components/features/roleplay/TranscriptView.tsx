@@ -8,7 +8,9 @@
 import { useState } from 'react'
 import { AnnotatedMessage } from './AnnotatedMessage'
 import { EmpathyMeter } from './EmpathyMeter'
+import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 import { Button } from '~/components/ui/Button'
+import { useFormat, useT } from '~/i18n/useT'
 
 interface NVCScore {
   observation: number
@@ -74,14 +76,16 @@ function MoodJourney({
   messages: Array<Message>
   initialMood: number
 }) {
+  const t = useT()
+  const copy = t.results.transcript.mood
   const moodPoints = [
-    { index: 0, mood: initialMood, label: 'Start' },
+    { index: 0, mood: initialMood, label: copy.startPoint },
     ...messages
       .filter((m) => m.role === 'assistant' && m.characterMood !== undefined)
       .map((m, idx) => ({
         index: idx + 1,
         mood: m.characterMood!,
-        label: `Response ${idx + 1}`,
+        label: copy.response(idx + 1),
       })),
   ]
 
@@ -91,7 +95,9 @@ function MoodJourney({
 
   return (
     <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
-      <h3 className="text-sm font-semibold text-brown-700 mb-3">Mood Journey</h3>
+      <h3 className="text-sm font-semibold text-brown-700 mb-3">
+        {copy.title}
+      </h3>
       <div className="relative h-24">
         {/* Grid lines */}
         <div className="absolute inset-0 flex flex-col justify-between">
@@ -156,8 +162,8 @@ function MoodJourney({
 
       {/* Legend */}
       <div className="flex justify-between mt-2 text-xs text-brown-600">
-        <span>Conversation Start</span>
-        <span>Conversation End</span>
+        <span>{copy.start}</span>
+        <span>{copy.end}</span>
       </div>
     </div>
   )
@@ -170,6 +176,8 @@ function SummaryStats({
   messages: Array<Message>
   finalScore: number
 }) {
+  const t = useT()
+  const copy = t.results.transcript.stats
   const userMessages = messages.filter((m) => m.role === 'user')
   const userMessagesWithScores = userMessages.filter((m) => m.nvcScore)
   // Counted as what went right, never as a tally of slips: the slips are
@@ -205,45 +213,45 @@ function SummaryStats({
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-giraffe-700">{finalScore}</div>
-        <div className="text-xs text-brown-600">Final Score</div>
+        <div className="text-xs text-brown-600">{copy.finalScore}</div>
       </div>
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-brown-700">
           {userMessages.length}
         </div>
-        <div className="text-xs text-brown-600">Your Messages</div>
+        <div className="text-xs text-brown-600">{copy.yourMessages}</div>
       </div>
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-brown-800">
           {giraffeCount}
           <span className="text-sm font-semibold text-brown-500">
-            {' '}
-            of {userMessages.length}
+            {copy.ofTotal(userMessages.length)}
           </span>
         </div>
-        <div className="text-xs text-brown-600">Free of Blame</div>
+        <div className="text-xs text-brown-600">{copy.freeOfBlame}</div>
       </div>
       <div className="bg-white rounded-lg p-4 border border-giraffe-100 text-center">
         <div className="text-2xl font-bold text-brown-800">{bestTurn}</div>
-        <div className="text-xs text-brown-600">Best Single Turn</div>
+        <div className="text-xs text-brown-600">{copy.bestTurn}</div>
       </div>
 
       {avgComponents && (
         <div className="col-span-2 md:col-span-4 bg-white rounded-lg p-4 border border-giraffe-100">
           <h4 className="text-sm font-semibold text-brown-700">
-            Average Component Scores
+            {copy.averagesTitle}
           </h4>
-          <p className="text-xs text-brown-500 mb-3">
-            Out of 25, across the messages where you used each one. A dot means
-            it was not part of this conversation.
-          </p>
+          <p className="text-xs text-brown-500 mb-3">{copy.averagesHint}</p>
           <div className="grid grid-cols-4 gap-3">
-            {Object.entries(avgComponents).map(([key, value]) => (
+            {NVC_COMPONENTS.map(
+              (key) => [key, avgComponents[key]] as const,
+            ).map(([key, value]) => (
               <div key={key} className="text-center">
                 <div className="text-lg font-bold text-giraffe-700">
                   {value === null ? '·' : Math.round(value)}
                 </div>
-                <div className="text-xs text-brown-600 capitalize">{key}</div>
+                <div className="text-xs text-brown-600">
+                  {t.common.components[key]}
+                </div>
               </div>
             ))}
           </div>
@@ -261,26 +269,30 @@ export function TranscriptView({
   completedAt,
   initialMood,
   reflection = null,
-  backLabel = 'Back to Practice',
+  backLabel,
   onBack,
 }: TranscriptViewProps) {
+  const t = useT()
+  const format = useFormat()
+  const copy = t.results.transcript
+  const backText = backLabel ?? copy.backToPractice
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
 
   const handleExport = async () => {
     const transcript = messages
       .map((m, idx) => {
-        const role = m.role === 'user' ? 'You' : characterName
-        const score = m.nvcScore ? ` [Score: ${m.nvcScore.total}/100]` : ''
+        const role = m.role === 'user' ? copy.export.you : characterName
+        const score = m.nvcScore ? copy.export.score(m.nvcScore.total) : ''
         return `[${idx + 1}] ${role}${score}:\n${m.content}`
       })
       .join('\n\n')
 
     const exportText = `
-CONVERSATION TRANSCRIPT
-=======================
-Scenario: ${scenarioTitle}
-Final Score: ${finalScore}/100
-Date: ${new Date(completedAt).toLocaleDateString()}
+${copy.export.heading}
+${copy.export.underline}
+${copy.export.scenario(scenarioTitle)}
+${copy.export.finalScore(finalScore)}
+${copy.export.date(format.date(completedAt))}
 
 ${transcript}
     `.trim()
@@ -295,7 +307,7 @@ ${transcript}
     }
   }
 
-  const completedDate = new Date(completedAt).toLocaleDateString(undefined, {
+  const completedDate = format.date(completedAt, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -341,7 +353,7 @@ ${transcript}
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              <span className="font-semibold text-sm">{backLabel}</span>
+              <span className="font-semibold text-sm">{backText}</span>
             </button>
 
             <Button
@@ -351,7 +363,7 @@ ${transcript}
               className="flex items-center gap-2"
             >
               <ExportIcon />
-              {copyStatus === 'copied' ? 'Copied!' : 'Copy Transcript'}
+              {copyStatus === 'copied' ? copy.copied : copy.copy}
             </Button>
           </div>
         </div>
@@ -360,9 +372,7 @@ ${transcript}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Title Section */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-brown-800">
-            Conversation Transcript
-          </h1>
+          <h1 className="text-3xl font-bold text-brown-800">{copy.title}</h1>
           <p className="text-lg text-giraffe-700">{scenarioTitle}</p>
           <p className="text-sm text-brown-600">{completedDate}</p>
         </div>
@@ -370,9 +380,9 @@ ${transcript}
         {/* Final Score */}
         <div className="bg-white rounded-xl p-6 border-2 border-giraffe-200">
           <div className="text-center mb-4">
-            <span className="text-sm text-brown-600">Final Score</span>
+            <span className="text-sm text-brown-600">{copy.finalScore}</span>
             <div className="text-4xl font-bold text-giraffe-700">
-              {finalScore}/100
+              {copy.scoreOutOf(finalScore)}
             </div>
           </div>
           <EmpathyMeter score={finalScore} showLabel={false} />
@@ -387,7 +397,7 @@ ${transcript}
         {/* Messages */}
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-brown-800">
-            Full Conversation
+            {copy.fullConversation}
           </h2>
           <div className="space-y-4">
             {messages.map((message, index) => (
@@ -412,7 +422,7 @@ ${transcript}
         {/* Footer */}
         <div className="text-center pt-8 pb-4">
           <Button onClick={onBack} variant="primary">
-            {backLabel}
+            {backText}
           </Button>
         </div>
       </div>

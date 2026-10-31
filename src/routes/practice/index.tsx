@@ -10,15 +10,14 @@ import { ScenarioCard } from '~/components/features/roleplay/ScenarioCard'
 import { Button } from '~/components/ui/Button'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { pickRecommendedScenario } from '~/lib/conversationInsights'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/practice/')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Practice',
-      description:
-        'Rehearse a difficult conversation with a practice partner who answers in character.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.practice.meta.hub) }
+  },
   component: ProtectedPracticeHub,
 })
 
@@ -44,17 +43,17 @@ function LevelNote({
   level: number
   pointsToNext?: number
 }) {
+  const t = useT()
   return (
     <p className="text-sm text-brown-600">
-      Level {level}
-      {pointsToNext !== undefined && pointsToNext > 0 && (
-        <span>, {pointsToNext} points to the next</span>
-      )}
+      {t.practice.hub.levelNote(level, pointsToNext)}
     </p>
   )
 }
 
 function PracticeHub() {
+  const t = useT()
+  const copy = t.practice.hub
   const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>(
     'all',
@@ -107,22 +106,24 @@ function PracticeHub() {
   const suggestion = waitingScenario
     ? {
         scenario: waitingScenario,
-        eyebrow: 'Pick up where you left off',
-        note: `Your conversation with ${waitingScenario.characterName} is waiting for you.`,
-        action: 'Continue',
+        eyebrow: copy.suggestion.waitingEyebrow,
+        note: copy.suggestion.waitingNote(waitingScenario.characterName),
+        action: copy.suggestion.continue,
       }
     : recommendedScenario
       ? {
           scenario: recommendedScenario,
           eyebrow:
-            userProgress.length === 0 ? 'A good place to start' : 'Suggested next',
+            userProgress.length === 0
+              ? copy.suggestion.firstEyebrow
+              : copy.suggestion.nextEyebrow,
           note: recommendedScenario.description,
           action:
             userProgress.find(
               (p) => p.scenarioId === recommendedScenario._id,
             )?.status === 'attempted'
-              ? 'Try it again'
-              : 'Start',
+              ? copy.suggestion.tryAgain
+              : copy.suggestion.start,
         }
       : null
 
@@ -166,18 +167,18 @@ function PracticeHub() {
     value: Category | 'all'
     label: string
   }> = [
-    { value: 'all', label: 'All topics' },
-    { value: 'workplace', label: 'Workplace' },
-    { value: 'family', label: 'Family' },
-    { value: 'friendship', label: 'Friendship' },
-    { value: 'self_expression', label: 'Self-Expression' },
+    { value: 'all', label: copy.allCategories },
+    { value: 'workplace', label: t.practice.categories.workplace },
+    { value: 'family', label: t.practice.categories.family },
+    { value: 'friendship', label: t.practice.categories.friendship },
+    { value: 'self_expression', label: t.practice.categories.self_expression },
   ]
 
   const difficulties: Array<{ value: Difficulty | 'all'; label: string }> = [
-    { value: 'all', label: 'All Levels' },
-    { value: 'beginner', label: 'Beginner' },
-    { value: 'intermediate', label: 'Intermediate' },
-    { value: 'advanced', label: 'Advanced' },
+    { value: 'all', label: copy.allDifficulties },
+    { value: 'beginner', label: t.practice.difficulties.beginner },
+    { value: 'intermediate', label: t.practice.difficulties.intermediate },
+    { value: 'advanced', label: t.practice.difficulties.advanced },
   ]
 
   return (
@@ -185,11 +186,10 @@ function PracticeHub() {
       <section className="pt-6 pb-6 sm:pt-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 mb-3 text-balance tracking-tight">
-            Who would you like to practice with?
+            {copy.title}
           </h1>
           <p className="text-base sm:text-lg text-brown-700 leading-relaxed max-w-prose text-pretty">
-            Every scenario is open. Pick someone whose situation feels close to
-            yours, or start with the suggestion below.
+            {copy.intro}
           </p>
         </div>
       </section>
@@ -234,18 +234,16 @@ function PracticeHub() {
             <div className="flex items-center gap-4 sm:gap-6 px-5 sm:px-8 py-5">
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg sm:text-xl font-bold text-brown-800">
-                  Rehearse a real conversation
+                  {copy.rehearse.title}
                 </h2>
                 <p className="text-sm text-brown-600 text-pretty mt-1 max-w-prose">
-                  Have something difficult coming up? Shape it into a practice
-                  space and try what you want to say, gently, before the real
-                  thing.
+                  {copy.rehearse.body}
                 </p>
               </div>
 
               {/* Action affordance: a full pill on wider screens, a chevron on phones */}
               <span className="hidden md:inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg bg-giraffe-400 group-hover:bg-giraffe-500 text-brown-800 font-semibold px-5 py-3 transition-colors duration-200">
-                Start shaping it
+                {copy.rehearse.action}
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -278,7 +276,7 @@ function PracticeHub() {
           {myScenarios.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold text-brown-800 mb-3">
-                Your own scenarios
+                {copy.yourScenarios}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {myScenarios.map((scenario) => (
@@ -316,7 +314,7 @@ function PracticeHub() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mt-6 mb-3">
             <h2 className="text-xl font-bold text-brown-800">
-              Scenario library
+              {copy.library}
             </h2>
             <LevelNote
               level={userLevel}
@@ -327,7 +325,7 @@ function PracticeHub() {
           <div className="flex flex-wrap items-center gap-2 mb-6">
             <div
               role="group"
-              aria-label="Filter scenarios by category"
+              aria-label={copy.filterByCategory}
               className="flex flex-wrap gap-2"
             >
               {categories.map((cat) => (
@@ -346,7 +344,7 @@ function PracticeHub() {
             />
             <div
               role="group"
-              aria-label="Filter scenarios by difficulty"
+              aria-label={copy.filterByDifficulty}
               className="flex flex-wrap gap-2"
             >
               {difficulties.map((diff) => (
@@ -364,7 +362,7 @@ function PracticeHub() {
             <div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               aria-busy="true"
-              aria-label="Loading scenarios"
+              aria-label={copy.loading}
             >
               {Array.from({ length: 6 }).map((_, i) => (
                 <SkeletonCard key={i} />
@@ -374,17 +372,16 @@ function PracticeHub() {
             hasActiveFilters ? (
               <div className="text-center py-12">
                 <p className="text-brown-700 mb-4">
-                  No scenarios match these filters.
+                  {copy.noMatches}
                 </p>
                 <Button variant="outline" onClick={clearFilters}>
-                  Clear filters
+                  {copy.clearFilters}
                 </Button>
               </div>
             ) : (
               <div className="text-center py-12">
                 <p className="text-brown-700">
-                  No scenarios are here yet. You can still rehearse one of your
-                  own above.
+                  {copy.empty}
                 </p>
               </div>
             )
@@ -416,12 +413,10 @@ function PracticeHub() {
       <section className="border-t border-giraffe-200 mt-8 py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-lg font-bold text-brown-800 mb-1">
-            One piece at a time
+            {copy.onePiece.title}
           </h2>
           <p className="text-sm text-brown-700 max-w-prose text-pretty">
-            A real conversation unfolds gradually. Say what you saw, then how
-            you felt, what matters to you, and what you would like. One of these
-            per message is plenty, and the others can wait for their turn.
+            {copy.onePiece.body}
           </p>
         </div>
       </section>
@@ -446,6 +441,8 @@ function DeleteScenarioDialog({
   scenario: { id: Id<'scenarios'>; title: string } | null
   onClose: () => void
 }) {
+  const t = useT()
+  const copy = t.practice.hub.deleteDialog
   const deleteScenario = useMutation(api.scenarios.deleteCustom)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -459,7 +456,7 @@ function DeleteScenarioDialog({
       setIsDeleting(false)
       onClose()
     } catch {
-      setError("That didn't go through. Take a breath and try again.")
+      setError(t.practice.tryAgainError)
       setIsDeleting(false)
     }
   }
@@ -480,14 +477,15 @@ function DeleteScenarioDialog({
           <div className="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
             <div className="bg-giraffe-400 text-brown-800 px-6 py-4">
               <Dialog.Title className="text-lg font-bold">
-                Delete this scenario?
+                {copy.title}
               </Dialog.Title>
             </div>
 
             <div className="p-6 space-y-3">
               <Dialog.Description className="text-brown-800 text-sm leading-relaxed text-pretty">
-                <span className="font-semibold">{scenario?.title}</span> and its
-                practice history will be removed for good.
+                {copy.descriptionBefore}
+                <span className="font-semibold">{scenario?.title}</span>
+                {copy.descriptionAfter}
               </Dialog.Description>
               {error && (
                 <p className="text-sm text-empathy-low font-medium">{error}</p>
@@ -501,7 +499,7 @@ function DeleteScenarioDialog({
                   disabled={isDeleting}
                   className="px-4 py-2 text-sm font-semibold text-brown-700 hover:bg-giraffe-100 rounded-lg transition-colors duration-200 cursor-pointer disabled:opacity-50"
                 >
-                  Keep it
+                  {copy.keep}
                 </button>
               </Dialog.Close>
               <button
@@ -510,7 +508,7 @@ function DeleteScenarioDialog({
                 disabled={isDeleting}
                 className="px-4 py-2 text-sm font-semibold text-brown-900 bg-empathy-low hover:brightness-95 rounded-lg transition-all duration-200 disabled:opacity-50 cursor-pointer"
               >
-                {isDeleting ? 'Deleting…' : 'Delete'}
+                {isDeleting ? copy.deleting : copy.delete}
               </button>
             </div>
           </div>

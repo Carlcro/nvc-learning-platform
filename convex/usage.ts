@@ -52,9 +52,7 @@ export const consumeTurn = internalMutation({
     }
 
     if (existing.turns >= MAX_TURNS_PER_DAY) {
-      userError(
-        'You have reached the practice limit for today. Come back tomorrow, and in the meantime the lessons and the feelings library are always open.',
-      )
+      userError('dailyTurnLimit')
     }
 
     await ctx.db.patch(existing._id, { turns: existing.turns + 1 })
@@ -78,9 +76,7 @@ export const consumeScenarioGeneration = internalMutation({
     }
 
     if (existing.scenarioGenerations >= MAX_SCENARIO_GENERATIONS_PER_DAY) {
-      userError(
-        'You have shaped a lot of scenarios today. Try practicing one of them, and you can build more tomorrow.',
-      )
+      userError('dailyScenarioLimit')
     }
 
     await ctx.db.patch(existing._id, {

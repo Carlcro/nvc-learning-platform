@@ -83,10 +83,10 @@ export const submitAnswer = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
-    if (userId === null) userError('Not authenticated')
+    if (userId === null) userError('notAuthenticated')
 
     const question = await ctx.db.get(args.questionId)
-    if (!question) userError('Question not found')
+    if (!question) userError('questionNotFound')
 
     const correct = args.answeredRealFeeling === question.isRealFeeling
 

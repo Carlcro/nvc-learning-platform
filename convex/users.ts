@@ -1,5 +1,7 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
+import { v } from 'convex/values'
 import { userError } from './lib/errors'
+import { localeValidator } from './lib/locale'
 import { mutation, query } from './_generated/server'
 
 /**
@@ -62,7 +64,7 @@ export const initializeUserProfile = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const existing = await ctx.db
@@ -104,3 +106,20 @@ export const initializeUserProfile = mutation({
   },
 })
 
+
+/**
+ * Save the signed-in person's language, so it follows them to other devices
+ * and so conversations they start are held in it.
+ */
+export const setLocale = mutation({
+  args: { locale: localeValidator },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      userError('notAuthenticated')
+    }
+    await ctx.db.patch(userId, { preferredLocale: args.locale })
+    return null
+  },
+})

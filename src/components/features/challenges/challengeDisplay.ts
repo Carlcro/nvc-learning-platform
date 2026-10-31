@@ -1,35 +1,34 @@
 import { useEffect, useState } from 'react'
+import type { Messages } from '~/i18n/messages'
+import { useFormat } from '~/i18n/useT'
 
 export type ChallengeDifficulty = 'easy' | 'medium' | 'hard'
 
 /**
- * The one vocabulary for daily challenge difficulty, matching the scenario
- * library. The data says easy, medium, hard; people always read these words.
+ * The on-screen word for a challenge difficulty, from
+ * `t.challenges.difficulty`. Pass that slice so the word follows the
+ * reader's language; it defaults to English for callers not yet converted.
+ * An unknown value reads as the middle level.
  */
-export const CHALLENGE_DIFFICULTY_LABELS: Record<ChallengeDifficulty, string> =
-  {
-    easy: 'Beginner',
-    medium: 'Intermediate',
-    hard: 'Advanced',
-  }
-
-export function challengeDifficultyLabel(difficulty: string): string {
-  const labels: Partial<Record<string, string>> = CHALLENGE_DIFFICULTY_LABELS
-  return labels[difficulty] ?? CHALLENGE_DIFFICULTY_LABELS.medium
+export function challengeDifficultyLabel(
+  difficulty: string,
+  labels: Messages['challenges']['difficulty'],
+): string {
+  const byValue: Partial<Record<string, string>> = labels
+  return byValue[difficulty] ?? labels.medium
 }
 
-const OBJECTIVE_WORDS: Record<string, string> = {
-  observation: 'observations',
-  feeling: 'feelings',
-  need: 'needs',
-  request: 'requests',
-}
-
-/** "observations and feelings", "observations, feelings and needs". */
-export function practiceAreasPhrase(objectives: Array<string>): string {
-  const words = objectives.map((o) => OBJECTIVE_WORDS[o] ?? o)
-  if (words.length <= 1) return words.join('')
-  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+/**
+ * The learning objectives as words for running text, from
+ * `t.challenges.objectiveWords`. An objective without a word is shown as is.
+ * The dictionary joins them into a sentence.
+ */
+export function practiceAreaWords(
+  objectives: ReadonlyArray<string>,
+  words: Messages['challenges']['objectiveWords'],
+): Array<string> {
+  const byValue: Partial<Record<string, string>> = words
+  return objectives.map((o) => byValue[o] ?? o)
 }
 
 /**
@@ -50,6 +49,7 @@ export const QUIET_LINK_CLASS =
  * null until then.
  */
 export function useNextChallengeTime(): string | null {
+  const format = useFormat()
   const [label, setLabel] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function useNextChallengeTime(): string | null {
       const next = new Date()
       next.setUTCHours(24, 0, 0, 0)
       setLabel(
-        next.toLocaleTimeString(undefined, {
+        format.time(next, {
           hour: 'numeric',
           minute: '2-digit',
         }),
@@ -68,7 +68,7 @@ export function useNextChallengeTime(): string | null {
     // hourly check is plenty.
     const interval = setInterval(update, 60 * 60 * 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [format])
 
   return label
 }

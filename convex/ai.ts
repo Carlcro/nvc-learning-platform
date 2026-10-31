@@ -262,15 +262,15 @@ export const submitTurn = action({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const message = args.message.trim()
     if (!message) {
-      userError('Message is empty')
+      userError('messageEmpty')
     }
     if (message.length > MAX_MESSAGE_LENGTH) {
-      userError('Message is too long')
+      userError('messageTooLong')
     }
 
     const turn = await ctx.runQuery(internal.conversations.getForTurn, {
@@ -278,15 +278,13 @@ export const submitTurn = action({
       userId,
     })
     if (!turn) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
 
     const { conversation, scenario, userLevel, userTurnCount } = turn
 
     if (userTurnCount >= MAX_USER_TURNS) {
-      userError(
-        'This conversation has run its course. Wrap it up to see how it went, and you can always start it again.',
-      )
+      userError('conversationAtTurnLimit')
     }
 
     // Reserved before the model is called, since that is what actually costs.
@@ -666,7 +664,7 @@ export const generateReflection = action({
   handler: async (ctx, args): Promise<ReflectionResult | null> => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const loaded = await ctx.runQuery(internal.conversations.getForReflection, {
@@ -674,7 +672,7 @@ export const generateReflection = action({
       userId,
     })
     if (!loaded) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     const { conversation, scenario } = loaded
     if (conversation.reflection) return conversation.reflection
@@ -796,16 +794,16 @@ export const assessScenarioReadiness = action({
   handler: async (ctx, args): Promise<ScenarioReadinessResult> => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
     if (args.userDescription.length > MAX_DESCRIPTION_LENGTH) {
-      userError('Description is too long')
+      userError('descriptionTooLong')
     }
     if (
       args.priorAnswers.length > 6 ||
       args.priorAnswers.some((qa) => qa.answer.length > MAX_ANSWER_LENGTH)
     ) {
-      userError('Answers are too long')
+      userError('answersTooLong')
     }
 
     // Hard cap: two rounds of follow-ups, then we always proceed.
@@ -895,16 +893,16 @@ export const generateCustomScenario = action({
   handler: async (ctx, args): Promise<CustomScenarioResult> => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
     if (args.userDescription.length > MAX_DESCRIPTION_LENGTH) {
-      userError('Description is too long')
+      userError('descriptionTooLong')
     }
     if (
       args.answers.length > 6 ||
       args.answers.some((qa) => qa.answer.length > MAX_ANSWER_LENGTH)
     ) {
-      userError('Answers are too long')
+      userError('answersTooLong')
     }
 
     await ctx.runMutation(internal.usage.consumeScenarioGeneration, { userId })

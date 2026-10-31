@@ -3,20 +3,20 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
+import type { Messages } from '~/i18n/messages'
 import { pageMeta } from '~/lib/seo'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { StarIcon } from '~/components/ui/Icons'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Scenario Brief',
-      description:
-        'Read the situation and meet the person you are about to talk with.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.practice.meta.brief) }
+  },
   // Daily challenges arrive here with their challenge id; keep it through the
   // brief so completing the conversation can credit the challenge.
   validateSearch: (search: Record<string, unknown>) => ({
@@ -34,13 +34,6 @@ function ProtectedBrief() {
   )
 }
 
-const categoryLabels: Record<string, string> = {
-  workplace: 'Workplace',
-  family: 'Family',
-  friendship: 'Friendship',
-  self_expression: 'Self-Expression',
-}
-
 // Difficulty reads as a warm ramp: calm green (easy) -> gold -> coral
 // (intense). Dark text keeps every chip legible on its fill.
 const difficultyChip: Record<string, string> = {
@@ -51,14 +44,16 @@ const difficultyChip: Record<string, string> = {
 
 // The four pieces, as a reference to dip into. Deliberately not a checklist
 // for every message: see the "one piece at a time" note shown above them.
-const TIPS = [
-  'Observation: describe what you saw or heard, without judgment.',
-  'Feeling: name the emotion itself, not a thought or blame.',
-  'Need: say what matters to you underneath the feeling.',
-  'Request: ask for one specific, doable thing, and leave room for a no.',
+const TIPS: Array<keyof Messages['practice']['brief']['tips']> = [
+  'observation',
+  'feeling',
+  'need',
+  'request',
 ]
 
 function ScenarioBrief() {
+  const t = useT()
+  const copy = t.practice.brief
   const navigate = useNavigate()
   const { scenarioId } = Route.useParams()
   const { dailyChallengeId } = Route.useSearch()
@@ -132,7 +127,7 @@ function ScenarioBrief() {
         search: { dailyChallengeId },
       })
     } catch {
-      setStartError("That didn't go through. Take a breath and try again.")
+      setStartError(t.practice.tryAgainError)
       setIsCreatingConversation(false)
     }
   }
@@ -142,7 +137,7 @@ function ScenarioBrief() {
   }
 
   if (scenario === undefined) {
-    return <GiraffeLoader message="Setting the scene for your conversation…" />
+    return <GiraffeLoader message={copy.loading} />
   }
 
   // Loaded but not found (deleted, or someone else's private scenario).
@@ -151,16 +146,16 @@ function ScenarioBrief() {
       <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-32 px-6">
         <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
           <h1 className="text-2xl font-bold text-brown-800 mb-3">
-            We could not find this scenario
+            {copy.notFound.title}
           </h1>
           <p className="text-brown-700 mb-6">
-            It may have been removed, or the link is no longer valid.
+            {copy.notFound.body}
           </p>
           <button
             onClick={handleBack}
             className="px-6 py-3 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors cursor-pointer"
           >
-            Back to scenarios
+            {copy.back}
           </button>
         </div>
       </main>
@@ -183,7 +178,7 @@ function ScenarioBrief() {
               clipRule="evenodd"
             />
           </svg>
-          Back to scenarios
+          {copy.back}
         </button>
 
         {/* Card */}
@@ -195,9 +190,7 @@ function ScenarioBrief() {
             </h1>
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brown-700 text-cream">
-                {categoryLabels[
-                  scenario.category as keyof typeof categoryLabels
-                ] || scenario.category}
+                {t.practice.categories[scenario.category] || scenario.category}
               </span>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
@@ -206,7 +199,7 @@ function ScenarioBrief() {
                   ] ?? 'bg-giraffe-100 text-brown-900'
                 }`}
               >
-                {scenario.difficulty}
+                {t.practice.difficulties[scenario.difficulty]}
               </span>
             </div>
           </header>
@@ -216,7 +209,7 @@ function ScenarioBrief() {
             {/* Situation - the setup the user needs first */}
             <section>
               <h2 className="text-lg font-bold text-brown-800 mb-2">
-                Situation
+                {t.practice.situation}
               </h2>
               <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-lg p-4 border border-giraffe-100 text-pretty">
                 {scenario.situation}
@@ -228,13 +221,13 @@ function ScenarioBrief() {
               {/* About the character */}
               <section>
                 <h2 className="text-lg font-bold text-brown-800 mb-2">
-                  About {scenario.characterName}
+                  {t.practice.aboutCharacter(scenario.characterName)}
                 </h2>
                 <div className="space-y-3">
                   {scenario.characterPersonality && (
                     <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
                       <p className="text-xs font-semibold text-brown-700 mb-1">
-                        Personality
+                        {t.practice.personality}
                       </p>
                       <p className="text-brown-700 text-sm leading-relaxed">
                         {scenario.characterPersonality}
@@ -244,7 +237,7 @@ function ScenarioBrief() {
                   {scenario.characterBackground && (
                     <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
                       <p className="text-xs font-semibold text-brown-700 mb-1">
-                        Background
+                        {t.practice.background}
                       </p>
                       <p className="text-brown-700 text-sm leading-relaxed">
                         {scenario.characterBackground}
@@ -257,7 +250,7 @@ function ScenarioBrief() {
               {/* What you'll practice */}
               <section>
                 <h2 className="text-lg font-bold text-brown-800 mb-2">
-                  What you'll practice
+                  {t.practice.whatYoullPractice}
                 </h2>
                 <ol className="space-y-2">
                   {scenario.learningObjectives.map(
@@ -280,7 +273,7 @@ function ScenarioBrief() {
                 {scenario.focusArea && (
                   <p className="mt-3 text-sm text-brown-700">
                     <span className="font-semibold text-brown-800">
-                      Focus:{' '}
+                      {copy.focus}{' '}
                     </span>
                     <span className="capitalize">
                       {scenario.focusArea.replace(/_/g, ' ')}
@@ -293,17 +286,15 @@ function ScenarioBrief() {
             {/* The one idea that shapes everything after this page */}
             <div className="rounded-lg border border-giraffe-200 bg-giraffe-50 px-4 py-3 text-sm text-brown-700 text-pretty">
               <span className="font-semibold text-brown-800">
-                One piece at a time.
+                {copy.onePiece.lead}
               </span>{' '}
-              A real conversation unfolds gradually: an observation in one
-              message, a feeling in the next, a request later on. You never
-              need to fit everything into one message.
+              {copy.onePiece.body}
             </div>
 
             {/* The four pieces, collapsed by default to keep the page short */}
             <details className="group rounded-lg border border-giraffe-200 bg-giraffe-50/70">
               <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-4 py-3 font-bold text-brown-800 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2">
-                The four pieces, for reference
+                {copy.tipsTitle}
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -318,12 +309,12 @@ function ScenarioBrief() {
                 </svg>
               </summary>
               <ul className="px-4 pb-4 space-y-2 text-sm text-brown-700">
-                {TIPS.map((tip, i) => (
-                  <li key={i} className="flex items-start gap-2">
+                {TIPS.map((tip) => (
+                  <li key={tip} className="flex items-start gap-2">
                     <span aria-hidden="true" className="text-giraffe-700 mt-0.5">
                       •
                     </span>
-                    <span className="text-pretty">{tip}</span>
+                    <span className="text-pretty">{copy.tips[tip]}</span>
                   </li>
                 ))}
                 <li className="flex items-start gap-2">
@@ -331,8 +322,7 @@ function ScenarioBrief() {
                     •
                   </span>
                   <span className="text-pretty">
-                    Stay curious about {scenario.characterName}'s perspective and
-                    needs, too.
+                    {copy.stayCurious(scenario.characterName)}
                   </span>
                 </li>
               </ul>
@@ -342,12 +332,12 @@ function ScenarioBrief() {
             {userProgress && userProgress.bestScore > 0 && (
               <div className="flex items-center gap-2 rounded-lg border border-empathy-high/40 bg-empathy-high/15 px-4 py-3 text-sm">
                 <span className="font-semibold text-brown-800">
-                  Your best: {userProgress.bestScore}/100
+                  {copy.best(userProgress.bestScore)}
                 </span>
                 {userProgress.bestStars > 0 && (
                   <span
                     role="img"
-                    aria-label={`${userProgress.bestStars} of 3 stars`}
+                    aria-label={t.practice.starsLabel(userProgress.bestStars)}
                     className="inline-flex items-center gap-0.5 text-giraffe-700"
                   >
                     {Array.from({ length: userProgress.bestStars }).map(
@@ -358,8 +348,7 @@ function ScenarioBrief() {
                   </span>
                 )}
                 <span className="text-brown-600">
-                  · {userProgress.attempts}{' '}
-                  {userProgress.attempts === 1 ? 'attempt' : 'attempts'}
+                  {copy.attempts(userProgress.attempts)}
                 </span>
               </div>
             )}
@@ -377,15 +366,14 @@ function ScenarioBrief() {
                 </p>
               ) : isContinuing ? (
                 <p className="flex-1 text-sm text-brown-600 text-pretty">
-                  Your conversation with {scenario.characterName} is waiting,{' '}
-                  {activeConversation.userTurns === 1
-                    ? 'one message in'
-                    : `${activeConversation.userTurns} messages in`}
-                  .
+                  {copy.waiting(
+                    scenario.characterName,
+                    activeConversation.userTurns,
+                  )}
                 </p>
               ) : (
                 <p className="flex-1 text-sm text-brown-600">
-                  Ready when you are. Take your time.
+                  {t.practice.readyWhenYouAre}
                 </p>
               )}
               {isContinuing && (
@@ -396,7 +384,7 @@ function ScenarioBrief() {
                   className="w-full sm:w-auto"
                   disabled={isCreatingConversation}
                 >
-                  Start fresh
+                  {copy.startFresh}
                 </Button>
               )}
               <Button
@@ -408,10 +396,10 @@ function ScenarioBrief() {
                 disabled={isCreatingConversation}
               >
                 {isCreatingConversation
-                  ? 'Starting...'
+                  ? copy.starting
                   : isContinuing
-                    ? 'Continue your conversation'
-                    : 'Start Conversation'}
+                    ? copy.continue
+                    : copy.start}
               </Button>
             </div>
           </footer>
@@ -467,10 +455,10 @@ function ScenarioBrief() {
             </svg>
           )}
           {isCreatingConversation
-            ? 'Starting...'
+            ? copy.starting
             : isContinuing
-              ? 'Continue your conversation'
-              : 'Start Conversation'}
+              ? copy.continue
+              : copy.start}
         </button>
       </div>
     </main>

@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '~/components/ui/Button'
 import { CheckIcon } from '~/components/ui/Icons'
 import { useLessonProgress } from '~/hooks/useLessonProgress'
+import { useT } from '~/i18n/useT'
 
 export interface Question {
   question: string
@@ -34,6 +35,7 @@ export function QuizSection({
   lessonId,
   next,
 }: QuizSectionProps) {
+  const t = useT()
   const { submitQuiz } = useLessonProgress()
   const [current, setCurrent] = useState(0)
   const [answers, setAnswers] = useState<Array<number | null>>(() =>
@@ -109,12 +111,12 @@ export function QuizSection({
           id="quiz-heading"
           className="text-2xl font-bold text-brown-800 text-balance"
         >
-          You've finished this lesson.
+          {t.learn.quiz.finishedTitle}
         </h2>
         <p className="mt-2 text-brown-700 text-pretty max-w-prose">
-          You found {firstTryCount} of {questions.length} on the first look.
+          {t.learn.quiz.firstLookSummary(firstTryCount, questions.length)}
           {firstTryCount < questions.length &&
-            ' The ones that took a second look are often the ones that stick.'}
+            ` ${t.learn.quiz.secondLookNote}`}
         </p>
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
           {next && (
@@ -129,7 +131,7 @@ export function QuizSection({
             onClick={restart}
             className="self-start sm:self-auto font-semibold text-brown-700 underline decoration-giraffe-400 decoration-2 underline-offset-4 hover:text-brown-900 cursor-pointer"
           >
-            Go through the questions again
+            {t.learn.quiz.tryAgain}
           </button>
         </div>
       </section>
@@ -143,10 +145,10 @@ export function QuizSection({
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-6">
         <h2 id="quiz-heading" className="text-2xl font-bold text-brown-800">
-          Check your understanding
+          {t.learn.quiz.heading}
         </h2>
         <p className="text-sm text-brown-600 tabular-nums">
-          Question {current + 1} of {questions.length}
+          {t.learn.quiz.questionOf(current + 1, questions.length)}
         </p>
       </div>
 
@@ -209,25 +211,27 @@ export function QuizSection({
         {step === 'missed' && (
           <div className="rounded-lg bg-paper border-2 border-brown-100 px-4 py-3">
             <p className="font-semibold text-brown-800">
-              Not quite this one.
+              {t.learn.quiz.notQuite}
             </p>
             <p className="text-sm text-brown-700 text-pretty">
-              Have another look at the other options, or{' '}
+              {t.learn.quiz.missedBefore}
               <button
                 type="button"
                 onClick={showAnswer}
                 className="font-semibold underline decoration-giraffe-400 decoration-2 underline-offset-4 hover:text-brown-900 cursor-pointer"
               >
-                show me the answer
+                {t.learn.quiz.showAnswer}
               </button>
-              .
+              {t.learn.quiz.missedAfter}
             </p>
           </div>
         )}
         {step === 'found' && (
           <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-empathy-high)_12%,white)] border-2 border-empathy-high/40 px-4 py-3">
             <p className="font-semibold text-brown-900">
-              {firstTry[current] ? 'Yes, that one.' : 'That’s the one.'}
+              {firstTry[current]
+                ? t.learn.quiz.foundFirstTry
+                : t.learn.quiz.foundLater}
             </p>
             <p className="text-sm text-brown-800 text-pretty">
               {question.explanation}
@@ -250,14 +254,14 @@ export function QuizSection({
             }}
             className="min-h-11 px-1 font-semibold text-brown-700 hover:text-brown-900 cursor-pointer"
           >
-            Previous question
+            {t.learn.quiz.previousQuestion}
           </button>
         ) : (
           <span />
         )}
         {step === 'found' ? (
           <Button variant="primary" onClick={goNext}>
-            {isLast ? 'Finish' : 'Next question'}
+            {isLast ? t.learn.quiz.finish : t.learn.quiz.nextQuestion}
           </Button>
         ) : (
           <Button
@@ -266,7 +270,7 @@ export function QuizSection({
             disabled={chosen === null}
             className="disabled:opacity-100 disabled:bg-brown-100 disabled:text-brown-500 disabled:shadow-none"
           >
-            Check my answer
+            {t.learn.quiz.checkAnswer}
           </Button>
         )}
       </div>

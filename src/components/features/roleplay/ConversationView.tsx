@@ -7,6 +7,8 @@
 
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
+import type { Messages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export interface Message {
   id?: string
@@ -42,11 +44,15 @@ interface ConversationViewProps {
  * link between what was just said and how it landed is visible in the
  * conversation itself, not only on the meter.
  */
-function moodShiftNote(name: string, delta: number): string | null {
-  if (delta >= 3) return `${name} opened up`
-  if (delta > 0) return `${name} softened a little`
-  if (delta <= -3) return `${name} grew more guarded`
-  if (delta < 0) return `${name} pulled back a little`
+function moodShiftNote(
+  name: string,
+  delta: number,
+  copy: Messages['roleplay']['conversation']['moodShift'],
+): string | null {
+  if (delta >= 3) return copy.openedUp(name)
+  if (delta > 0) return copy.softened(name)
+  if (delta <= -3) return copy.moreGuarded(name)
+  if (delta < 0) return copy.pulledBack(name)
   return null
 }
 
@@ -58,6 +64,7 @@ function moodShiftNote(name: string, delta: number): string | null {
 function highlightJackalPhrases(
   content: string,
   phrases: Array<string>,
+  markTitle: string,
 ): ReactNode {
   const escaped = phrases
     .map((p) => p.trim())
@@ -72,7 +79,7 @@ function highlightJackalPhrases(
     matcher.test(part) ? (
       <mark
         key={i}
-        title="This might land as judgment or blame"
+        title={markTitle}
         className="bg-white/40 text-inherit rounded px-0.5 -mx-0.5 underline decoration-empathy-low decoration-2 underline-offset-2 box-decoration-clone"
       >
         {part}
@@ -95,13 +102,15 @@ function MessageBubble({
   moodDelta?: number
   animateIn?: boolean
 }) {
+  const t = useT()
+  const copy = t.roleplay.conversation
   const isUser = message.role === 'user'
   const jackalPhrases =
     isUser && message.isJackalLanguage ? (message.jackalPhrases ?? []) : []
   const hasHighlights = jackalPhrases.length > 0
   const shiftNote =
     !isUser && moodDelta !== undefined
-      ? moodShiftNote(characterName, moodDelta)
+      ? moodShiftNote(characterName, moodDelta, copy.moodShift)
       : null
 
   return (
@@ -118,7 +127,7 @@ function MessageBubble({
             : 'bg-linear-to-br from-brown-600 to-brown-700 text-white'
         }`}
       >
-        {isUser ? 'You' : characterName.charAt(0)}
+        {isUser ? copy.you : characterName.charAt(0)}
       </div>
 
       {/* Message Content */}
@@ -127,7 +136,7 @@ function MessageBubble({
       >
         {/* Sender Label */}
         <div className="text-xs font-semibold text-brown-600">
-          {isUser ? 'You' : characterName}
+          {isUser ? copy.you : characterName}
         </div>
 
         {/* Message Bubble */}
@@ -139,15 +148,17 @@ function MessageBubble({
           }`}
         >
           {hasHighlights
-            ? highlightJackalPhrases(message.content, jackalPhrases)
+            ? highlightJackalPhrases(
+                message.content,
+                jackalPhrases,
+                copy.jackalMarkTitle,
+              )
             : message.content}
         </div>
 
         {/* One quiet line explaining the marks, only when there are marks */}
         {hasHighlights && (
-          <p className="text-[11px] text-brown-500">
-            Underlined words may land as judgment or blame.
-          </p>
+          <p className="text-[11px] text-brown-500">{copy.jackalNote}</p>
         )}
 
         {shiftNote && moodDelta !== undefined && (

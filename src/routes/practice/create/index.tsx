@@ -4,21 +4,21 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from 'convex/_generated/dataModel'
 import type { ReactNode } from 'react'
+import type { Messages } from '~/i18n/messages'
 import { pageMeta } from '~/lib/seo'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { Button } from '~/components/ui/Button'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/practice/create/')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Build a Scenario',
-      description:
-        'Shape a scenario from a real situation in your life, then rehearse it.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.practice.meta.create) }
+  },
   component: ProtectedCreate,
 })
 
@@ -91,36 +91,40 @@ const EMPTY_DRAFT: DraftAnswers = {
   challenge: '',
 }
 
-const RELATIONSHIPS = [
-  'Partner',
-  'Family member',
-  'Friend',
-  'Manager',
-  'Coworker',
-  'Roommate',
-  'Other',
+type CreateCopy = Messages['practice']['create']
+
+// The chip options are stored by key; their words come from the dictionary,
+// in the order listed here.
+const RELATIONSHIPS: Array<keyof CreateCopy['relationships']> = [
+  'partner',
+  'familyMember',
+  'friend',
+  'manager',
+  'coworker',
+  'roommate',
+  'other',
 ]
 
-const REACTIONS = [
-  'Gets defensive',
-  'Shuts down or goes quiet',
-  'Gets louder',
-  'Deflects with humor',
-  'Stays calm',
-  'Apologizes quickly',
-  'Brings up the past',
-  'Not sure yet',
+const REACTIONS: Array<keyof CreateCopy['reactions']> = [
+  'defensive',
+  'shutsDown',
+  'louder',
+  'humor',
+  'calm',
+  'apologizes',
+  'past',
+  'notSure',
 ]
 
-const OPENNESS: Array<{ value: DraftAnswers['openness']; label: string }> = [
-  { value: 'guarded', label: 'Pretty guarded' },
-  { value: 'mixed', label: 'Guarded but willing' },
-  { value: 'open', label: 'Fairly open' },
+const OPENNESS: Array<Exclude<DraftAnswers['openness'], ''>> = [
+  'guarded',
+  'mixed',
+  'open',
 ]
 
 // Common feelings in a hard conversation, drawn from the app's feelings
 // library vocabulary. Kept short so naming a feeling stays calm, not clinical.
-const FEELINGS = [
+const FEELINGS: Array<keyof CreateCopy['feelings']> = [
   'frustrated',
   'angry',
   'irritated',
@@ -135,26 +139,19 @@ const FEELINGS = [
   'resentful',
 ]
 
-const PRACTICE_FOCUS = [
-  'Stating what I observed without blame',
-  'Naming my feelings',
-  'Connecting to what I need',
-  'Making a clear request',
-  'Staying grounded if it gets heated',
+const PRACTICE_FOCUS: Array<keyof CreateCopy['practiceFocus']> = [
+  'observation',
+  'feelings',
+  'needs',
+  'request',
+  'grounded',
 ]
 
-const CHALLENGE: Array<{ value: DraftAnswers['challenge']; label: string }> = [
-  { value: 'gentle', label: 'Gentle' },
-  { value: 'true', label: 'True to life' },
-  { value: 'tougher', label: 'Tougher than usual' },
+const CHALLENGE: Array<Exclude<DraftAnswers['challenge'], ''>> = [
+  'gentle',
+  'true',
+  'tougher',
 ]
-
-const categoryLabels: Record<string, string> = {
-  workplace: 'Workplace',
-  family: 'Family',
-  friendship: 'Friendship',
-  self_expression: 'Self-Expression',
-}
 
 const difficultyChip: Record<string, string> = {
   beginner: 'bg-empathy-high text-brown-900',
@@ -162,31 +159,24 @@ const difficultyChip: Record<string, string> = {
   advanced: 'bg-empathy-low text-brown-900',
 }
 
-// The journey the user travels, named so the guide rail can show where they are.
-const STAGES = [
-  'The situation',
-  'The other person',
-  'What you hope for',
-  'Your space',
-]
-
-const opennessLabel = (value: DraftAnswers['openness']) =>
-  OPENNESS.find((o) => o.value === value)?.label ?? 'Unsure'
-
-const challengeLabel = (value: DraftAnswers['challenge']) =>
-  CHALLENGE.find((c) => c.value === value)?.label ?? 'True to life'
-
 /**
  * Turn the wizard answers into a plain Q&A list the builder can reason over.
- * Only includes the things the person actually shared.
+ * Only includes the things the person actually shared. The questions are
+ * instructions for the builder, never shown, so they stay in English; the
+ * chosen chips are written out in the words the person saw.
  */
-function buildSeedAnswers(a: DraftAnswers): Array<{
+function buildSeedAnswers(
+  a: DraftAnswers,
+  copy: CreateCopy,
+): Array<{
   question: string
   answer: string
 }> {
   const seed: Array<{ question: string; answer: string }> = []
-  const name = a.otherPersonName.trim() || 'the other person'
-  const relationship = a.relationship || 'someone in my life'
+  const name = a.otherPersonName.trim() || copy.otherPersonFallback
+  const relationship = a.relationship
+    ? copy.relationships[a.relationship as keyof CreateCopy['relationships']]
+    : copy.relationshipFallback
   seed.push({
     question: 'Who is this conversation with and what is your relationship?',
     answer: `${name}, ${relationship}`,
@@ -200,7 +190,9 @@ function buildSeedAnswers(a: DraftAnswers): Array<{
   if (a.howTheyReact.length > 0) {
     seed.push({
       question: 'How does this person usually react when things get tense?',
-      answer: a.howTheyReact.join(', '),
+      answer: a.howTheyReact
+        .map((r) => copy.reactions[r as keyof CreateCopy['reactions']])
+        .join(', '),
     })
   }
   if (a.whatMattersToThem.trim()) {
@@ -212,7 +204,7 @@ function buildSeedAnswers(a: DraftAnswers): Array<{
   if (a.openness) {
     seed.push({
       question: 'How open do you expect them to be at the start?',
-      answer: opennessLabel(a.openness),
+      answer: copy.openness[a.openness],
     })
   }
   if (a.history.trim()) {
@@ -224,7 +216,9 @@ function buildSeedAnswers(a: DraftAnswers): Array<{
   if (a.feelings.length > 0) {
     seed.push({
       question: 'How does this situation leave you feeling?',
-      answer: a.feelings.join(', '),
+      answer: a.feelings
+        .map((f) => copy.feelings[f as keyof CreateCopy['feelings']])
+        .join(', '),
     })
   }
   if (a.goodOutcome.trim()) {
@@ -236,13 +230,15 @@ function buildSeedAnswers(a: DraftAnswers): Array<{
   if (a.whatToPractice.length > 0) {
     seed.push({
       question: 'What do you most want to practice?',
-      answer: a.whatToPractice.join(', '),
+      answer: a.whatToPractice
+        .map((p) => copy.practiceFocus[p as keyof CreateCopy['practiceFocus']])
+        .join(', '),
     })
   }
   if (a.challenge) {
     seed.push({
       question: 'How challenging should they be?',
-      answer: challengeLabel(a.challenge),
+      answer: copy.challenge[a.challenge],
     })
   }
   return seed
@@ -253,6 +249,8 @@ function buildSeedAnswers(a: DraftAnswers): Array<{
 // ============================================================================
 
 function ScenarioCreate() {
+  const t = useT()
+  const copy = t.practice.create
   const navigate = useNavigate()
   const currentUser = useQuery(api.users.getCurrentUser)
 
@@ -292,7 +290,7 @@ function ScenarioCreate() {
   const flowEpochRef = useRef(0)
   const isStale = (epoch: number) => epoch !== flowEpochRef.current
 
-  const name = answers.otherPersonName.trim() || 'them'
+  const name = answers.otherPersonName.trim() || copy.themFallback
 
   const userDescription = [answers.whatsGoingOn.trim(), answers.whatWasSaid.trim()]
     .filter(Boolean)
@@ -311,7 +309,7 @@ function ScenarioCreate() {
     try {
       const scenario = (await generateScenario({
         userDescription,
-        answers: [...buildSeedAnswers(answers), ...clarify],
+        answers: [...buildSeedAnswers(answers, copy), ...clarify],
       })) as GeneratedScenario
       if (isStale(epoch)) return
       setGenerated(scenario)
@@ -321,7 +319,8 @@ function ScenarioCreate() {
       setError(
         userFacingMessage(
           err,
-          "We couldn't shape this just now. Take a breath and try again.",
+          copy.generateError,
+          t.errors,
         ),
       )
     } finally {
@@ -343,7 +342,7 @@ function ScenarioCreate() {
     try {
       const res = await assessReadiness({
         userDescription,
-        priorAnswers: buildSeedAnswers(answers),
+        priorAnswers: buildSeedAnswers(answers, copy),
         roundsSoFar: 0,
       })
       if (isStale(epoch)) return
@@ -384,7 +383,7 @@ function ScenarioCreate() {
     try {
       const res = await assessReadiness({
         userDescription,
-        priorAnswers: [...buildSeedAnswers(answers), ...newThread],
+        priorAnswers: [...buildSeedAnswers(answers, copy), ...newThread],
         roundsSoFar: rounds,
       })
       if (isStale(epoch)) return
@@ -429,7 +428,8 @@ function ScenarioCreate() {
       setError(
         userFacingMessage(
           err,
-          "That didn't go through. Take a breath and try again.",
+          t.practice.tryAgainError,
+          t.errors,
         ),
       )
       setStarting(false)
@@ -462,16 +462,17 @@ function ScenarioCreate() {
 
   const railBubble =
     step === 'situation'
-      ? "Let's start with what's on your mind. Share only what you'd like, and keep it simple."
+      ? copy.bubble.situation
       : step === 'person'
-        ? `A little about ${name}, so they feel real to talk to.`
+        ? copy.bubble.person(name)
         : step === 'you'
-          ? "Now the part that's about you, and what you're hoping for."
+          ? copy.bubble.you
           : step === 'refine'
-            ? `A couple of things, so this feels true to your situation with ${name}.`
-            : "Here's your space. Make it yours, and adjust anything that doesn't fit."
+            ? copy.bubble.refine(name)
+            : copy.bubble.review
 
-  const backLabel = step === 'situation' ? 'Back to practice' : 'Back a step'
+  const backLabel =
+    step === 'situation' ? copy.backToPractice : copy.backAStep
   const handleBack = () => {
     setError(null)
     if (step === 'situation') navigate({ to: '/practice' })
@@ -500,7 +501,7 @@ function ScenarioCreate() {
   // ---- Render ---------------------------------------------------------------
 
   if (step === 'review' && generating) {
-    return <GiraffeLoader message="Shaping your practice space…" />
+    return <GiraffeLoader message={copy.loading} />
   }
 
   return (
@@ -514,17 +515,20 @@ function ScenarioCreate() {
           {/* Each phase fades up as it takes the stage */}
           <div ref={contentRef} key={step} className="animate-step-in min-w-0">
             {step === 'situation' && (
-              <StepCard title="The situation">
+              <StepCard title={copy.situationStep.title}>
                 <TextField
-                  label="Who is this conversation with?"
-                  hint="A name or how you'll refer to them"
+                  label={copy.situationStep.who}
+                  hint={copy.situationStep.whoHint}
                   value={answers.otherPersonName}
                   onChange={(v) => update({ otherPersonName: v })}
-                  placeholder="e.g. Sam"
+                  placeholder={copy.situationStep.whoPlaceholder}
                 />
                 <ChipGroup
-                  label="What's your relationship?"
-                  options={RELATIONSHIPS.map((r) => ({ value: r, label: r }))}
+                  label={copy.situationStep.relationship}
+                  options={RELATIONSHIPS.map((r) => ({
+                    value: r,
+                    label: copy.relationships[r],
+                  }))}
                   selected={answers.relationship ? [answers.relationship] : []}
                   onToggle={(v) =>
                     update({
@@ -533,23 +537,23 @@ function ScenarioCreate() {
                   }
                 />
                 <TextAreaField
-                  label="In a sentence or two, what's going on?"
+                  label={copy.situationStep.whatsGoingOn}
                   value={answers.whatsGoingOn}
                   onChange={(v) => update({ whatsGoingOn: v })}
-                  placeholder="What's the situation you want to rehearse?"
+                  placeholder={copy.situationStep.whatsGoingOnPlaceholder}
                 />
                 <TextAreaField
-                  label="What happened, specifically?"
+                  label={copy.situationStep.whatHappened}
                   optional
                   value={answers.whatWasSaid}
                   onChange={(v) => update({ whatWasSaid: v })}
-                  placeholder="A specific thing that was said or done"
+                  placeholder={copy.situationStep.whatHappenedPlaceholder}
                 />
 
                 <StepActions
                   hint={
                     !canLeaveSituation
-                      ? "Add who it's with and what's going on to continue."
+                      ? copy.situationStep.incompleteHint
                       : undefined
                   }
                 >
@@ -560,18 +564,21 @@ function ScenarioCreate() {
                     disabled={!canLeaveSituation}
                     onClick={() => setStep('person')}
                   >
-                    Continue
+                    {copy.continue}
                   </Button>
                 </StepActions>
               </StepCard>
             )}
 
             {step === 'person' && (
-              <StepCard title={`About ${name}`}>
+              <StepCard title={copy.personStep.title(name)}>
                 <ChipGroup
-                  label="How do they usually react when things get tense?"
-                  hint="Choose any that fit"
-                  options={REACTIONS.map((r) => ({ value: r, label: r }))}
+                  label={copy.personStep.reactions}
+                  hint={copy.personStep.chooseAny}
+                  options={REACTIONS.map((r) => ({
+                    value: r,
+                    label: copy.reactions[r],
+                  }))}
                   selected={answers.howTheyReact}
                   onToggle={(v) =>
                     update({
@@ -582,18 +589,18 @@ function ScenarioCreate() {
                   }
                 />
                 <TextAreaField
-                  label="What do you think matters most to them here?"
+                  label={copy.personStep.whatMatters}
                   optional
-                  hint="For example: being respected, being heard, fairness"
+                  hint={copy.personStep.whatMattersHint}
                   value={answers.whatMattersToThem}
                   onChange={(v) => update({ whatMattersToThem: v })}
-                  placeholder="What's underneath their reaction?"
+                  placeholder={copy.personStep.whatMattersPlaceholder}
                 />
                 <ChipGroup
-                  label="How open do you expect them to be at the start?"
+                  label={copy.personStep.openness}
                   options={OPENNESS.map((o) => ({
-                    value: o.value,
-                    label: o.label,
+                    value: o,
+                    label: copy.openness[o],
                   }))}
                   selected={answers.openness ? [answers.openness] : []}
                   onToggle={(v) =>
@@ -606,11 +613,11 @@ function ScenarioCreate() {
                   }
                 />
                 <TextAreaField
-                  label="Anything else about them or your history?"
+                  label={copy.personStep.history}
                   optional
                   value={answers.history}
                   onChange={(v) => update({ history: v })}
-                  placeholder="Only if it helps picture the conversation"
+                  placeholder={copy.personStep.historyPlaceholder}
                 />
 
                 <StepActions>
@@ -620,21 +627,23 @@ function ScenarioCreate() {
                     className="px-8"
                     onClick={() => setStep('you')}
                   >
-                    Continue
+                    {copy.continue}
                   </Button>
                 </StepActions>
               </StepCard>
             )}
 
             {step === 'you' && (
-              <StepCard title="What you're hoping for">
+              <StepCard title={copy.youStep.title}>
                 <ChipGroup
-                  label="How does this leave you feeling?"
+                  label={copy.youStep.feelings}
                   optional
-                  hint="Choose any that fit, or none"
+                  hint={copy.youStep.feelingsHint}
                   options={FEELINGS.map((f) => ({
                     value: f,
-                    label: f.charAt(0).toUpperCase() + f.slice(1),
+                    label:
+                      copy.feelings[f].charAt(0).toUpperCase() +
+                      copy.feelings[f].slice(1),
                   }))}
                   selected={answers.feelings}
                   onToggle={(v) =>
@@ -646,15 +655,18 @@ function ScenarioCreate() {
                   }
                 />
                 <TextAreaField
-                  label="What would feel like a good outcome for you?"
+                  label={copy.youStep.goodOutcome}
                   value={answers.goodOutcome}
                   onChange={(v) => update({ goodOutcome: v })}
-                  placeholder="What you'd love to feel or hear by the end"
+                  placeholder={copy.youStep.goodOutcomePlaceholder}
                 />
                 <ChipGroup
-                  label="What do you most want to practice?"
-                  hint="Choose any that fit"
-                  options={PRACTICE_FOCUS.map((p) => ({ value: p, label: p }))}
+                  label={copy.youStep.practice}
+                  hint={copy.youStep.chooseAny}
+                  options={PRACTICE_FOCUS.map((p) => ({
+                    value: p,
+                    label: copy.practiceFocus[p],
+                  }))}
                   selected={answers.whatToPractice}
                   onToggle={(v) =>
                     update({
@@ -665,10 +677,10 @@ function ScenarioCreate() {
                   }
                 />
                 <ChipGroup
-                  label="How challenging should they be?"
+                  label={copy.youStep.challenge}
                   options={CHALLENGE.map((c) => ({
-                    value: c.value,
-                    label: c.label,
+                    value: c,
+                    label: copy.challenge[c],
                   }))}
                   selected={answers.challenge ? [answers.challenge] : []}
                   onToggle={(v) =>
@@ -684,7 +696,7 @@ function ScenarioCreate() {
                 <StepActions
                   hint={
                     !canFinish
-                      ? 'Share what a good outcome would look like to continue.'
+                      ? copy.youStep.incompleteHint
                       : undefined
                   }
                 >
@@ -695,7 +707,7 @@ function ScenarioCreate() {
                     disabled={!canFinish}
                     onClick={startRefine}
                   >
-                    Continue
+                    {copy.continue}
                   </Button>
                 </StepActions>
               </StepCard>
@@ -732,21 +744,20 @@ function ScenarioCreate() {
               <div className="bg-white rounded-lg border-2 border-giraffe-100 shadow-sm overflow-hidden">
                 <div className="px-6 sm:px-8 py-7 space-y-4">
                   <h1 className="text-2xl font-bold text-brown-800 tracking-tight">
-                    Let's try that again
+                    {copy.retry.title}
                   </h1>
                   <p className="text-brown-700 text-pretty">
-                    {error ??
-                      "We couldn't shape this just now. Your answers are safe."}
+                    {error ?? copy.retry.body}
                   </p>
                   <div className="flex flex-wrap gap-3 pt-1">
                     <Button
                       variant="primary"
                       onClick={() => generateAndReview(clarifyThread)}
                     >
-                      Try again
+                      {copy.retry.tryAgain}
                     </Button>
                     <Button variant="outline" onClick={keepEditing}>
-                      Back to editing
+                      {copy.retry.backToEditing}
                     </Button>
                   </div>
                 </div>
@@ -777,6 +788,7 @@ function RailGuide({
   bubble: string
   stageIndex: number
 }) {
+  const t = useT()
   return (
     <aside className="md:sticky md:top-28">
       {/* Desktop: the guide stands tall, speaking down to a vertical path */}
@@ -788,7 +800,7 @@ function RailGuide({
         </SpeechBubble>
         <img
           src="/giraff.png"
-          alt="Your guide"
+          alt={t.practice.create.guideAlt}
           className="h-40 lg:h-48 w-auto object-contain drop-shadow-xl mb-7 -scale-x-100"
         />
         <JourneyPath stageIndex={stageIndex} />
@@ -799,7 +811,7 @@ function RailGuide({
         <div className="flex items-start gap-3">
           <img
             src="/giraff.png"
-            alt="Your guide"
+            alt={t.practice.create.guideAlt}
             className="h-20 w-auto object-contain drop-shadow-md flex-shrink-0 -scale-x-100"
           />
           <SpeechBubble tail="left" className="flex-1">
@@ -820,12 +832,15 @@ function RailGuide({
  * work as a gentle journey, never a graded checklist.
  */
 function JourneyPath({ stageIndex }: { stageIndex: number }) {
+  const t = useT()
+  // The journey the user travels, named so the guide rail can show where they are.
+  const stages = t.practice.create.stages
   return (
-    <ol className="w-full" aria-label="Your progress">
-      {STAGES.map((label, i) => {
+    <ol className="w-full" aria-label={t.practice.create.progressLabel}>
+      {stages.map((label, i) => {
         const state =
           i < stageIndex ? 'done' : i === stageIndex ? 'current' : 'upcoming'
-        const isLast = i === STAGES.length - 1
+        const isLast = i === stages.length - 1
         return (
           <li
             key={label}
@@ -886,10 +901,11 @@ function JourneyPath({ stageIndex }: { stageIndex: number }) {
 
 /** Compact progress for the mobile companion header. */
 function JourneyPathCompact({ stageIndex }: { stageIndex: number }) {
+  const stages = useT().practice.create.stages
   return (
     <div className="mt-4 flex items-center gap-3">
       <div className="flex items-center gap-1.5 flex-1">
-        {STAGES.map((label, i) => (
+        {stages.map((label, i) => (
           <span
             key={label}
             className={`h-1.5 flex-1 rounded-full transition-colors duration-200 ${
@@ -899,7 +915,7 @@ function JourneyPathCompact({ stageIndex }: { stageIndex: number }) {
         ))}
       </div>
       <span className="text-xs font-semibold text-brown-600 whitespace-nowrap">
-        {STAGES[stageIndex]}
+        {stages[stageIndex]}
       </span>
     </div>
   )
@@ -922,6 +938,7 @@ function RefineStep({
   onAnswer: (answer: string) => void
   onSkipRest: () => void
 }) {
+  const copy = useT().practice.create.refine
   const [value, setValue] = useState('')
 
   const handleSend = () => {
@@ -935,7 +952,7 @@ function RefineStep({
     <div className="bg-white rounded-lg border-2 border-giraffe-100 shadow-sm overflow-hidden">
       <div className="px-6 sm:px-8 py-7 space-y-6">
         <h1 className="text-2xl font-bold text-brown-800 tracking-tight">
-          A few details
+          {copy.title}
         </h1>
 
         {/* Thread of answered questions */}
@@ -971,7 +988,7 @@ function RefineStep({
             <div
               className="flex gap-1.5 px-2 py-1"
               role="status"
-              aria-label="One moment"
+              aria-label={copy.thinking}
             >
               {[0, 150, 300].map((delay) => (
                 <span
@@ -996,7 +1013,7 @@ function RefineStep({
                   handleSend()
                 }
               }}
-              placeholder="Share what comes to mind…"
+              placeholder={copy.placeholder}
               maxLength={1000}
               className="w-full px-4 py-3 rounded-lg border-2 border-giraffe-200 bg-white text-brown-800 placeholder-brown-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-giraffe-400 focus:ring-offset-2 focus:border-giraffe-400 resize-none min-h-20"
             />
@@ -1006,10 +1023,10 @@ function RefineStep({
                 onClick={handleSend}
                 disabled={!value.trim()}
               >
-                Send
+                {copy.send}
               </Button>
               <Button variant="ghost" onClick={onSkipRest}>
-                Skip and continue
+                {copy.skip}
               </Button>
             </div>
           </div>
@@ -1040,6 +1057,8 @@ function ReviewStep({
   starting: boolean
   error: string | null
 }) {
+  const t = useT()
+  const copy = t.practice.create.review
   const titleId = useId()
   return (
     <>
@@ -1049,7 +1068,7 @@ function ReviewStep({
             htmlFor={titleId}
             className="block text-xs font-semibold text-brown-800/80 mb-1"
           >
-            Title
+            {copy.titleLabel}
           </label>
           <input
             id={titleId}
@@ -1060,7 +1079,7 @@ function ReviewStep({
           />
           <div className="flex flex-wrap gap-2 mt-3">
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brown-700 text-cream">
-              {categoryLabels[scenario.category] ?? scenario.category}
+              {t.practice.categories[scenario.category]}
             </span>
             <span
               className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
@@ -1068,14 +1087,16 @@ function ReviewStep({
                 'bg-giraffe-100 text-brown-900'
               }`}
             >
-              {scenario.difficulty}
+              {t.practice.difficulties[scenario.difficulty]}
             </span>
           </div>
         </header>
 
         <div className="px-6 sm:px-8 py-6 space-y-6">
           <section>
-            <h2 className="text-lg font-bold text-brown-800 mb-2">Situation</h2>
+            <h2 className="text-lg font-bold text-brown-800 mb-2">
+              {t.practice.situation}
+            </h2>
             <p className="text-brown-700 leading-relaxed bg-giraffe-50 rounded-lg p-4 border border-giraffe-100 text-pretty">
               {scenario.situation}
             </p>
@@ -1084,12 +1105,12 @@ function ReviewStep({
           <div className="grid md:grid-cols-2 gap-6">
             <section>
               <h2 className="text-lg font-bold text-brown-800 mb-2">
-                About {scenario.characterName}
+                {t.practice.aboutCharacter(scenario.characterName)}
               </h2>
               <div className="space-y-3">
                 <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
                   <p className="text-xs font-semibold text-brown-700 mb-1">
-                    Personality
+                    {t.practice.personality}
                   </p>
                   <p className="text-brown-700 text-sm leading-relaxed">
                     {scenario.characterPersonality}
@@ -1098,7 +1119,7 @@ function ReviewStep({
                 {scenario.characterBackground && (
                   <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-100">
                     <p className="text-xs font-semibold text-brown-700 mb-1">
-                      Background
+                      {t.practice.background}
                     </p>
                     <p className="text-brown-700 text-sm leading-relaxed">
                       {scenario.characterBackground}
@@ -1110,7 +1131,7 @@ function ReviewStep({
 
             <section>
               <h2 className="text-lg font-bold text-brown-800 mb-2">
-                What you'll practice
+                {t.practice.whatYoullPractice}
               </h2>
               <ol className="space-y-2">
                 {scenario.learningObjectives.map((objective, idx) => (
@@ -1131,8 +1152,7 @@ function ReviewStep({
           </div>
 
           <p className="text-sm text-brown-600 bg-giraffe-50/70 border border-giraffe-100 rounded-lg px-4 py-3 text-pretty">
-            {scenario.characterName}'s responses here are a practice stand-in, so
-            you can try things out gently before the real conversation.
+            {copy.standIn(scenario.characterName)}
           </p>
         </div>
       </div>
@@ -1143,11 +1163,11 @@ function ReviewStep({
           <p className="flex-1 text-sm text-empathy-low font-medium">{error}</p>
         ) : (
           <p className="flex-1 hidden sm:block text-sm text-brown-600">
-            Ready when you are. Take your time.
+            {t.practice.readyWhenYouAre}
           </p>
         )}
         <Button variant="outline" onClick={onKeepEditing} disabled={starting}>
-          Keep editing
+          {copy.keepEditing}
         </Button>
         <Button
           variant="primary"
@@ -1157,7 +1177,7 @@ function ReviewStep({
           isLoading={starting}
           disabled={starting}
         >
-          {starting ? 'Starting…' : 'Start the conversation'}
+          {starting ? copy.starting : copy.start}
         </Button>
       </div>
     </>
@@ -1219,6 +1239,7 @@ function FieldLabel({
   optional?: boolean
   htmlFor?: string
 }) {
+  const t = useT()
   return (
     <div className="mb-2">
       <div className="flex items-baseline gap-2">
@@ -1226,7 +1247,9 @@ function FieldLabel({
           {label}
         </label>
         {optional && (
-          <span className="text-xs font-normal text-brown-400">(optional)</span>
+          <span className="text-xs font-normal text-brown-400">
+            {t.practice.create.optional}
+          </span>
         )}
       </div>
       {hint && <p className="text-xs text-brown-500 mt-0.5">{hint}</p>}

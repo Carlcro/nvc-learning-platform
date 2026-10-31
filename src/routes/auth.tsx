@@ -4,19 +4,19 @@ import { useConvexAuth } from 'convex/react'
 import { pageMeta } from '~/lib/seo'
 import { SignInForm } from '~/components/auth/SignInForm'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/auth')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Sign in',
-      description:
-        'Sign in to save your progress and keep practicing compassionate communication.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.auth.meta) }
+  },
   component: AuthPage,
 })
 
 function AuthPage() {
+  const t = useT()
   const { isLoading, isAuthenticated } = useConvexAuth()
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
@@ -40,12 +40,12 @@ function AuthPage() {
         <div className="flex flex-col items-center gap-8">
           <SpeechBubble className="max-w-sm">
             <p className="text-lg text-brown-800 text-center font-medium">
-              Welcoming you in...
+              {t.auth.welcomingIn}
             </p>
           </SpeechBubble>
           <img
             src="/giraff.png"
-            alt="Your compassionate communication guide"
+            alt={t.common.giraffeAlt}
             className="h-64 w-auto object-contain"
           />
         </div>

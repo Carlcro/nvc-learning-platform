@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useT } from '~/i18n/useT'
 
 /** Visible keyboard focus, shared by every control in the feelings area. */
 export const focusRing =
@@ -42,6 +43,7 @@ export function FeelingsPage({
   aside,
   children,
 }: FeelingsPageProps) {
+  const t = useT()
   return (
     <main className="min-h-screen bg-paper">
       <section className="bg-giraffe-100 px-4 sm:px-6 lg:px-8 pt-28 pb-10 md:pb-12">
@@ -55,7 +57,7 @@ export function FeelingsPage({
                 className={`inline-flex items-center gap-1.5 min-h-11 mb-3 text-sm font-semibold text-brown-700 hover:text-brown-900 rounded-sm ${focusRing}`}
               >
                 <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-                Feelings
+                {t.feelings.page.back}
               </Link>
             )}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 text-balance tracking-tight leading-[1.1]">

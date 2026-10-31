@@ -5,6 +5,8 @@
  * server already holds, so none of it needs another model call.
  */
 
+import type { Messages } from '../i18n/messages'
+
 export type NVCComponent = 'observation' | 'feeling' | 'need' | 'request'
 
 export const NVC_COMPONENTS: ReadonlyArray<NVCComponent> = [
@@ -24,54 +26,35 @@ interface ScoredMessage {
   nvcScore?: Record<NVCComponent, number> & { total: number }
 }
 
-/** Where to go to brush up on one component, and how to talk about it. */
-export const SKILL_RESOURCES: Record<
-  NVCComponent,
-  {
-    to: string
-    label: string
-    /** Why this skill is worth a refresher, as a gentle invitation. */
-    invite: string
-    /** The component as a plural noun, for running text. */
-    plural: string
-    /** A first move for someone about to practice this component. */
-    nudge: string
-  }
-> = {
-  observation: {
-    to: '/learn/observation',
-    label: 'Observations lesson',
-    invite:
-      'Separating what happened from what we think about it is its own skill.',
-    plural: 'observations',
-    nudge:
-      'Describe what happened the way a camera would have seen it, before saying what you make of it.',
-  },
-  feeling: {
-    to: '/feelings',
-    label: 'Feelings library',
-    invite: 'Finding the exact feeling word gets easier with a bigger vocabulary.',
-    plural: 'feelings',
-    nudge:
-      'Look for the one word that names the emotion itself: worried, hurt, tired, hopeful.',
-  },
-  need: {
-    to: '/learn/need',
-    label: 'Needs lesson',
-    invite:
-      'Connecting feelings to the universal needs beneath them takes practice.',
-    plural: 'needs',
-    nudge:
-      'Ask yourself what matters to you underneath the feeling: trust, rest, respect, being included.',
-  },
-  request: {
-    to: '/learn/request',
-    label: 'Requests lesson',
-    invite: 'Shaping clear, doable requests is worth a short refresher.',
-    plural: 'requests',
-    nudge:
-      'Ask for one concrete thing they could say yes or no to, and leave room for a no.',
-  },
+/** Where each component is taught, for a "brush up" link. */
+export const SKILL_PATHS: Record<NVCComponent, string> = {
+  observation: '/learn/observation',
+  feeling: '/feelings',
+  need: '/learn/need',
+  request: '/learn/request',
+}
+
+export interface SkillResource {
+  to: string
+  /** The name of the page that teaches it. */
+  label: string
+  /** Why this skill is worth a refresher, as a gentle invitation. */
+  invite: string
+  /** The component as a plural noun, for running text. */
+  plural: string
+  /** A first move for someone about to practice this component. */
+  nudge: string
+}
+
+/**
+ * Where to go to brush up on one component, and how to talk about it, in the
+ * reader's language. Pass `t.results.skills` from `useT()`.
+ */
+export function skillResource(
+  component: NVCComponent,
+  skills: Messages['results']['skills'],
+): SkillResource {
+  return { to: SKILL_PATHS[component], ...skills[component] }
 }
 
 // A component scoring at least this (of 25) has genuinely landed: it is the

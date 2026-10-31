@@ -301,6 +301,19 @@ Add `--prod` for production; the two deployments have separate users and separat
 
 **Cost tracking**: every Claude call reports its token usage through `internal.usage.recordModelCalls`, which prices it (`convex/lib/modelUsage.ts`, in micro-dollars, at write time) and writes the raw `modelCalls` log plus three rollups: `dailyUsage` (per user per day), `userUsageTotals` (per user lifetime) and `dailyModelSpend` (per day per kind, including the nightly cron). The admin panel reads the rollups, never the raw log, which a cron prunes after 90 days. When adding a model call: give it a kind in `MODEL_CALL_KINDS`, record it with `callRecord(kind, MODEL, response.usage)`, and never let a failed record fail the feature. When changing `MODEL` or `CHARACTER_MODEL`, make sure it is in `MODEL_PRICING` (a test enforces this). The two are separate on purpose: a different scorer shifts stars and points for everyone, so move `MODEL` only after comparing score bands on sample messages. Nothing was metered before this shipped, so earlier usage has activity but no cost.
 
+### Languages (i18n)
+
+The app is being made available in English, French, Spanish and Swedish. The codes are shared by frontend and backend in `convex/lib/locale.ts` (`Locale`, `localeValidator`).
+
+- **UI copy** never sits in components. English lives in `src/i18n/messages/en/<namespace>.ts` and is the source of truth: `Messages = typeof en`. Components call `const t = useT()` and read `t.practice.hub.title`; strings with values are functions (`t.nav.level(3)`), plurals use `pluralFor(locale)`. Never build a sentence from fragments in a component, since word order differs between languages.
+- **Translations** are `PartialMessages` registered in `TRANSLATIONS` (`src/i18n/messages/index.ts`); anything missing falls back to English.
+- **Choosing a language**: the `locale` cookie decides what the server renders (first visit guesses from `Accept-Language`); the root route's `beforeLoad` puts it in router context, and `useSetLocale()` switches without a reload. Signed-in users also have `users.preferredLocale`, kept in step by `LocaleSync`. `SELECTABLE_LOCALES` (`src/i18n/config.ts`) lists what the picker offers; it stays hidden while that is only English.
+- **Page titles**: route `head` reads `getMessages(match.context.locale)`.
+- **Dates and numbers** go through `useFormat()` / `formatters(locale)`, never a bare `toLocaleString()`.
+- **Server errors** people can read are codes: `userError('conversationNotFound')`, with English in `USER_ERRORS` (`convex/lib/errors.ts`). The client shows `userFacingMessage(error, fallback, t.errors)`.
+- **Achievements** are shown from `t.achievements[id]`; a test keeps them in step with the server catalog.
+- The admin panel stays English only.
+
 ### Task: Create a New UI Component
 
 1. **Check if a similar component exists** in `src/components/`

@@ -1,6 +1,8 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Messages } from '~/i18n/messages'
 import { CheckIcon } from '~/components/ui/Icons'
+import { useT } from '~/i18n/useT'
 
 interface Achievement {
   id: string
@@ -16,6 +18,7 @@ interface Achievement {
  * to without any pressure.
  */
 export function AchievementsGrid() {
+  const t = useT()
   const achievements = useQuery(api.userProgress.getMyAchievements)
 
   if (!achievements) return null
@@ -29,20 +32,23 @@ export function AchievementsGrid() {
         id="achievements-heading"
         className="text-xl font-bold text-brown-800 text-balance"
       >
-        Achievements
+        {t.profile.achievements.title}
       </h2>
       <p className="mt-3 text-brown-700 max-w-prose text-pretty">
         {earned.length === 0
-          ? 'Your first one arrives with your first finished conversation.'
-          : `${earned.length} of ${achievements.length} so far.`}
+          ? t.profile.achievements.none
+          : t.profile.achievements.progress(earned.length, achievements.length)}
       </p>
 
       <div className="mt-6 space-y-8">
         {earned.length > 0 && (
-          <AchievementList title="Earned" items={earned} />
+          <AchievementList
+            title={t.profile.achievements.earned}
+            items={earned}
+          />
         )}
         {ahead.length > 0 && (
-          <AchievementList title="Still ahead" items={ahead} />
+          <AchievementList title={t.profile.achievements.ahead} items={ahead} />
         )}
       </div>
     </section>
@@ -56,38 +62,49 @@ function AchievementList({
   title: string
   items: ReadonlyArray<Achievement>
 }) {
+  const t = useT()
+  // Ids the dictionary does not know yet read as undefined, not as words.
+  const named: Partial<Messages['achievements']> = t.achievements
+
   return (
     <div>
       <h3 className="text-sm font-semibold text-brown-800">{title}</h3>
       <ul className="mt-3 grid sm:grid-cols-2 gap-x-10 gap-y-4">
-        {items.map((achievement) => (
-          <li key={achievement.id} className="flex items-start gap-3">
-            {achievement.earned ? (
-              <span
-                className="mt-0.5 grid place-items-center w-5 h-5 rounded-full shrink-0 bg-giraffe-400 text-brown-800"
-                aria-hidden="true"
-              >
-                <CheckIcon className="w-3 h-3" />
-              </span>
-            ) : (
-              <span
-                className="mt-0.5 w-5 h-5 rounded-full shrink-0 border-2 border-brown-200"
-                aria-hidden="true"
-              />
-            )}
-            <div className="min-w-0">
-              <p className="font-semibold text-brown-800 text-sm">
-                {achievement.title}
-                {!achievement.earned && (
-                  <span className="sr-only">, not yet earned</span>
-                )}
-              </p>
-              <p className="text-sm text-brown-600 mt-0.5 text-pretty">
-                {achievement.description}
-              </p>
-            </div>
-          </li>
-        ))}
+        {items.map((achievement) => {
+          // The server sends ids and English words; show the words in the
+          // reader's language, falling back to the server's for an unknown id.
+          const words = named[achievement.id]
+          return (
+            <li key={achievement.id} className="flex items-start gap-3">
+              {achievement.earned ? (
+                <span
+                  className="mt-0.5 grid place-items-center w-5 h-5 rounded-full shrink-0 bg-giraffe-400 text-brown-800"
+                  aria-hidden="true"
+                >
+                  <CheckIcon className="w-3 h-3" />
+                </span>
+              ) : (
+                <span
+                  className="mt-0.5 w-5 h-5 rounded-full shrink-0 border-2 border-brown-200"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="min-w-0">
+                <p className="font-semibold text-brown-800 text-sm">
+                  {words?.title ?? achievement.title}
+                  {!achievement.earned && (
+                    <span className="sr-only">
+                      {t.profile.achievements.notYetEarned}
+                    </span>
+                  )}
+                </p>
+                <p className="text-sm text-brown-600 mt-0.5 text-pretty">
+                  {words?.description ?? achievement.description}
+                </p>
+              </div>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )

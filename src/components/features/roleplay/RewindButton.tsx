@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import { useT } from '~/i18n/useT'
 
 interface RewindButtonProps {
   rewindsRemaining: number
@@ -37,6 +38,8 @@ export function RewindButton({
   onRewind,
   disabled = false,
 }: RewindButtonProps) {
+  const t = useT()
+  const copy = t.roleplay.rewind
   const [isOpen, setIsOpen] = useState(false)
   const [isRewinding, setIsRewinding] = useState(false)
 
@@ -64,7 +67,7 @@ export function RewindButton({
           }`}
         >
           <RewindIcon />
-          <span>Rewind</span>
+          <span>{copy.button}</span>
           <span className="text-xs bg-giraffe-100 text-brown-800 px-1.5 py-0.5 rounded-full">
             {rewindsRemaining}
           </span>
@@ -77,36 +80,31 @@ export function RewindButton({
           <div className="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden">
             <div className="bg-giraffe-400 text-brown-800 px-6 py-4">
               <Dialog.Title className="text-lg font-bold">
-                Rewind Last Message?
+                {copy.title}
               </Dialog.Title>
             </div>
 
             <div className="p-6 space-y-4">
               <div className="bg-giraffe-50 rounded-lg p-4 border border-giraffe-200">
                 <p className="text-brown-800 text-sm leading-relaxed">
-                  Feeling stuck? This takes back your last message and the
-                  reply to it, and puts your words back in the box so you can
-                  reshape them and try a different approach.
+                  {copy.body}
                 </p>
               </div>
 
               <div className="flex items-center gap-2 text-sm text-brown-700">
-                <span className="font-semibold">Rewinds remaining:</span>
+                <span className="font-semibold">{copy.remaining}</span>
                 <span className="bg-giraffe-100 px-2 py-0.5 rounded-full">
                   {rewindsRemaining}
                 </span>
               </div>
 
-              <p className="text-xs text-brown-600">
-                A rewound message is taken out of the conversation, so it
-                will not be part of your final reflection.
-              </p>
+              <p className="text-xs text-brown-600">{copy.note}</p>
             </div>
 
             <div className="border-t border-giraffe-100 px-6 py-4 flex gap-3 justify-end bg-giraffe-50">
               <Dialog.Close asChild>
                 <button className="px-4 py-2 text-sm font-medium text-brown-700 hover:bg-giraffe-100 rounded-lg transition-colors cursor-pointer">
-                  Cancel
+                  {copy.cancel}
                 </button>
               </Dialog.Close>
               <button
@@ -114,7 +112,7 @@ export function RewindButton({
                 disabled={isRewinding}
                 className="px-4 py-2 text-sm font-medium text-brown-800 bg-giraffe-400 hover:bg-giraffe-500 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {isRewinding ? 'Rewinding...' : 'Rewind'}
+                {isRewinding ? copy.rewinding : copy.confirm}
               </button>
             </div>
           </div>
