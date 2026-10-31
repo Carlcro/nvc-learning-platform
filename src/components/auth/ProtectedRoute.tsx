@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Authenticated, Unauthenticated, useMutation, useQuery } from "convex/react";
 import { useLocation } from "@tanstack/react-router";
 import { api } from "../../../convex/_generated/api";
+import { GiraffeLoader } from "../ui/GiraffeLoader";
 import { SignInForm } from "./SignInForm";
 import type { ReactNode } from "react";
 
@@ -20,14 +21,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (userProfile === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-giraffe-50">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-giraffe-200 border-t-giraffe-600 rounded-full mx-auto" />
-          <p className="text-brown-700">Loading your profile...</p>
-        </div>
-      </div>
-    );
+    return <GiraffeLoader message="Getting your space ready..." />;
   }
 
   return (

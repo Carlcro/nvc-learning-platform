@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react'
 import { SpeechBubble } from './SpeechBubble'
+
+/** How long a wait has to last before the giraffe appears at all. */
+const SHOW_AFTER_MS = 400
 
 interface GiraffeLoaderProps {
   /** Warm, specific message shown in the guide's speech bubble. */
@@ -7,20 +11,37 @@ interface GiraffeLoaderProps {
 
 /**
  * Full-screen loading state in the brand's voice: the giraffe guide gently
- * preparing your space, "thinking" via the calm typing dots. Replaces the bare
- * spinner so even the wait feels warm and unhurried (the Patient Mentor).
+ * preparing your space, "thinking" via the calm typing dots.
  *
- * The typing dots are the only motion, and they stop under
+ * Most loads finish in a fraction of a second, so for the first 400ms this
+ * shows only the plain page background. A giraffe that appears and vanishes
+ * at once is a flash, not reassurance. If the wait goes on, the guide fades
+ * in softly.
+ *
+ * The fade and the typing dots are the only motion, and both stop under
  * prefers-reduced-motion via the animation utilities in app.css. The giraffe
  * itself never moves.
  */
 export function GiraffeLoader({
-  message = 'Getting things ready for you…',
+  message = 'Getting things ready for you...',
 }: GiraffeLoaderProps) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), SHOW_AFTER_MS)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (!visible) {
+    return (
+      <div className="min-h-screen bg-paper" aria-busy="true" />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div
-        className="flex flex-col items-center gap-6"
+        className="flex flex-col items-center gap-6 animate-loader-in"
         role="status"
         aria-live="polite"
       >
