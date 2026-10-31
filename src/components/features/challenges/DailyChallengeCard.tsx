@@ -1,165 +1,115 @@
-import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Card, CardBody } from '~/components/ui/Card'
-import { Button } from '~/components/ui/Button'
+import {
+  PRIMARY_LINK_CLASS,
+  QUIET_LINK_CLASS,
+  challengeDifficultyLabel,
+  practiceAreasPhrase,
+  useNextChallengeTime,
+} from './challengeDisplay'
+import type { ChallengeDifficulty } from './challengeDisplay'
+import { Card } from '~/components/ui/Card'
 
 interface DailyChallengeCardProps {
-  title: string
+  /** Undefined while the scenario is still loading. */
+  title?: string
   description: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  characterName: string
-  learningObjectives: Array<string>
+  difficulty: ChallengeDifficulty
+  /** Undefined while the scenario is still loading. */
+  characterName?: string
+  learningObjectives?: Array<string>
   completed?: boolean
-  completedScore?: number
   bonusPoints: number
   scenarioId: string
   challengeId: string
 }
 
-const difficultyConfig = {
-  easy: {
-    label: 'Beginner',
-    badge: "bg-empathy-high/25 text-brown-800",
-  },
-  medium: {
-    label: 'Intermediate',
-    badge: 'bg-giraffe-100 text-giraffe-800',
-  },
-  hard: {
-    label: 'Advanced',
-    badge: 'bg-empathy-low text-white',
-  },
-}
-
-const objectiveLabels: Record<string, string> = {
-  observation: 'Observation',
-  feeling: 'Feeling',
-  need: 'Need',
-  request: 'Request',
-}
-
+/**
+ * Today's challenge on the calm anatomy of a scenario card: who, what, one
+ * quiet line about the bonus and the reset, and a single gold action.
+ */
 export function DailyChallengeCard({
   title,
   description,
   difficulty,
   characterName,
-  learningObjectives,
-  completed,
-  completedScore,
+  learningObjectives = [],
+  completed = false,
   bonusPoints,
   scenarioId,
   challengeId,
 }: DailyChallengeCardProps) {
-  const [hoursRemaining, setHoursRemaining] = useState(0)
-
-  useEffect(() => {
-    const now = new Date()
-    const midnight = new Date(now)
-    midnight.setUTCHours(24, 0, 0, 0)
-
-    const updateHours = () => {
-      const currentTime = new Date()
-      const msUntilMidnight = midnight.getTime() - currentTime.getTime()
-      const hours = Math.ceil(msUntilMidnight / (1000 * 60 * 60))
-      setHoursRemaining(Math.max(0, hours))
-    }
-
-    updateHours()
-    const interval = setInterval(updateHours, 60000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const config = difficultyConfig[difficulty]
+  const nextTime = useNextChallengeTime()
+  const isLoadingScenario = title === undefined
 
   return (
-    <Card className="flex flex-col hover:shadow-lg transition-all duration-200">
-      {/* Status Badge */}
-      <div
-        className={`${completed ? "bg-empathy-high text-brown-900" : "bg-giraffe-400 text-brown-800"} px-6 py-2`}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold">
-            {completed ? 'COMPLETED' : 'DAILY CHALLENGE'}
-          </span>
-          <span className="text-sm font-semibold">+{bonusPoints} bonus pts</span>
-        </div>
-      </div>
+    <Card className="p-6 sm:p-8">
+      <p className="text-sm text-brown-600">
+        {challengeDifficultyLabel(difficulty)}
+      </p>
 
-      {/* Header */}
-      <div className="bg-linear-to-r from-giraffe-500 to-giraffe-400 px-6 py-4 text-white">
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <div>
-            <div className="text-sm font-semibold text-giraffe-50 mb-1">
-              Today's Focus
-            </div>
-            <h3 className="text-xl font-bold text-white">{title}</h3>
-          </div>
-          <div
-            className={`px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${config.badge}`}
+      {isLoadingScenario ? (
+        <div aria-hidden="true" className="mt-2 space-y-2">
+          <div className="h-7 w-2/3 rounded bg-giraffe-50" />
+          <div className="h-5 w-1/3 rounded bg-giraffe-50" />
+        </div>
+      ) : (
+        <>
+          <h3 className="mt-1 text-2xl font-bold text-brown-800 text-balance break-words">
+            {title}
+          </h3>
+          {characterName && (
+            <p className="mt-1 text-sm font-semibold text-brown-700 break-words">
+              with {characterName}
+            </p>
+          )}
+        </>
+      )}
+
+      <p className="mt-4 max-w-prose text-brown-700 leading-relaxed text-pretty break-words">
+        {description}
+      </p>
+
+      {learningObjectives.length > 0 && (
+        <p className="mt-3 text-sm text-brown-700">
+          A good one for practicing {practiceAreasPhrase(learningObjectives)}.
+        </p>
+      )}
+
+      {completed ? (
+        <div className="mt-6 space-y-3">
+          <p className="text-brown-800 font-semibold">
+            You finished today's challenge.
+          </p>
+          <p className="text-sm text-brown-700">
+            You are welcome to go through it again
+            {nextTime ? `, and a new one arrives at ${nextTime}.` : '.'}{' '}
+            <Link
+              to="/practice/$scenarioId/brief"
+              params={{ scenarioId }}
+              search={{ dailyChallengeId: challengeId }}
+              className={QUIET_LINK_CLASS}
+            >
+              Try it again
+              {title && <span className="sr-only">: {title}</span>}
+            </Link>
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-brown-600">
+            Worth {bonusPoints} bonus points
+            {nextTime ? `. New challenge at ${nextTime}.` : '.'}
+          </p>
+          <Link
+            to="/practice/$scenarioId/brief"
+            params={{ scenarioId }}
+            search={{ dailyChallengeId: challengeId }}
+            className={`${PRIMARY_LINK_CLASS} w-full sm:w-auto`}
           >
-            {config.label}
-          </div>
+            Start this conversation
+          </Link>
         </div>
-
-        {completed && completedScore !== undefined && (
-          <div className="text-sm font-semibold text-white mt-2">
-            Score: {completedScore}/100
-          </div>
-        )}
-      </div>
-
-      {/* Body */}
-      <CardBody className="flex-grow flex flex-col gap-4">
-        <p className="text-brown-700 text-sm leading-relaxed">{description}</p>
-
-        {/* Character Info */}
-        <div className="bg-giraffe-50 rounded-lg p-3 border border-giraffe-100">
-          <div className="text-xs font-semibold text-giraffe-700 mb-1">
-            Character
-          </div>
-          <div className="font-semibold text-brown-800">{characterName}</div>
-        </div>
-
-        {/* Learning Objectives */}
-        {learningObjectives.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold text-giraffe-700 mb-2">
-              Practice Areas
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {learningObjectives.map((obj) => (
-                <span
-                  key={obj}
-                  className="inline-block px-2 py-1 bg-giraffe-50 text-giraffe-800 text-xs font-medium rounded border border-giraffe-200"
-                >
-                  {objectiveLabels[obj] || obj}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Time remaining */}
-        {!completed && (
-          <div className="text-xs text-brown-500 mt-auto">
-            {hoursRemaining} hours remaining - Expires at midnight UTC
-          </div>
-        )}
-      </CardBody>
-
-      {/* Footer */}
-      <div className="px-6 py-4 border-t border-giraffe-100 bg-giraffe-50">
-        <Link
-          to="/practice/$scenarioId/brief"
-          params={{ scenarioId }}
-          search={{ dailyChallengeId: challengeId }}
-        >
-          <Button variant="primary" className="w-full">
-            {completed ? 'Try Again' : 'Start Challenge'}
-          </Button>
-        </Link>
-      </div>
+      )}
     </Card>
   )
 }

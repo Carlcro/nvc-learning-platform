@@ -1,365 +1,421 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
-import { BackButton } from '~/components/ui/BackButton'
+import { userFacingMessage } from '~/lib/errorMessage'
+import { Button } from '~/components/ui/Button'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
+import {
+  FeelingsPage,
+  fieldClass,
+  focusRing,
+  textLinkClass,
+} from '~/components/features/feelings/FeelingsPage'
+import { OptionButton } from '~/components/features/feelings/OptionButton'
+import {
+  CATEGORY_SWATCH,
+  describeFeeling,
+} from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/wheel')({
   head: () => ({
     meta: pageMeta({
-      title: 'Feelings Wheel',
+      title: 'Browse feelings',
       description:
-        'Explore feelings by family and intensity on an interactive wheel.',
+        'Explore feelings by family, with definitions, examples and related words.',
     }),
   }),
-  component: FeelingsWheel,
+  component: BrowseFeelings,
 })
 
 type Category = 'all' | 'pleasant' | 'unpleasant'
 
-function FeelingsWheel() {
+const CATEGORY_OPTIONS: ReadonlyArray<{ value: Category; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'pleasant', label: 'Pleasant' },
+  { value: 'unpleasant', label: 'Unpleasant' },
+]
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+function BrowseFeelings() {
   const currentUser = useQuery(api.users.getCurrentUser)
   const [selectedFamily, setSelectedFamily] = useState('joyful')
   const [showCategory, setShowCategory] = useState<Category>('all')
   const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [libraryMessage, setLibraryMessage] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const detailHeadingRef = useRef<HTMLHeadingElement>(null)
 
   // Queries
   const families = useQuery(api.feelings.getFamilies)
-
   const allFeelings = useQuery(api.feelings.getAll)
+  const userProgress = useQuery(
+    api.feelingsProgress.getUserProgress,
+    currentUser ? {} : 'skip',
+  )
 
   // Mutations
   const markExploredMutation = useMutation(api.feelings.markFeelingExplored)
-
   const saveFeelingMutation = useMutation(api.feelings.saveFeelingToLibrary)
-
   const removeFeelingMutation = useMutation(
     api.feelings.removeFeelingFromLibrary,
   )
 
-  // Filter feelings based on selected family and category
+  const term = searchTerm.trim().toLowerCase()
+
   const filteredFeelings = useMemo(() => {
     if (!allFeelings) return []
     return allFeelings.filter((f) => {
-      const familyMatch = searchTerm ? true : f.family === selectedFamily
+      const familyMatch = term ? true : f.family === selectedFamily
       const categoryMatch =
         showCategory === 'all' || f.category === showCategory
-      const searchMatch = searchTerm
-        ? f.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          f.definition.toLowerCase().includes(searchTerm.toLowerCase())
+      const searchMatch = term
+        ? f.word.toLowerCase().includes(term) ||
+          f.definition.toLowerCase().includes(term)
         : true
-
       return familyMatch && categoryMatch && searchMatch
     })
-  }, [allFeelings, selectedFamily, showCategory, searchTerm])
+  }, [allFeelings, selectedFamily, showCategory, term])
 
-  // Get detail of selected feeling
   const selectedFeelingDetail = useMemo(
     () =>
       allFeelings
-        ? allFeelings.find((f) => f.word === selectedFeeling) || null
+        ? (allFeelings.find((f) => f.word === selectedFeeling) ?? null)
         : null,
     [allFeelings, selectedFeeling],
   )
 
-  const handleFeelingClick = (word: string) => {
+  const isSaved = Boolean(
+    selectedFeeling && userProgress?.feelingsSaved.includes(selectedFeeling),
+  )
+
+  // On a phone the detail sits below the grid, out of view. Bring it in and
+  // move focus to its heading, so keyboard and screen reader users land on it.
+  useEffect(() => {
+    if (!selectedFeeling) return
+    const heading = detailHeadingRef.current
+    if (!heading) return
+    heading.focus({ preventScroll: true })
+    heading.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      block: 'start',
+    })
+  }, [selectedFeeling])
+
+  const handleChooseFeeling = (word: string) => {
     setSelectedFeeling(word)
+    setLibraryMessage(null)
     if (currentUser) {
-      markExploredMutation({ feelingWord: word })
+      void markExploredMutation({ feelingWord: word })
     }
   }
 
-  const handleSave = () => {
-    if (selectedFeeling && currentUser) {
-      saveFeelingMutation({ feelingWord: selectedFeeling })
+  const handleSave = async () => {
+    if (!selectedFeeling || !currentUser) return
+    setIsSaving(true)
+    try {
+      await saveFeelingMutation({ feelingWord: selectedFeeling })
+      setLibraryMessage('Saved to your library.')
+    } catch (err) {
+      setLibraryMessage(
+        userFacingMessage(err, 'We could not save this word just now.'),
+      )
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const handleRemove = () => {
-    if (selectedFeeling && currentUser) {
-      removeFeelingMutation({ feelingWord: selectedFeeling })
+  const handleRemove = async () => {
+    if (!selectedFeeling || !currentUser) return
+    try {
+      await removeFeelingMutation({ feelingWord: selectedFeeling })
+      setLibraryMessage('Removed from your library.')
+    } catch (err) {
+      setLibraryMessage(
+        userFacingMessage(err, 'We could not remove this word just now.'),
+      )
     }
   }
 
-  // Handle loading state
   if (families === undefined || allFeelings === undefined) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper flex items-center justify-center">
-        <p className="text-brown-700">Loading feelings...</p>
-      </div>
-    )
+    return <GiraffeLoader message="Gathering feelings..." />
   }
+
+  const gridHeading = term
+    ? `Feelings matching “${searchTerm.trim()}”`
+    : `${selectedFamily.charAt(0).toUpperCase()}${selectedFamily.slice(1)} feelings`
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-      {/* Header */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
-        <BackButton to="/feelings" label="Feelings" />
-        <h1 className="text-3xl font-bold text-brown-800 mb-2 mt-2">
-          Feelings Wheel
-        </h1>
-        <p className="text-brown-700">
-          Explore feelings organized by family. Click on any feeling to learn
-          more.
+    <FeelingsPage
+      title="Browse feelings"
+      intro={
+        <p>
+          Feelings grouped into families. Choose any word to see what it means,
+          how it sounds in a sentence, and the words close to it.
         </p>
-      </section>
+      }
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Filters */}
+        <div className="lg:col-span-1">
+          <div className="space-y-6 lg:sticky lg:top-28">
+            <div>
+              <label
+                htmlFor="wheel-search"
+                className="block text-sm font-semibold text-brown-700 mb-2"
+              >
+                Search all feelings
+              </label>
+              <input
+                id="wheel-search"
+                type="search"
+                autoComplete="off"
+                placeholder="For example, calm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={fieldClass}
+              />
+            </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Family Selector */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 sticky top-4">
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4 mb-4 border-b border-giraffe-200 pb-4">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder="Search feelings..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-giraffe-200 focus:border-giraffe-400 focus:ring-0"
-                    />
-                  </div>
-                  <Link
-                    to="/feelings/intensity"
-                    className="px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors shadow-sm flex items-center justify-center gap-2"
+            <div>
+              <h2
+                id="category-heading"
+                className="text-sm font-semibold text-brown-700 mb-2"
+              >
+                Show
+              </h2>
+              <div
+                role="group"
+                aria-labelledby="category-heading"
+                className="flex flex-wrap gap-2"
+              >
+                {CATEGORY_OPTIONS.map((option) => (
+                  <OptionButton
+                    key={option.value}
+                    pressed={showCategory === option.value}
+                    onClick={() => setShowCategory(option.value)}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Intensity Explorer
-                  </Link>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pb-4 border-b border-giraffe-200">
-                  {(['all', 'pleasant', 'unpleasant'] as const).map(
-                    (option) => (
-                      <button
-                        key={option}
-                        onClick={() => setShowCategory(option)}
-                        className={`
-                        px-4 py-2 rounded-lg font-medium transition-all
-                        ${
-                          showCategory === option
-                            ? 'bg-giraffe-400 text-brown-800 shadow-sm'
-                            : 'bg-giraffe-50 text-brown-700 hover:bg-giraffe-100'
-                        }
-                      `}
-                      >
-                        {option === 'all'
-                          ? 'All'
-                          : option === 'pleasant'
-                            ? 'Pleasant'
-                            : 'Unpleasant'}
-                      </button>
-                    ),
-                  )}
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-brown-700 mb-3">
-                    Feeling Families
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-3">
-                    {families.map((family) => (
-                      <button
-                        key={family}
-                        onClick={() => setSelectedFamily(family)}
-                        className={`
-                          px-4 py-3 rounded-lg font-medium capitalize transition-all
-                          ${
-                            selectedFamily === family
-                              ? 'bg-giraffe-100 text-brown-800 border-2 border-giraffe-400 shadow-sm'
-                              : 'bg-white text-brown-700 border-2 border-giraffe-200 hover:border-giraffe-300 hover:bg-giraffe-50'
-                          }
-                        `}
-                      >
-                        {family}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                    {option.label}
+                  </OptionButton>
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Middle/Right: Feelings Grid and Detail */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Feelings Grid */}
-            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
-              <h2 className="text-xl font-bold text-brown-800 mb-4 capitalize">
-                {selectedFamily} Feelings
+            <div>
+              <h2
+                id="family-heading"
+                className="text-sm font-semibold text-brown-700 mb-2"
+              >
+                Families
               </h2>
-              {filteredFeelings.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {filteredFeelings.map((feeling) => (
-                    <div
-                      key={feeling.word}
-                      className={`
-                        p-3 rounded-lg border-2 transition-all cursor-pointer
-                        ${
-                          feeling.category === 'pleasant'
-                            ? 'border-giraffe-200 hover:bg-giraffe-50'
-                            : 'border-empathy-low/30 hover:bg-empathy-low/10'
-                        }
-                        ${selectedFeeling === feeling.word ? 'ring-2 ring-giraffe-400 bg-giraffe-50' : ''}
-                      `}
-                      onClick={() => handleFeelingClick(feeling.word)}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm capitalize text-brown-800">
-                            {feeling.word}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <span
-                              className={`
-                                text-xs px-2 py-0.5 rounded-full font-medium
-                                ${
-                                  feeling.intensity <= 2
-                                    ? 'bg-giraffe-100 text-brown-800'
-                                    : feeling.intensity === 3
-                                      ? 'bg-giraffe-300 text-brown-900'
-                                      : 'bg-empathy-low/25 text-brown-900'
-                                }
-                              `}
-                            >
-                              {feeling.intensity === 1 && 'Mild'}
-                              {feeling.intensity === 2 && 'Light'}
-                              {feeling.intensity === 3 && 'Moderate'}
-                              {feeling.intensity === 4 && 'Strong'}
-                              {feeling.intensity === 5 && 'Intense'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-brown-600 py-8">
-                  No feelings found with this combination of filters.
-                </p>
-              )}
+              <div
+                role="group"
+                aria-labelledby="family-heading"
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2"
+              >
+                {families.map((family) => (
+                  <OptionButton
+                    key={family}
+                    pressed={!term && selectedFamily === family}
+                    onClick={() => {
+                      setSelectedFamily(family)
+                      setSearchTerm('')
+                    }}
+                    className="capitalize"
+                  >
+                    {family}
+                  </OptionButton>
+                ))}
+              </div>
             </div>
 
-            {/* Feeling Detail */}
-            {selectedFeelingDetail && (
-              <div className="bg-white rounded-lg border-2 border-giraffe-300 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-brown-800 capitalize">
-                      {selectedFeelingDetail.word}
-                    </h2>
-                    <p className="text-sm text-brown-600 mt-1">
-                      {
-                        ['', 'Mild', 'Light', 'Moderate', 'Strong', 'Intense'][
-                          selectedFeelingDetail.intensity
-                        ]
-                      }{' '}
-                      intensity -{' '}
-                      <span className="capitalize">
-                        {selectedFeelingDetail.category}
+            <p className="text-sm text-brown-700 text-pretty">
+              Want to see one feeling grow stronger?{' '}
+              <Link to="/feelings/intensity" className={textLinkClass}>
+                Explore intensity
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Feelings and the chosen one's detail */}
+        <div className="lg:col-span-2 space-y-8">
+          <section aria-labelledby="grid-heading">
+            <h2
+              id="grid-heading"
+              className="text-xl font-bold text-brown-800 mb-4 text-balance"
+            >
+              {gridHeading}
+            </h2>
+            {filteredFeelings.length > 0 ? (
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {filteredFeelings.map((feeling) => (
+                  <li key={feeling.word}>
+                    <OptionButton
+                      pressed={selectedFeeling === feeling.word}
+                      onClick={() => handleChooseFeeling(feeling.word)}
+                      className="w-full flex items-center gap-3 py-3"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`h-3 w-3 shrink-0 rounded-full ${CATEGORY_SWATCH[feeling.category]}`}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold capitalize text-brown-900">
+                          {feeling.word}
+                        </span>
+                        <span className="block text-sm font-normal text-brown-700">
+                          {describeFeeling(feeling)}
+                        </span>
                       </span>
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedFeeling(null)}
-                    className="text-brown-600 hover:text-brown-900 text-xl font-bold cursor-pointer"
+                    </OptionButton>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-brown-700 py-4">
+                No feelings match these choices. Try another family, or show
+                all feelings.
+              </p>
+            )}
+          </section>
+
+          {selectedFeelingDetail ? (
+            <section
+              aria-labelledby="detail-heading"
+              className="rounded-lg border-2 border-giraffe-300 bg-white p-5 sm:p-7 scroll-mt-28"
+            >
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <h2
+                    id="detail-heading"
+                    ref={detailHeadingRef}
+                    tabIndex={-1}
+                    className="text-2xl sm:text-3xl font-bold text-brown-800 capitalize scroll-mt-28 focus:outline-none"
                   >
-                    ×
-                  </button>
+                    {selectedFeelingDetail.word}
+                  </h2>
+                  <p className="mt-1 flex items-center gap-2 text-sm text-brown-700">
+                    <span
+                      aria-hidden="true"
+                      className={`h-3 w-3 rounded-full ${CATEGORY_SWATCH[selectedFeelingDetail.category]}`}
+                    />
+                    {describeFeeling(selectedFeelingDetail)}, in the{' '}
+                    {selectedFeelingDetail.family} family
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFeeling(null)}
+                  aria-label={`Close ${selectedFeelingDetail.word}`}
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brown-700 hover:text-brown-900 hover:bg-giraffe-50 cursor-pointer ${focusRing}`}
+                >
+                  <X aria-hidden="true" className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6 max-w-prose">
+                <div>
+                  <h3 className="font-semibold text-brown-800 mb-1">
+                    What it means
+                  </h3>
+                  <p className="text-brown-700 text-pretty">
+                    {selectedFeelingDetail.definition}
+                  </p>
                 </div>
 
-                <div className="space-y-6">
+                {selectedFeelingDetail.examples.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-brown-800 mb-2">
-                      Definition
-                    </h3>
-                    <p className="text-brown-700">
-                      {selectedFeelingDetail.definition}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-brown-800 mb-2">
-                      Examples
+                    <h3 className="font-semibold text-brown-800 mb-1">
+                      In a sentence
                     </h3>
                     <ul className="space-y-2">
-                      {selectedFeelingDetail.examples.map((example, idx) => (
-                        <li key={idx} className="text-brown-700 flex gap-3">
-                          <span className="text-brown-700 font-semibold shrink-0">
-                            •
-                          </span>
-                          <span className="italic">{example}</span>
+                      {selectedFeelingDetail.examples.map((example) => (
+                        <li
+                          key={example}
+                          className="flex gap-3 text-brown-700 text-pretty"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-giraffe-500"
+                          />
+                          {example}
                         </li>
                       ))}
                     </ul>
                   </div>
+                )}
 
+                {selectedFeelingDetail.synonyms.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-brown-800 mb-2">
-                      Synonyms
+                    <h3 className="font-semibold text-brown-800 mb-1">
+                      Similar words
                     </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedFeelingDetail.synonyms.map((synonym) => (
-                        <span
-                          key={synonym}
-                          className="inline-block bg-giraffe-100 text-brown-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {synonym}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-brown-700">
+                      {selectedFeelingDetail.synonyms.join(', ')}
+                    </p>
                   </div>
+                )}
 
+                {selectedFeelingDetail.relatedFeelings.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-brown-800 mb-2">
-                      Related Feelings
+                    <h3 className="font-semibold text-brown-800 mb-1">
+                      Related feelings
                     </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedFeelingDetail.relatedFeelings.map((related) => (
-                        <span
-                          key={related}
-                          className="inline-block bg-brown-100 text-brown-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {related}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-brown-700">
+                      {selectedFeelingDetail.relatedFeelings.join(', ')}
+                    </p>
                   </div>
-                </div>
-
-                <div className="flex gap-3 mt-6 pt-6 border-t border-giraffe-100">
-                  <button
-                    onClick={handleSave}
-                    className="flex-1 px-4 py-2 bg-giraffe-400 text-brown-800 rounded-lg font-semibold hover:bg-giraffe-500 transition-colors"
-                  >
-                    Save to Library
-                  </button>
-                  <button
-                    onClick={handleRemove}
-                    className="flex-1 px-4 py-2 bg-empathy-low/20 text-brown-800 rounded-lg font-semibold hover:bg-empathy-low/30 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
+                )}
               </div>
-            )}
 
-            {!selectedFeelingDetail && (
-              <div className="bg-giraffe-50 border-2 border-giraffe-200 rounded-lg p-8 text-center">
-                <p className="text-brown-700">
-                  Click on a feeling above to see its definition, examples, and
-                  related emotions.
-                </p>
-              </div>
-            )}
-          </div>
+              {currentUser && (
+                <div className="mt-6 pt-6 border-t-2 border-brown-100 flex flex-col sm:flex-row sm:items-center gap-4">
+                  {isSaved ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleRemove()}
+                      className={`self-start min-h-11 cursor-pointer ${textLinkClass}`}
+                    >
+                      Remove from your library
+                    </button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={() => void handleSave()}
+                      isLoading={isSaving}
+                      className={`min-h-11 px-6 ${focusRing}`}
+                    >
+                      Save to your library
+                    </Button>
+                  )}
+                  <p
+                    role="status"
+                    className="text-sm font-medium text-brown-800"
+                  >
+                    {libraryMessage ??
+                      (isSaved ? 'This word is in your library.' : '')}
+                  </p>
+                </div>
+              )}
+            </section>
+          ) : (
+            <p className="rounded-lg border-2 border-giraffe-200 bg-giraffe-50 px-5 py-6 text-brown-700 text-pretty">
+              Choose a feeling to see its meaning, an example, and related
+              words.
+            </p>
+          )}
         </div>
       </div>
-    </main>
+    </FeelingsPage>
   )
 }

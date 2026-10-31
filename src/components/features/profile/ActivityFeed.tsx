@@ -1,73 +1,65 @@
 import { Link } from '@tanstack/react-router'
-import { Card, CardBody } from '~/components/ui/Card'
-import { Button } from '~/components/ui/Button'
-import { StarIcon } from '~/components/ui/Icons'
+import { TEXT_LINK } from './linkStyles'
 
 interface ActivityFeedProps {
   completedScenarios: number
-  masteredScenarios: number
+  threeStarScenarios: number
   totalStars: number
 }
 
-function renderStars(count: number) {
-  const filled = Math.min(count, 3)
-  return (
-    <span
-      className="inline-flex gap-0.5 align-middle"
-      role="img"
-      aria-label={`${filled} of 3 stars`}
-    >
-      {[0, 1, 2].map((i) => (
-        <StarIcon
-          key={i}
-          className={`w-4 h-4 ${i < filled ? 'text-giraffe-400' : 'text-brown-200'}`}
-        />
-      ))}
-    </span>
-  )
+function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`
 }
 
 /**
- * A closing "your journey so far" strip: the milestones earned through
- * practice, paired with the one clear next step. Deliberately a horizontal
- * call-to-action band, not another stat card, so the page ends on momentum.
+ * The conversations so far, in one sentence, with a quiet invitation to
+ * rehearse something from the person's own life next.
  */
 export function ActivityFeed({
   completedScenarios,
-  masteredScenarios,
+  threeStarScenarios,
   totalStars,
 }: ActivityFeedProps) {
   return (
-    <Card>
-      <CardBody className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <dl className="grid grid-cols-3 gap-4 sm:gap-10 text-center sm:text-left">
-          <JourneyStat value={completedScenarios} label="Completed" />
-          <JourneyStat value={masteredScenarios} label="Mastered" />
-          <div>
-            <dd className="text-2xl font-bold text-brown-800">
-              {totalStars} {renderStars(totalStars)}
-            </dd>
-            <dt className="text-xs text-brown-600 font-medium mt-0.5">
-              Stars earned
-            </dt>
-          </div>
-        </dl>
-
-        <Link to="/practice" className="shrink-0">
-          <Button variant="primary" size="lg" className="w-full sm:w-auto">
-            Continue practicing
-          </Button>
+    <section aria-labelledby="conversations-heading">
+      <h2
+        id="conversations-heading"
+        className="text-xl font-bold text-brown-800 text-balance"
+      >
+        Your conversations
+      </h2>
+      <p className="mt-3 text-brown-700 max-w-prose text-pretty">
+        {completedScenarios === 0
+          ? 'You have not finished a conversation yet. The first one is often the hardest, and a beginner scenario is a gentle place to begin.'
+          : describeConversations(
+              completedScenarios,
+              threeStarScenarios,
+              totalStars,
+            )}
+      </p>
+      <p className="mt-4">
+        <Link to="/practice/create" className={TEXT_LINK}>
+          Rehearse a real conversation of your own
         </Link>
-      </CardBody>
-    </Card>
+      </p>
+    </section>
   )
 }
 
-function JourneyStat({ value, label }: { value: number; label: string }) {
-  return (
-    <div>
-      <dd className="text-2xl font-bold text-brown-800">{value}</dd>
-      <dt className="text-xs text-brown-600 font-medium mt-0.5">{label}</dt>
-    </div>
-  )
+function describeConversations(
+  completed: number,
+  threeStars: number,
+  stars: number,
+): string {
+  let sentence = `You have finished ${plural(completed, 'scenario', 'different scenarios')}`
+  if (threeStars > 0) {
+    sentence +=
+      completed === 1
+        ? ', with three stars'
+        : `, ${threeStars} of them with three stars`
+  }
+  if (stars > 0) {
+    sentence += `, gathering ${plural(stars, 'star', 'stars')} along the way`
+  }
+  return `${sentence}.`
 }

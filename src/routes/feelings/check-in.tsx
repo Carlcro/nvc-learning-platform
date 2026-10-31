@@ -1,22 +1,66 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from 'convex/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { pageMeta } from '~/lib/seo'
-import { BackButton } from '~/components/ui/BackButton'
 import { localDateString } from '~/lib/localDate'
+import { Button } from '~/components/ui/Button'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
+import {
+  FeelingsPage,
+  fieldClass,
+  focusRing,
+} from '~/components/features/feelings/FeelingsPage'
+import { OptionButton } from '~/components/features/feelings/OptionButton'
+import { CATEGORY_FILL } from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/check-in')({
   head: () => ({
     meta: pageMeta({
-      title: 'Daily Check In',
-      description:
-        'Notice and name how you are feeling today.',
+      title: 'Daily check in',
+      description: 'Notice and name how you are feeling today.',
     }),
   }),
   component: DailyCheckIn,
 })
+
+// A short starting list, in this order. The search finds every other word.
+const COMMON_FEELINGS_LIST = [
+  'happy',
+  'sad',
+  'angry',
+  'scared',
+  'excited',
+  'tired',
+  'grateful',
+  'frustrated',
+  'anxious',
+  'content',
+  'confused',
+  'hopeful',
+]
+
+const MAX_SEARCH_RESULTS = 8
+
+/** "once", "twice", "a few times": how often a feeling came up, in words. */
+function howOften(count: number): string {
+  if (count <= 1) return 'once'
+  if (count === 2) return 'twice'
+  if (count <= 4) return 'a few times'
+  return 'often'
+}
+
+/** "rest, connection or support" */
+function joinWithOr(words: ReadonlyArray<string>): string {
+  if (words.length <= 1) return words.join('')
+  return `${words.slice(0, -1).join(', ')} or ${words[words.length - 1]}`
+}
+
+function capitalize(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1)
+}
 
 function DailyCheckIn() {
   const currentUser = useQuery(api.users.getCurrentUser)
@@ -24,17 +68,14 @@ function DailyCheckIn() {
   const [note, setNote] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Queries
   const allFeelings = useQuery(api.feelings.getAll)
   const todayCheckIn = useQuery(
     api.feelingsProgress.getTodayCheckIn,
     currentUser ? { localDate: localDateString() } : 'skip',
-  )
-  const stats = useQuery(
-    api.feelingsProgress.getStats,
-    currentUser ? {} : 'skip',
   )
   const history = useQuery(
     api.feelingsProgress.getCheckInHistory,
@@ -45,74 +86,64 @@ function DailyCheckIn() {
     currentUser ? {} : 'skip',
   )
 
-  // Mutations
   const recordCheckInMutation = useMutation(api.feelingsProgress.recordCheckIn)
-  const [pointsEarned, setPointsEarned] = useState(0)
-  const [error, setError] = useState<string | null>(null)
 
-  // Initialize state from today's check-in if it exists
-  useMemo(() => {
-    if (todayCheckIn && selectedFeelings.length === 0 && !note) {
-      setSelectedFeelings(todayCheckIn.feelings)
-      setNote(todayCheckIn.note || '')
+  // Start from today's check-in once, if there is one, without overwriting
+  // anything the person has already begun to choose.
+  const initialized = useRef(false)
+  useEffect(() => {
+    if (initialized.current || todayCheckIn === undefined) return
+    initialized.current = true
+    if (todayCheckIn) {
+      setSelectedFeelings((prev) =>
+        prev.length === 0 ? todayCheckIn.feelings : prev,
+      )
+      setNote((prev) => (prev ? prev : todayCheckIn.note || ''))
     }
   }, [todayCheckIn])
 
-  // Hardcoded list of common feelings since isCommon is not in schema yet
-  const COMMON_FEELINGS_LIST = [
-    'happy',
-    'sad',
-    'angry',
-    'scared',
-    'excited',
-    'tired',
-    'grateful',
-    'frustrated',
-    'anxious',
-    'content',
-    'confused',
-    'hopeful',
-  ]
-
-  // Filter feelings
   const commonFeelings = useMemo(() => {
     if (!allFeelings) return []
-    // Return feelings that match the common list, preserving the order of the common list
     return COMMON_FEELINGS_LIST.map((word) =>
       allFeelings.find((f) => f.word.toLowerCase() === word),
     ).filter((f) => f !== undefined)
   }, [allFeelings])
 
+  // Every word matches, common ones included, so searching for "sad" finds it.
   const searchResults = useMemo(() => {
-    if (!allFeelings || !searchTerm) return []
-    return allFeelings.filter(
-      (f) =>
-        f.word.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !COMMON_FEELINGS_LIST.includes(f.word.toLowerCase()) && // Don't show if already in common list
-        !selectedFeelings.includes(f.word), // Don't show if already selected
-    )
+    const term = searchTerm.trim().toLowerCase()
+    if (!allFeelings || !term) return []
+    return allFeelings
+      .filter(
+        (f) =>
+          f.word.toLowerCase().includes(term) &&
+          !selectedFeelings.includes(f.word),
+      )
+      .slice(0, MAX_SEARCH_RESULTS)
   }, [allFeelings, searchTerm, selectedFeelings])
 
   const handleToggleFeeling = (word: string) => {
     setSelectedFeelings((prev) =>
       prev.includes(word) ? prev.filter((f) => f !== word) : [...prev, word],
     )
-    setSearchTerm('') // Clear search after selection
+    setSearchTerm('')
+    setSaved(false)
   }
 
   const handleSubmit = async () => {
     if (!currentUser || selectedFeelings.length === 0) return
 
     setIsSubmitting(true)
+    setError(null)
     try {
-      const result = await recordCheckInMutation({
+      // Points and the streak are still recorded on the server; this page
+      // does not mention them, so a check-in never feels like a score.
+      await recordCheckInMutation({
         feelings: selectedFeelings,
         note: note,
         localDate: localDateString(),
       })
-      setPointsEarned(result.pointsEarned)
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 4000)
+      setSaved(true)
     } catch (err) {
       setError(
         userFacingMessage(
@@ -126,293 +157,316 @@ function DailyCheckIn() {
   }
 
   if (allFeelings === undefined) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper flex items-center justify-center">
-        <p className="text-brown-700">Loading...</p>
-      </div>
-    )
+    return <GiraffeLoader message="Gathering words for feelings..." />
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-      {/* Header */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
-        <BackButton to="/feelings" label="Feelings" />
-        <div className="flex items-center justify-between gap-4 mt-2">
-          <div>
-            <h1 className="text-3xl font-bold text-brown-800 mb-2">
-              Daily Check-In
-            </h1>
-            <p className="text-brown-700">
-              Track your feelings to build emotional awareness
-            </p>
-          </div>
-          {stats && (
-            <div className="bg-giraffe-100 px-4 py-2 rounded-lg border border-giraffe-200 flex items-center gap-2">
-              <div className="bg-giraffe-200 p-2 rounded-full">
-                <svg className="w-5 h-5 text-giraffe-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs text-brown-700 font-bold">
-                  Check-In Streak
-                </div>
-                <div className="text-xl font-bold text-brown-800">
-                  {stats.checkInStreak} Days
-                </div>
-              </div>
+    <FeelingsPage
+      title="How are you today?"
+      intro={
+        <p>
+          Take a moment to notice what is here, and pick the words that fit.
+          There is no right answer, and you can change it later in the day.
+        </p>
+      }
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Check-in form */}
+        <section
+          aria-labelledby="checkin-heading"
+          className="lg:col-span-2 rounded-lg border-2 border-giraffe-200 bg-white p-5 sm:p-7"
+        >
+          <h2
+            id="checkin-heading"
+            className="text-xl font-bold text-brown-800 mb-5"
+          >
+            What are you feeling?
+          </h2>
+
+          {selectedFeelings.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-brown-700 mb-2">
+                Your words for today
+              </h3>
+              <ul className="flex flex-wrap gap-2">
+                {selectedFeelings.map((word) => (
+                  <li
+                    key={word}
+                    className="inline-flex items-center rounded-lg border-2 border-brown-700 bg-giraffe-100 pl-3 text-brown-900 font-medium capitalize"
+                  >
+                    {word}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeeling(word)}
+                      aria-label={`Remove ${word}`}
+                      className={`ml-1 grid h-11 w-11 place-items-center rounded-md text-brown-700 hover:text-brown-900 cursor-pointer ${focusRing}`}
+                    >
+                      <X aria-hidden="true" className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-        </div>
-      </section>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Check-In Form */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-brown-800 mb-6">
-                How are you feeling today?
-              </h2>
+          <div className="mb-8">
+            <h3
+              id="common-heading"
+              className="text-sm font-semibold text-brown-700 mb-3"
+            >
+              Some common feelings
+            </h3>
+            <div
+              role="group"
+              aria-labelledby="common-heading"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"
+            >
+              {commonFeelings.map((feeling) => (
+                <OptionButton
+                  key={feeling.word}
+                  pressed={selectedFeelings.includes(feeling.word)}
+                  onClick={() => handleToggleFeeling(feeling.word)}
+                  className="capitalize"
+                >
+                  {feeling.word}
+                </OptionButton>
+              ))}
+            </div>
+          </div>
 
-              {/* Selected Feelings */}
-              {selectedFeelings.length > 0 && (
-                <div className="mb-6 flex flex-wrap gap-2">
-                  {selectedFeelings.map((word) => (
-                    <span
-                      key={word}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-giraffe-400 text-brown-800 rounded-full font-medium shadow-sm animate-in fade-in zoom-in"
-                    >
-                      {word}
-                      <button
-                        onClick={() => handleToggleFeeling(word)}
-                        className="hover:text-brown-600 cursor-pointer"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Search */}
-              <div className="mb-6 relative">
-                <input
-                  type="text"
-                  placeholder="Search for a specific feeling..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-giraffe-200 focus:border-giraffe-400 focus:ring-0"
-                />
-                {searchTerm && searchResults.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border-2 border-giraffe-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="mb-8">
+            <label
+              htmlFor="checkin-search"
+              className="block text-sm font-semibold text-brown-700 mb-2"
+            >
+              Find another word
+            </label>
+            <input
+              id="checkin-search"
+              type="search"
+              autoComplete="off"
+              placeholder="For example, restless"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-describedby="checkin-search-count"
+              className={fieldClass}
+            />
+            <p
+              id="checkin-search-count"
+              aria-live="polite"
+              className="sr-only"
+            >
+              {searchTerm.trim()
+                ? `${searchResults.length} ${searchResults.length === 1 ? 'match' : 'matches'}`
+                : ''}
+            </p>
+            {searchTerm.trim() && (
+              <div className="mt-2">
+                {searchResults.length > 0 ? (
+                  <ul className="rounded-lg border-2 border-giraffe-200 bg-white divide-y divide-giraffe-100 overflow-hidden">
                     {searchResults.map((feeling) => (
-                      <button
-                        key={feeling.word}
-                        onClick={() => handleToggleFeeling(feeling.word)}
-                        className="w-full text-left px-4 py-2 hover:bg-giraffe-50 text-brown-800"
-                      >
-                        {feeling.word}
-                      </button>
+                      <li key={feeling.word}>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleFeeling(feeling.word)}
+                          className="w-full min-h-11 px-4 py-2 text-left text-brown-800 capitalize hover:bg-giraffe-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-giraffe-400"
+                        >
+                          {feeling.word}
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
+                ) : (
+                  <p className="text-sm text-brown-700">
+                    No word matches that yet. Try a shorter part of it.
+                  </p>
                 )}
               </div>
-
-              {/* Common Feelings Grid */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-brown-700 mb-3">
-                  Common Feelings
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {commonFeelings.map((feeling) => (
-                    <button
-                      key={feeling.word}
-                      onClick={() => handleToggleFeeling(feeling.word)}
-                      className={`
-                        px-3 py-2 rounded-lg font-medium transition-all text-sm
-                        ${
-                          selectedFeelings.includes(feeling.word)
-                            ? "bg-giraffe-400 text-brown-800 shadow-sm ring-2 ring-giraffe-300"
-                            : 'bg-giraffe-50 text-brown-700 hover:bg-giraffe-100 border border-giraffe-200'
-                        }
-                      `}
-                    >
-                      {feeling.word}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Note */}
-              <div className="mb-8">
-                <label className="block text-sm font-semibold text-brown-700 mb-2">
-                  Add a note (optional)
-                </label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="What's happening? (e.g., 'Big presentation at work today')"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-giraffe-200 focus:border-giraffe-400 focus:ring-0 min-h-[100px]"
-                />
-              </div>
-
-              {/* Submit */}
-              <button
-                onClick={handleSubmit}
-                disabled={selectedFeelings.length === 0 || isSubmitting}
-                className={`
-                  w-full py-4 rounded-lg font-bold text-lg transition-all
-                  ${
-                    selectedFeelings.length === 0
-                      ? 'bg-giraffe-100 text-brown-400 cursor-not-allowed'
-                      : 'bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 shadow-sm hover:shadow-md'
-                  }
-                `}
-              >
-                {isSubmitting ? 'Saving...' : 'Save Check-In'}
-              </button>
-
-              {showSuccess && (
-                <div className="mt-4 p-4 bg-empathy-high/20 text-brown-800 rounded-lg text-center font-medium animate-in fade-in slide-in-from-top-2">
-                  {pointsEarned > 0
-                    ? `Check-in saved. That is ${pointsEarned} points, and today counts toward your streak.`
-                    : 'Check-in updated. Today was already counted.'}
-                </div>
-              )}
-
-              {error && (
-                <div className="mt-4 p-4 bg-empathy-low/15 border-2 border-empathy-low/40 rounded-lg text-center">
-                  <p className="text-brown-800 font-medium">{error}</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Right: History */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
-              <h3 className="text-lg font-bold text-brown-800 mb-4">
-                Recent History
-              </h3>
-              {history && history.length > 0 ? (
-                <div className="space-y-6">
-                  {history.map((checkIn, idx) => (
-                    <div
-                      key={idx}
-                      className="relative pl-6 border-l-2 border-giraffe-200"
-                    >
-                      <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-giraffe-200 border-2 border-white" />
-                      <div className="text-sm text-brown-600 font-medium mb-1">
-                        {new Date(checkIn.date).toLocaleDateString(undefined, {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </div>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {checkIn.feelings.map((f) => (
-                          <span
-                            key={f}
-                            className="text-xs px-2 py-0.5 bg-giraffe-50 text-brown-700 rounded-full border border-giraffe-100"
-                          >
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                      {checkIn.note && (
-                        <p className="text-sm text-brown-600 italic">
-                          "{checkIn.note}"
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-brown-700 text-sm">
-                  No check-ins yet. Start today!
-                </p>
-              )}
-            </div>
+          <div className="mb-8">
+            <label
+              htmlFor="checkin-note"
+              className="block text-sm font-semibold text-brown-700 mb-2"
+            >
+              Add a note, if you like
+            </label>
+            <textarea
+              id="checkin-note"
+              value={note}
+              onChange={(e) => {
+                setNote(e.target.value)
+                setSaved(false)
+              }}
+              aria-describedby="checkin-note-privacy"
+              placeholder="What is happening today?"
+              className={`${fieldClass} min-h-28`}
+            />
+            <p
+              id="checkin-note-privacy"
+              className="mt-2 text-sm text-brown-700"
+            >
+              Only you can see your check-ins.
+            </p>
+          </div>
 
-            {/* Weekly Patterns Insights */}
-            {weeklyPatterns &&
-              weeklyPatterns.frequentFeelings.length > 0 && (
-                <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
-                  <h3 className="text-lg font-bold text-brown-800 mb-4">
-                    Weekly Patterns
-                  </h3>
-                  <div className="space-y-4">
-                    {weeklyPatterns.frequentFeelings.map((insight) => (
-                      <div
-                        key={insight.feeling}
-                        className="bg-giraffe-50 border border-giraffe-200 rounded-lg px-4 py-3"
-                      >
-                        <p className="text-brown-800 font-medium">
-                          You've felt{' '}
-                          <span className="font-bold">{insight.feeling}</span>{' '}
-                          {insight.count} times this week.
-                        </p>
-                        <p className="text-sm text-giraffe-700 mt-1">
-                          This often connects to needs for:
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {insight.relatedNeeds.map((need) => (
-                            <span
-                              key={need}
-                              className="text-xs px-2 py-1 bg-giraffe-50 text-brown-700 rounded-full border border-giraffe-200 capitalize"
-                            >
-                              {need}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => void handleSubmit()}
+            disabled={selectedFeelings.length === 0}
+            isLoading={isSubmitting}
+            className={`w-full sm:w-auto px-8 min-h-12 ${focusRing}`}
+          >
+            {isSubmitting
+              ? 'Saving...'
+              : todayCheckIn
+                ? 'Update check-in'
+                : 'Save check-in'}
+          </Button>
+          {selectedFeelings.length === 0 && (
+            <p className="mt-2 text-sm text-brown-700">
+              Choose at least one word to save.
+            </p>
+          )}
 
-                    {/* Pleasant vs Unpleasant ratio */}
-                    <div className="pt-4 border-t border-giraffe-100">
-                      <p className="text-sm text-giraffe-700 mb-2">
-                        Emotional balance this week:
-                      </p>
-                      <div className="flex h-3 rounded-full overflow-hidden bg-giraffe-100">
-                        <div
-                          className="bg-empathy-high transition-all"
-                          style={{
-                            width: `${weeklyPatterns.pleasantPercent}%`,
-                          }}
-                        />
-                        <div
-                          className="bg-empathy-low transition-all"
-                          style={{
-                            width: `${weeklyPatterns.unpleasantPercent}%`,
-                          }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-brown-700 mt-1">
-                        <span>Pleasant {weeklyPatterns.pleasantPercent}%</span>
-                        <span>
-                          Unpleasant {weeklyPatterns.unpleasantPercent}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            <div className="bg-giraffe-50 rounded-lg border-2 border-giraffe-100 p-6">
-              <h3 className="text-lg font-bold text-brown-800 mb-2">
-                Did you know?
-              </h3>
-              <p className="text-brown-700 text-sm">
-                Naming your feelings ("affect labeling") can reduce their
-                intensity and help your brain process emotions more effectively.
+          <div role="status" className="empty:hidden mt-4">
+            {saved && (
+              <p className="rounded-lg border-2 border-giraffe-200 bg-giraffe-50 px-4 py-3 text-brown-800 font-medium text-pretty">
+                Saved. Thank you for pausing to notice how you are.
               </p>
-            </div>
+            )}
           </div>
+
+          {error && (
+            <div
+              role="alert"
+              className="mt-4 rounded-lg border-2 border-brown-200 bg-brown-50 px-4 py-3"
+            >
+              <p className="text-brown-800 font-medium">{error}</p>
+            </div>
+          )}
+        </section>
+
+        {/* Looking back */}
+        <div className="space-y-8">
+          <section aria-labelledby="history-heading">
+            <h2
+              id="history-heading"
+              className="text-lg font-bold text-brown-800 mb-4"
+            >
+              Recent days
+            </h2>
+            {history && history.length > 0 ? (
+              <ol className="space-y-5 border-l-2 border-giraffe-200 pl-5">
+                {history.map((checkIn) => (
+                  <li key={checkIn.date}>
+                    <p className="text-sm font-semibold text-brown-700">
+                      {new Date(checkIn.date).toLocaleDateString(undefined, {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </p>
+                    <p className="text-brown-900">
+                      {checkIn.feelings.map(capitalize).join(', ')}
+                    </p>
+                    {checkIn.note && (
+                      <p className="mt-1 text-sm text-brown-700 text-pretty">
+                        {checkIn.note}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-brown-700 text-sm text-pretty">
+                Your check-ins will gather here, one line per day.
+              </p>
+            )}
+          </section>
+
+          {weeklyPatterns && weeklyPatterns.frequentFeelings.length > 0 && (
+            <section aria-labelledby="week-heading">
+              <h2
+                id="week-heading"
+                className="text-lg font-bold text-brown-800 mb-4"
+              >
+                This week
+              </h2>
+              <ul className="space-y-4">
+                {weeklyPatterns.frequentFeelings.map((insight) => (
+                  <li key={insight.feeling} className="text-brown-800">
+                    <p className="text-pretty">
+                      <span className="font-semibold">
+                        {capitalize(insight.feeling)}
+                      </span>{' '}
+                      came up {howOften(insight.count)} this week.
+                    </p>
+                    {insight.relatedNeeds.length > 0 && (
+                      <p className="mt-1 text-sm text-brown-700 text-pretty">
+                        It often points to a need for{' '}
+                        {joinWithOr(
+                          insight.relatedNeeds.map((n) => n.toLowerCase()),
+                        )}
+                        .
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 pt-4 border-t-2 border-brown-100">
+                <p className="text-sm text-brown-700 mb-2">
+                  Pleasant and unpleasant feelings this week
+                </p>
+                <div
+                  aria-hidden="true"
+                  className="flex h-3 rounded-full overflow-hidden bg-brown-100"
+                >
+                  <div
+                    className={CATEGORY_FILL.pleasant}
+                    style={{ width: `${weeklyPatterns.pleasantPercent}%` }}
+                  />
+                  <div
+                    className={CATEGORY_FILL.unpleasant}
+                    style={{ width: `${weeklyPatterns.unpleasantPercent}%` }}
+                  />
+                </div>
+                <div className="flex justify-between gap-4 text-sm text-brown-700 mt-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      aria-hidden="true"
+                      className={`h-2.5 w-2.5 rounded-full ${CATEGORY_FILL.pleasant}`}
+                    />
+                    Pleasant {weeklyPatterns.pleasantPercent}%
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      aria-hidden="true"
+                      className={`h-2.5 w-2.5 rounded-full ${CATEGORY_FILL.unpleasant}`}
+                    />
+                    Unpleasant {weeklyPatterns.unpleasantPercent}%
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-brown-700 text-pretty">
+                  Both kinds are welcome. Each one points to something that
+                  matters to you.
+                </p>
+              </div>
+            </section>
+          )}
+
+          <aside className="border-t-2 border-brown-100 pt-6">
+            <h2 className="font-bold text-brown-800 mb-1">Did you know</h2>
+            <p className="text-brown-700 text-sm text-pretty">
+              Putting a feeling into words can soften it a little and help you
+              think more clearly about what you need.
+            </p>
+          </aside>
         </div>
       </div>
-    </main>
+    </FeelingsPage>
   )
 }

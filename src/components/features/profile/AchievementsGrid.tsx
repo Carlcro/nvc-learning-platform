@@ -2,52 +2,87 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { CheckIcon } from '~/components/ui/Icons'
 
+interface Achievement {
+  id: string
+  title: string
+  description: string
+  earned: boolean
+}
+
 /**
- * Every achievement in the catalog, with the ones this user has earned lit
- * up. Unearned ones stay visible but quiet, so there is always a next thing
- * to look forward to without any pressure.
+ * Every achievement in the catalog, as two calm lists: the ones earned so far
+ * (with a check) and the ones still ahead (an empty ring, no check). The
+ * ones ahead stay readable, so there is always a next thing to look forward
+ * to without any pressure.
  */
 export function AchievementsGrid() {
   const achievements = useQuery(api.userProgress.getMyAchievements)
 
   if (!achievements) return null
 
-  const earnedCount = achievements.filter((a) => a.earned).length
+  const earned = achievements.filter((a) => a.earned)
+  const ahead = achievements.filter((a) => !a.earned)
 
   return (
-    <div className="bg-white rounded-lg border-2 border-giraffe-100 p-6">
-      <div className="flex items-baseline justify-between gap-3 mb-4">
-        <h2 className="text-lg font-bold text-brown-800">Achievements</h2>
-        <span className="text-sm font-semibold text-brown-600">
-          {earnedCount} of {achievements.length}
-        </span>
-      </div>
+    <section aria-labelledby="achievements-heading">
+      <h2
+        id="achievements-heading"
+        className="text-xl font-bold text-brown-800 text-balance"
+      >
+        Achievements
+      </h2>
+      <p className="mt-3 text-brown-700 max-w-prose text-pretty">
+        {earned.length === 0
+          ? 'Your first one arrives with your first finished conversation.'
+          : `${earned.length} of ${achievements.length} so far.`}
+      </p>
 
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {achievements.map((achievement) => (
-          <li
-            key={achievement.id}
-            className={`rounded-lg border p-4 flex items-start gap-3 ${
-              achievement.earned
-                ? 'bg-giraffe-50 border-giraffe-200'
-                : 'bg-white border-giraffe-100 opacity-60'
-            }`}
-          >
-            <span
-              className={`mt-0.5 grid place-items-center w-6 h-6 rounded-full shrink-0 ${
-                achievement.earned
-                  ? 'bg-giraffe-400 text-brown-800'
-                  : 'bg-giraffe-100 text-brown-400'
-              }`}
-              aria-hidden="true"
-            >
-              <CheckIcon className="w-3.5 h-3.5" />
-            </span>
-            <div>
-              <div className="font-semibold text-brown-800 text-sm">
+      <div className="mt-6 space-y-8">
+        {earned.length > 0 && (
+          <AchievementList title="Earned" items={earned} />
+        )}
+        {ahead.length > 0 && (
+          <AchievementList title="Still ahead" items={ahead} />
+        )}
+      </div>
+    </section>
+  )
+}
+
+function AchievementList({
+  title,
+  items,
+}: {
+  title: string
+  items: ReadonlyArray<Achievement>
+}) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-brown-800">{title}</h3>
+      <ul className="mt-3 grid sm:grid-cols-2 gap-x-10 gap-y-4">
+        {items.map((achievement) => (
+          <li key={achievement.id} className="flex items-start gap-3">
+            {achievement.earned ? (
+              <span
+                className="mt-0.5 grid place-items-center w-5 h-5 rounded-full shrink-0 bg-giraffe-400 text-brown-800"
+                aria-hidden="true"
+              >
+                <CheckIcon className="w-3 h-3" />
+              </span>
+            ) : (
+              <span
+                className="mt-0.5 w-5 h-5 rounded-full shrink-0 border-2 border-brown-200"
+                aria-hidden="true"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="font-semibold text-brown-800 text-sm">
                 {achievement.title}
-              </div>
-              <p className="text-xs text-brown-600 mt-0.5 leading-relaxed">
+                {!achievement.earned && (
+                  <span className="sr-only">, not yet earned</span>
+                )}
+              </p>
+              <p className="text-sm text-brown-600 mt-0.5 text-pretty">
                 {achievement.description}
               </p>
             </div>

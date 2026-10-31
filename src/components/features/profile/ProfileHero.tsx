@@ -1,4 +1,5 @@
-import { pointsInLevel } from 'convex/lib/progress'
+import { Link } from '@tanstack/react-router'
+import { PRIMARY_LINK } from './linkStyles'
 import type { UserStats } from './types'
 
 interface ProfileHeroProps {
@@ -6,96 +7,63 @@ interface ProfileHeroProps {
 }
 
 /**
- * The profile's focal band: the guide speaking to the learner. Identity (level
- * + title), an encouraging line in the mentor's voice, the level-progress bar,
- * and a quiet row of supporting stats, all in one warm panel, so the page
- * opens with a person's growth rather than a grid of boxes.
+ * The profile's header band: the guide speaking to the learner. A plain
+ * heading, an encouraging line in the mentor's voice, one quiet line about
+ * level and streak, and the page's single primary action.
  */
 export function ProfileHero({ stats }: ProfileHeroProps) {
-  const range = pointsInLevel(stats.level)
-  const currentLevelProgress = Math.max(0, range - stats.pointsToNextLevel)
-  const percentage = Math.min(100, Math.round((currentLevelProgress / range) * 100))
-
   return (
-    <div className="rounded-lg border-2 border-giraffe-100 bg-white shadow-sm overflow-hidden">
-      <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 sm:p-8">
-        {/* Guide */}
-        <div className="shrink-0 mx-auto md:mx-0">
-          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-giraffe-50 border-2 border-giraffe-100 flex items-center justify-center">
-            <img
-              src="/giraff.png"
-              alt=""
-              aria-hidden="true"
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-            />
-          </div>
-        </div>
-
-        {/* Identity + progress */}
-        <div className="flex-1 text-center md:text-left">
-          <div className="text-sm font-semibold text-giraffe-700">
-            Level {stats.level}
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-brown-800 text-balance">
-            {getLevelTitle(stats.level)}
+    <section className="bg-giraffe-100 px-4 sm:px-6 lg:px-8 pt-28 pb-10 md:pb-12">
+      <div className="max-w-3xl mx-auto flex items-start gap-6 sm:gap-10">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 text-balance tracking-tight">
+            Your practice so far
           </h1>
-          <p className="text-brown-700 mt-1 text-pretty">
-            {getMentorLine(stats.averageScores.overall, stats.scenariosCompleted)}
+          <p className="mt-4 text-lg text-brown-700 max-w-prose text-pretty">
+            {getMentorLine(
+              stats.averageScores.overall,
+              stats.scenariosCompleted,
+            )}
           </p>
-
-          {/* Level progress */}
-          <div className="mt-5 max-w-md mx-auto md:mx-0">
-            <div className="flex justify-between text-sm text-brown-700 mb-2">
-              <span className="font-medium">
-                Progress to level {stats.level + 1}
-              </span>
-              <span className="font-semibold">
-                {stats.pointsToNextLevel} pts to go
-              </span>
-            </div>
-            <div
-              className="h-3 bg-giraffe-100 rounded-full overflow-hidden border border-giraffe-200"
-              role="progressbar"
-              aria-valuenow={percentage}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`Progress to level ${stats.level + 1}`}
-            >
-              <div
-                className="h-full bg-giraffe-400 rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
+          <p className="mt-5 text-sm font-semibold text-brown-800 text-pretty">
+            {getStatLine(stats)}
+          </p>
+          <div className="mt-6">
+            <Link to="/practice" className={PRIMARY_LINK}>
+              {stats.scenariosCompleted === 0
+                ? 'Start practicing'
+                : 'Continue practicing'}
+            </Link>
           </div>
         </div>
+        <img
+          src="/giraff.png"
+          alt=""
+          aria-hidden="true"
+          className="hidden sm:block w-28 md:w-36 h-auto shrink-0 object-contain"
+        />
       </div>
-
-      {/* Supporting stats */}
-      <dl className="bg-giraffe-50 border-t border-giraffe-100 px-6 sm:px-8 py-4 flex flex-wrap justify-center md:justify-start gap-x-10 gap-y-3">
-        <Stat value={stats.currentStreak} label="day streak" />
-        <Stat value={stats.longestStreak} label="best streak" />
-        <Stat value={stats.totalPoints} label="total points" />
-      </dl>
-    </div>
+    </section>
   )
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="flex items-baseline gap-2">
-      <dd className="text-xl font-bold text-brown-800">{value}</dd>
-      <dt className="text-sm text-brown-600">{label}</dt>
-    </div>
-  )
-}
-
-function getLevelTitle(level: number): string {
-  if (level === 1) return 'Aspiring Giraffe'
-  if (level === 2) return 'Empathetic Listener'
-  if (level === 3) return 'Compassionate Communicator'
-  if (level === 4) return 'Connection Builder'
-  if (level === 5) return 'Harmony Weaver'
-  return 'NVC Master'
+/**
+ * Level and points in words, plus the current streak when there is one.
+ * One line, so the header never turns into a row of numbers.
+ */
+function getStatLine(stats: UserStats): string {
+  const points = stats.totalPoints === 1 ? 'point' : 'points'
+  let line = `Level ${stats.level}, with ${stats.totalPoints} ${points}`
+  if (stats.pointsToNextLevel > 0) {
+    line += ` and ${stats.pointsToNextLevel} more to reach level ${stats.level + 1}`
+  }
+  line += '.'
+  if (stats.currentStreak > 1) {
+    line += ` You have practiced ${stats.currentStreak} days in a row.`
+  } else if (stats.currentStreak === 1) {
+    line += ' Your practice streak has begun.'
+  }
+  return line
 }
 
 /**
@@ -107,9 +75,9 @@ function getMentorLine(overall: number, completed: number): string {
     return 'Welcome. Every conversation you practice is a step toward connection.'
   }
   if (overall >= 90) return 'Your words are landing with real compassion.'
-  if (overall >= 70) return "You're growing beautifully. Keep going."
+  if (overall >= 70) return 'You are growing steadily. Keep going.'
   if (overall >= 50) {
-    return "You're finding your giraffe voice, one conversation at a time."
+    return 'You are finding your giraffe voice, one conversation at a time.'
   }
-  return "You're showing up for this, and that's what matters most."
+  return 'You are showing up for this, and that is what matters most.'
 }

@@ -2,18 +2,23 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { DailyChallengeCard } from '../../components/features/challenges/DailyChallengeCard'
-import { ChallengeStats } from '../../components/features/challenges/ChallengeStats'
-import { GiraffeLoader } from '../../components/ui/GiraffeLoader'
-import { ProtectedRoute } from '../../components/auth/ProtectedRoute'
+import type { ReactNode } from 'react'
+import { DailyChallengeCard } from '~/components/features/challenges/DailyChallengeCard'
+import { ChallengeStats } from '~/components/features/challenges/ChallengeStats'
+import {
+  PRIMARY_LINK_CLASS,
+  QUIET_LINK_CLASS,
+  challengeDifficultyLabel,
+} from '~/components/features/challenges/challengeDisplay'
+import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
+import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { pageMeta } from '~/lib/seo'
 
 export const Route = createFileRoute('/challenges/daily')({
   head: () => ({
     meta: pageMeta({
       title: 'Daily Challenge',
-      description:
-        'A fresh scenario every day to build fluency.',
+      description: 'A new practice situation each day, if you would like one.',
     }),
   }),
   component: DailyChallengePage,
@@ -27,10 +32,27 @@ function DailyChallengePage() {
   )
 }
 
-const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: 'Beginner',
-  medium: 'Intermediate',
-  hard: 'Advanced',
+/** The page shell shared by every state: paper, with a giraffe-100 band. */
+function DailyShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="min-h-screen bg-paper">
+      <section className="bg-giraffe-100 px-4 sm:px-6 lg:px-8 pt-28 pb-10 md:pb-12">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brown-800 text-balance tracking-tight">
+            One conversation for today.
+          </h1>
+          <p className="mt-4 text-lg text-brown-700 max-w-prose text-pretty">
+            A new situation each day, if you would like one. It plays like any
+            other practice conversation, and finishing it adds a few bonus
+            points.
+          </p>
+        </div>
+      </section>
+      <div className="px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="max-w-3xl mx-auto space-y-12">{children}</div>
+      </div>
+    </main>
+  )
 }
 
 function DailyChallengeContent() {
@@ -51,142 +73,102 @@ function DailyChallengeContent() {
   )
 
   if (myChallenge === undefined) {
-    return <GiraffeLoader message="Finding today's challenge for you…" />
+    return <GiraffeLoader message="Finding today's challenge for you..." />
   }
 
   if (myChallenge === null) {
     return (
-      <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24">
-        <section className="py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto px-8">
-            <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6">
-              Daily <span className="text-giraffe-700">Challenge</span>
-            </h1>
-          </div>
+      <DailyShell>
+        <section className="rounded-lg border-2 border-giraffe-100 bg-white p-6 sm:p-8">
+          <h2 className="text-xl font-bold text-brown-800">
+            Today's situation is still on its way.
+          </h2>
+          <p className="mt-2 max-w-prose text-brown-700 text-pretty">
+            A new one is prepared every day. In the meantime, every practice
+            scenario is open to you.
+          </p>
+          <Link to="/practice" className={`${PRIMARY_LINK_CLASS} mt-6`}>
+            Browse practice scenarios
+          </Link>
         </section>
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
-            <h2 className="text-xl font-bold text-brown-800 mb-3">
-              No Challenge Available
-            </h2>
-            <p className="text-brown-700 mb-4">
-              Daily challenges are generated automatically. Check back soon!
-            </p>
-            <p className="text-sm text-brown-600 mb-6">
-              In the meantime, you can explore other practice scenarios.
-            </p>
-            <Link
-              to="/practice"
-              className="px-6 py-3 bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 font-bold rounded-full transition-colors shadow-sm inline-block"
-            >
-              Browse Practice Scenarios
-            </Link>
-          </div>
-        </section>
-      </main>
+      </DailyShell>
     )
   }
 
-  const title = scenario?.title || 'Daily Challenge'
-  const learningObjectives = scenario?.learningObjectives || [
-    'observation',
-    'feeling',
-  ]
-  const characterName = scenario?.characterName || 'Character'
+  // While the scenario loads, the card shows the description calmly and
+  // leaves the title and character to arrive, rather than flashing defaults.
+  const scenarioLoaded = scenario !== undefined && scenario !== null
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-giraffe-50 to-paper pt-24 pb-16">
-      {/* Header */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto px-8">
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl sm:text-5xl font-bold text-brown-800 mb-6 text-balance tracking-tight">
-              Daily <span className="text-giraffe-700">Challenge</span>
-            </h1>
-            <p className="text-lg text-brown-700 leading-relaxed">
-              A fresh scenario every day. Complete it to earn bonus points and
-              keep your streak alive.
-            </p>
-          </div>
-        </div>
+    <DailyShell>
+      <section aria-labelledby="suggested-heading">
+        <h2
+          id="suggested-heading"
+          className="text-lg font-bold text-brown-800"
+        >
+          Suggested for you
+        </h2>
+        <p className="mt-1 mb-4 text-sm text-brown-600">
+          Chosen for level {myChallenge.userLevel}.
+          {myChallenge.alternatives.length > 0 &&
+            ' The others below are just as open to you.'}
+        </p>
+        <DailyChallengeCard
+          title={scenarioLoaded ? scenario.title : undefined}
+          description={myChallenge.description}
+          difficulty={myChallenge.difficulty}
+          characterName={scenarioLoaded ? scenario.characterName : undefined}
+          learningObjectives={
+            scenarioLoaded ? scenario.learningObjectives : undefined
+          }
+          completed={myChallenge.completed}
+          bonusPoints={myChallenge.bonusPoints}
+          scenarioId={myChallenge.scenarioId}
+          challengeId={myChallenge._id}
+        />
       </section>
 
-      {/* Recommended Challenge Card */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div>
-          <h2 className="text-sm font-semibold text-brown-800 mb-3">
-            Recommended for You
+      {myChallenge.alternatives.length > 0 && (
+        <section aria-labelledby="alternatives-heading">
+          <h2
+            id="alternatives-heading"
+            className="text-lg font-bold text-brown-800"
+          >
+            Or choose another
           </h2>
-          <p className="text-sm text-brown-600 mb-4">
-            Based on your level ({myChallenge.userLevel}), we recommend the{' '}
-            <span className="font-semibold">
-              {DIFFICULTY_LABELS[myChallenge.recommendedDifficulty]}
-            </span>{' '}
-            challenge.
-          </p>
-          <DailyChallengeCard
-            title={title}
-            description={myChallenge.description}
-            difficulty={myChallenge.difficulty}
-            characterName={characterName}
-            learningObjectives={learningObjectives}
-            completed={myChallenge.completed}
-            completedScore={myChallenge.completedScore ?? undefined}
-            bonusPoints={myChallenge.bonusPoints}
-            scenarioId={myChallenge.scenarioId}
-            challengeId={myChallenge._id}
-          />
-        </div>
-
-        {/* Other difficulties */}
-        {myChallenge.alternatives.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold text-brown-800 mb-3">
-              Want something different today?
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {myChallenge.alternatives.map((alt) => (
-                <div
-                  key={alt._id}
-                  className="bg-white rounded-lg border-2 border-giraffe-100 p-5 flex flex-col gap-3"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-giraffe-100 text-giraffe-800">
-                      {DIFFICULTY_LABELS[alt.difficulty]}
-                    </span>
-                    <span className="text-xs font-semibold text-giraffe-700">
-                      +{alt.bonusPoints} pts
-                    </span>
-                  </div>
-                  <p className="text-sm text-brown-700 leading-relaxed flex-1">
+          <ul className="mt-2 divide-y-2 divide-giraffe-100">
+            {myChallenge.alternatives.map((alt) => {
+              const label = challengeDifficultyLabel(alt.difficulty)
+              return (
+                <li key={alt._id} className="py-5">
+                  <p className="max-w-prose text-brown-700 leading-relaxed text-pretty break-words">
                     {alt.description}
                   </p>
-                  <Link
-                    to="/practice/$scenarioId/brief"
-                    params={{ scenarioId: alt.scenarioId }}
-                    search={{ dailyChallengeId: alt._id }}
-                    className="text-sm font-semibold text-brown-800 bg-giraffe-100 hover:bg-giraffe-200 transition-colors rounded-lg px-4 py-2 text-center"
-                  >
-                    Take this one instead
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                  <p className="mt-2 text-sm text-brown-600">
+                    {label}, worth {alt.bonusPoints} bonus points.{' '}
+                    <Link
+                      to="/practice/$scenarioId/brief"
+                      params={{ scenarioId: alt.scenarioId }}
+                      search={{ dailyChallengeId: alt._id }}
+                      className={QUIET_LINK_CLASS}
+                    >
+                      Choose this one
+                      <span className="sr-only">: the {label} challenge</span>
+                    </Link>
+                  </p>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
 
-        {/* Streak and history */}
-        {stats && (
-          <ChallengeStats
-            currentStreak={stats.currentStreak}
-            longestStreak={stats.longestStreak}
-            completedCount={stats.completedCount}
-            averageScore={stats.averageScore}
-            totalPoints={stats.totalPoints}
-            level={stats.level}
-          />
-        )}
-      </section>
-    </main>
+      {stats && (
+        <ChallengeStats
+          completedCount={stats.completedCount}
+          longestStreak={stats.longestStreak}
+        />
+      )}
+    </DailyShell>
   )
 }
