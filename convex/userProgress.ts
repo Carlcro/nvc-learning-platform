@@ -41,7 +41,7 @@ export const getOrCreate = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) {
-      userError('User not authenticated')
+      userError('notAuthenticated')
     }
     return await getOrCreateUserProgress(ctx, userId)
   },

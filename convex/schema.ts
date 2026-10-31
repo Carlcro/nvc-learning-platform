@@ -2,6 +2,8 @@ import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 import { authTables } from '@convex-dev/auth/server'
 import { modelCallKindValidator } from './lib/modelUsage'
+import { localeValidator } from './lib/locale'
+import { scenarioTranslationsValidator } from './lib/scenarioText'
 
 /**
  * NVC Learning App Database Schema
@@ -12,6 +14,19 @@ import { modelCallKindValidator } from './lib/modelUsage'
 
 export default defineSchema({
   ...authTables,
+
+  /**
+   * Convex Auth's users table, plus the person's chosen language. The auth
+   * fields and indexes are kept exactly as Convex Auth defines them.
+   */
+  users: defineTable({
+    ...authTables.users.validator.fields,
+    // Absent until the person picks a language or first signs in, at which
+    // point the language they were browsing in is saved.
+    preferredLocale: v.optional(localeValidator),
+  })
+    .index('email', ['email'])
+    .index('phone', ['phone']),
 
   // ============================================================================
   // PROGRESS TRACKING
@@ -144,6 +159,15 @@ export default defineSchema({
         v.literal('daily'), // generated for a daily challenge
       ),
     ),
+
+    // ============ Languages ============
+    // The language the words above are written in. Absent on rows from before
+    // languages existed, which are English. A custom scenario is written in
+    // its creator's language and stays in it.
+    locale: v.optional(localeValidator),
+    // The same words in other languages, for daily challenges. The built-in
+    // library keeps its translations in code (convex/scenarioTranslations).
+    translations: v.optional(scenarioTranslationsValidator),
   })
     .index('by_category', ['category'])
     .index('by_difficulty', ['difficulty'])
@@ -287,6 +311,12 @@ export default defineSchema({
         observationMade: v.optional(v.boolean()), // observation >= 15
       }),
     ),
+
+    // ============ Language ============
+    // The language this conversation is held in, fixed when it starts so the
+    // character, the coaching and the reflection all stay in it even if the
+    // person later switches the interface. Absent on older rows: English.
+    locale: v.optional(localeValidator),
 
     // ============ Rewind Feature ============
     // Optional: pre-rewind-feature conversations lack these; the code reads

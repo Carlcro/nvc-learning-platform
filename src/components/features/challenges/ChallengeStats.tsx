@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { QUIET_LINK_CLASS } from './challengeDisplay'
+import { useT } from '~/i18n/useT'
 
 interface ChallengeStatsProps {
   completedCount: number
@@ -14,17 +15,10 @@ export function ChallengeStats({
   completedCount,
   longestStreak,
 }: ChallengeStatsProps) {
-  const finished =
-    completedCount === 0
-      ? 'The daily challenges you finish will gather on your profile.'
-      : completedCount === 1
-        ? 'You have finished one daily challenge so far.'
-        : `You have finished ${completedCount} daily challenges so far.`
-
+  const t = useT()
+  const finished = t.challenges.stats.finished(completedCount)
   const run =
-    longestStreak > 1
-      ? ` Your longest run of practice days is ${longestStreak}.`
-      : ''
+    longestStreak > 1 ? t.challenges.stats.longestRun(longestStreak) : ''
 
   return (
     <section
@@ -35,13 +29,13 @@ export function ChallengeStats({
         id="challenge-history-heading"
         className="text-lg font-bold text-brown-800"
       >
-        Your practice so far
+        {t.challenges.stats.title}
       </h2>
       <p className="mt-2 max-w-prose text-brown-700 text-pretty">
         {finished}
         {run}{' '}
         <Link to="/profile" className={QUIET_LINK_CLASS}>
-          See your profile
+          {t.challenges.stats.seeProfile}
         </Link>
       </p>
     </section>

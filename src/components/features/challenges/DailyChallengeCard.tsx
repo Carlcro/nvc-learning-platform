@@ -3,11 +3,12 @@ import {
   PRIMARY_LINK_CLASS,
   QUIET_LINK_CLASS,
   challengeDifficultyLabel,
-  practiceAreasPhrase,
+  practiceAreaWords,
   useNextChallengeTime,
 } from './challengeDisplay'
 import type { ChallengeDifficulty } from './challengeDisplay'
 import { Card } from '~/components/ui/Card'
+import { useT } from '~/i18n/useT'
 
 interface DailyChallengeCardProps {
   /** Undefined while the scenario is still loading. */
@@ -38,13 +39,14 @@ export function DailyChallengeCard({
   scenarioId,
   challengeId,
 }: DailyChallengeCardProps) {
+  const t = useT()
   const nextTime = useNextChallengeTime()
   const isLoadingScenario = title === undefined
 
   return (
     <Card className="p-6 sm:p-8">
       <p className="text-sm text-brown-600">
-        {challengeDifficultyLabel(difficulty)}
+        {challengeDifficultyLabel(difficulty, t.challenges.difficulty)}
       </p>
 
       {isLoadingScenario ? (
@@ -59,7 +61,7 @@ export function DailyChallengeCard({
           </h3>
           {characterName && (
             <p className="mt-1 text-sm font-semibold text-brown-700 break-words">
-              with {characterName}
+              {t.challenges.card.withCharacter(characterName)}
             </p>
           )}
         </>
@@ -71,25 +73,26 @@ export function DailyChallengeCard({
 
       {learningObjectives.length > 0 && (
         <p className="mt-3 text-sm text-brown-700">
-          A good one for practicing {practiceAreasPhrase(learningObjectives)}.
+          {t.challenges.card.goodFor(
+            practiceAreaWords(learningObjectives, t.challenges.objectiveWords),
+          )}
         </p>
       )}
 
       {completed ? (
         <div className="mt-6 space-y-3">
           <p className="text-brown-800 font-semibold">
-            You finished today's challenge.
+            {t.challenges.card.finished}
           </p>
           <p className="text-sm text-brown-700">
-            You are welcome to go through it again
-            {nextTime ? `, and a new one arrives at ${nextTime}.` : '.'}{' '}
+            {t.challenges.card.againWelcome(nextTime)}{' '}
             <Link
               to="/practice/$scenarioId/brief"
               params={{ scenarioId }}
               search={{ dailyChallengeId: challengeId }}
               className={QUIET_LINK_CLASS}
             >
-              Try it again
+              {t.challenges.card.tryAgain}
               {title && <span className="sr-only">: {title}</span>}
             </Link>
           </p>
@@ -97,8 +100,7 @@ export function DailyChallengeCard({
       ) : (
         <div className="mt-6 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-brown-600">
-            Worth {bonusPoints} bonus points
-            {nextTime ? `. New challenge at ${nextTime}.` : '.'}
+            {t.challenges.card.worth(bonusPoints, nextTime)}
           </p>
           <Link
             to="/practice/$scenarioId/brief"
@@ -106,7 +108,7 @@ export function DailyChallengeCard({
             search={{ dailyChallengeId: challengeId }}
             className={`${PRIMARY_LINK_CLASS} w-full sm:w-auto`}
           >
-            Start this conversation
+            {t.challenges.card.start}
           </Link>
         </div>
       )}

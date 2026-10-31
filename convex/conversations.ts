@@ -1,6 +1,8 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
+import { DEFAULT_LOCALE, localeValidator } from './lib/locale'
+import { conversationLocaleFor, localizeScenario } from './lib/scenarioText'
 import { MAX_USER_TURNS } from './lib/limits'
 import { getOrCreateUserProgress } from './lib/userProgressWrite'
 import {
@@ -127,35 +129,49 @@ export const getActiveForScenario = query({
 /**
  * Start a conversation in a scenario for the current user.
  * If an in-progress conversation already exists for this scenario (double
- * click, second tab), it is returned instead of creating a parallel one.
+ * click, second tab), it is returned instead of creating a parallel one, in
+ * whatever language it was started in.
+ *
+ * `locale` is the language the person is reading the app in. The conversation
+ * is held in it when the scenario exists in that language, and otherwise in
+ * the scenario's own language (a custom scenario written in Swedish).
  */
 export const create = mutation({
-  args: { scenarioId: v.id('scenarios') },
+  args: {
+    scenarioId: v.id('scenarios'),
+    locale: v.optional(localeValidator),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const scenario = await ctx.db.get(args.scenarioId)
     if (!scenario) {
-      userError('Scenario not found')
+      userError('scenarioNotFound')
     }
     if (scenario.visibility === 'private' && scenario.ownerId !== userId) {
-      userError('Scenario not found')
+      userError('scenarioNotFound')
     }
 
     const existing = await findActiveConversation(ctx, userId, args.scenarioId)
     if (existing) return existing._id
 
+    const requested =
+      args.locale ?? (await ctx.db.get(userId))?.preferredLocale ?? DEFAULT_LOCALE
+    const locale = conversationLocaleFor(scenario, requested)
+    const opening = localizeScenario(scenario, locale).aiOpeningMessage
+
     const now = Date.now()
     return await ctx.db.insert('conversations', {
       userId,
       scenarioId: args.scenarioId,
+      locale,
       messages: [
         {
           role: 'assistant',
-          content: scenario.aiOpeningMessage,
+          content: opening,
           timestamp: now,
         },
       ],
@@ -218,9 +234,11 @@ export const getForTurn = internalQuery({
       .withIndex('by_user', (q) => q.eq('userId', args.userId))
       .first()
 
+    const locale = conversation.locale ?? DEFAULT_LOCALE
     return {
       conversation,
-      scenario,
+      locale,
+      scenario: localizeScenario(scenario, locale),
       userLevel: progress?.level ?? 1,
       userTurnCount: countUserTurns(conversation),
     }
@@ -263,16 +281,16 @@ export const recordTurn = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== args.userId) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     if (conversation.status !== 'in_progress') {
-      userError('Conversation is no longer active')
+      userError('conversationNotActive')
     }
     // Checked again inside the transaction: submitTurn checks before spending
     // on the model, but only this re-read stops two concurrent turns from both
     // landing on the last allowed slot.
     if (countUserTurns(conversation) >= MAX_USER_TURNS) {
-      userError('This conversation has run its course.')
+      userError('conversationAtTurnLimit')
     }
 
     const now = Date.now()
@@ -396,12 +414,12 @@ export const complete = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== userId) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
 
     if (conversation.status !== 'in_progress') {
@@ -692,7 +710,7 @@ export const abandon = mutation({
   handler: async (ctx, args) => {
     const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     if (conversation.status !== 'in_progress') {
       return { success: true }
@@ -712,23 +730,23 @@ export const rewindLastMessages = mutation({
   handler: async (ctx, args) => {
     const conversation = await getOwnedConversation(ctx, args.conversationId)
     if (!conversation) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
 
     if (conversation.status !== 'in_progress') {
-      userError('Cannot rewind a completed conversation')
+      userError('cannotRewindCompleted')
     }
 
     const maxRewinds = conversation.maxRewinds ?? 2
     const rewindsUsed = conversation.rewindsUsed ?? 0
 
     if (rewindsUsed >= maxRewinds) {
-      userError('No rewinds remaining')
+      userError('noRewindsLeft')
     }
 
     // Need at least 3 messages (opening + user + assistant) to rewind
     if (conversation.messages.length < 3) {
-      userError('Not enough messages to rewind')
+      userError('notEnoughMessagesToRewind')
     }
 
     // Remove last 2 messages (user message + character response)
@@ -832,7 +850,12 @@ export const getForReflection = internalQuery({
     }
     const scenario = await ctx.db.get(conversation.scenarioId)
     if (!scenario) return null
-    return { conversation, scenario }
+    const locale = conversation.locale ?? DEFAULT_LOCALE
+    return {
+      conversation,
+      locale,
+      scenario: localizeScenario(scenario, locale),
+    }
   },
 })
 
@@ -851,7 +874,7 @@ export const saveReflection = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
     if (!conversation || conversation.userId !== args.userId) {
-      userError('Conversation not found')
+      userError('conversationNotFound')
     }
     if (conversation.reflection) return conversation.reflection
     await ctx.db.patch(args.conversationId, { reflection: args.reflection })

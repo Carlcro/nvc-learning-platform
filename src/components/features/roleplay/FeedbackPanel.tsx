@@ -27,7 +27,10 @@ import type { Milestones } from './milestones'
 import type { FeedbackData, NVCScore } from './types'
 import type { SkillHint } from '~/hooks/useConversation'
 import type { NVCComponent } from '~/lib/conversationInsights'
-import { SKILL_RESOURCES } from '~/lib/conversationInsights'
+import type { Messages } from '~/i18n/messages'
+import { skillResource } from '~/lib/conversationInsights'
+import { useLocale, useT } from '~/i18n/useT'
+import { focusAreaLabel, objectiveLabel } from '~/i18n/focusAreas'
 
 export type { FeedbackData, NVCScore }
 
@@ -114,12 +117,14 @@ function useCountUp(target: number, turnKey: number): number {
 
 type MoodTone = 'low' | 'mid' | 'high'
 
-function getMood(mood: number): { label: string; tone: MoodTone } {
-  if (mood >= 6) return { label: 'Open', tone: 'high' }
-  if (mood >= 3) return { label: 'Warming', tone: 'mid' }
-  if (mood >= 0) return { label: 'Neutral', tone: 'mid' }
-  if (mood >= -6) return { label: 'Guarded', tone: 'low' }
-  return { label: 'Defensive', tone: 'low' }
+type MoodKey = keyof Messages['roleplay']['feedback']['mood']
+
+function getMood(mood: number): { key: MoodKey; tone: MoodTone } {
+  if (mood >= 6) return { key: 'open', tone: 'high' }
+  if (mood >= 3) return { key: 'warming', tone: 'mid' }
+  if (mood >= 0) return { key: 'neutral', tone: 'mid' }
+  if (mood >= -6) return { key: 'guarded', tone: 'low' }
+  return { key: 'defensive', tone: 'low' }
 }
 
 // Warm and gentle at every step: sage when open, gold in between, soft coral
@@ -151,16 +156,20 @@ function MoodHeader({
 }) {
   const clampedMood = Math.max(-10, Math.min(10, mood))
   const percent = ((clampedMood + 10) / 20) * 100
-  const { label, tone } = getMood(clampedMood)
-  const who = characterName || 'They'
+  const t = useT()
+  const copy = t.roleplay.feedback
+  const { key, tone } = getMood(clampedMood)
+  const label = copy.mood[key]
+  const howFeels = copy.howFeels(characterName)
 
   return (
     <div className="shrink-0 bg-giraffe-50 border-b border-giraffe-100 px-5 pt-4 pb-4">
-      <h2 className="sr-only">Feedback</h2>
+      <h2 className="sr-only">{copy.srHeading}</h2>
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-sm text-brown-600">
-          How <span className="font-semibold text-brown-900">{who}</span>{' '}
-          feels
+          {howFeels.before}
+          <span className="font-semibold text-brown-900">{howFeels.name}</span>
+          {howFeels.after}
         </p>
         <p className="flex items-center gap-1.5 text-sm font-semibold text-brown-900">
           <span
@@ -174,9 +183,7 @@ function MoodHeader({
       <div
         className="mt-3 flex items-center gap-2.5"
         role="img"
-        aria-label={`How ${who} feels: ${label}${
-          opened ? `. ${who} has opened up.` : ''
-        }`}
+        aria-label={copy.moodAria(characterName, label, opened)}
       >
         {/* Inset by the marker's radius so it never pokes past either end */}
         <div className="relative flex-1 h-1.5 rounded-full bg-brown-900/10">
@@ -194,17 +201,14 @@ function MoodHeader({
         <Star
           aria-hidden="true"
           className={`h-4 w-4 shrink-0 transition-colors duration-500 ${
-            opened
-              ? 'fill-giraffe-400 text-giraffe-600'
-              : 'text-brown-300'
+            opened ? 'fill-giraffe-400 text-giraffe-600' : 'text-brown-300'
           }`}
         />
       </div>
 
       {!opened && (
         <p className="mt-2 text-xs text-brown-500 text-pretty">
-          The star lights when {characterName || 'they'} opens up. People open
-          up when they feel heard.
+          {copy.starHint(characterName)}
         </p>
       )}
     </div>
@@ -212,12 +216,16 @@ function MoodHeader({
 }
 
 // Follows the scoring anchors (0-49, 50-69, 70-89, 90+) so the words and the
-// number always tell the same story, and stays kind at every band.
-export function getScoreMessage(score: number): string {
-  if (score < 50) return 'Keep going'
-  if (score < 70) return 'Getting there'
-  if (score < 90) return 'Landing well'
-  return 'Beautifully said'
+// number always tell the same story, and stays kind at every band. Pass
+// `t.roleplay.scoreMessages`.
+export function getScoreMessage(
+  score: number,
+  messages: Messages['roleplay']['scoreMessages'],
+): string {
+  if (score < 50) return messages.keepGoing
+  if (score < 70) return messages.gettingThere
+  if (score < 90) return messages.landingWell
+  return messages.beautifullySaid
 }
 
 function scoreBand(score: number): number {
@@ -240,7 +248,14 @@ const BAND_FILL = [
  * and four steps show which stage of the journey this turn reached, so it
  * reads as a place on a path rather than a grade.
  */
-function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) {
+function ScoreSection({
+  score,
+  turnKey,
+}: {
+  score: NVCScore
+  turnKey: number
+}) {
+  const t = useT()
   const shown = useCountUp(score.total, turnKey)
   const band = scoreBand(score.total)
 
@@ -249,14 +264,16 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-xl font-bold text-brown-900 text-balance">
-            {getScoreMessage(score.total)}
+            {getScoreMessage(score.total, t.roleplay.scoreMessages)}
           </h3>
           <p className="text-xs text-brown-500 mt-0.5">
-            How this message landed
+            {t.roleplay.feedback.howLanded}
           </p>
         </div>
         <p className="shrink-0 pt-1 text-brown-600 tabular-nums">
-          <span className="text-base font-semibold text-brown-800">{shown}</span>
+          <span className="text-base font-semibold text-brown-800">
+            {shown}
+          </span>
           <span className="text-xs">/100</span>
         </p>
       </div>
@@ -277,10 +294,25 @@ function ScoreSection({ score, turnKey }: { score: NVCScore; turnKey: number }) 
 }
 
 const ARC = [
-  { key: 'observationMade', scoreKey: 'observation', label: 'Observe', Icon: Eye },
-  { key: 'feelingExpressed', scoreKey: 'feeling', label: 'Feeling', Icon: Heart },
-  { key: 'needIdentified', scoreKey: 'need', label: 'Need', Icon: Sprout },
-  { key: 'requestMade', scoreKey: 'request', label: 'Request', Icon: MessageCircleQuestion },
+  {
+    key: 'observationMade',
+    scoreKey: 'observation',
+    labelKey: 'observe',
+    Icon: Eye,
+  },
+  {
+    key: 'feelingExpressed',
+    scoreKey: 'feeling',
+    labelKey: 'feeling',
+    Icon: Heart,
+  },
+  { key: 'needIdentified', scoreKey: 'need', labelKey: 'need', Icon: Sprout },
+  {
+    key: 'requestMade',
+    scoreKey: 'request',
+    labelKey: 'request',
+    Icon: MessageCircleQuestion,
+  },
 ] as const
 
 /**
@@ -298,15 +330,19 @@ function ArcSection({
   score: NVCScore
   freshKeys: ReadonlyArray<string>
 }) {
+  const t = useT()
+  const copy = t.roleplay.feedback
   const reached = ARC.filter((p) => milestones[p.key]).length
   const nextIndex = ARC.findIndex((p) => !milestones[p.key])
 
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-brown-800">Your arc</h3>
+        <h3 className="text-sm font-semibold text-brown-800">
+          {copy.arcTitle}
+        </h3>
         <span className="text-xs text-brown-500 tabular-nums">
-          {reached} of {ARC.length} reached
+          {copy.arcReached(reached, ARC.length)}
         </span>
       </div>
 
@@ -317,16 +353,24 @@ function ArcSection({
           const isFresh = isReached && freshKeys.includes(piece.key)
           const value = score[piece.scoreKey]
           const following = index < ARC.length - 1 ? ARC[index + 1] : null
-          const linkLit = isReached && !!following && !!milestones[following.key]
+          const linkLit =
+            isReached && !!following && !!milestones[following.key]
           const PieceIcon = piece.Icon
+          const label = t.roleplay.milestones[piece.labelKey]
 
           return (
             <li
               key={piece.key}
               className="relative flex flex-col items-center text-center"
-              aria-label={`${piece.label}: ${
-                isReached ? 'reached' : isNext ? 'next to reach' : 'not yet'
-              }${value > 0 ? `, ${value} of 25 in this message` : ''}`}
+              aria-label={copy.pieceAria(
+                label,
+                isReached
+                  ? copy.pieceStatus.reached
+                  : isNext
+                    ? copy.pieceStatus.next
+                    : copy.pieceStatus.notYet,
+                value,
+              )}
             >
               {index < ARC.length - 1 && (
                 <div
@@ -359,12 +403,12 @@ function ArcSection({
                   isReached || isNext ? 'text-brown-800' : 'text-brown-500'
                 }`}
               >
-                {piece.label}
+                {label}
               </span>
               <span
                 aria-hidden="true"
                 className="h-4 text-xs font-semibold text-giraffe-700 tabular-nums"
-                title={value > 0 ? `This message: ${value} of 25` : undefined}
+                title={value > 0 ? copy.pieceValueTitle(value) : undefined}
               >
                 {value > 0 ? `${value}/25` : ''}
               </span>
@@ -390,7 +434,8 @@ function EmpathyLine({
   justEarned?: boolean
   characterName?: string
 }) {
-  const who = characterName || 'they'
+  const t = useT()
+  const copy = t.roleplay.feedback
   return (
     <div className="flex items-start gap-2.5">
       <div
@@ -405,11 +450,10 @@ function EmpathyLine({
       <p className="text-sm text-brown-700 leading-snug pt-0.5">
         {earned ? (
           <span className="font-semibold text-brown-800">
-            You heard them. You tuned into{' '}
-            {who === 'they' ? 'their' : `${who}'s`} side.
+            {copy.empathyEarned(characterName)}
           </span>
         ) : (
-          <>Wondering what {who} might be feeling? Asking counts too.</>
+          <>{copy.empathyInvite(characterName)}</>
         )}
       </p>
     </div>
@@ -422,7 +466,8 @@ function EmpathyLine({
  * the conversation stays right where it is.
  */
 function SkillHintLine({ hint }: { hint: SkillHint }) {
-  const resource = SKILL_RESOURCES[hint.component]
+  const t = useT()
+  const resource = skillResource(hint.component, t.results.skills)
   return (
     <div className="flex items-start gap-2.5">
       <div className="shrink-0 mt-px h-6 w-6 rounded-full bg-giraffe-100 flex items-center justify-center">
@@ -435,9 +480,9 @@ function SkillHintLine({ hint }: { hint: SkillHint }) {
           target="_blank"
           className="font-semibold text-giraffe-800 hover:text-giraffe-900 underline underline-offset-2 decoration-giraffe-400 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-400"
         >
-          Open the {resource.label}
-        </Link>{' '}
-        in a new tab; this conversation will wait for you.
+          {t.roleplay.feedback.skillHintLink(resource.label)}
+        </Link>
+        {t.roleplay.feedback.skillHintAfter}
       </p>
     </div>
   )
@@ -469,6 +514,8 @@ interface RetryProps {
  * there is, so the offer sits right under the next step it would act on.
  */
 function RetryRow({ onRetry, rewindsRemaining }: RetryProps) {
+  const t = useT()
+  const copy = t.roleplay.feedback
   return (
     <div className="flex items-center gap-3">
       <button
@@ -477,13 +524,10 @@ function RetryRow({ onRetry, rewindsRemaining }: RetryProps) {
         className="shrink-0 inline-flex items-center gap-1.5 min-h-9 px-3.5 py-1.5 rounded-lg bg-giraffe-400 hover:bg-giraffe-500 text-brown-900 text-sm font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2 focus-visible:ring-offset-giraffe-50"
       >
         <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-        Try again
+        {copy.tryAgain}
       </button>
       <p className="text-xs text-brown-600 leading-snug text-pretty">
-        Your words come back to the box.{' '}
-        {rewindsRemaining === 1
-          ? 'One rewind left.'
-          : `${rewindsRemaining} rewinds left.`}
+        {copy.wordsComeBack} {copy.rewindsLeft(rewindsRemaining)}
       </p>
     </div>
   )
@@ -515,9 +559,12 @@ function NextStepCard({
   text: string
   retry: RetryProps | null
 }) {
+  const t = useT()
   return (
     <div className="rounded-xl bg-giraffe-50 border border-giraffe-200 p-4">
-      <p className="text-xs font-semibold text-giraffe-800">Try next</p>
+      <p className="text-xs font-semibold text-giraffe-800">
+        {t.roleplay.feedback.tryNext}
+      </p>
       <p className="mt-1 text-base leading-relaxed font-medium text-brown-900 text-pretty">
         {text}
       </p>
@@ -537,10 +584,11 @@ function FeedbackNotes({
   feedback: FeedbackData
   retry: RetryProps | null
 }) {
+  const t = useT()
   const strength = cleanText(feedback.whatWentWell)
   const nextStep =
     cleanText(feedback.feedback) ||
-    (strength ? '' : 'Try naming a feeling and the need underneath it.')
+    (strength ? '' : t.roleplay.feedback.defaultNextStep)
 
   return (
     <div className="space-y-4">
@@ -567,7 +615,11 @@ function FirstTurnGuide({
   learningObjectives: Array<string>
   retryFocus?: NVCComponent | null
 }) {
-  const focus = retryFocus ? SKILL_RESOURCES[retryFocus] : null
+  const t = useT()
+  const locale = useLocale()
+  const copy = t.roleplay.feedback.firstTurn
+  const focusLabel = focusArea ? focusAreaLabel(focusArea, t.practice.focusAreas, locale) : null
+  const focus = retryFocus ? skillResource(retryFocus, t.results.skills) : null
 
   return (
     <div className="space-y-4">
@@ -581,15 +633,14 @@ function FirstTurnGuide({
           className="h-24 w-auto object-contain shrink-0"
         />
         <p className="text-sm text-brown-700 leading-relaxed text-pretty">
-          Take your time. After each message I will tell you how it landed and
-          suggest one next step.
+          {copy.intro}
         </p>
       </div>
 
       {focus && (
         <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
           <p className="text-xs font-semibold text-brown-600 mb-1">
-            Your focus this time: {focus.plural}
+            {copy.focus(focus.plural)}
           </p>
           <p className="text-sm text-brown-800 leading-relaxed font-medium text-pretty">
             {focus.nudge}
@@ -599,23 +650,21 @@ function FirstTurnGuide({
 
       <div className="p-3 bg-white rounded-lg border border-giraffe-200">
         <p className="text-xs font-semibold text-brown-600 mb-1">
-          A good opening
+          {copy.openingTitle}
         </p>
         <p className="text-sm text-brown-800 leading-relaxed text-pretty">
-          Describe what happened, just the facts, with no verdict on it yet.
-          One piece is plenty. Feelings, needs, and a request can each have
-          their own message.
+          {copy.openingBody}
         </p>
       </div>
 
-      {(focusArea || learningObjectives.length > 0) && (
+      {(focusLabel || learningObjectives.length > 0) && (
         <div className="space-y-1.5">
           <p className="text-xs font-semibold text-brown-600">
-            What this conversation practices
-            {focusArea && (
+            {copy.practices}
+            {focusLabel && (
               <span className="font-normal text-brown-500">
                 {' '}
-                ({focusArea.replace(/_/g, ' ')})
+                ({focusLabel})
               </span>
             )}
           </p>
@@ -628,7 +677,9 @@ function FirstTurnGuide({
                 <span aria-hidden="true" className="text-giraffe-700">
                   •
                 </span>
-                <span className="first-letter:uppercase">{objective}</span>
+                <span className="first-letter:uppercase">
+                  {objectiveLabel(objective, t.common.components)}
+                </span>
               </li>
             ))}
           </ul>
@@ -662,6 +713,7 @@ export function FeedbackPanel({
   onRetryLastTurn,
   rewindsRemaining = 0,
 }: FeedbackPanelProps) {
+  const t = useT()
   // Milestones earned just now get a one-time ignite pop. The memory lives up
   // here because the turn block below remounts every turn (keyed by
   // messageCount) and would otherwise forget what was already lit. A signature
@@ -688,7 +740,9 @@ export function FeedbackPanel({
       fresh:
         // No `previous` means the query just filled in (a reload), where
         // nothing was earned "just now" and nothing should pop.
-        signature !== milestoneMemory.current.signature && milestones && previous
+        signature !== milestoneMemory.current.signature &&
+        milestones &&
+        previous
           ? MILESTONE_KEYS.filter((k) => milestones[k] && !previous[k])
           : [],
     }
@@ -719,9 +773,11 @@ export function FeedbackPanel({
             This sentence updates when a new score lands. */}
         <div role="status" className="sr-only">
           {feedback && !isLoading
-            ? `${getScoreMessage(feedback.score.total)}. Your message scored ${
-                feedback.score.total
-              } out of 100. ${cleanText(feedback.feedback)}`
+            ? t.roleplay.feedback.statusLine(
+                getScoreMessage(feedback.score.total, t.roleplay.scoreMessages),
+                feedback.score.total,
+                cleanText(feedback.feedback),
+              )
             : null}
         </div>
         {isLoading ? (
@@ -750,7 +806,9 @@ export function FeedbackPanel({
                 />
               ))}
             </div>
-            <p className="text-sm text-brown-600">Reading your message…</p>
+            <p className="text-sm text-brown-600">
+              {t.roleplay.feedback.reading}
+            </p>
           </div>
         ) : feedback ? (
           // Keyed by turn so each new result eases up the panel as it arrives.
@@ -760,7 +818,10 @@ export function FeedbackPanel({
             </div>
 
             {milestones && (
-              <div className="animate-step-in" style={{ animationDelay: '90ms' }}>
+              <div
+                className="animate-step-in"
+                style={{ animationDelay: '90ms' }}
+              >
                 <ArcSection
                   milestones={milestones}
                   score={feedback.score}
@@ -769,7 +830,10 @@ export function FeedbackPanel({
               </div>
             )}
 
-            <div className="animate-step-in" style={{ animationDelay: '180ms' }}>
+            <div
+              className="animate-step-in"
+              style={{ animationDelay: '180ms' }}
+            >
               <FeedbackNotes feedback={feedback} retry={retry} />
             </div>
 

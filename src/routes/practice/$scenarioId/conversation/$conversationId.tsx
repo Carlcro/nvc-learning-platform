@@ -21,17 +21,16 @@ import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import { useConversation } from '~/hooks/useConversation'
 import { isNVCComponent } from '~/lib/conversationInsights'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute(
   '/practice/$scenarioId/conversation/$conversationId',
 )({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Conversation',
-      description:
-        'Practice compassionate communication turn by turn, with feedback as you go.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.roleplay.meta) }
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     view: (search.view as string | undefined) ?? undefined,
     dailyChallengeId:
@@ -42,16 +41,19 @@ export const Route = createFileRoute(
   component: ConversationComponent,
 })
 
-function LoadingScreen({ label }: { label: string }) {
-  const message = label.toLowerCase().includes('scenario')
-    ? 'Setting the scene for your conversation…'
-    : 'Getting things ready for you…'
+function LoadingScreen({ scene = false }: { scene?: boolean }) {
+  const t = useT()
+  const message = scene
+    ? t.roleplay.page.loadingScene
+    : t.roleplay.page.loadingDefault
   return <GiraffeLoader message={message} />
 }
 
 function ConversationComponent() {
   const { scenarioId, conversationId } = Route.useParams()
   const search = Route.useSearch()
+  const t = useT()
+  const copy = t.roleplay.page
 
   const [mobileFeedbackExpanded, setMobileFeedbackExpanded] = useState(false)
   const [showScenarioContext, setShowScenarioContext] = useState(false)
@@ -97,9 +99,9 @@ function ConversationComponent() {
     setMobileFeedbackExpanded(false)
   }
 
-  if (currentUser === undefined) return <LoadingScreen label="Initializing..." />
+  if (currentUser === undefined) return <LoadingScreen />
   if (scenario === undefined || conversation === undefined)
-    return <LoadingScreen label="Loading scenario..." />
+    return <LoadingScreen scene />
 
   // null (as opposed to undefined) means loaded and not found: a deleted or
   // foreign scenario/conversation should not spin forever.
@@ -108,13 +110,11 @@ function ConversationComponent() {
       <main className="min-h-screen bg-paper pt-28 px-6">
         <div className="max-w-xl mx-auto bg-white rounded-lg border-2 border-giraffe-100 p-8 text-center">
           <h1 className="text-2xl font-bold text-brown-800 mb-3">
-            We could not find this conversation
+            {copy.notFound.title}
           </h1>
-          <p className="text-brown-700 mb-6">
-            It may have been removed, or the link is no longer valid.
-          </p>
+          <p className="text-brown-700 mb-6">{copy.notFound.body}</p>
           <Button onClick={goToPractice} variant="primary">
-            Back to Practice
+            {copy.notFound.back}
           </Button>
         </div>
       </main>
@@ -214,7 +214,7 @@ function ConversationComponent() {
               onClick={dismissError}
               className="text-brown-700 hover:text-brown-900 text-sm font-semibold cursor-pointer rounded px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
             >
-              Dismiss
+              {copy.dismissError}
             </button>
           </div>
         </div>
@@ -224,12 +224,9 @@ function ConversationComponent() {
         <div className="bg-giraffe-50 border-b-2 border-giraffe-200 px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-3">
             <div className="text-brown-800 font-semibold">
-              Viewing Completed Conversation
+              {copy.archive.title}
             </div>
-            <p className="text-brown-700 text-sm">
-              This conversation has been completed. You can review it but cannot
-              make changes.
-            </p>
+            <p className="text-brown-700 text-sm">{copy.archive.body}</p>
           </div>
         </div>
       )}
@@ -243,12 +240,14 @@ function ConversationComponent() {
                 onClick={() => setShowScenarioContext(true)}
                 className="text-nowrap text-sm font-semibold text-brown-700 hover:text-brown-900 underline cursor-pointer rounded px-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
               >
-                View Scenario
+                {copy.viewScenario}
               </button>
             )}
           </div>
           <p className="text-brown-700 text-sm">
-            Practicing with <strong>{scenario.characterName}</strong>
+            {copy.practicingWith.before}
+            <strong>{scenario.characterName}</strong>
+            {copy.practicingWith.after}
           </p>
         </div>
       </div>
@@ -278,17 +277,14 @@ function ConversationComponent() {
                     disabled={isCompleting}
                     isLoading={isCompleting}
                   >
-                    {completedArc
-                      ? 'Wrap up and see how it went'
-                      : 'Wrap up here and see how it went'}
+                    {completedArc ? copy.wrapUpArc : copy.wrapUpEarly}
                   </Button>
                 </div>
               )}
 
               {reachedTurnLimit && !isArchiveMode ? (
                 <p className="text-center text-sm text-brown-600 py-2">
-                  This is as far as this conversation goes. Wrap it up above to
-                  see how it went, and you can always start it again.
+                  {copy.turnLimitReached}
                 </p>
               ) : (
                 <MessageInput
@@ -301,9 +297,7 @@ function ConversationComponent() {
 
               {showTurnsRemaining && (
                 <p className="text-center text-sm text-brown-500">
-                  {turnsRemaining === 1
-                    ? 'One message left in this conversation.'
-                    : `${turnsRemaining} messages left in this conversation.`}
+                  {copy.turnsRemaining(turnsRemaining)}
                 </p>
               )}
 
@@ -338,14 +332,16 @@ function ConversationComponent() {
             <div className="lg:hidden border-t border-giraffe-200 bg-white px-4 py-3">
               <button
                 onClick={() => setMobileFeedbackExpanded(true)}
-                aria-label="Open the full feedback"
+                aria-label={copy.mobile.openFeedback}
                 className="w-full min-h-11 flex items-center justify-between gap-3 text-left text-brown-700 hover:text-brown-900 text-sm cursor-pointer rounded-lg px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2"
               >
                 {/* On a phone the panel is out of sight, so the latest turn's
                     result lands right here; the full panel is one tap away.
                     Keyed by turn so each new result eases in and is noticed. */}
                 {isLoading ? (
-                  <span className="font-semibold">Reading your message…</span>
+                  <span className="font-semibold">
+                    {t.roleplay.feedback.reading}
+                  </span>
                 ) : feedback ? (
                   <span
                     key={userMessageCount}
@@ -356,18 +352,21 @@ function ConversationComponent() {
                     </span>
                     <span className="min-w-0">
                       <span className="block font-semibold text-brown-800">
-                        {getScoreMessage(feedback.score.total)}
+                        {getScoreMessage(
+                          feedback.score.total,
+                          t.roleplay.scoreMessages,
+                        )}
                       </span>
                       {feedback.feedback && (
                         <span className="block text-xs text-brown-600 line-clamp-2">
-                          Try next: {feedback.feedback}
+                          {copy.mobile.tryNext(feedback.feedback)}
                         </span>
                       )}
                     </span>
                   </span>
                 ) : (
                   <span className="font-semibold">
-                    Tips for your first message
+                    {copy.mobile.firstMessageTips}
                   </span>
                 )}
                 <svg
@@ -391,11 +390,13 @@ function ConversationComponent() {
           {mobileFeedbackExpanded && (
             <div className="lg:hidden fixed inset-0 bg-white z-50 flex flex-col">
               <div className="bg-giraffe-400 text-brown-800 px-4 py-4 flex items-center justify-between">
-                <h2 className="font-bold text-lg">Live Feedback</h2>
+                <h2 className="font-bold text-lg">
+                  {copy.mobile.liveFeedback}
+                </h2>
                 <button
                   onClick={() => setMobileFeedbackExpanded(false)}
                   className="grid place-items-center w-11 h-11 -mr-2 rounded-full text-brown-700 hover:text-brown-900 hover:bg-giraffe-300/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2 focus-visible:ring-offset-giraffe-400"
-                  aria-label="Close feedback panel"
+                  aria-label={copy.mobile.closeFeedback}
                 >
                   <svg
                     className="w-6 h-6"
@@ -420,7 +421,7 @@ function ConversationComponent() {
                   onClick={() => setMobileFeedbackExpanded(false)}
                   className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2"
                 >
-                  Continue Conversation
+                  {copy.continueConversation}
                 </button>
               </div>
             </div>
@@ -437,11 +438,11 @@ function ConversationComponent() {
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="bg-giraffe-400 text-brown-800 px-6 py-4 sticky top-0 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Scenario Context</h2>
+                <h2 className="text-xl font-bold">{copy.context.title}</h2>
                 <Dialog.Close asChild>
                   <button
                     className="grid place-items-center w-11 h-11 -mr-2 rounded-full text-brown-700 hover:text-brown-900 hover:bg-giraffe-300/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brown-500 focus-visible:ring-offset-2 focus-visible:ring-offset-giraffe-400"
-                    aria-label="Close scenario context"
+                    aria-label={copy.context.close}
                   >
                     <svg
                       className="w-6 h-6"
@@ -463,7 +464,7 @@ function ConversationComponent() {
               <div className="px-6 py-6 space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-brown-800 mb-3">
-                    Situation
+                    {copy.context.situation}
                   </h3>
                   <p className="text-brown-700 leading-relaxed">
                     {scenario.situation}
@@ -472,7 +473,7 @@ function ConversationComponent() {
 
                 <div>
                   <h3 className="text-sm font-bold text-brown-700 mb-3">
-                    What You'll Practice:
+                    {copy.context.whatYoullPractice}
                   </h3>
                   <ul className="space-y-2">
                     {scenario.learningObjectives.map(
@@ -490,17 +491,17 @@ function ConversationComponent() {
                 </div>
 
                 <div className="bg-giraffe-50 border border-giraffe-200 rounded-lg p-4 text-sm text-brown-700">
-                  <strong className="text-brown-800">Tip:</strong> A real
-                  conversation unfolds a piece at a time. An observation in one
-                  message, a feeling in the next, a request later on. You do not
-                  need to fit all four into every message.
+                  <strong className="text-brown-800">
+                    {copy.context.tipLabel}
+                  </strong>
+                  {copy.context.tipBody}
                 </div>
               </div>
 
               <div className="border-t border-giraffe-200 bg-paper px-6 py-4">
                 <Dialog.Close asChild>
                   <button className="w-full bg-giraffe-400 hover:bg-giraffe-500 text-brown-800 font-semibold py-3 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-500 focus-visible:ring-offset-2">
-                    Continue Conversation
+                    {copy.continueConversation}
                   </button>
                 </Dialog.Close>
               </div>

@@ -4,6 +4,8 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { SpeechBubble } from '../ui/SpeechBubble'
+import type { Messages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 interface SignInFormProps {
   onSignInSuccess?: () => void
@@ -28,65 +30,39 @@ const submitClasses =
  * below therefore only match in development, so each fallback has to stand on
  * its own and name the likely causes rather than just saying to try again.
  */
-function friendlyAuthError(err: unknown, mode: Mode): string {
+function friendlyAuthError(
+  err: unknown,
+  mode: Mode,
+  messages: Messages['auth']['errors'],
+): string {
   const raw = err instanceof Error ? err.message : String(err ?? '')
 
   if (/Invalid code|InvalidSecret.*verification/i.test(raw)) {
-    return 'That code did not match, or it has expired. You can send yourself a new one.'
+    return messages.codeMismatch
   }
   if (/InvalidSecret|InvalidAccountId|Invalid credentials/i.test(raw)) {
-    return "That email and password don't match an account. Please double-check them, or create a new account below."
+    return messages.wrongCredentials
   }
   if (/TooManyFailedAttempts/i.test(raw)) {
-    return 'Too many attempts for now. Please wait a moment and try again.'
+    return messages.tooManyAttempts
   }
   if (/Invalid password/i.test(raw)) {
-    return 'Please choose a password with at least 8 characters.'
+    return messages.passwordTooShort
   }
   if (/already.*exist|account.*exist/i.test(raw)) {
-    return 'An account with this email already exists. Try signing in instead.'
+    return messages.accountExists
   }
 
   switch (mode) {
     case 'signUp':
-      return "We couldn't create your account. That email may already have one, or the password may be under 8 characters."
+      return messages.signUpFailed
     case 'resetRequest':
-      return "We couldn't start the reset just now. Please try again in a moment."
+      return messages.resetRequestFailed
     case 'resetVerify':
-      return "We couldn't update your password. The code may not match, or it may have expired. You can send yourself a new one."
+      return messages.resetVerifyFailed
     default:
-      return "We couldn't sign you in. Please check your email and password. If you are not sure of your password, you can reset it."
+      return messages.signInFailed
   }
-}
-
-const headings: Record<Mode, { title: string; subtitle: string }> = {
-  signIn: {
-    title: 'Sign in',
-    subtitle: 'Your conversations and progress are saved to your account',
-  },
-  signUp: {
-    title: 'Create Your Account',
-    subtitle: 'Your practice stays private to you',
-  },
-  resetRequest: {
-    title: 'Reset your password',
-    subtitle: 'We will email you a code to set a new one',
-  },
-  resetVerify: {
-    title: 'Choose a new password',
-    subtitle: 'Enter the code we emailed you, and your new password',
-  },
-}
-
-const welcomeMessages: Record<Mode, string> = {
-  signIn:
-    "Practice conversations are saved to your account, so you can come back to them. New here? Create an account at the bottom, it only takes a moment.",
-  signUp:
-    "Glad you're here. Once you have an account, you can rehearse any scenario as many times as you like.",
-  resetRequest:
-    "It happens to everyone. Give me the address you signed up with and I'll send you a code so you can get back to your practice.",
-  resetVerify:
-    "Almost there. Pop in the code from your inbox, choose a new password, and you're back where you left off.",
 }
 
 /**
@@ -94,6 +70,7 @@ const welcomeMessages: Record<Mode, string> = {
  * Styled with NVC principles - encouraging and welcoming
  */
 export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
+  const t = useT()
   const { signIn } = useAuthActions()
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>('signIn')
@@ -151,9 +128,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
           // same either way.
         }
         setMode('resetVerify')
-        setNotice(
-          'If that address has an account, a code is on its way. It can take a moment to arrive.',
-        )
+        setNotice(t.auth.codeSent)
       } else {
         await signIn('password', {
           email,
@@ -164,7 +139,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
         finishSignIn()
       }
     } catch (err) {
-      setError(friendlyAuthError(err, mode))
+      setError(friendlyAuthError(err, mode, t.auth.errors))
     } finally {
       setEmailLoading(false)
     }
@@ -181,23 +156,14 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
       await signIn('github', { redirectTo: from as string })
       onSignInSuccess?.()
     } catch (err) {
-      setError(friendlyAuthError(err, mode))
+      setError(friendlyAuthError(err, mode, t.auth.errors))
       setGithubLoading(false)
     }
   }
 
   const submitLabel = () => {
-    if (emailLoading) return 'Please wait...'
-    switch (mode) {
-      case 'signUp':
-        return 'Create Account'
-      case 'resetRequest':
-        return 'Email me a code'
-      case 'resetVerify':
-        return 'Update password and sign in'
-      default:
-        return 'Sign In'
-    }
+    if (emailLoading) return t.auth.submit.waiting
+    return t.auth.submit[mode]
   }
 
   return (
@@ -208,13 +174,13 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
           <div className="flex flex-col items-center space-y-10">
             <SpeechBubble className="w-full">
               <p className="text-brown-800 text-center font-medium leading-relaxed text-lg">
-                {welcomeMessages[mode]}
+                {t.auth.welcome[mode]}
               </p>
             </SpeechBubble>
             <div className="hidden md:block w-full">
               <img
                 src="/giraff.png"
-                alt="The giraffe, your guide"
+                alt={t.layout.guideAlt}
                 className="h-80 w-auto object-contain mx-auto md:mx-0 scale-x-[-1]"
               />
             </div>
@@ -226,10 +192,10 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
               <div className="p-6 sm:p-10 space-y-1">
                 <div className="space-y-4 text-center md:text-left">
                   <h1 className="text-4xl font-bold text-brown-800">
-                    {headings[mode].title}
+                    {t.auth.headings[mode].title}
                   </h1>
                   <p className="text-brown-600 text-lg leading-relaxed">
-                    {headings[mode].subtitle}
+                    {t.auth.headings[mode].subtitle}
                   </p>
                 </div>
 
@@ -255,8 +221,8 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                         className="w-full py-3.5 rounded-xl font-medium text-base"
                       >
                         {githubLoading
-                          ? 'Connecting...'
-                          : 'Continue with GitHub'}
+                          ? t.auth.github.connecting
+                          : t.auth.github.continue}
                       </Button>
                     </div>
 
@@ -266,7 +232,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                       </div>
                       <div className="relative flex justify-center text-sm">
                         <span className="px-4 bg-white text-brown-600 font-medium">
-                          or with email
+                          {t.auth.orWithEmail}
                         </span>
                       </div>
                     </div>
@@ -280,14 +246,14 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                         htmlFor="signin-email"
                         className="block text-base font-semibold text-brown-800 mb-3"
                       >
-                        Email Address
+                        {t.auth.fields.email}
                       </label>
                       <input
                         id="signin-email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
+                        placeholder={t.auth.fields.emailPlaceholder}
                         required
                         className={inputClasses}
                         disabled={isLoading}
@@ -301,7 +267,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                         htmlFor="signin-password"
                         className="block text-base font-semibold text-brown-800 mb-3"
                       >
-                        Password
+                        {t.auth.fields.password}
                       </label>
                       <input
                         id="signin-password"
@@ -310,8 +276,8 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder={
                           mode === 'signUp'
-                            ? 'Create a password'
-                            : 'Enter your password'
+                            ? t.auth.fields.createPasswordPlaceholder
+                            : t.auth.fields.passwordPlaceholder
                         }
                         required
                         minLength={mode === 'signUp' ? 8 : 1}
@@ -320,7 +286,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                       />
                       {mode === 'signUp' ? (
                         <p className="text-sm text-brown-600 mt-3 font-medium">
-                          Minimum 8 characters for security
+                          {t.auth.fields.passwordHint}
                         </p>
                       ) : (
                         <div className="mt-3">
@@ -330,7 +296,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                             disabled={isLoading}
                             className="text-giraffe-800 hover:text-brown-800 font-semibold text-sm transition-colors underline-offset-2 hover:underline"
                           >
-                            Forgot your password?
+                            {t.auth.fields.forgotPassword}
                           </button>
                         </div>
                       )}
@@ -344,7 +310,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                           htmlFor="reset-code"
                           className="block text-base font-semibold text-brown-800 mb-3"
                         >
-                          Code from your email
+                          {t.auth.fields.code}
                         </label>
                         <input
                           id="reset-code"
@@ -353,7 +319,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                           autoComplete="one-time-code"
                           value={code}
                           onChange={(e) => setCode(e.target.value.trim())}
-                          placeholder="12345678"
+                          placeholder={t.auth.fields.codePlaceholder}
                           required
                           className={inputClasses}
                           disabled={isLoading}
@@ -365,21 +331,21 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                           htmlFor="reset-new-password"
                           className="block text-base font-semibold text-brown-800 mb-3"
                         >
-                          New Password
+                          {t.auth.fields.newPassword}
                         </label>
                         <input
                           id="reset-new-password"
                           type="password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Choose a new password"
+                          placeholder={t.auth.fields.newPasswordPlaceholder}
                           required
                           minLength={8}
                           className={inputClasses}
                           disabled={isLoading}
                         />
                         <p className="text-sm text-brown-600 mt-3 font-medium">
-                          Minimum 8 characters for security
+                          {t.auth.fields.passwordHint}
                         </p>
                       </div>
                     </>
@@ -398,8 +364,8 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                   {isPasswordMode ? (
                     <p className="text-brown-700">
                       {mode === 'signUp'
-                        ? 'Already have an account? '
-                        : 'New to compassionate communication? '}
+                        ? t.auth.switchMode.haveAccount
+                        : t.auth.switchMode.newHere}
                       <button
                         type="button"
                         onClick={() => {
@@ -410,14 +376,16 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                         className="text-giraffe-800 hover:text-brown-800 font-bold text-base transition-colors underline-offset-2 hover:underline"
                         disabled={isLoading}
                       >
-                        {mode === 'signUp' ? 'Sign in' : 'Create account'}
+                        {mode === 'signUp'
+                          ? t.auth.switchMode.signIn
+                          : t.auth.switchMode.createAccount}
                       </button>
                     </p>
                   ) : (
                     <div className="space-y-3">
                       {mode === 'resetVerify' && (
                         <p className="text-brown-700">
-                          Code did not arrive?{' '}
+                          {t.auth.reset.noCode}{' '}
                           <button
                             type="button"
                             onClick={() => {
@@ -428,7 +396,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                             className="text-giraffe-800 hover:text-brown-800 font-bold text-base transition-colors underline-offset-2 hover:underline"
                             disabled={isLoading}
                           >
-                            Send another
+                            {t.auth.reset.sendAnother}
                           </button>
                         </p>
                       )}
@@ -443,7 +411,7 @@ export function SignInForm({ onSignInSuccess, redirectTo }: SignInFormProps) {
                           className="text-giraffe-800 hover:text-brown-800 font-bold text-base transition-colors underline-offset-2 hover:underline"
                           disabled={isLoading}
                         >
-                          Back to sign in
+                          {t.auth.reset.backToSignIn}
                         </button>
                       </p>
                     </div>

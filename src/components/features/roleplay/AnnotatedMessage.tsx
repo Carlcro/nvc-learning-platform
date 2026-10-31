@@ -5,6 +5,8 @@
  * Shows NVC scores, mood changes, and feedback for user messages
  */
 
+import { useFormat, useT } from '~/i18n/useT'
+
 interface NVCScore {
   observation: number
   feeling: number
@@ -35,12 +37,14 @@ interface AnnotatedMessageProps {
   reflection?: { rewrite: string; why: string }
 }
 
-function getMoodLabel(mood: number): string {
-  if (mood >= 6) return 'Open & Warm'
-  if (mood >= 3) return 'Warming up'
-  if (mood >= 0) return 'Neutral'
-  if (mood >= -6) return 'Guarded'
-  return 'Defensive'
+type MoodKey = 'openWarm' | 'warmingUp' | 'neutral' | 'guarded' | 'defensive'
+
+function getMoodKey(mood: number): MoodKey {
+  if (mood >= 6) return 'openWarm'
+  if (mood >= 3) return 'warmingUp'
+  if (mood >= 0) return 'neutral'
+  if (mood >= -6) return 'guarded'
+  return 'defensive'
 }
 
 // Valence is carried by the label words and the +/- delta, not color alone -
@@ -50,7 +54,13 @@ function getMoodColor(mood: number): string {
   return 'text-brown-700'
 }
 
-function ScoreBar({ score, maxScore = 25 }: { score: number; maxScore?: number }) {
+function ScoreBar({
+  score,
+  maxScore = 25,
+}: {
+  score: number
+  maxScore?: number
+}) {
   const percentage = (score / maxScore) * 100
   const color =
     percentage >= 60
@@ -70,18 +80,20 @@ function ScoreBar({ score, maxScore = 25 }: { score: number; maxScore?: number }
 }
 
 function NVCScoreBreakdown({ score }: { score: NVCScore }) {
+  const t = useT()
+  const copy = t.roleplay.annotated
   const components = [
-    { label: 'Observation', value: score.observation },
-    { label: 'Feeling', value: score.feeling },
-    { label: 'Need', value: score.need },
-    { label: 'Request', value: score.request },
+    { label: t.common.components.observation, value: score.observation },
+    { label: t.common.components.feeling, value: score.feeling },
+    { label: t.common.components.need, value: score.need },
+    { label: t.common.components.request, value: score.request },
   ]
 
   return (
     <div className="bg-giraffe-50 rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-brown-700">
-          NVC Score Breakdown
+          {copy.breakdown}
         </span>
         <span
           className={`text-sm font-bold px-2 py-0.5 rounded-full ${
@@ -111,9 +123,9 @@ function NVCScoreBreakdown({ score }: { score: NVCScore }) {
           ) : (
             <span
               className="text-xs text-brown-400"
-              aria-label={`${comp.label}: not part of this message`}
+              aria-label={copy.notThisTurnAria(comp.label)}
             >
-              · not this turn
+              {copy.notThisTurn}
             </span>
           )}
         </div>
@@ -129,8 +141,11 @@ export function AnnotatedMessage({
   previousMood,
   reflection,
 }: AnnotatedMessageProps) {
+  const t = useT()
+  const format = useFormat()
+  const copy = t.roleplay.annotated
   const isUser = message.role === 'user'
-  const timestamp = new Date(message.timestamp).toLocaleTimeString([], {
+  const timestamp = format.time(message.timestamp, {
     hour: '2-digit',
     minute: '2-digit',
   })
@@ -153,7 +168,7 @@ export function AnnotatedMessage({
                 : 'bg-paper text-brown-700 border border-giraffe-200'
             }`}
           >
-            {isUser ? 'You' : characterName}
+            {isUser ? copy.you : characterName}
           </span>
           <span className="text-xs text-brown-500">#{messageIndex + 1}</span>
         </div>
@@ -172,7 +187,7 @@ export function AnnotatedMessage({
           {message.whatWentWell && (
             <div className="bg-empathy-high/15 rounded-lg p-3 border border-empathy-high/40">
               <h4 className="text-xs font-semibold text-brown-800 mb-1">
-                What Went Well
+                {copy.whatWentWell}
               </h4>
               <p className="text-sm text-brown-700">{message.whatWentWell}</p>
             </div>
@@ -183,7 +198,7 @@ export function AnnotatedMessage({
           {message.feedback && (
             <div className="bg-giraffe-100/70 rounded-lg p-3 border border-giraffe-200">
               <h4 className="text-xs font-semibold text-brown-800 mb-1">
-                The next step suggested
+                {copy.nextStepSuggested}
               </h4>
               <p className="text-sm text-brown-800">{message.feedback}</p>
             </div>
@@ -195,19 +210,19 @@ export function AnnotatedMessage({
             message.jackalPhrases.length > 0 && (
               <div className="bg-empathy-low/15 rounded-lg p-3 border border-empathy-low/30">
                 <h4 className="text-xs font-semibold text-brown-800 mb-1">
-                  Phrases to reconsider
+                  {copy.phrasesToReconsider}
                 </h4>
                 <p className="text-sm text-brown-700">
                   {message.jackalPhrases.map((phrase, i) => (
                     <span key={i}>
                       {i > 0 && ', '}
-                      <span className="italic">"{phrase}"</span>
+                      <span className="italic">{copy.quoted(phrase)}</span>
                     </span>
                   ))}
                 </p>
                 {message.giraffeAlternative && (
                   <p className="mt-2 pt-2 border-t border-empathy-low/30 text-sm text-brown-700 italic">
-                    "{message.giraffeAlternative}"
+                    {copy.quoted(message.giraffeAlternative)}
                   </p>
                 )}
               </div>
@@ -219,7 +234,7 @@ export function AnnotatedMessage({
       {isUser && reflection && (
         <div className="mt-3 bg-white rounded-lg p-3 border-2 border-empathy-high/40">
           <h4 className="text-xs font-semibold text-brown-800 mb-1">
-            It could also sound like
+            {copy.couldAlsoSound}
           </h4>
           <p className="text-sm text-brown-800 font-medium">
             {reflection.rewrite}
@@ -232,7 +247,7 @@ export function AnnotatedMessage({
       {!isUser && message.characterMood !== undefined && (
         <div className="pt-3 border-t border-giraffe-100">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-brown-600">Character Mood:</span>
+            <span className="text-xs text-brown-600">{copy.characterMood}</span>
             <div className="flex items-center gap-2">
               {previousMood !== undefined &&
                 previousMood !== message.characterMood && (
@@ -250,7 +265,7 @@ export function AnnotatedMessage({
               <span
                 className={`text-sm font-medium ${getMoodColor(message.characterMood)}`}
               >
-                {getMoodLabel(message.characterMood)}
+                {copy.mood[getMoodKey(message.characterMood)]}
               </span>
             </div>
           </div>

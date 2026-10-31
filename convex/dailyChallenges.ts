@@ -3,6 +3,14 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { internalAction, internalMutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { utcToday } from './lib/progress'
+import { DEFAULT_LOCALE, localeValidator } from './lib/locale'
+import {
+  localizeScenario,
+  scenarioTranslationsValidator,
+} from './lib/scenarioText'
+import type { Locale } from './lib/locale'
+import type { Doc } from './_generated/dataModel'
+import type { QueryCtx } from './_generated/server'
 
 /**
  * Daily Challenge System
@@ -22,6 +30,28 @@ import { utcToday } from './lib/progress'
 // ============================================================================
 
 /**
+ * The challenges with each description in the reader's language. A challenge
+ * row keeps the English description it was created with; the words people
+ * read come from the scenario they will actually play.
+ */
+async function localizeChallenges(
+  ctx: QueryCtx,
+  challenges: Array<Doc<'dailyChallenges'>>,
+  locale: Locale,
+): Promise<Array<Doc<'dailyChallenges'>>> {
+  return await Promise.all(
+    challenges.map(async (challenge) => {
+      const scenario = await ctx.db.get(challenge.scenarioId)
+      if (!scenario) return challenge
+      return {
+        ...challenge,
+        description: localizeScenario(scenario, locale).description,
+      }
+    }),
+  )
+}
+
+/**
  * Today's challenges plus which one fits this user best.
  *
  * Returns the recommended challenge (falling back across difficulties when a
@@ -29,16 +59,20 @@ import { utcToday } from './lib/progress'
  * user's completion state for today.
  */
 export const getMyChallenge = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { locale: v.optional(localeValidator) },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (!userId) return null
 
     const today = utcToday()
-    const challenges = await ctx.db
-      .query('dailyChallenges')
-      .withIndex('by_date', (q) => q.eq('date', today))
-      .collect()
+    const challenges = await localizeChallenges(
+      ctx,
+      await ctx.db
+        .query('dailyChallenges')
+        .withIndex('by_date', (q) => q.eq('date', today))
+        .collect(),
+      args.locale ?? DEFAULT_LOCALE,
+    )
 
     if (challenges.length === 0) return null
 
@@ -111,15 +145,19 @@ export const getMyChallenge = query({
  * Lightweight version for the signed-in home dashboard card.
  */
 export const getDailyChallenge = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { locale: v.optional(localeValidator) },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
 
     const today = utcToday()
-    const challenges = await ctx.db
-      .query('dailyChallenges')
-      .withIndex('by_date', (q) => q.eq('date', today))
-      .collect()
+    const challenges = await localizeChallenges(
+      ctx,
+      await ctx.db
+        .query('dailyChallenges')
+        .withIndex('by_date', (q) => q.eq('date', today))
+        .collect(),
+      args.locale ?? DEFAULT_LOCALE,
+    )
     if (challenges.length === 0) return null
 
     let recommendedDifficulty: 'easy' | 'medium' | 'hard' = 'easy'
@@ -261,6 +299,7 @@ export const saveGeneratedChallenges = internalMutation({
         aiOpeningMessage: v.string(),
         learningObjectives: v.array(v.string()),
         focusArea: v.string(),
+        translations: v.optional(scenarioTranslationsValidator),
       }),
     ),
   },
@@ -313,6 +352,8 @@ export const saveGeneratedChallenges = internalMutation({
         tags: ['daily-challenge', generated.category],
         isActive: true,
         source: 'daily',
+        locale: DEFAULT_LOCALE,
+        translations: generated.translations,
         createdAt: now,
         updatedAt: now,
       })

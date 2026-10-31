@@ -1,6 +1,7 @@
-import { COMPONENT_NAMES, growthWord } from './growth'
+import { growthWord } from './growth'
 import type { UserStats } from './types'
 import { NVC_COMPONENTS } from '~/lib/conversationInsights'
+import { useT } from '~/i18n/useT'
 
 interface SkillStatsProps {
   averages: UserStats['averageScores']
@@ -12,12 +13,14 @@ interface SkillStatsProps {
  * marked as a failure.
  */
 export function SkillStats({ averages }: SkillStatsProps) {
+  const t = useT()
+
   return (
     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
       {NVC_COMPONENTS.map((component) => {
         const average = Math.max(0, Math.min(25, averages[component]))
-        const word = growthWord(average)
-        const name = COMPONENT_NAMES[component]
+        const word = t.profile.growth.words[growthWord(average)]
+        const name = t.common.components[component]
         return (
           <li key={component}>
             <div className="flex items-baseline justify-between gap-3 text-sm mb-2">

@@ -1,10 +1,11 @@
 import type { NVCComponent } from '~/lib/conversationInsights'
 import type { UserStats } from './types'
+import type { Messages } from '~/i18n/messages'
 import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 
 /**
  * Pure helpers that turn the lifetime running averages (0 to 25 per
- * component, from api.userProgress.getStats) into words. The conversation
+ * component, from api.userProgress.getStats) into insights. The conversation
  * helpers in conversationInsights work on one conversation's messages; these
  * work on the averages, but use the same bars so the two never disagree.
  */
@@ -12,13 +13,6 @@ import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 // Mirrors STRENGTH_AT and FOCUS_BELOW in src/lib/conversationInsights.ts.
 const LANDED_AT = 15
 const FOCUS_BELOW = 20
-
-export const COMPONENT_NAMES: Record<NVCComponent, string> = {
-  observation: 'Observation',
-  feeling: 'Feeling',
-  need: 'Need',
-  request: 'Request',
-}
 
 export interface GrowthInsights {
   /** The piece with the highest average, when any has been tried. */
@@ -51,13 +45,16 @@ export function summarizeGrowth(
   return { strongest, focus, focusUntried: false }
 }
 
+export type GrowthWord = keyof Messages['profile']['growth']['words']
+
 /**
- * A plain word for where one piece is, never a grade. Coloured the same
+ * Which plain word describes where one piece is, never a grade. The
+ * component looks the word up in `t.profile.growth.words`. Coloured the same
  * whatever the word, so no band reads as a warning.
  */
-export function growthWord(average: number): string {
-  if (average <= 0) return 'not tried yet'
-  if (average < 10) return 'just starting'
+export function growthWord(average: number): GrowthWord {
+  if (average <= 0) return 'notTried'
+  if (average < 10) return 'starting'
   if (average < LANDED_AT) return 'growing'
   if (average < FOCUS_BELOW) return 'steady'
   return 'strong'

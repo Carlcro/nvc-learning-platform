@@ -4,6 +4,10 @@ import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { pageMeta } from '~/lib/seo'
+import { getMessages } from '~/i18n/messages'
+import { useLocale, useT } from '~/i18n/useT'
+import { upperFirst } from '~/lib/text'
+import { useFeelingLabels } from '~/hooks/useFeelingLabels'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
 import {
@@ -18,22 +22,24 @@ import {
 } from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/library')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Your saved feelings',
-      description: 'The feelings you have explored and saved.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.feelings.library.meta) }
+  },
   component: PersonalLibrary,
 })
 
 function PersonalLibrary() {
+  const t = useT()
+  const copy = t.feelings.library
   const currentUser = useQuery(api.users.getCurrentUser)
   const [filterFamily, setFilterFamily] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
 
-  const allFeelings = useQuery(api.feelings.getAll)
+  const locale = useLocale()
+  const allFeelings = useQuery(api.feelings.getAll, { locale })
+  const labelOf = useFeelingLabels()
   const userProgress = useQuery(
     api.feelingsProgress.getUserProgress,
     currentUser ? {} : 'skip',
@@ -56,6 +62,7 @@ function PersonalLibrary() {
       const familyMatch = filterFamily === 'all' || f.family === filterFamily
       const searchMatch =
         !term ||
+        f.label.toLowerCase().includes(term) ||
         f.word.toLowerCase().includes(term) ||
         f.definition.toLowerCase().includes(term)
       return familyMatch && searchMatch
@@ -66,40 +73,29 @@ function PersonalLibrary() {
     if (!currentUser) return
     try {
       await removeFeelingMutation({ feelingWord: word })
-      setStatusMessage(`Removed ${word} from your library.`)
+      setStatusMessage(copy.removed(word))
     } catch (err) {
-      setStatusMessage(
-        userFacingMessage(err, `We could not remove ${word} just now.`),
-      )
+      setStatusMessage(userFacingMessage(err, copy.removeError(word), t.errors))
     }
   }
 
   if (allFeelings === undefined || userProgress === undefined) {
-    return <GiraffeLoader message="Opening your library..." />
+    return <GiraffeLoader message={copy.loading} />
   }
 
   return (
-    <FeelingsPage
-      title="Your saved feelings"
-      intro={
-        <p>
-          The words you have kept to come back to. Reading them now and then
-          makes them easier to reach for when it matters.
-        </p>
-      }
-    >
+    <FeelingsPage title={copy.title} intro={<p>{copy.intro}</p>}>
       <p role="status" className="sr-only">
         {statusMessage}
       </p>
 
       {savedFeelings.length === 0 ? (
         <p className="max-w-prose text-lg text-brown-700 text-pretty">
-          Nothing saved yet. When a word fits something you have felt, save it
-          while you{' '}
+          {copy.empty.before}
           <Link to="/feelings/wheel" className={textLinkClass}>
-            browse feelings
-          </Link>{' '}
-          and it will wait for you here.
+            {copy.empty.linkText}
+          </Link>
+          {copy.empty.after}
         </p>
       ) : (
         <div className="space-y-8">
@@ -109,7 +105,7 @@ function PersonalLibrary() {
                 htmlFor="library-search"
                 className="block text-sm font-semibold text-brown-700 mb-2"
               >
-                Search your saved feelings
+                {copy.searchLabel}
               </label>
               <input
                 id="library-search"
@@ -125,18 +121,18 @@ function PersonalLibrary() {
                 htmlFor="library-family"
                 className="block text-sm font-semibold text-brown-700 mb-2"
               >
-                Family
+                {copy.familyLabel}
               </label>
               <select
                 id="library-family"
                 value={filterFamily}
                 onChange={(e) => setFilterFamily(e.target.value)}
-                className={`${fieldClass} capitalize cursor-pointer`}
+                className={`${fieldClass} cursor-pointer`}
               >
-                <option value="all">All families</option>
+                <option value="all">{copy.allFamilies}</option>
                 {families?.map((family) => (
                   <option key={family} value={family}>
-                    {family}
+                    {upperFirst(labelOf(family))}
                   </option>
                 ))}
               </select>
@@ -146,11 +142,11 @@ function PersonalLibrary() {
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm text-brown-700">
             <p>
               {filteredFeelings.length === savedFeelings.length
-                ? `${savedFeelings.length} saved`
-                : `Showing ${filteredFeelings.length} of ${savedFeelings.length}`}
+                ? copy.savedCount(savedFeelings.length)
+                : copy.showing(filteredFeelings.length, savedFeelings.length)}
             </p>
             <Link to="/feelings/wheel" className={textLinkClass}>
-              Find more words
+              {copy.findMore}
             </Link>
           </div>
 
@@ -163,21 +159,24 @@ function PersonalLibrary() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h2 className="text-xl font-bold text-brown-800 capitalize">
-                        {feeling.word}
+                      <h2 className="text-xl font-bold text-brown-800">
+                        {upperFirst(feeling.label)}
                       </h2>
                       <p className="mt-0.5 flex items-center gap-2 text-sm text-brown-700">
                         <span
                           aria-hidden="true"
                           className={`h-3 w-3 shrink-0 rounded-full ${CATEGORY_SWATCH[feeling.category]}`}
                         />
-                        {describeFeeling(feeling)}, {feeling.family}
+                        {copy.detail(
+                          describeFeeling(feeling, t.feelings.scale),
+                          feeling.familyLabel,
+                        )}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => void handleRemove(feeling.word)}
-                      aria-label={`Remove ${feeling.word}`}
+                      aria-label={copy.remove(feeling.label)}
                       className={`-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brown-700 hover:text-brown-900 hover:bg-giraffe-50 cursor-pointer ${focusRing}`}
                     >
                       <X aria-hidden="true" className="h-5 w-5" />
@@ -191,7 +190,7 @@ function PersonalLibrary() {
                   {feeling.examples.length > 0 && (
                     <p className="mt-3 text-sm text-brown-700 text-pretty">
                       <span className="font-semibold text-brown-800">
-                        In a sentence:{' '}
+                        {t.feelings.page.inASentence}
                       </span>
                       {feeling.examples[0]}
                     </p>
@@ -200,9 +199,7 @@ function PersonalLibrary() {
               ))}
             </ul>
           ) : (
-            <p className="text-brown-700">
-              None of your saved feelings match. Try another search or family.
-            </p>
+            <p className="text-brown-700">{copy.noMatches}</p>
           )}
         </div>
       )}

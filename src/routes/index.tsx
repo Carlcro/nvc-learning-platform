@@ -1,43 +1,24 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { pageMeta } from '~/lib/seo'
 import { Button } from '~/components/ui/Button'
+import { LanguagePicker } from '~/components/ui/LanguagePicker'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { DailyChallengeTeaser } from '~/components/features/dashboard/DailyChallengeTeaser'
 import { PracticePreview } from '~/components/features/landing/PracticePreview'
+import { getMessages } from '~/i18n/messages'
+import { useT } from '~/i18n/useT'
 
 export const Route = createFileRoute('/')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Learn Compassionate Communication',
-      description:
-        'Practice the four steps of compassionate communication through guided lessons and lifelike roleplay conversations.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.home.meta) }
+  },
   component: Home,
 })
 
-/**
- * One message said two ways. Line by line, each jackal move sits beside the
- * giraffe piece that replaces it, so the four parts read as a translation.
- */
-const JACKAL_LINES = [
-  { move: 'Judgment', line: 'You always ignore me.' },
-  { move: 'Mind reading', line: "I feel like you don't care." },
-  { move: 'Criticism', line: 'I need you to be better at this.' },
-  { move: 'Demand', line: 'Just text me next time.' },
-] as const
-
-const GIRAFFE_LINES = [
-  { move: 'Observation', line: "When I didn't hear from you last night," },
-  { move: 'Feeling', line: 'I felt worried,' },
-  { move: 'Need', line: "because knowing you're safe matters to me." },
-  {
-    move: 'Request',
-    line: "Would you be willing to send a quick text if you're out late?",
-  },
-] as const
-
 function Home() {
+  const t = useT()
+  const home = t.home
   return (
     <main className="w-full">
       {/* Hero */}
@@ -45,12 +26,10 @@ function Home() {
         <div className="max-w-5xl mx-auto grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-14 items-center">
           <div className="text-center md:text-left">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-brown-800 mb-6 text-balance tracking-tight leading-[1.08]">
-              Rehearse the hard conversation before you have it.
+              {home.hero.title}
             </h1>
             <p className="text-lg sm:text-xl text-brown-700 mb-8 leading-relaxed max-w-prose mx-auto md:mx-0 text-pretty">
-              Learn the four parts of Non-Violent Communication, then try them
-              out loud with someone who answers back. When the real talk comes,
-              the words will already feel like yours.
+              {home.hero.intro}
             </p>
             <div className="flex flex-col gap-4 items-center md:items-start">
               <Link to="/practice">
@@ -59,14 +38,14 @@ function Home() {
                   variant="primary"
                   className="px-8 whitespace-nowrap"
                 >
-                  Try a practice conversation
+                  {home.hero.primaryAction}
                 </Button>
               </Link>
               <Link
                 to="/learn"
                 className="font-semibold text-brown-700 underline decoration-giraffe-500 decoration-2 underline-offset-4 hover:text-brown-900 hover:decoration-brown-700 transition-colors"
               >
-                Or start with a short lesson
+                {home.hero.secondaryAction}
               </Link>
             </div>
           </div>
@@ -74,12 +53,12 @@ function Home() {
           <div className="flex flex-col items-center">
             <SpeechBubble className="mb-6 max-w-xs">
               <p className="text-lg text-brown-800 text-center font-medium text-pretty">
-                Had a talk go sideways? Let's try it again, slowly.
+                {home.hero.bubble}
               </p>
             </SpeechBubble>
             <img
               src="/giraff.png"
-              alt="The giraffe, your guide"
+              alt={t.layout.guideAlt}
               className="h-56 sm:h-72 md:h-80 w-auto object-contain scale-x-[-1]"
             />
           </div>
@@ -91,19 +70,11 @@ function Home() {
         <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_1.15fr] gap-10 md:gap-16 items-center">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold text-brown-800 mb-5 text-balance tracking-tight">
-              Say it, see how it lands, try again.
+              {home.showcase.title}
             </h2>
             <div className="space-y-4 text-lg text-brown-700 leading-relaxed max-w-prose text-pretty">
-              <p>
-                Each practice partner has a history and a mood. Blame makes
-                them guarded. Honesty about what you saw and felt helps them
-                soften.
-              </p>
-              <p>
-                After every message you get a hint, never a script, and the
-                arc fills in as you bring each piece into the conversation. One
-                piece per message is plenty.
-              </p>
+              <p>{home.showcase.partners}</p>
+              <p>{home.showcase.hints}</p>
             </div>
           </div>
           <PracticePreview />
@@ -115,43 +86,39 @@ function Home() {
         <div className="max-w-5xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-brown-800 mb-5 text-balance tracking-tight">
-              Every hard moment has two voices.
+              {home.voices.title}
             </h2>
             <p className="text-lg text-brown-700 leading-relaxed max-w-prose text-pretty">
-              Marshall Rosenberg called them the jackal and the giraffe. The
-              jackal judges, blames and demands, and people defend themselves
-              against it. The giraffe, the land animal with the largest heart,
-              says what happened, how it felt, what mattered, and what would
-              help.
+              {home.voices.intro}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
             <VoicePanel
               voice="jackal"
-              name="The jackal"
+              name={home.voices.jackal.name}
+              tagline={home.voices.jackal.tagline}
               image="/jakyll.webp"
-              lines={JACKAL_LINES}
-              outcome="Sam hears an attack, and starts defending."
+              lines={home.voices.jackal.lines}
+              outcome={home.voices.jackal.outcome}
             />
             <VoicePanel
               voice="giraffe"
-              name="The giraffe"
+              name={home.voices.giraffe.name}
+              tagline={home.voices.giraffe.tagline}
               image="/giraff.png"
-              lines={GIRAFFE_LINES}
-              outcome="Sam hears that you were worried, and softens."
+              lines={home.voices.giraffe.lines}
+              outcome={home.voices.giraffe.outcome}
             />
           </div>
 
           <p className="mt-10 max-w-prose text-brown-700 text-pretty">
-            Nobody speaks all four at once in real life, and you don't have to
-            either. The lessons take each piece in turn, with a short quiz at
-            the end of each.{' '}
+            {home.voices.lessonsNote}{' '}
             <Link
               to="/learn"
               className="font-semibold text-brown-800 underline decoration-giraffe-500 decoration-2 underline-offset-4 hover:decoration-brown-700"
             >
-              See the lessons
+              {home.voices.seeLessons}
             </Link>
           </p>
         </div>
@@ -168,16 +135,14 @@ function Home() {
       <section className="bg-brown-800 px-4 sm:px-6 lg:px-8 py-16 md:py-20">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-cream mb-5 text-balance tracking-tight">
-            Bring the conversation you're dreading.
+            {home.closing.title}
           </h2>
           <p className="text-lg text-giraffe-100 mb-8 max-w-prose mx-auto text-pretty">
-            Pick a ready-made scenario, or describe a situation from your own
-            life and rehearse it there. Your practice conversations are private
-            to you.
+            {home.closing.body}
           </p>
           <Link to="/practice">
             <Button size="lg" variant="primary" className="px-8">
-              Start practicing
+              {home.closing.action}
             </Button>
           </Link>
         </div>
@@ -186,28 +151,29 @@ function Home() {
       <footer className="bg-brown-900 px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between text-sm">
           <p className="text-brown-200">
-            Practice NVC. Based on the work of Marshall Rosenberg and the{' '}
+            {home.footer.creditBefore}
             <a
               href="https://www.cnvc.org"
               target="_blank"
               rel="noreferrer"
               className="underline underline-offset-2 hover:text-cream"
             >
-              Center for Nonviolent Communication
+              {home.footer.creditLink}
             </a>
-            .
+            {home.footer.creditAfter}
           </p>
-          <nav aria-label="Footer" className="flex gap-6 text-brown-200">
+          <nav aria-label={home.footer.navLabel} className="flex gap-6 text-brown-200">
             <Link to="/learn" className="hover:text-cream">
-              Lessons
+              {home.footer.lessons}
             </Link>
             <Link to="/practice" className="hover:text-cream">
-              Practice
+              {home.footer.practice}
             </Link>
             <Link to="/feelings" className="hover:text-cream">
-              Feelings
+              {home.footer.feelings}
             </Link>
           </nav>
+          <LanguagePicker tone="dark" />
         </div>
       </footer>
     </main>
@@ -217,6 +183,8 @@ function Home() {
 interface VoicePanelProps {
   voice: 'jackal' | 'giraffe'
   name: string
+  /** One line under the name saying what this voice does. */
+  tagline: string
   image: string
   lines: ReadonlyArray<{ move: string; line: string }>
   outcome: string
@@ -226,7 +194,14 @@ interface VoicePanelProps {
  * One voice saying the whole message. The animal stands at the top like the
  * speaker; each line carries a small label naming the move it makes.
  */
-function VoicePanel({ voice, name, image, lines, outcome }: VoicePanelProps) {
+function VoicePanel({
+  voice,
+  name,
+  tagline,
+  image,
+  lines,
+  outcome,
+}: VoicePanelProps) {
   const isGiraffe = voice === 'giraffe'
   return (
     <figure
@@ -251,11 +226,7 @@ function VoicePanel({ voice, name, image, lines, outcome }: VoicePanelProps) {
         />
         <figcaption className="pb-5">
           <p className="text-xl font-bold text-brown-900">{name}</p>
-          <p className="text-sm text-brown-700">
-            {isGiraffe
-              ? 'Says what happened and what would help'
-              : 'Judges, blames and demands'}
-          </p>
+          <p className="text-sm text-brown-700">{tagline}</p>
         </figcaption>
       </div>
 

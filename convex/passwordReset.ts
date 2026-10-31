@@ -1,5 +1,9 @@
 import { Email } from '@convex-dev/auth/providers/Email'
 import { Resend } from 'resend'
+import { internal } from './_generated/api'
+import { passwordResetEmail } from './lib/emailCopy'
+import type { EmailConfig } from '@convex-dev/auth/server'
+import type { ActionCtx } from './_generated/server'
 
 /**
  * Password reset by emailed code.
@@ -25,7 +29,14 @@ export const ResendPasswordReset = Email({
 
   generateVerificationToken: () => Promise.resolve(generateCode()),
 
-  sendVerificationRequest: async ({ identifier: email, token }) => {
+  // Convex Auth passes the action context as a second argument to email
+  // providers too, but its types only declare it for phone providers (a known
+  // gap marked TODO in the library). The context is what lets the email look
+  // up the account's language.
+  sendVerificationRequest: (async (
+    { identifier: email, token }: { identifier: string; token: string },
+    ctx: ActionCtx,
+  ) => {
     // Read directly rather than through provider.apiKey: Convex Auth fills
     // that from AUTH_<PROVIDER_ID>_KEY, which would never match the plainly
     // named variable this deployment actually sets.
@@ -38,23 +49,23 @@ export const ResendPasswordReset = Email({
       throw new Error('AUTH_EMAIL_FROM is not set on the Convex deployment')
     }
 
+    // Written in the account's saved language. A lookup that fails only
+    // means the code arrives in English, never that it does not arrive.
+    const locale = await ctx
+      .runQuery(internal.users.localeForEmail, { email })
+      .catch(() => null)
+    const { subject, text } = passwordResetEmail(
+      locale ?? 'en',
+      token,
+      CODE_TTL_MINUTES,
+    )
+
     const resend = new Resend(apiKey)
     const { error } = await resend.emails.send({
       from,
       to: [email],
-      subject: 'Reset your password',
-      text: [
-        'Hi,',
-        '',
-        'Here is the code to reset your password:',
-        '',
-        token,
-        '',
-        `The code works for the next ${CODE_TTL_MINUTES} minutes.`,
-        '',
-        'If you did not ask to reset your password, you can ignore this',
-        'message and nothing will change.',
-      ].join('\n'),
+      subject,
+      text,
     })
 
     // Surfaced rather than swallowed: a silent failure here looks to the user
@@ -62,5 +73,5 @@ export const ResendPasswordReset = Email({
     if (error) {
       throw new Error(`Could not send the reset email: ${error.message}`)
     }
-  },
+  }) as unknown as EmailConfig['sendVerificationRequest'],
 })

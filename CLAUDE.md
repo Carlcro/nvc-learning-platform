@@ -301,6 +301,35 @@ Add `--prod` for production; the two deployments have separate users and separat
 
 **Cost tracking**: every Claude call reports its token usage through `internal.usage.recordModelCalls`, which prices it (`convex/lib/modelUsage.ts`, in micro-dollars, at write time) and writes the raw `modelCalls` log plus three rollups: `dailyUsage` (per user per day), `userUsageTotals` (per user lifetime) and `dailyModelSpend` (per day per kind, including the nightly cron). The admin panel reads the rollups, never the raw log, which a cron prunes after 90 days. When adding a model call: give it a kind in `MODEL_CALL_KINDS`, record it with `callRecord(kind, MODEL, response.usage)`, and never let a failed record fail the feature. When changing `MODEL` or `CHARACTER_MODEL`, make sure it is in `MODEL_PRICING` (a test enforces this). The two are separate on purpose: a different scorer shifts stars and points for everyone, so move `MODEL` only after comparing score bands on sample messages. Nothing was metered before this shipped, so earlier usage has activity but no cost.
 
+### Languages (i18n)
+
+The app is being made available in English, French, Spanish and Swedish. The codes are shared by frontend and backend in `convex/lib/locale.ts` (`Locale`, `localeValidator`).
+
+- **UI copy** never sits in components. English lives in `src/i18n/messages/en/<namespace>.ts` and is the source of truth: `Messages = typeof en`. Components call `const t = useT()` and read `t.practice.hub.title`; strings with values are functions (`t.nav.level(3)`), plurals use `pluralFor(locale)`. Never build a sentence from fragments in a component, since word order differs between languages.
+- **Translations** live in `src/i18n/messages/<lang>/<namespace>.ts`, one file per English namespace, each typed `Messages['<namespace>']`, so a key added to English is a type error in every other language until it is translated. They are registered in `TRANSLATIONS` (`src/i18n/messages/index.ts`). When you add or change English copy, update fr, es and sv in the same change (warm, informal tu/tú/du, no gendered agreement with the reader, terms as listed below).
+- **Emails** are written in the account's saved language (`convex/lib/emailCopy.ts`, looked up by address with `users.localeForEmail`).
+- **Choosing a language**: the `locale` cookie decides what the server renders (first visit guesses from `Accept-Language`); the root route's `beforeLoad` puts it in router context, and `useSetLocale()` switches without a reload. Signed-in users also have `users.preferredLocale`, kept in step by `LocaleSync`. `SELECTABLE_LOCALES` (`src/i18n/config.ts`) lists what the picker offers; it stays hidden while that is only English.
+- **Page titles**: route `head` reads `getMessages(match.context.locale)`.
+- **Dates and numbers** go through `useFormat()` / `formatters(locale)`, never a bare `toLocaleString()`.
+- **Server errors** people can read are codes: `userError('conversationNotFound')`, with English in `USER_ERRORS` (`convex/lib/errors.ts`). The client shows `userFacingMessage(error, fallback, t.errors)`.
+- **Achievements** are shown from `t.achievements[id]`; a test keeps them in step with the server catalog.
+- The admin panel stays English only.
+
+**Roleplay in the chosen language**:
+- A conversation's language is fixed when it starts (`conversations.locale`, absent means English). `conversations.create` takes the reader's `locale` and holds the conversation in it when the scenario exists in that language, otherwise in the scenario's own (`conversationLocaleFor`). The character, the coaching and the reflection all follow `conversation.locale`, never the current interface language, and the conversation and transcript screens read the scenario in that same language so names match.
+- Scenario words that change with the language are `ScenarioText` (`convex/lib/scenarioText.ts`); `localizeScenario(scenario, locale)` returns them plus `contentLocale`. Built-in scenarios keep their translations in code, in `convex/scenarioTranslations/{fr,es,sv}.ts`, keyed by English title (a test checks every built-in has every language). Daily challenges store `translations` on the row: the cron writes them in English, then adapts them into each language in parallel; a language that fails plays in English that day. A custom scenario is written in its creator's language (`scenarios.locale`) and stays in it.
+- Scenario queries (`getById`, `listByOrder`, `listMine`, the daily challenge queries) take an optional `locale`; pass `useLocale()`.
+- Prompts stay in English. The per-language notes (which language to write in, how that language disguises a thought as a feeling, tu or du, gender-neutral phrasing toward the learner, punctuation) live in `convex/lib/promptLanguage.ts`. Characters get local names. In French and Spanish we address the learner as tu and tú.
+- Someone who writes in another language than the conversation's is scored as usual; the analysis reports `writtenInConversationLanguage`, and when it is false the server shows the fixed `languageNudge` instead of the usual hint.
+- After changing a scoring prompt, check that the same message still scores the same in every language: `npx convex run scoreCalibration:run` (about twenty model calls).
+
+**Lessons and feelings in each language**:
+- English stays the source (`LESSONS` in `convex/lessons.ts`, `feelingsData` and `quizQuestionsData` in `convex/feelings/seed.ts`). Other languages live in `convex/contentTranslations/` and are merged by `convex/lib/localizeContent.ts`. Only words change: ids, order, families, answers and scores are shared, so grading never depends on the language.
+- A lesson translation has the same examples, questions and options in the same order (the correct answer is an index). One that does not line up is ignored and the lesson shows in English. Tests check this.
+- A feeling is stored and referred to by its English `word` everywhere (saved library, check-ins, explored). Queries return `label` and `familyLabel` to show; the client turns a stored word into its label with `useFeelingLabels()`. Families are feeling words, so they translate the same way. Feelings quiz sentences are keyed by the English sentence and keep the same real-or-not answer.
+- Lesson, feeling and quiz queries take an optional `locale`; pass `useLocale()`.
+- Terms used so far: Swedish calls a request "önskemål" and the jackal "varg"; Spanish uses "petición" against "exigencia". Keep the interface copy consistent with them.
+
 ### Task: Create a New UI Component
 
 1. **Check if a similar component exists** in `src/components/`

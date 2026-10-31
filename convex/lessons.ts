@@ -1,6 +1,8 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { userError } from "./lib/errors";
+import { DEFAULT_LOCALE, localeValidator } from "./lib/locale";
+import { localizeLesson } from "./lib/localizeContent";
 import { mutation, query } from "./_generated/server";
 
 /**
@@ -591,14 +593,17 @@ export const LESSONS = [
  * Returns lessons in order with all content needed for the UI
  */
 export const getAllLessons = query({
-  args: {},
+  args: { locale: v.optional(localeValidator) },
   // eslint-disable-next-line @typescript-eslint/require-await -- Convex handlers are async by contract
-  handler: async () => {
+  handler: async (_, args) => {
     // Return the hardcoded lessons in order
     // In the future, this could query from the database
     // Copied first: sorting in place mutates the module-level array on
     // every call.
-    return [...LESSONS].sort((a, b) => a.order - b.order);
+    const locale = args.locale ?? DEFAULT_LOCALE;
+    return [...LESSONS]
+      .sort((a, b) => a.order - b.order)
+      .map((lesson) => localizeLesson(lesson, locale));
   },
 });
 
@@ -606,10 +611,11 @@ export const getAllLessons = query({
  * Query to fetch a single lesson by ID
  */
 export const getLessonById = query({
-  args: { lessonId: v.string() },
+  args: { lessonId: v.string(), locale: v.optional(localeValidator) },
   // eslint-disable-next-line @typescript-eslint/require-await -- Convex handlers are async by contract
   handler: async (_, args) => {
-    return LESSONS.find((lesson) => lesson.lessonId === args.lessonId) || null;
+    const lesson = LESSONS.find((l) => l.lessonId === args.lessonId);
+    return lesson ? localizeLesson(lesson, args.locale ?? DEFAULT_LOCALE) : null;
   },
 });
 
@@ -646,17 +652,17 @@ export const submitQuiz = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      userError("Not authenticated");
+      userError('notAuthenticated');
     }
 
     const lesson = LESSONS.find((l) => l.lessonId === args.lessonId);
     if (!lesson) {
-      userError("Lesson not found");
+      userError('lessonNotFound');
     }
 
     const questions = lesson.quiz.questions;
     if (args.answers.length !== questions.length) {
-      userError("That quiz submission did not match this lesson.");
+      userError('quizSubmissionMismatch');
     }
 
     const correctCount = questions.reduce(

@@ -1,9 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { COMPONENT_NAMES, summarizeGrowth } from './growth'
+import { summarizeGrowth } from './growth'
 import { SkillStats } from './SkillStats'
 import { TEXT_LINK } from './linkStyles'
 import type { UserStats } from './types'
-import { SKILL_RESOURCES } from '~/lib/conversationInsights'
+import { skillResource } from '~/lib/conversationInsights'
+import { useT } from '~/i18n/useT'
 
 interface GrowthSummaryProps {
   stats: UserStats
@@ -15,6 +16,8 @@ interface GrowthSummaryProps {
  * next. The four bars sit underneath as supporting detail.
  */
 export function GrowthSummary({ stats }: GrowthSummaryProps) {
+  const t = useT()
+  const names = t.common.components
   const { strongest, focus, focusUntried } = summarizeGrowth(
     stats.averageScores,
   )
@@ -26,23 +29,22 @@ export function GrowthSummary({ stats }: GrowthSummaryProps) {
           id="growth-heading"
           className="text-xl font-bold text-brown-800 text-balance"
         >
-          The four pieces
+          {t.profile.growth.title}
         </h2>
         <p className="mt-3 text-brown-700 max-w-prose text-pretty">
-          Observation, feeling, need and request. Once you finish a first
-          conversation, this is where you will see which of them comes
-          naturally to you and which one to explore next.
+          {t.profile.growth.empty}
         </p>
         <p className="mt-4">
           <Link to="/learn/observation" className={TEXT_LINK}>
-            Start with the observations lesson
+            {t.profile.growth.emptyLink}
           </Link>
         </p>
       </section>
     )
   }
 
-  const focusResource = focus ? SKILL_RESOURCES[focus] : null
+  const focusResource = focus ? skillResource(focus, t.results.skills) : null
+  const focusCopy = focus ? t.profile.growth.focus[focus] : null
 
   return (
     <section aria-labelledby="growth-heading">
@@ -50,26 +52,24 @@ export function GrowthSummary({ stats }: GrowthSummaryProps) {
         id="growth-heading"
         className="text-xl font-bold text-brown-800 text-balance"
       >
-        The four pieces
+        {t.profile.growth.title}
       </h2>
       <p className="mt-3 text-lg text-brown-800 max-w-prose text-pretty">
-        Lately your strongest piece is {COMPONENT_NAMES[strongest]}.
+        {t.profile.growth.strongest(names[strongest])}
         {focus
-          ? ` Next to explore: ${COMPONENT_NAMES[focus]}.`
-          : ' All four are landing well in your conversations.'}
+          ? t.profile.growth.nextToExplore(names[focus])
+          : t.profile.growth.allLanding}
       </p>
-      {focusResource && (
+      {focusResource && focusCopy && (
         <p className="mt-2 text-brown-700 max-w-prose text-pretty">
-          {focusUntried
-            ? `You have not reached for ${focusResource.plural} in a conversation yet. `
-            : ''}
+          {focusUntried ? focusCopy.untried : ''}
           {focusResource.nudge}
         </p>
       )}
-      {focusResource && (
+      {focusResource && focusCopy && (
         <p className="mt-4">
           <Link to={focusResource.to} className={TEXT_LINK}>
-            Visit the {focusResource.label.toLowerCase()}
+            {focusCopy.visit}
           </Link>
         </p>
       )}

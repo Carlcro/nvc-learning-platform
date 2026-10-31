@@ -25,13 +25,18 @@ import type {
   EarnedAchievement,
 } from '~/hooks/useConversation'
 import type { NVCComponent } from '~/lib/conversationInsights'
+import type { Messages } from '~/i18n/messages'
 import { Button } from '~/components/ui/Button'
 import { StarIcon } from '~/components/ui/Icons'
 import {
-  SKILL_RESOURCES,
+  NVC_COMPONENTS,
   pickRecommendedScenario,
+  skillResource,
   summarizeConversation,
 } from '~/lib/conversationInsights'
+import { useLocale, useT } from '~/i18n/useT'
+
+type ScreenCopy = Messages['results']['screen']
 
 interface ScenarioResultsProps {
   finalScore: number
@@ -59,25 +64,29 @@ interface ScenarioResultsProps {
 // is the most useful next step.
 const PASSING_SCORE = 60
 
-function scoreLabel(score: number): string {
-  if (score >= 90) return 'Excellent'
-  if (score >= 70) return 'Good'
-  if (score >= 50) return 'Getting there'
-  return 'Keep practicing'
+function scoreLabel(score: number, labels: ScreenCopy['scoreLabel']): string {
+  if (score >= 90) return labels.excellent
+  if (score >= 70) return labels.good
+  if (score >= 50) return labels.gettingThere
+  return labels.keepPracticing
 }
 
 /** How this run compares with the best one before it, said plainly. */
-function comparisonLine(finalScore: number, previousBest?: number): string {
+function comparisonLine(
+  finalScore: number,
+  previousBest: number | undefined,
+  copy: ScreenCopy['comparison'],
+): string {
   if (previousBest === undefined) {
-    return 'Your first finished run of this scenario. Now there is something to build on.'
+    return copy.firstRun
   }
   if (finalScore > previousBest) {
-    return `Up from ${previousBest} last time. That is your new best here.`
+    return copy.newBest(previousBest)
   }
   if (finalScore === previousBest) {
-    return `Level with your best of ${previousBest}. Steady is a skill too.`
+    return copy.levelWithBest(previousBest)
   }
-  return `Your best here is still ${previousBest}. Every run teaches something different.`
+  return copy.belowBest(previousBest)
 }
 
 function CheckMark() {
@@ -167,65 +176,61 @@ function describeEnding(args: {
   milestones?: Milestones
   /** The piece to work on next, shared with the takeaway card below. */
   focus: NVCComponent | null
+  copy: ScreenCopy['ending']
 }): { connected: boolean; headline: string; label: string; sub: string } {
-  const { characterName, finalMood, milestones, focus } = args
+  const { characterName, finalMood, milestones, focus, copy } = args
   const connected = !!milestones?.resolutionReached || finalMood >= 5
 
   if (connected) {
     return {
       connected,
-      headline: 'Look how far you came',
-      label: `You connected with ${characterName}`,
-      sub: 'You expressed yourself and were heard.',
+      headline: copy.connected.headline,
+      label: copy.connected.label(characterName),
+      sub: copy.connected.sub,
     }
   }
 
   // What they did manage, and the earliest piece still to come.
-  const managed = [
-    milestones?.observationMade && 'a clear observation',
-    milestones?.feelingExpressed && 'a feeling',
-    milestones?.needIdentified && 'a need',
-    milestones?.requestMade && 'a request',
-  ].filter(Boolean) as Array<string>
-  const nextPieceByFocus: Record<NVCComponent, string> = {
-    observation:
-      'Describing what happened, with no verdict on it, is the piece to try next time.',
-    feeling: 'Naming a feeling is the piece to try next time.',
-    need: 'The need beneath the feeling is the piece to try next time.',
-    request: 'A clear request is the piece to try next time.',
+  const reachedByComponent: Record<NVCComponent, boolean> = {
+    observation: !!milestones?.observationMade,
+    feeling: !!milestones?.feelingExpressed,
+    need: !!milestones?.needIdentified,
+    request: !!milestones?.requestMade,
   }
+  const managed = NVC_COMPONENTS.filter((c) => reachedByComponent[c]).map(
+    (c) => copy.managed[c],
+  )
   const nextPiece = focus
-    ? nextPieceByFocus[focus]
+    ? copy.nextPiece[focus]
     : !milestones?.empathyShown
-      ? `Wondering aloud what ${characterName} was feeling is the piece to try next time.`
-      : 'A little more time might have been all it needed.'
+      ? copy.nextPieceEmpathy(characterName)
+      : copy.nextPieceTime
   const didManage =
-    managed.length > 0
-      ? `You brought ${managed.join(' and ')}, which is the hard part.`
-      : 'You stayed in a hard conversation, which is where it starts.'
+    managed.length > 0 ? copy.didManage(managed) : copy.didManageNothing
 
   if (finalMood >= 0) {
     return {
       connected,
-      headline: 'A real step forward',
-      label: `${characterName} was starting to listen`,
-      sub: `Not fully open yet. ${didManage} ${nextPiece}`,
+      headline: copy.listening.headline,
+      label: copy.listening.label(characterName),
+      sub: copy.listening.sub(didManage, nextPiece),
     }
   }
   return {
     connected,
-    headline: 'That was a hard one, and you stayed with it',
-    label: `${characterName} was still guarded at the end`,
-    sub: `That happens in real conversations too. ${didManage} ${nextPiece}`,
+    headline: copy.guarded.headline,
+    label: copy.guarded.label(characterName),
+    sub: copy.guarded.sub(didManage, nextPiece),
   }
 }
 
 function Stars({ stars }: { stars: number }) {
+  const t = useT()
   return (
     <span
       className="inline-flex gap-1"
       role="img"
-      aria-label={`${stars} of 3 stars`}
+      aria-label={t.results.screen.starsAria(stars)}
     >
       {[0, 1, 2].map((i) => (
         <StarIcon
@@ -242,7 +247,8 @@ function Stars({ stars }: { stars: number }) {
  * the results screen can name a scenario rather than drop people at the hub.
  */
 function useNextScenario(currentScenarioId: string) {
-  const scenarios = useQuery(api.scenarios.listByOrder)
+  const locale = useLocale()
+  const scenarios = useQuery(api.scenarios.listByOrder, { locale })
   const progress = useQuery(api.scenarioProgress.getUserProgress)
   const overall = useQuery(api.userProgress.getByUserId)
   if (!scenarios || !progress) return null
@@ -272,6 +278,8 @@ export function ScenarioResults({
   onNext,
   onViewTranscript,
 }: ScenarioResultsProps) {
+  const t = useT()
+  const copy = t.results.screen
   const navigate = useNavigate()
   const nextScenario = useNextScenario(scenarioId)
   const insights = useMemo(() => summarizeConversation(messages), [messages])
@@ -280,23 +288,24 @@ export function ScenarioResults({
     finalMood,
     milestones,
     focus: insights.focus,
+    copy: copy.ending,
   })
 
   // Each station is read from the milestones, so a partial path renders
   // honestly: wrapping up is open to everyone after a few turns, not only to
   // those who completed the arc.
   const stations = [
-    { label: 'You opened the conversation', reached: true },
+    { label: copy.stations.opened, reached: true },
     {
-      label: 'You described what happened',
+      label: copy.stations.observation,
       reached: !!milestones?.observationMade,
     },
-    { label: 'You named what you felt', reached: !!milestones?.feelingExpressed },
+    { label: copy.stations.feeling, reached: !!milestones?.feelingExpressed },
     {
-      label: 'You uncovered the need beneath it',
+      label: copy.stations.need,
       reached: !!milestones?.needIdentified,
     },
-    { label: 'You made a clear request', reached: !!milestones?.requestMade },
+    { label: copy.stations.request, reached: !!milestones?.requestMade },
     {
       label: ending.label,
       sub: ending.sub,
@@ -306,9 +315,9 @@ export function ScenarioResults({
   ]
 
   const focus = insights.focus
-  const focusResource = focus ? SKILL_RESOURCES[focus] : null
+  const focusResource = focus ? skillResource(focus, t.results.skills) : null
   const strongestResource = insights.strongest
-    ? SKILL_RESOURCES[insights.strongest]
+    ? skillResource(insights.strongest, t.results.skills)
     : null
   const hasTakeaway =
     !!focusResource || !!strongestResource || !!insights.bestMessage
@@ -331,8 +340,8 @@ export function ScenarioResults({
       className={primary ? 'w-full' : 'flex-1 whitespace-nowrap'}
     >
       {primary && focusResource
-        ? `Practice again, with an eye on ${focusResource.plural}`
-        : 'Practice again'}
+        ? copy.actions.practiceAgainFocus(focusResource.plural)
+        : copy.actions.practiceAgain}
     </Button>
   )
 
@@ -422,7 +431,7 @@ export function ScenarioResults({
                     >
                       {s.label}
                       {!last && !s.reached && (
-                        <span className="sr-only"> (not yet)</span>
+                        <span className="sr-only">{copy.stations.notYet}</span>
                       )}
                     </p>
                     {'sub' in s && s.sub && (
@@ -441,12 +450,14 @@ export function ScenarioResults({
             <div className="flex items-center justify-between gap-3 mb-3">
               <Stars stars={stars} />
               <p className="text-xs text-brown-500 text-right">
-                Empathy{' '}
+                {copy.scoreLine.empathy}{' '}
                 <span className="font-semibold text-brown-700">
                   {finalScore}
                 </span>{' '}
-                · {scoreLabel(finalScore)} · {userMessageCount}{' '}
-                {userMessageCount === 1 ? 'message' : 'messages'}
+                {copy.scoreLine.afterScore(
+                  scoreLabel(finalScore, copy.scoreLabel),
+                  userMessageCount,
+                )}
               </p>
             </div>
             <EmpathyMeter score={finalScore} showLabel={false} size="sm" />
@@ -456,7 +467,11 @@ export function ScenarioResults({
                   className="w-4 h-4 mt-0.5 shrink-0 text-giraffe-700"
                   aria-hidden="true"
                 />
-                {comparisonLine(finalScore, summary.previousBestScore)}
+                {comparisonLine(
+                  finalScore,
+                  summary.previousBestScore,
+                  copy.comparison,
+                )}
               </p>
             )}
           </div>
@@ -471,16 +486,20 @@ export function ScenarioResults({
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
                 <p className="text-xl font-bold text-brown-800 tabular-nums">
-                  +{pointsEarned}
+                  {copy.earned.points(pointsEarned)}
                 </p>
-                <p className="text-xs text-brown-600">points</p>
+                <p className="text-xs text-brown-600">
+                  {copy.earned.pointsLabel}
+                </p>
               </div>
               <div>
                 <p className="text-xl font-bold text-brown-800 tabular-nums">
                   {summary.levelAfter}
                 </p>
                 <p className="text-xs text-brown-600">
-                  {leveledUp ? 'new level' : 'level'}
+                  {leveledUp
+                    ? copy.earned.newLevelLabel
+                    : copy.earned.levelLabel}
                 </p>
               </div>
               <div>
@@ -492,20 +511,23 @@ export function ScenarioResults({
                   {summary.currentStreak}
                 </p>
                 <p className="text-xs text-brown-600">
-                  day streak
+                  {copy.earned.streakLabel(summary.currentStreak)}
                 </p>
               </div>
             </div>
             <p className="mt-3 pt-3 border-t border-giraffe-100 text-xs text-brown-600 leading-relaxed text-center text-pretty">
               {leveledUp
-                ? `You reached Level ${summary.levelAfter}. `
-                : `${summary.pointsToNextLevel} points to Level ${summary.levelAfter + 1}. `}
+                ? copy.earned.reachedLevel(summary.levelAfter)
+                : copy.earned.toNextLevel(
+                    summary.pointsToNextLevel,
+                    summary.levelAfter + 1,
+                  )}
               {pointsEarned === 0
-                ? 'Points come from new stars on a scenario, so beating your best here is what earns more.'
+                ? copy.earned.noPoints
                 : summary.challengeBonus > 0
-                  ? `That includes ${summary.challengeBonus} for today's challenge.`
+                  ? copy.earned.challengeBonus(summary.challengeBonus)
                   : summary.streakExtended
-                    ? 'Today now counts toward your streak.'
+                    ? copy.earned.streakExtended
                     : ''}
             </p>
           </div>
@@ -518,13 +540,13 @@ export function ScenarioResults({
             style={{ animationDelay: '2.6s' }}
           >
             <h2 className="font-bold text-brown-800 mb-3">
-              What to take with you
+              {copy.takeaway.title}
             </h2>
             <div className="space-y-4">
               {insights.bestMessage && (
                 <div>
                   <p className="text-xs font-semibold text-brown-600 mb-1">
-                    Your message that landed best
+                    {copy.takeaway.bestMessage}
                   </p>
                   <blockquote className="border-l-4 border-empathy-high pl-3 text-sm text-brown-800 leading-relaxed text-pretty">
                     {insights.bestMessage.content}
@@ -534,17 +556,17 @@ export function ScenarioResults({
               {strongestResource && (
                 <p className="text-sm text-brown-700 leading-relaxed text-pretty">
                   <span className="font-semibold text-brown-800">
-                    Your {strongestResource.plural} were the strongest part.
+                    {copy.takeaway.strongest(strongestResource.plural)}
                   </span>{' '}
-                  That is a skill you can lean on now.
+                  {copy.takeaway.strongestAfter}
                 </p>
               )}
               {focusResource && (
                 <div className="p-3 bg-giraffe-100/70 rounded-lg border border-giraffe-200">
                   <p className="text-xs font-semibold text-brown-600 mb-1">
                     {insights.focusUntried
-                      ? `Still to try: ${focusResource.plural}`
-                      : `Worth a little attention: ${focusResource.plural}`}
+                      ? copy.takeaway.stillToTry(focusResource.plural)
+                      : copy.takeaway.worthAttention(focusResource.plural)}
                   </p>
                   <p className="text-sm text-brown-800 leading-relaxed font-medium text-pretty">
                     {focusResource.nudge}
@@ -554,7 +576,7 @@ export function ScenarioResults({
                     className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-giraffe-800 hover:text-giraffe-900 underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300"
                   >
                     <BookOpen className="w-4 h-4" aria-hidden="true" />
-                    Open the {focusResource.label}
+                    {copy.takeaway.openResource(focusResource.label)}
                   </Link>
                 </div>
               )}
@@ -566,23 +588,23 @@ export function ScenarioResults({
             only hints, so people find their own words; afterwards a worked
             example is what helps it stick. */}
         {reflection && (
-          <div
-            className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in"
-          >
+          <div className="mt-6 rounded-2xl bg-white border border-giraffe-100 shadow-sm p-5 animate-step-in">
             <div className="flex items-center gap-2 mb-3">
               <span className="flex items-center justify-center w-7 h-7 rounded-full bg-giraffe-100 text-brown-700">
                 <Repeat2 className="w-4 h-4" aria-hidden="true" />
               </span>
               <h2 className="font-bold text-brown-800">
-                One message, another way
+                {copy.reflection.title}
               </h2>
             </div>
-            <p className="text-xs font-semibold text-brown-600 mb-1">You said</p>
+            <p className="text-xs font-semibold text-brown-600 mb-1">
+              {copy.reflection.youSaid}
+            </p>
             <p className="text-sm text-brown-600 leading-relaxed text-pretty mb-3">
               {reflection.original}
             </p>
             <p className="text-xs font-semibold text-brown-600 mb-1">
-              It could also sound like
+              {copy.reflection.couldSound}
             </p>
             <blockquote className="border-l-4 border-empathy-high pl-3 text-sm text-brown-800 font-medium leading-relaxed text-pretty">
               {reflection.rewrite}
@@ -605,7 +627,7 @@ export function ScenarioResults({
                 <Ear className="w-4 h-4" />
               </span>
               <h2 className="font-bold text-brown-800">
-                What {characterName} needed underneath
+                {copy.hiddenNeeds.title(characterName)}
               </h2>
             </div>
             <div className="flex flex-wrap gap-2 mb-2">
@@ -621,9 +643,9 @@ export function ScenarioResults({
             <p className="text-sm text-brown-600 leading-relaxed text-pretty">
               {milestones?.empathyShown
                 ? ending.connected
-                  ? `You reached toward this during the conversation. That is what helped ${characterName} open up.`
-                  : `You reached toward this during the conversation. Keep doing that. It is what opens people up, even when it takes longer than one talk.`
-                : `Next time, try wondering out loud what ${characterName} might be feeling or needing. Guessing at this is what opens people up.`}
+                  ? copy.hiddenNeeds.reachedConnected(characterName)
+                  : copy.hiddenNeeds.reachedNotConnected
+                : copy.hiddenNeeds.nextTime(characterName)}
             </p>
           </div>
         )}
@@ -635,7 +657,7 @@ export function ScenarioResults({
             style={{ animationDelay: '3s' }}
           >
             <h2 className="font-bold text-brown-800 mb-3">
-              {newAchievements.length === 1 ? 'New badge' : 'New badges'}
+              {copy.badges(newAchievements.length)}
             </h2>
             <ul className="space-y-3">
               {newAchievements.map((achievement) => (
@@ -645,10 +667,12 @@ export function ScenarioResults({
                   </span>
                   <div>
                     <p className="font-semibold text-brown-800 leading-tight">
-                      {achievement.title}
+                      {t.achievements[achievement.id]?.title ??
+                        achievement.title}
                     </p>
                     <p className="text-sm text-brown-600">
-                      {achievement.description}
+                      {t.achievements[achievement.id]?.description ??
+                        achievement.description}
                     </p>
                   </div>
                 </li>
@@ -666,8 +690,7 @@ export function ScenarioResults({
             className="w-16 h-16 object-contain shrink-0"
           />
           <p className="text-sm text-brown-600 leading-relaxed">
-            Growth, not perfection. Every conversation like this one makes the
-            real ones a little easier.
+            {copy.encouragement}
           </p>
         </div>
 
@@ -682,11 +705,13 @@ export function ScenarioResults({
               onClick={goToNextScenario}
               className="w-full"
             >
-              <span className="text-balance">Next up: {nextScenario.title}</span>
+              <span className="text-balance">
+                {copy.actions.nextUp(nextScenario.title)}
+              </span>
             </Button>
           ) : (
             <Button variant="primary" onClick={onNext} className="w-full">
-              Back to all scenarios
+              {copy.actions.backToScenarios}
             </Button>
           )}
           <div className="flex gap-3">
@@ -695,21 +720,19 @@ export function ScenarioResults({
               onClick={onViewTranscript}
               className="flex-1 whitespace-nowrap"
             >
-              Review it turn by turn
+              {copy.actions.reviewTranscript}
             </Button>
-            {retryLeads ? (
-              nextScenario && (
-                <Button
-                  variant="secondary"
-                  onClick={goToNextScenario}
-                  className="flex-1 whitespace-nowrap"
-                >
-                  Try another
-                </Button>
-              )
-            ) : (
-              retryButton(false)
-            )}
+            {retryLeads
+              ? nextScenario && (
+                  <Button
+                    variant="secondary"
+                    onClick={goToNextScenario}
+                    className="flex-1 whitespace-nowrap"
+                  >
+                    {copy.actions.tryAnother}
+                  </Button>
+                )
+              : retryButton(false)}
           </div>
           {(retryLeads || nextScenario) && (
             <button
@@ -717,7 +740,7 @@ export function ScenarioResults({
               onClick={onNext}
               className="block mx-auto text-sm font-semibold text-brown-600 hover:text-brown-900 underline underline-offset-2 cursor-pointer rounded px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-giraffe-300 focus-visible:ring-offset-2"
             >
-              Back to all scenarios
+              {copy.actions.backToScenarios}
             </button>
           )}
         </div>

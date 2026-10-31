@@ -4,9 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
+import type { Messages } from '~/i18n/messages'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { localDateString } from '~/lib/localDate'
 import { pageMeta } from '~/lib/seo'
+import { getMessages } from '~/i18n/messages'
+import { useLocale, useT } from '~/i18n/useT'
 import { Button } from '~/components/ui/Button'
 import {
   FeelingsPage,
@@ -15,17 +18,19 @@ import {
 } from '~/components/features/feelings/FeelingsPage'
 
 export const Route = createFileRoute('/feelings/quiz')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Feeling or thought',
-      description:
-        'Practice telling real feelings apart from thoughts about other people.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.feelings.quiz.meta) }
+  },
   component: QuizGame,
 })
 
-type QuizState = 'level-select' | 'loading' | 'question' | 'feedback' | 'complete'
+type QuizState =
+  | 'level-select'
+  | 'loading'
+  | 'question'
+  | 'feedback'
+  | 'complete'
 
 // Questions arrive without their answers; the server grades each answer and
 // returns the explanation, so the solution is never in the client before the
@@ -47,39 +52,30 @@ interface AnswerResult {
   leveledUp: boolean
 }
 
+// The wording for each level lives in the dictionary under `feelings.quiz.levels`.
 const LEVELS = [
-  {
-    level: 1,
-    title: 'Level 1: clear cases',
-    text: 'Thoughts that are easy to spot once you look for them.',
-  },
-  {
-    level: 2,
-    title: 'Level 2: judgments in disguise',
-    text: 'Words like ignored or used, which sound like feelings but describe what someone did.',
-  },
-  {
-    level: 3,
-    title: 'Level 3: subtle cases',
-    text: 'Sentences where the line is fine and worth slowing down for.',
-  },
+  { level: 1, key: 'clear' },
+  { level: 2, key: 'disguised' },
+  { level: 3, key: 'subtle' },
 ] as const
 
 const answerButtonClass = `flex-1 min-h-14 px-5 py-3 rounded-lg border-2 border-giraffe-300 bg-white text-lg font-semibold text-brown-800 transition-colors duration-150 hover:border-brown-700 hover:bg-giraffe-50 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`
 
 /** The calm one-line verdict for an answer. */
-function verdict(result: AnswerResult): string {
+function verdict(
+  result: AnswerResult,
+  copy: Messages['feelings']['quiz']['verdict'],
+): string {
   if (result.correct) {
-    return result.isFeeling
-      ? 'Yes, that one is a feeling.'
-      : 'Yes, that one is a thought dressed as a feeling.'
+    return result.isFeeling ? copy.correctFeeling : copy.correctThought
   }
-  return result.isFeeling
-    ? 'That one is a feeling, after all.'
-    : 'That one is a thought dressed as a feeling.'
+  return result.isFeeling ? copy.wrongFeeling : copy.wrongThought
 }
 
 function QuizGame() {
+  const t = useT()
+  const locale = useLocale()
+  const copy = t.feelings.quiz
   const [quizState, setQuizState] = useState<QuizState>('level-select')
   const [selectedLevel, setSelectedLevel] = useState(1)
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9))
@@ -93,7 +89,7 @@ function QuizGame() {
   const quizBatch = useQuery(
     api.feelingsQuiz.getQuizBatch,
     quizState === 'loading'
-      ? { level: selectedLevel, count: 10, seed }
+      ? { level: selectedLevel, count: 10, seed, locale }
       : 'skip',
   )
 
@@ -137,6 +133,7 @@ function QuizGame() {
         questionId: currentQuestionData._id as Id<'feelingsQuizQuestions'>,
         answeredRealFeeling,
         localDate: localDateString(),
+        locale,
       })
       setResults((prev) => [
         ...prev,
@@ -154,12 +151,7 @@ function QuizGame() {
       setError(null)
       setQuizState('feedback')
     } catch (err) {
-      setError(
-        userFacingMessage(
-          err,
-          'We could not record that answer just now. Please try again.',
-        ),
-      )
+      setError(userFacingMessage(err, copy.answerError, t.errors))
     } finally {
       setIsAnswering(false)
     }
@@ -183,16 +175,7 @@ function QuizGame() {
   const missed = results.filter((r) => !r.correct)
 
   return (
-    <FeelingsPage
-      title="Feeling or thought?"
-      intro={
-        <p>
-          A feeling describes what is going on inside you. A thought dressed as
-          a feeling, like &ldquo;I feel ignored&rdquo;, describes what you think
-          someone else did. Read each sentence and sort it.
-        </p>
-      }
-    >
+    <FeelingsPage title={copy.title} intro={<p>{copy.intro}</p>}>
       <div className="max-w-2xl">
         {quizState === 'level-select' && (
           <section aria-labelledby="levels-heading">
@@ -200,7 +183,7 @@ function QuizGame() {
               id="levels-heading"
               className="text-xl font-bold text-brown-800 mb-4"
             >
-              Choose where to start
+              {copy.levelsHeading}
             </h2>
             <ul className="border-t-2 border-brown-100">
               {LEVELS.map((option) => (
@@ -212,10 +195,10 @@ function QuizGame() {
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block text-lg font-bold text-brown-800 group-hover:underline decoration-giraffe-400 decoration-2 underline-offset-4">
-                        {option.title}
+                        {copy.levels[option.key].title}
                       </span>
                       <span className="block mt-0.5 text-brown-700 text-pretty">
-                        {option.text}
+                        {copy.levels[option.key].text}
                       </span>
                     </span>
                     <ArrowRight
@@ -226,15 +209,13 @@ function QuizGame() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-sm text-brown-700">
-              Each round is ten sentences.
-            </p>
+            <p className="mt-4 text-sm text-brown-700">{copy.roundLength}</p>
           </section>
         )}
 
         {quizState === 'loading' && (
           <p role="status" className="text-brown-700">
-            Gathering sentences...
+            {copy.loading}
           </p>
         )}
 
@@ -245,17 +226,15 @@ function QuizGame() {
               tabIndex={-1}
               className="text-xl font-bold text-brown-800 mb-2 focus:outline-none"
             >
-              No sentences here yet
+              {copy.emptyHeading}
             </h2>
-            <p className="text-brown-700 mb-5">
-              This level has no questions for now. Another level may have some.
-            </p>
+            <p className="text-brown-700 mb-5">{copy.emptyText}</p>
             <button
               type="button"
               onClick={backToLevels}
               className={`min-h-11 cursor-pointer ${textLinkClass}`}
             >
-              Choose another level
+              {copy.chooseAnotherLevel}
             </button>
           </section>
         )}
@@ -266,7 +245,7 @@ function QuizGame() {
             className="rounded-lg border-2 border-giraffe-200 bg-white p-5 sm:p-8"
           >
             <p className="text-sm font-semibold text-brown-700 tabular-nums">
-              Question {currentQuestion + 1} of {questions.length}
+              {copy.progress(currentQuestion + 1, questions.length)}
             </p>
             <div aria-hidden="true" className="mt-2 mb-6 flex gap-1">
               {questions.map((q, idx) => (
@@ -289,7 +268,7 @@ function QuizGame() {
               tabIndex={-1}
               className="text-xl font-bold text-brown-800 mb-4 focus:outline-none"
             >
-              Is this a feeling, or a thought?
+              {copy.questionHeading}
             </h2>
             <blockquote className="rounded-lg bg-giraffe-50 border-2 border-giraffe-100 px-5 py-4 text-lg text-brown-900 leading-relaxed text-pretty mb-6">
               {currentQuestionData.sentence}
@@ -302,7 +281,7 @@ function QuizGame() {
                 disabled={isAnswering}
                 className={answerButtonClass}
               >
-                A feeling
+                {copy.answerFeeling}
               </button>
               <button
                 type="button"
@@ -310,7 +289,7 @@ function QuizGame() {
                 disabled={isAnswering}
                 className={answerButtonClass}
               >
-                A thought
+                {copy.answerThought}
               </button>
             </div>
           </section>
@@ -331,7 +310,7 @@ function QuizGame() {
             className="rounded-lg border-2 border-giraffe-200 bg-white p-5 sm:p-8"
           >
             <p className="text-sm font-semibold text-brown-700 tabular-nums mb-2">
-              Question {currentQuestion + 1} of {questions.length}
+              {copy.progress(currentQuestion + 1, questions.length)}
             </p>
             <h2
               id="feedback-heading"
@@ -339,7 +318,7 @@ function QuizGame() {
               tabIndex={-1}
               className="text-xl font-bold text-brown-800 text-balance focus:outline-none"
             >
-              {verdict(latest)}
+              {verdict(latest, copy.verdict)}
             </h2>
             <blockquote className="mt-3 text-brown-700 text-pretty border-l-2 border-giraffe-300 pl-4">
               {latest.sentence}
@@ -351,7 +330,7 @@ function QuizGame() {
             {latest.correctFeelings.length > 0 && (
               <p className="mt-4 text-brown-700 text-pretty">
                 <span className="font-semibold text-brown-800">
-                  Feelings you could name instead:{' '}
+                  {copy.insteadLabel}
                 </span>
                 {latest.correctFeelings.join(', ')}
               </p>
@@ -359,7 +338,7 @@ function QuizGame() {
 
             {latest.leveledUp && (
               <p className="mt-4 text-sm font-medium text-brown-800">
-                You have moved up a quiz level.
+                {copy.leveledUp}
               </p>
             )}
 
@@ -371,8 +350,8 @@ function QuizGame() {
                 className={`w-full sm:w-auto px-8 ${focusRing}`}
               >
                 {currentQuestion < questions.length - 1
-                  ? 'Next sentence'
-                  : 'See how it went'}
+                  ? copy.next
+                  : copy.finish}
               </Button>
             </div>
           </section>
@@ -389,14 +368,13 @@ function QuizGame() {
               tabIndex={-1}
               className="text-2xl font-bold text-brown-800 text-balance focus:outline-none"
             >
-              You sorted {sortedCount} of {results.length}.
+              {copy.summary(sortedCount, results.length)}
             </h2>
 
             {missed.length > 0 ? (
               <>
                 <p className="mt-2 text-brown-700 text-pretty">
-                  The ones worth a second look are below. They are often the
-                  ones that stick.
+                  {copy.missedIntro}
                 </p>
                 <ul className="mt-6 space-y-5">
                   {missed.map((item) => (
@@ -409,8 +387,8 @@ function QuizGame() {
                       </p>
                       <p className="mt-1 text-sm font-semibold text-brown-800">
                         {item.isFeeling
-                          ? 'This one is a feeling.'
-                          : 'This one is a thought dressed as a feeling.'}
+                          ? copy.missedFeeling
+                          : copy.missedThought}
                       </p>
                       <p className="mt-1 text-sm text-brown-700 text-pretty">
                         {item.explanation}
@@ -421,8 +399,7 @@ function QuizGame() {
               </>
             ) : (
               <p className="mt-2 text-brown-700 text-pretty">
-                Every sentence landed where it belongs. The next level is there
-                whenever you feel ready.
+                {copy.allCorrect}
               </p>
             )}
 
@@ -433,20 +410,20 @@ function QuizGame() {
                 onClick={() => startLevel(selectedLevel)}
                 className={`px-8 ${focusRing}`}
               >
-                Play again
+                {copy.playAgain}
               </Button>
               <button
                 type="button"
                 onClick={backToLevels}
                 className={`self-start sm:self-auto min-h-11 cursor-pointer ${textLinkClass}`}
               >
-                Choose another level
+                {copy.chooseAnotherLevel}
               </button>
               <Link
                 to="/feelings"
                 className={`self-start sm:self-auto inline-flex items-center min-h-11 ${textLinkClass}`}
               >
-                Back to feelings
+                {copy.backToFeelings}
               </Link>
             </div>
           </section>

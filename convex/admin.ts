@@ -57,7 +57,7 @@ async function isAdmin(ctx: QueryCtx): Promise<boolean> {
 /** Refuse anyone who is not an admin, without saying the page exists. */
 async function requireAdmin(ctx: QueryCtx): Promise<void> {
   if (!(await isAdmin(ctx))) {
-    userError('Not found')
+    userError('notFound')
   }
 }
 

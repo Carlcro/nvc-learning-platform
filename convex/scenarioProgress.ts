@@ -63,7 +63,7 @@ export const initializeScenarioProgress = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const existing = await ctx.db

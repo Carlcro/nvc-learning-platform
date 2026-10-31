@@ -22,6 +22,7 @@ import type { Celebration } from '~/components/features/roleplay/MilestoneCelebr
 import type { NVCComponent } from '~/lib/conversationInsights'
 import { NVC_COMPONENTS } from '~/lib/conversationInsights'
 import { userFacingMessage } from '~/lib/errorMessage'
+import { useLocale, useT } from '~/i18n/useT'
 import { localDateString } from '~/lib/localDate'
 
 // ---------------------------------------------------------------------------
@@ -112,51 +113,18 @@ function messageToFeedback(message: Message | undefined): FeedbackData | null {
 }
 
 /**
- * Milestone copy, in ascending order of significance. When several flip true at
- * once we celebrate the most meaningful one.
+ * Celebrated milestones, in ascending order of significance. When several flip
+ * true at once we celebrate the most meaningful one. The copy for each lives
+ * in `roleplay.celebrations`, keyed the same way.
  */
-const MILESTONE_CELEBRATIONS: Array<{
-  key:
-    | 'observationMade'
-    | 'feelingExpressed'
-    | 'needIdentified'
-    | 'requestMade'
-    | 'empathyShown'
-    | 'resolutionReached'
-  title: string
-  message: (characterName: string) => string
-}> = [
-  {
-    key: 'observationMade',
-    title: 'Clear observation',
-    message: () => 'You described what happened without judging it.',
-  },
-  {
-    key: 'feelingExpressed',
-    title: 'Feeling named',
-    message: () => 'You put honest words to an emotion.',
-  },
-  {
-    key: 'needIdentified',
-    title: 'Need uncovered',
-    message: () => 'You connected your feeling to what matters.',
-  },
-  {
-    key: 'requestMade',
-    title: 'Clear request',
-    message: () => 'You asked for something concrete and doable.',
-  },
-  {
-    key: 'empathyShown',
-    title: 'You heard them',
-    message: (name) => `You tuned into what ${name} might be feeling.`,
-  },
-  {
-    key: 'resolutionReached',
-    title: 'Breakthrough',
-    message: (name) => `${name} feels genuinely heard.`,
-  },
-]
+const MILESTONE_CELEBRATIONS = [
+  'observationMade',
+  'feelingExpressed',
+  'needIdentified',
+  'requestMade',
+  'empathyShown',
+  'resolutionReached',
+] as const
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -179,15 +147,13 @@ export function useConversation({
   view,
 }: UseConversationArgs) {
   const navigate = useNavigate()
+  const t = useT()
+  const locale = useLocale()
 
   // --- Data --------------------------------------------------------------
   const currentUser = useQuery(api.users.getCurrentUser)
   const overallProgress = useQuery(api.userProgress.getByUserId)
   const userLevel = overallProgress?.level ?? 1
-
-  const scenario = useQuery(api.scenarios.getById, {
-    scenarioId: scenarioId as Id<'scenarios'>,
-  })
 
   const conversation = useQuery(
     api.conversations.getById,
@@ -195,6 +161,17 @@ export function useConversation({
       ? { conversationId: conversationId as Id<'conversations'> }
       : 'skip',
   )
+
+  // The scenario is read in the conversation's own language, so the
+  // character's name and the setup match what is said, whatever language
+  // the interface is in now. Until the conversation arrives it is read in
+  // the interface language, which is almost always the same, so both
+  // queries load at once instead of one after the other.
+  const conversationLocale = conversation ? (conversation.locale ?? 'en') : locale
+  const scenario = useQuery(api.scenarios.getById, {
+    scenarioId: scenarioId as Id<'scenarios'>,
+    locale: conversationLocale,
+  })
 
   const submitTurn = useAction(api.ai.submitTurn)
   const generateReflection = useAction(api.ai.generateReflection)
@@ -267,7 +244,10 @@ export function useConversation({
 
   // A gentle pointer to the lesson or library for whichever component has
   // been consistently rough over the last few turns (null when none has).
-  const skillHint = useMemo(() => deriveSkillHint(serverMessages), [serverMessages])
+  const skillHint = useMemo(
+    () => deriveSkillHint(serverMessages),
+    [serverMessages],
+  )
 
   // --- Milestone celebrations --------------------------------------------
   // Reacting to server-computed milestones to fire a one-shot toast is a
@@ -288,19 +268,24 @@ export function useConversation({
     const previous = seenMilestonesRef.current
     const newlyReached = [...MILESTONE_CELEBRATIONS]
       .reverse()
-      .find((m) => milestones[m.key] && !previous[m.key])
+      .find((key) => milestones[key] && !previous[key])
 
     seenMilestonesRef.current = { ...milestones }
 
     if (newlyReached) {
+      const copy = t.roleplay.celebrations
       celebrationIdRef.current += 1
       setCelebration({
         id: celebrationIdRef.current,
-        title: newlyReached.title,
-        message: newlyReached.message(scenario?.characterName || 'They'),
+        title: copy[newlyReached].title,
+        message: copy[newlyReached].message(
+          scenario?.characterName || copy.characterFallback,
+        ),
       })
     }
-  }, [conversation?.milestonesAchieved, scenario?.characterName])
+    // `t` only changes with the language, and a re-run with no newly reached
+    // milestone does nothing.
+  }, [conversation?.milestonesAchieved, scenario?.characterName, t])
 
   // --- Actions -----------------------------------------------------------
   /**
@@ -335,18 +320,13 @@ export function useConversation({
         return true
       } catch (err) {
         setPending(null)
-        setError(
-          userFacingMessage(
-            err,
-            'Something went wrong sending your message. Your words are still below, give it another try.',
-          ),
-        )
+        setError(userFacingMessage(err, t.roleplay.errors.sendFailed, t.errors))
         return false
       } finally {
         setIsLoading(false)
       }
     },
-    [conversationId, isLoading, submitTurn],
+    [conversationId, isLoading, submitTurn, t],
   )
 
   // Guards completeScenario against double clicks; the server is idempotent
@@ -378,59 +358,61 @@ export function useConversation({
       })
     } catch (err) {
       setError(
-        userFacingMessage(err, 'We could not save your results. Please try again.'),
+        userFacingMessage(err, t.roleplay.errors.completeFailed, t.errors),
       )
     } finally {
       setIsCompleting(false)
     }
-  }, [conversationId, isCompleting, dailyChallengeId, completeConversation])
+  }, [conversationId, isCompleting, dailyChallengeId, completeConversation, t])
 
   // `focus` carries the takeaway from the results screen into the retry, so
   // the next attempt opens with the one thing worth working on.
-  const startNewConversation = useCallback(async (focus?: NVCComponent) => {
-    if (!currentUser || !scenario) return
+  const startNewConversation = useCallback(
+    async (focus?: NVCComponent) => {
+      if (!currentUser || !scenario) return
 
-    try {
-      if (conversationId) {
-        await abandonConversation({
-          conversationId: conversationId as Id<'conversations'>,
+      try {
+        if (conversationId) {
+          await abandonConversation({
+            conversationId: conversationId as Id<'conversations'>,
+          })
+        }
+
+        const newConversationId = await createConversation({
+          scenarioId: scenarioId as Id<'scenarios'>,
+          locale,
         })
+
+        // Resetting these here keeps the results screen from flashing before the
+        // route swaps to the new conversation id.
+        setJustCompleted(null)
+        setError(null)
+        seenMilestonesRef.current = null
+
+        // Keep the daily challenge attached so a retry can still credit it
+        // (completion of an already-credited challenge is a no-op server-side).
+        navigate({
+          to: `/practice/${scenarioId}/conversation/${newConversationId}`,
+          search: { view: undefined, dailyChallengeId, focus },
+        })
+      } catch (err) {
+        setError(
+          userFacingMessage(err, t.roleplay.errors.startFailed, t.errors),
+        )
       }
-
-      const newConversationId = await createConversation({
-        scenarioId: scenarioId as Id<'scenarios'>,
-      })
-
-      // Resetting these here keeps the results screen from flashing before the
-      // route swaps to the new conversation id.
-      setJustCompleted(null)
-      setError(null)
-      seenMilestonesRef.current = null
-
-      // Keep the daily challenge attached so a retry can still credit it
-      // (completion of an already-credited challenge is a no-op server-side).
-      navigate({
-        to: `/practice/${scenarioId}/conversation/${newConversationId}`,
-        search: { view: undefined, dailyChallengeId, focus },
-      })
-    } catch (err) {
-      setError(
-        userFacingMessage(
-          err,
-          'We could not start a new conversation. Please try again.',
-        ),
-      )
-    }
-  }, [
-    currentUser,
-    scenario,
-    conversationId,
-    scenarioId,
-    dailyChallengeId,
-    abandonConversation,
-    createConversation,
-    navigate,
-  ])
+    },
+    [
+      currentUser,
+      scenario,
+      conversationId,
+      scenarioId,
+      dailyChallengeId,
+      abandonConversation,
+      createConversation,
+      navigate,
+      t,
+    ],
+  )
 
   /**
    * Take back the last turn. Resolves to the words that were taken back, so
@@ -449,10 +431,10 @@ export function useConversation({
       // Rendered messages follow the conversation query, so nothing to set.
       return lastUserMessage?.content ?? null
     } catch (err) {
-      setError(userFacingMessage(err, 'We could not rewind. Please try again.'))
+      setError(userFacingMessage(err, t.roleplay.errors.rewindFailed, t.errors))
       return null
     }
-  }, [conversationId, rewindMessages, serverMessages])
+  }, [conversationId, rewindMessages, serverMessages, t])
 
   const goToPractice = useCallback(() => {
     navigate({ to: '/practice' })

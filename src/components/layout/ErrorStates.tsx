@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
+import { useT } from '~/i18n/useT'
 
 function ErrorShell({
   message,
@@ -9,6 +10,7 @@ function ErrorShell({
   message: string
   children?: React.ReactNode
 }) {
+  const t = useT()
   return (
     <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-giraffe-100 to-giraffe-50 px-4">
       <div className="flex flex-col items-center gap-8 max-w-md">
@@ -20,7 +22,7 @@ function ErrorShell({
 
         <img
           src="/giraff.png"
-          alt="Your compassionate communication guide"
+          alt={t.common.giraffeAlt}
           className="h-56 w-auto object-contain"
         />
 
@@ -37,18 +39,19 @@ const secondaryLinkClasses =
   'inline-flex items-center justify-center rounded-lg px-6 py-3 text-lg border-2 border-giraffe-400 text-brown-700 hover:bg-giraffe-50 transition duration-200 focus:ring-2 focus:ring-giraffe-300 focus:ring-offset-2'
 
 export function RouteErrorPage({ error, reset }: ErrorComponentProps) {
+  const t = useT()
   // The message and stack stay in the console for debugging and never reach
   // the page, where they would expose internals and read as a hard crash.
   console.error('Route error', error)
 
   return (
-    <ErrorShell message="Something went wrong on our side. Nothing you did caused this, and your progress is safe.">
+    <ErrorShell message={t.layout.errors.routeError}>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <button type="button" onClick={reset} className={homeLinkClasses}>
-          Try again
+          {t.layout.errors.tryAgain}
         </button>
         <Link to="/" className={secondaryLinkClasses}>
-          Back to start
+          {t.layout.errors.backToStart}
         </Link>
       </div>
     </ErrorShell>
@@ -56,10 +59,11 @@ export function RouteErrorPage({ error, reset }: ErrorComponentProps) {
 }
 
 export function NotFoundPage() {
+  const t = useT()
   return (
-    <ErrorShell message="We could not find that page. It may have moved, or the link may be incomplete.">
+    <ErrorShell message={t.layout.errors.notFound}>
       <Link to="/" className={homeLinkClasses}>
-        Back to start
+        {t.layout.errors.backToStart}
       </Link>
     </ErrorShell>
   )

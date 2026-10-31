@@ -4,25 +4,29 @@ import { useAuthActions } from '@convex-dev/auth/react'
 import { useConvexAuth, useQuery } from 'convex/react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { api } from '../../../convex/_generated/api'
+import type { Messages } from '~/i18n/messages'
+import { LanguagePicker } from '~/components/ui/LanguagePicker'
+import { useT } from '~/i18n/useT'
 
 interface NavLink {
   to: string
-  label: string
+  labelKey: keyof Messages['nav']['links']
   icon: string
   /** Hidden from signed-out visitors, who would only hit a redirect. */
   requiresAuth?: boolean
 }
 
 const navLinks: Array<NavLink> = [
-  { to: '/', label: 'Home', icon: 'H' },
-  { to: '/learn', label: 'Lessons', icon: 'L' },
-  { to: '/practice', label: 'Practice', icon: 'P', requiresAuth: true },
-  { to: '/challenges/daily', label: 'Daily', icon: 'D', requiresAuth: true },
-  { to: '/feelings', label: 'Feelings', icon: 'F', requiresAuth: true },
-  { to: '/profile', label: 'Profile', icon: 'U', requiresAuth: true },
+  { to: '/', labelKey: 'home', icon: 'H' },
+  { to: '/learn', labelKey: 'lessons', icon: 'L' },
+  { to: '/practice', labelKey: 'practice', icon: 'P', requiresAuth: true },
+  { to: '/challenges/daily', labelKey: 'daily', icon: 'D', requiresAuth: true },
+  { to: '/feelings', labelKey: 'feelings', icon: 'F', requiresAuth: true },
+  { to: '/profile', labelKey: 'profile', icon: 'U', requiresAuth: true },
 ]
 
 export function FloatingNav() {
+  const t = useT()
   const location = useLocation()
   const { isAuthenticated } = useConvexAuth()
   const { signOut } = useAuthActions()
@@ -66,7 +70,7 @@ export function FloatingNav() {
                 }
               `}
             >
-              {link.label}
+              {t.nav.links[link.labelKey]}
             </Link>
           ))}
         </div>
@@ -76,7 +80,7 @@ export function FloatingNav() {
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="flex flex-col gap-1.5 p-2 hover:bg-giraffe-50 rounded-full transition-colors"
-            aria-label="Toggle menu"
+            aria-label={t.nav.toggleMenu}
             aria-expanded={isMenuOpen}
           >
             <span
@@ -109,7 +113,7 @@ export function FloatingNav() {
                       }
                     `}
                   >
-                    {link.label}
+                    {t.nav.links[link.labelKey]}
                   </Link>
                 ))}
               </div>
@@ -132,7 +136,7 @@ export function FloatingNav() {
             <DropdownMenu.Trigger asChild>
               <button
                 className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-giraffe-50 transition-colors ml-2 flex-shrink-0"
-                aria-label="User menu"
+                aria-label={t.nav.userMenu}
               >
                 {/* Avatar */}
                 <div className="w-7 h-7 rounded-full bg-giraffe-100 flex items-center justify-center text-xs font-bold text-brown-700 flex-shrink-0">
@@ -142,10 +146,10 @@ export function FloatingNav() {
                 {/* User Info - Hidden on mobile */}
                 <div className="hidden sm:flex flex-col items-start">
                   <span className="text-xs font-semibold text-brown-700 leading-tight">
-                    {user.name || 'Learner'}
+                    {user.name || t.nav.learnerFallbackName}
                   </span>
                   <span className="text-xs text-brown-400 leading-tight">
-                    Level {profile?.level || 1}
+                    {t.nav.level(profile?.level || 1)}
                   </span>
                 </div>
               </button>
@@ -160,7 +164,7 @@ export function FloatingNav() {
                 {/* User Info */}
                 <div className="px-4 py-3 border-b border-giraffe-100">
                   <p className="text-sm font-medium text-brown-800">
-                    {user.name || 'Learner'}
+                    {user.name || t.nav.learnerFallbackName}
                   </p>
                   <p className="text-xs text-brown-600">{user.email}</p>
                 </div>
@@ -168,24 +172,33 @@ export function FloatingNav() {
                 {/* Stats */}
                 <div className="px-4 py-3 border-b border-giraffe-100 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-brown-700 font-medium">Level</span>
+                    <span className="text-brown-700 font-medium">
+                      {t.nav.stats.level}
+                    </span>
                     <span className="text-giraffe-600 font-bold">
                       {profile?.level || 1}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-brown-700 font-medium">Points</span>
+                    <span className="text-brown-700 font-medium">
+                      {t.nav.stats.points}
+                    </span>
                     <span className="text-giraffe-600 font-bold">
                       {profile?.totalPoints || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-brown-700 font-medium">Streak</span>
+                    <span className="text-brown-700 font-medium">
+                      {t.nav.stats.streak}
+                    </span>
                     <span className="text-giraffe-600 font-bold">
                       {profile?.currentStreak || 0}
                     </span>
                   </div>
                 </div>
+
+                {/* Language, shown once there is more than one */}
+                <LanguagePicker className="px-4 py-3 border-b border-giraffe-100" />
 
                 {/* Admin panel, for the few accounts allowed to open it */}
                 {isAdmin && (
@@ -195,7 +208,7 @@ export function FloatingNav() {
                       search={{ tab: undefined, days: undefined }}
                       className="block w-full px-4 py-2 text-left text-sm text-brown-700 hover:bg-giraffe-50 active:bg-giraffe-100 transition-colors font-medium cursor-pointer"
                     >
-                      Admin
+                      {t.nav.admin}
                     </Link>
                   </DropdownMenu.Item>
                 )}
@@ -209,7 +222,7 @@ export function FloatingNav() {
                     className="w-full px-4 py-2 text-left text-sm text-brown-700 hover:bg-giraffe-50 active:bg-giraffe-100 transition-colors font-medium border-t border-giraffe-100 cursor-pointer"
                     type="button"
                   >
-                    Log out
+                    {t.nav.logOut}
                   </button>
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
@@ -220,7 +233,7 @@ export function FloatingNav() {
             to="/auth"
             className="px-3 py-2 ml-2 rounded-full text-sm font-semibold bg-giraffe-400 text-brown-800 hover:bg-giraffe-500 transition-colors whitespace-nowrap shrink-0"
           >
-            Sign in
+            {t.nav.signIn}
           </Link>
         )}
       </nav>

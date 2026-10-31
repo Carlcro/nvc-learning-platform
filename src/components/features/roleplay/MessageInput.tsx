@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '~/components/ui/Button'
+import { useT } from '~/i18n/useT'
 
 interface MessageInputProps {
   /** Returns whether the message was sent; the input only clears on success. */
@@ -28,9 +29,11 @@ export function MessageInput({
   onSubmit,
   isLoading = false,
   disabled = false,
-  placeholder = 'What is the next true thing you want to say?',
+  placeholder,
   restoredDraft = null,
 }: MessageInputProps) {
+  const t = useT()
+  const copy = t.roleplay.input
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,12 +54,12 @@ export function MessageInput({
   const submitMessage = async () => {
     // Validation
     if (!value.trim()) {
-      setError('Please enter a message')
+      setError(copy.emptyError)
       return
     }
 
     if (value.length > MAX_MESSAGE_LENGTH) {
-      setError(`Message too long (max ${MAX_MESSAGE_LENGTH} characters)`)
+      setError(copy.tooLongError(MAX_MESSAGE_LENGTH))
       return
     }
 
@@ -71,7 +74,7 @@ export function MessageInput({
         setValue('')
       }
     } catch (err) {
-      setError('Failed to send message. Please try again.')
+      setError(copy.sendFailed)
       console.error('Error submitting message:', err)
     } finally {
       setIsSubmitting(false)
@@ -107,14 +110,14 @@ export function MessageInput({
       <div className="relative">
         <textarea
           ref={textareaRef}
-          aria-label="Your message"
+          aria-label={copy.ariaLabel}
           value={value}
           onChange={(e) => {
             setValue(e.target.value)
             setError(null)
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={placeholder ?? copy.placeholder}
           disabled={disabled || isLoading || isSubmitting}
           maxLength={MAX_MESSAGE_LENGTH}
           className={`
@@ -150,14 +153,12 @@ export function MessageInput({
           isLoading={isSubmitting}
           className="text-nowrap"
         >
-          Send Response
+          {copy.send}
         </Button>
 
         {/* Info Text */}
         {characterCount > 0 && (
-          <div className="text-xs text-brown-600 w-full">
-            One piece at a time is plenty. Say the next true thing.
-          </div>
+          <div className="text-xs text-brown-600 w-full">{copy.hint}</div>
         )}
       </div>
     </form>

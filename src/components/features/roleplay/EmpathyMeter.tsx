@@ -5,6 +5,10 @@
  * Uses color gradient from red (low) -> yellow (medium) -> green (high)
  */
 
+import { useT } from '~/i18n/useT'
+
+type ScoreBand = 'excellent' | 'good' | 'partial' | 'needsPractice'
+
 interface EmpathyMeterProps {
   score: number // 0-100
   showLabel?: boolean
@@ -19,18 +23,12 @@ function getScoreColor(score: number): string {
   return 'from-empathy-low to-empathy-low'
 }
 
-function getScoreLabel(score: number): string {
-  if (score >= 90) return 'Excellent'
-  if (score >= 70) return 'Good'
-  if (score >= 50) return 'Partial'
-  return 'Needs Practice'
-}
-
-function getScoreDescription(score: number): string {
-  if (score >= 90) return 'Pure giraffe language'
-  if (score >= 70) return 'Minor improvements'
-  if (score >= 50) return 'Mix of giraffe & jackal'
-  return 'Mostly jackal language'
+// The band picks both the label and the description shown under the meter.
+function getScoreBand(score: number): ScoreBand {
+  if (score >= 90) return 'excellent'
+  if (score >= 70) return 'good'
+  if (score >= 50) return 'partial'
+  return 'needsPractice'
 }
 
 export function EmpathyMeter({
@@ -38,6 +36,8 @@ export function EmpathyMeter({
   showLabel = true,
   size = 'md',
 }: EmpathyMeterProps) {
+  const t = useT()
+  const copy = t.roleplay.empathyMeter
   const sizeClasses = {
     sm: 'h-2',
     md: 'h-3',
@@ -51,13 +51,14 @@ export function EmpathyMeter({
   }
 
   const clampedScore = Math.max(0, Math.min(100, Math.round(score)))
+  const band = getScoreBand(clampedScore)
 
   return (
     <div className="space-y-2">
       {/* Score Label */}
       {showLabel && (
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-brown-800">Empathy Meter</h3>
+          <h3 className="font-semibold text-brown-800">{copy.title}</h3>
           <div className="text-right">
             <div className={`font-bold text-brown-900 ${textSizes[size]}`}>
               {clampedScore}/100
@@ -65,7 +66,7 @@ export function EmpathyMeter({
             <div
               className={`text-giraffe-700 font-semibold ${textSizes[size]}`}
             >
-              {getScoreLabel(clampedScore)}
+              {copy.label[band]}
             </div>
           </div>
         </div>
@@ -89,9 +90,7 @@ export function EmpathyMeter({
 
       {/* Description */}
       {showLabel && (
-        <p className="text-xs text-brown-600">
-          {getScoreDescription(clampedScore)}
-        </p>
+        <p className="text-xs text-brown-600">{copy.description[band]}</p>
       )}
     </div>
   )

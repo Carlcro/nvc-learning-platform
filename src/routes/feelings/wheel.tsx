@@ -3,7 +3,12 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
+import type { Messages } from '~/i18n/messages'
 import { pageMeta } from '~/lib/seo'
+import { getMessages } from '~/i18n/messages'
+import { useLocale, useT } from '~/i18n/useT'
+import { upperFirst } from '~/lib/text'
+import { useFeelingLabels } from '~/hooks/useFeelingLabels'
 import { userFacingMessage } from '~/lib/errorMessage'
 import { Button } from '~/components/ui/Button'
 import { GiraffeLoader } from '~/components/ui/GiraffeLoader'
@@ -20,23 +25,26 @@ import {
 } from '~/components/features/feelings/feelingScale'
 
 export const Route = createFileRoute('/feelings/wheel')({
-  head: () => ({
-    meta: pageMeta({
-      title: 'Browse feelings',
-      description:
-        'Explore feelings by family, with definitions, examples and related words.',
-    }),
-  }),
+  head: ({ match }) => {
+    const t = getMessages(match.context.locale)
+    return { meta: pageMeta(t.feelings.wheel.meta) }
+  },
   component: BrowseFeelings,
 })
 
 type Category = 'all' | 'pleasant' | 'unpleasant'
 
-const CATEGORY_OPTIONS: ReadonlyArray<{ value: Category; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'pleasant', label: 'Pleasant' },
-  { value: 'unpleasant', label: 'Unpleasant' },
+const CATEGORY_OPTIONS: ReadonlyArray<Category> = [
+  'all',
+  'pleasant',
+  'unpleasant',
 ]
+
+function categoryLabel(category: Category, t: Messages): string {
+  return category === 'all'
+    ? t.feelings.wheel.categoryAll
+    : t.feelings.scale.category[category]
+}
 
 function prefersReducedMotion(): boolean {
   return (
@@ -46,6 +54,8 @@ function prefersReducedMotion(): boolean {
 }
 
 function BrowseFeelings() {
+  const t = useT()
+  const copy = t.feelings.wheel
   const currentUser = useQuery(api.users.getCurrentUser)
   const [selectedFamily, setSelectedFamily] = useState('joyful')
   const [showCategory, setShowCategory] = useState<Category>('all')
@@ -57,7 +67,9 @@ function BrowseFeelings() {
 
   // Queries
   const families = useQuery(api.feelings.getFamilies)
-  const allFeelings = useQuery(api.feelings.getAll)
+  const locale = useLocale()
+  const allFeelings = useQuery(api.feelings.getAll, { locale })
+  const labelOf = useFeelingLabels()
   const userProgress = useQuery(
     api.feelingsProgress.getUserProgress,
     currentUser ? {} : 'skip',
@@ -79,7 +91,8 @@ function BrowseFeelings() {
       const categoryMatch =
         showCategory === 'all' || f.category === showCategory
       const searchMatch = term
-        ? f.word.toLowerCase().includes(term) ||
+        ? f.label.toLowerCase().includes(term) ||
+          f.word.toLowerCase().includes(term) ||
           f.definition.toLowerCase().includes(term)
         : true
       return familyMatch && categoryMatch && searchMatch
@@ -124,11 +137,9 @@ function BrowseFeelings() {
     setIsSaving(true)
     try {
       await saveFeelingMutation({ feelingWord: selectedFeeling })
-      setLibraryMessage('Saved to your library.')
+      setLibraryMessage(copy.saved)
     } catch (err) {
-      setLibraryMessage(
-        userFacingMessage(err, 'We could not save this word just now.'),
-      )
+      setLibraryMessage(userFacingMessage(err, copy.saveError, t.errors))
     } finally {
       setIsSaving(false)
     }
@@ -138,32 +149,24 @@ function BrowseFeelings() {
     if (!selectedFeeling || !currentUser) return
     try {
       await removeFeelingMutation({ feelingWord: selectedFeeling })
-      setLibraryMessage('Removed from your library.')
+      setLibraryMessage(copy.removed)
     } catch (err) {
-      setLibraryMessage(
-        userFacingMessage(err, 'We could not remove this word just now.'),
-      )
+      setLibraryMessage(userFacingMessage(err, copy.removeError, t.errors))
     }
   }
 
   if (families === undefined || allFeelings === undefined) {
-    return <GiraffeLoader message="Gathering feelings..." />
+    return <GiraffeLoader message={copy.loading} />
   }
 
   const gridHeading = term
-    ? `Feelings matching “${searchTerm.trim()}”`
-    : `${selectedFamily.charAt(0).toUpperCase()}${selectedFamily.slice(1)} feelings`
+    ? copy.gridHeadingSearch(searchTerm.trim())
+    : copy.gridHeadingFamily(
+        `${labelOf(selectedFamily).charAt(0).toUpperCase()}${labelOf(selectedFamily).slice(1)}`,
+      )
 
   return (
-    <FeelingsPage
-      title="Browse feelings"
-      intro={
-        <p>
-          Feelings grouped into families. Choose any word to see what it means,
-          how it sounds in a sentence, and the words close to it.
-        </p>
-      }
-    >
+    <FeelingsPage title={copy.title} intro={<p>{copy.intro}</p>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Filters */}
         <div className="lg:col-span-1">
@@ -173,13 +176,13 @@ function BrowseFeelings() {
                 htmlFor="wheel-search"
                 className="block text-sm font-semibold text-brown-700 mb-2"
               >
-                Search all feelings
+                {copy.searchLabel}
               </label>
               <input
                 id="wheel-search"
                 type="search"
                 autoComplete="off"
-                placeholder="For example, calm"
+                placeholder={copy.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={fieldClass}
@@ -191,7 +194,7 @@ function BrowseFeelings() {
                 id="category-heading"
                 className="text-sm font-semibold text-brown-700 mb-2"
               >
-                Show
+                {copy.showHeading}
               </h2>
               <div
                 role="group"
@@ -200,11 +203,11 @@ function BrowseFeelings() {
               >
                 {CATEGORY_OPTIONS.map((option) => (
                   <OptionButton
-                    key={option.value}
-                    pressed={showCategory === option.value}
-                    onClick={() => setShowCategory(option.value)}
+                    key={option}
+                    pressed={showCategory === option}
+                    onClick={() => setShowCategory(option)}
                   >
-                    {option.label}
+                    {categoryLabel(option, t)}
                   </OptionButton>
                 ))}
               </div>
@@ -215,7 +218,7 @@ function BrowseFeelings() {
                 id="family-heading"
                 className="text-sm font-semibold text-brown-700 mb-2"
               >
-                Families
+                {copy.familiesHeading}
               </h2>
               <div
                 role="group"
@@ -230,18 +233,18 @@ function BrowseFeelings() {
                       setSelectedFamily(family)
                       setSearchTerm('')
                     }}
-                    className="capitalize"
+                   
                   >
-                    {family}
+                    {upperFirst(labelOf(family))}
                   </OptionButton>
                 ))}
               </div>
             </div>
 
             <p className="text-sm text-brown-700 text-pretty">
-              Want to see one feeling grow stronger?{' '}
+              {copy.intensityPrompt}
               <Link to="/feelings/intensity" className={textLinkClass}>
-                Explore intensity
+                {copy.intensityLink}
               </Link>
             </p>
           </div>
@@ -270,11 +273,11 @@ function BrowseFeelings() {
                         className={`h-3 w-3 shrink-0 rounded-full ${CATEGORY_SWATCH[feeling.category]}`}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block font-semibold capitalize text-brown-900">
-                          {feeling.word}
+                        <span className="block font-semibold text-brown-900">
+                          {upperFirst(feeling.label)}
                         </span>
                         <span className="block text-sm font-normal text-brown-700">
-                          {describeFeeling(feeling)}
+                          {describeFeeling(feeling, t.feelings.scale)}
                         </span>
                       </span>
                     </OptionButton>
@@ -282,10 +285,7 @@ function BrowseFeelings() {
                 ))}
               </ul>
             ) : (
-              <p className="text-brown-700 py-4">
-                No feelings match these choices. Try another family, or show
-                all feelings.
-              </p>
+              <p className="text-brown-700 py-4">{copy.noMatches}</p>
             )}
           </section>
 
@@ -300,23 +300,25 @@ function BrowseFeelings() {
                     id="detail-heading"
                     ref={detailHeadingRef}
                     tabIndex={-1}
-                    className="text-2xl sm:text-3xl font-bold text-brown-800 capitalize scroll-mt-28 focus:outline-none"
+                    className="text-2xl sm:text-3xl font-bold text-brown-800 scroll-mt-28 focus:outline-none"
                   >
-                    {selectedFeelingDetail.word}
+                    {upperFirst(selectedFeelingDetail.label)}
                   </h2>
                   <p className="mt-1 flex items-center gap-2 text-sm text-brown-700">
                     <span
                       aria-hidden="true"
                       className={`h-3 w-3 rounded-full ${CATEGORY_SWATCH[selectedFeelingDetail.category]}`}
                     />
-                    {describeFeeling(selectedFeelingDetail)}, in the{' '}
-                    {selectedFeelingDetail.family} family
+                    {copy.detail(
+                      describeFeeling(selectedFeelingDetail, t.feelings.scale),
+                      selectedFeelingDetail.familyLabel,
+                    )}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedFeeling(null)}
-                  aria-label={`Close ${selectedFeelingDetail.word}`}
+                  aria-label={copy.close(selectedFeelingDetail.label)}
                   className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-brown-700 hover:text-brown-900 hover:bg-giraffe-50 cursor-pointer ${focusRing}`}
                 >
                   <X aria-hidden="true" className="h-5 w-5" />
@@ -326,7 +328,7 @@ function BrowseFeelings() {
               <div className="space-y-6 max-w-prose">
                 <div>
                   <h3 className="font-semibold text-brown-800 mb-1">
-                    What it means
+                    {copy.meaningHeading}
                   </h3>
                   <p className="text-brown-700 text-pretty">
                     {selectedFeelingDetail.definition}
@@ -336,7 +338,7 @@ function BrowseFeelings() {
                 {selectedFeelingDetail.examples.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-brown-800 mb-1">
-                      In a sentence
+                      {copy.sentenceHeading}
                     </h3>
                     <ul className="space-y-2">
                       {selectedFeelingDetail.examples.map((example) => (
@@ -358,7 +360,7 @@ function BrowseFeelings() {
                 {selectedFeelingDetail.synonyms.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-brown-800 mb-1">
-                      Similar words
+                      {copy.similarHeading}
                     </h3>
                     <p className="text-brown-700">
                       {selectedFeelingDetail.synonyms.join(', ')}
@@ -369,7 +371,7 @@ function BrowseFeelings() {
                 {selectedFeelingDetail.relatedFeelings.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-brown-800 mb-1">
-                      Related feelings
+                      {copy.relatedHeading}
                     </h3>
                     <p className="text-brown-700">
                       {selectedFeelingDetail.relatedFeelings.join(', ')}
@@ -386,7 +388,7 @@ function BrowseFeelings() {
                       onClick={() => void handleRemove()}
                       className={`self-start min-h-11 cursor-pointer ${textLinkClass}`}
                     >
-                      Remove from your library
+                      {copy.remove}
                     </button>
                   ) : (
                     <Button
@@ -395,23 +397,21 @@ function BrowseFeelings() {
                       isLoading={isSaving}
                       className={`min-h-11 px-6 ${focusRing}`}
                     >
-                      Save to your library
+                      {copy.save}
                     </Button>
                   )}
                   <p
                     role="status"
                     className="text-sm font-medium text-brown-800"
                   >
-                    {libraryMessage ??
-                      (isSaved ? 'This word is in your library.' : '')}
+                    {libraryMessage ?? (isSaved ? copy.inLibrary : '')}
                   </p>
                 </div>
               )}
             </section>
           ) : (
             <p className="rounded-lg border-2 border-giraffe-200 bg-giraffe-50 px-5 py-6 text-brown-700 text-pretty">
-              Choose a feeling to see its meaning, an example, and related
-              words.
+              {copy.choosePrompt}
             </p>
           )}
         </div>

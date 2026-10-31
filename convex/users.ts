@@ -1,6 +1,8 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
+import { v } from 'convex/values'
 import { userError } from './lib/errors'
-import { mutation, query } from './_generated/server'
+import { localeValidator } from './lib/locale'
+import { internalQuery, mutation, query } from './_generated/server'
 
 /**
  * Get the current authenticated user
@@ -62,7 +64,7 @@ export const initializeUserProfile = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx)
     if (userId === null) {
-      userError('Not authenticated')
+      userError('notAuthenticated')
     }
 
     const existing = await ctx.db
@@ -104,3 +106,36 @@ export const initializeUserProfile = mutation({
   },
 })
 
+
+/**
+ * Save the signed-in person's language, so it follows them to other devices
+ * and so conversations they start are held in it.
+ */
+export const setLocale = mutation({
+  args: { locale: localeValidator },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      userError('notAuthenticated')
+    }
+    await ctx.db.patch(userId, { preferredLocale: args.locale })
+    return null
+  },
+})
+
+/**
+ * Internal: the language to write to an email address in, for messages sent
+ * before anyone is signed in (the password reset code). One address can
+ * belong to more than one account, so the first saved preference wins.
+ */
+export const localeForEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const accounts = await ctx.db
+      .query('users')
+      .withIndex('email', (q) => q.eq('email', args.email))
+      .take(5)
+    return accounts.find((a) => a.preferredLocale)?.preferredLocale ?? null
+  },
+})

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { SpeechBubble } from './SpeechBubble'
+import { useT } from '~/i18n/useT'
 
 /** How long a wait has to last before the giraffe appears at all. */
 const SHOW_AFTER_MS = 400
@@ -22,9 +23,8 @@ interface GiraffeLoaderProps {
  * prefers-reduced-motion via the animation utilities in app.css. The giraffe
  * itself never moves.
  */
-export function GiraffeLoader({
-  message = 'Getting things ready for you...',
-}: GiraffeLoaderProps) {
+export function GiraffeLoader({ message }: GiraffeLoaderProps) {
+  const t = useT()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function GiraffeLoader({
       >
         <SpeechBubble className="max-w-xs">
           <p className="text-center text-brown-800 font-medium text-pretty">
-            {message}
+            {message ?? t.layout.loader.default}
           </p>
           <div
             className="mt-3 flex justify-center gap-1.5"

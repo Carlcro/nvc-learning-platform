@@ -1,6 +1,8 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { userError } from "./lib/errors";
+import { DEFAULT_LOCALE, localeValidator } from "./lib/locale";
+import { localizeScenario } from "./lib/scenarioText";
 import { internalMutation, mutation, query } from "./_generated/server";
 
 /**
@@ -406,7 +408,12 @@ You're tired of feeling like the "lenient" parent while Jordan gets the credit f
  * so one person's rehearsal can never be opened by anyone else.
  */
 export const getById = query({
-  args: { scenarioId: v.id("scenarios") },
+  args: {
+    scenarioId: v.id("scenarios"),
+    // The language to read it in. A scenario without that language comes
+    // back in its own; `contentLocale` on the result says which.
+    locale: v.optional(localeValidator),
+  },
   handler: async (ctx, args) => {
     const scenario = await ctx.db.get(args.scenarioId);
     if (!scenario) return null;
@@ -418,7 +425,7 @@ export const getById = query({
       }
     }
 
-    return scenario;
+    return localizeScenario(scenario, args.locale ?? DEFAULT_LOCALE);
   },
 });
 
@@ -427,16 +434,18 @@ export const getById = query({
  * Returns an empty array when signed out.
  */
 export const listMine = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { locale: v.optional(localeValidator) },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) return [];
 
-    return await ctx.db
+    const scenarios = await ctx.db
       .query("scenarios")
       .withIndex("by_owner", (q) => q.eq("ownerId", userId))
       .order("desc")
       .collect();
+    const locale = args.locale ?? DEFAULT_LOCALE;
+    return scenarios.map((s) => localizeScenario(s, locale));
   },
 });
 
@@ -445,8 +454,8 @@ export const listMine = query({
  * Filtering by unlock requirements must be done in the component
  */
 export const listByOrder = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { locale: v.optional(localeValidator) },
+  handler: async (ctx, args) => {
     // User-created scenarios use orderIndex -1 to stay out of the linear
     // ladder; the visibility filter is a second guard so a private scenario
     // can never surface in another user's hub.
@@ -455,7 +464,10 @@ export const listByOrder = query({
       .withIndex("by_order", (q) => q.gt("orderIndex", -1))
       .order("asc")
       .collect();
-    return scenarios.filter((s) => s.visibility !== "private");
+    const locale = args.locale ?? DEFAULT_LOCALE;
+    return scenarios
+      .filter((s) => s.visibility !== "private")
+      .map((s) => localizeScenario(s, locale));
   },
 });
 
@@ -538,11 +550,13 @@ export const createCustom = mutation({
     focusArea: v.string(),
     estimatedDuration: v.number(),
     tags: v.array(v.string()),
+    // The language the scenario was written in (the creator's language).
+    locale: v.optional(localeValidator),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      userError("Not authenticated");
+      userError('notAuthenticated');
     }
 
     const now = Date.now();
@@ -558,6 +572,7 @@ export const createCustom = mutation({
 
     const scenarioId = await ctx.db.insert("scenarios", {
       ...args,
+      locale: args.locale ?? DEFAULT_LOCALE,
       characterInitialMood: mood,
       learningObjectives: objectives.length > 0 ? objectives : allowedObjectives,
       estimatedDuration: Math.max(
@@ -592,7 +607,7 @@ export const deleteCustom = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
-      userError("Not authenticated");
+      userError('notAuthenticated');
     }
 
     const scenario = await ctx.db.get(args.scenarioId);
@@ -601,7 +616,7 @@ export const deleteCustom = mutation({
     }
 
     if (scenario.ownerId !== userId) {
-      userError("You can only delete your own scenarios");
+      userError('notYourScenario');
     }
 
     // Remove the conversations and progress tied to this scenario so nothing
