@@ -511,7 +511,7 @@ export function ScenarioResults({
                   {summary.currentStreak}
                 </p>
                 <p className="text-xs text-brown-600">
-                  {copy.earned.streakLabel}
+                  {copy.earned.streakLabel(summary.currentStreak)}
                 </p>
               </div>
             </div>

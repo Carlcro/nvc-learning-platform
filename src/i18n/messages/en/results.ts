@@ -143,7 +143,7 @@ export const results = {
       pointsLabel: 'points',
       levelLabel: 'level',
       newLevelLabel: 'new level',
-      streakLabel: 'day streak',
+      streakLabel: (_days: number) => 'day streak',
       reachedLevel: (level: number) => `You reached Level ${level}. `,
       toNextLevel: (points: number, level: number) =>
         `${points} points to Level ${level}. `,

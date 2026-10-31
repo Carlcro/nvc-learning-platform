@@ -2,7 +2,7 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 import { userError } from './lib/errors'
 import { localeValidator } from './lib/locale'
-import { mutation, query } from './_generated/server'
+import { internalQuery, mutation, query } from './_generated/server'
 
 /**
  * Get the current authenticated user
@@ -121,5 +121,21 @@ export const setLocale = mutation({
     }
     await ctx.db.patch(userId, { preferredLocale: args.locale })
     return null
+  },
+})
+
+/**
+ * Internal: the language to write to an email address in, for messages sent
+ * before anyone is signed in (the password reset code). One address can
+ * belong to more than one account, so the first saved preference wins.
+ */
+export const localeForEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const accounts = await ctx.db
+      .query('users')
+      .withIndex('email', (q) => q.eq('email', args.email))
+      .take(5)
+    return accounts.find((a) => a.preferredLocale)?.preferredLocale ?? null
   },
 })

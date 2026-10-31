@@ -29,7 +29,8 @@ import type { SkillHint } from '~/hooks/useConversation'
 import type { NVCComponent } from '~/lib/conversationInsights'
 import type { Messages } from '~/i18n/messages'
 import { skillResource } from '~/lib/conversationInsights'
-import { useT } from '~/i18n/useT'
+import { useLocale, useT } from '~/i18n/useT'
+import { focusAreaLabel, objectiveLabel } from '~/i18n/focusAreas'
 
 export type { FeedbackData, NVCScore }
 
@@ -615,7 +616,9 @@ function FirstTurnGuide({
   retryFocus?: NVCComponent | null
 }) {
   const t = useT()
+  const locale = useLocale()
   const copy = t.roleplay.feedback.firstTurn
+  const focusLabel = focusArea ? focusAreaLabel(focusArea, locale) : null
   const focus = retryFocus ? skillResource(retryFocus, t.results.skills) : null
 
   return (
@@ -654,14 +657,14 @@ function FirstTurnGuide({
         </p>
       </div>
 
-      {(focusArea || learningObjectives.length > 0) && (
+      {(focusLabel || learningObjectives.length > 0) && (
         <div className="space-y-1.5">
           <p className="text-xs font-semibold text-brown-600">
             {copy.practices}
-            {focusArea && (
+            {focusLabel && (
               <span className="font-normal text-brown-500">
                 {' '}
-                ({focusArea.replace(/_/g, ' ')})
+                ({focusLabel})
               </span>
             )}
           </p>
@@ -674,7 +677,9 @@ function FirstTurnGuide({
                 <span aria-hidden="true" className="text-giraffe-700">
                   •
                 </span>
-                <span className="first-letter:uppercase">{objective}</span>
+                <span className="first-letter:uppercase">
+                  {objectiveLabel(objective, t.common.components)}
+                </span>
               </li>
             ))}
           </ul>

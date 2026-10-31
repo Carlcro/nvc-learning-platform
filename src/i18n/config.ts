@@ -1,11 +1,11 @@
 import type { Locale } from '../../convex/lib/locale'
 
 /**
- * The languages people can choose today. A language joins this list once its
- * roleplay is ready; until then the picker stays hidden (it only shows when
- * there is more than one choice) and everyone reads English.
+ * The languages people can choose. A language belongs here only once its
+ * interface, lessons, feelings and roleplay are all translated. The picker
+ * only shows when there is more than one choice.
  */
-export const SELECTABLE_LOCALES: ReadonlyArray<Locale> = ['en']
+export const SELECTABLE_LOCALES: ReadonlyArray<Locale> = ['en', 'fr', 'es', 'sv']
 
 /** Cookie that carries the chosen language, so the server renders in it. */
 export const LOCALE_COOKIE = 'locale'

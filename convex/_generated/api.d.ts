@@ -25,6 +25,7 @@ import type * as http from "../http.js";
 import type * as lessons from "../lessons.js";
 import type * as lib_adminStats from "../lib/adminStats.js";
 import type * as lib_contentText from "../lib/contentText.js";
+import type * as lib_emailCopy from "../lib/emailCopy.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_limits from "../lib/limits.js";
 import type * as lib_locale from "../lib/locale.js";
@@ -79,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   lessons: typeof lessons;
   "lib/adminStats": typeof lib_adminStats;
   "lib/contentText": typeof lib_contentText;
+  "lib/emailCopy": typeof lib_emailCopy;
   "lib/errors": typeof lib_errors;
   "lib/limits": typeof lib_limits;
   "lib/locale": typeof lib_locale;

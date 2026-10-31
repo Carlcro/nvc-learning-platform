@@ -11,6 +11,7 @@ import { ProtectedRoute } from '~/components/auth/ProtectedRoute'
 import { StarIcon } from '~/components/ui/Icons'
 import { getMessages } from '~/i18n/messages'
 import { useLocale, useT } from '~/i18n/useT'
+import { focusAreaLabel, objectiveLabel } from '~/i18n/focusAreas'
 
 export const Route = createFileRoute('/practice/$scenarioId/brief')({
   head: ({ match }) => {
@@ -265,24 +266,25 @@ function ScenarioBrief() {
                         <span className="flex-shrink-0 grid place-items-center w-6 h-6 rounded-full bg-giraffe-400 text-brown-800 text-xs font-bold">
                           {idx + 1}
                         </span>
-                        <span className="text-brown-700 text-sm capitalize">
-                          {objective}
+                        <span className="text-brown-700 text-sm">
+                          {objectiveLabel(objective, t.common.components)}
                         </span>
                       </li>
                     ),
                   )}
                 </ol>
 
-                {scenario.focusArea && (
-                  <p className="mt-3 text-sm text-brown-700">
-                    <span className="font-semibold text-brown-800">
-                      {copy.focus}{' '}
-                    </span>
-                    <span className="capitalize">
-                      {scenario.focusArea.replace(/_/g, ' ')}
-                    </span>
-                  </p>
-                )}
+                {scenario.focusArea &&
+                  focusAreaLabel(scenario.focusArea, locale) && (
+                    <p className="mt-3 text-sm text-brown-700">
+                      <span className="font-semibold text-brown-800">
+                        {copy.focus}{' '}
+                      </span>
+                      <span className="inline-block first-letter:uppercase">
+                        {focusAreaLabel(scenario.focusArea, locale)}
+                      </span>
+                    </p>
+                  )}
               </section>
             </div>
 

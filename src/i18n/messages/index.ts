@@ -1,4 +1,7 @@
 import { en } from './en'
+import { es } from './es'
+import { fr } from './fr'
+import { sv } from './sv'
 import type { Locale } from '../../../convex/lib/locale'
 
 /** The full dictionary shape, taken from English. */
@@ -22,10 +25,14 @@ type DeepPartial<T> = {
 }
 
 /**
- * Translations by language. A language appears here once its dictionary
- * exists; until then it reads entirely in English.
+ * Translations by language. Each is a complete dictionary, checked against
+ * the English shape; a language missing here would read entirely in English.
  */
-const TRANSLATIONS: Partial<Record<Locale, PartialMessages>> = {}
+export const TRANSLATIONS: Partial<Record<Locale, PartialMessages>> = {
+  fr,
+  es,
+  sv,
+}
 
 const cache = new Map<Locale, Messages>()
 
