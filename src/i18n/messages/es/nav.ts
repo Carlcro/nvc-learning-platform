@@ -18,6 +18,7 @@ export const nav: Messages['nav'] = {
     points: 'Puntos',
     streak: 'Racha',
   },
+  tour: 'Recorrido por la app',
   admin: 'Admin',
   logOut: 'Cerrar sesión',
   signIn: 'Iniciar sesión',

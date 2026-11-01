@@ -125,6 +125,51 @@ export const setLocale = mutation({
 })
 
 /**
+ * The welcome tour is for accounts made from this moment on. Older accounts
+ * already know their way around, so they are never sent through it.
+ */
+export const ONBOARDING_LAUNCHED_AT = Date.UTC(2026, 10, 1)
+
+/**
+ * Whether the signed-in person should see the welcome tour: a new account
+ * that has not finished or skipped it yet. Null when signed out.
+ */
+export const needsOnboarding = query({
+  args: {},
+  returns: v.union(v.boolean(), v.null()),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
+    const user = await ctx.db.get(userId)
+    if (!user) return null
+    return (
+      user.onboardingCompletedAt === undefined &&
+      user._creationTime >= ONBOARDING_LAUNCHED_AT
+    )
+  },
+})
+
+/**
+ * Mark the welcome tour as done (finished or skipped). Idempotent: the first
+ * time is the one that is kept.
+ */
+export const completeOnboarding = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
+      userError('notAuthenticated')
+    }
+    const user = await ctx.db.get(userId)
+    if (user && user.onboardingCompletedAt === undefined) {
+      await ctx.db.patch(userId, { onboardingCompletedAt: Date.now() })
+    }
+    return null
+  },
+})
+
+/**
  * Internal: the language to write to an email address in, for messages sent
  * before anyone is signed in (the password reset code). One address can
  * belong to more than one account, so the first saved preference wins.

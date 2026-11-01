@@ -24,6 +24,10 @@ export default defineSchema({
     // Absent until the person picks a language or first signs in, at which
     // point the language they were browsing in is saved.
     preferredLocale: v.optional(localeValidator),
+    // Set when the person finishes or skips the welcome tour. Absent on
+    // accounts that never saw it, including every account made before it
+    // existed (see ONBOARDING_LAUNCHED_AT in users.ts).
+    onboardingCompletedAt: v.optional(v.number()),
   })
     .index('email', ['email'])
     .index('phone', ['phone']),

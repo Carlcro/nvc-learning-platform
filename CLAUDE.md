@@ -282,6 +282,10 @@ A conversation with at least one user message counts as waiting. The hub (`conve
 
 **Levels**: thresholds are 0 / 300 / 700 / 1200 / 1800 / 2500 points, then +800 points per level after level 5.
 
+### The welcome tour
+
+A new account is sent once to `/welcome` (`OnboardingRedirect` in the root layout, driven by `users.needsOnboarding`): choose a language, a look at each part of the app, how a practice conversation works, and where to start. Finishing or skipping calls `users.completeOnboarding`, which sets `onboardingCompletedAt`. Accounts created before `ONBOARDING_LAUNCHED_AT` are never redirected. Anyone can replay it from "Tour of the app" in the user menu. Copy lives in the `onboarding` namespace; UI in `src/components/features/onboarding/`.
+
 ### The admin panel and cost tracking
 
 `/admin` shows how people use the app and what it costs to run: an overview (growth, activity, spend per day, spend by kind of call, how much of the daily allowance people use), practice (completion, how far along the arc people get, where they stop, which piece is hardest, scenario popularity), engagement (milestones, feature adoption, lessons, levels, achievements), and a sortable list of people with a detail page each. Queries live in `convex/admin.ts`, UI in `src/components/features/admin/` and `src/routes/admin/`.

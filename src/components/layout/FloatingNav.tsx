@@ -7,6 +7,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Messages } from '~/i18n/messages'
 import { LanguagePicker } from '~/components/ui/LanguagePicker'
 import { useT } from '~/i18n/useT'
+import { WELCOME_PATH } from '~/lib/onboarding'
 
 interface NavLink {
   to: string
@@ -51,6 +52,9 @@ export function FloatingNav() {
   // the profile arrives.
   const user = userProfile?.user
   const profile = userProfile?.profile
+
+  // The welcome tour has its own way forward; the nav would only distract.
+  if (location.pathname.startsWith(WELCOME_PATH)) return null
 
   return (
     <div className="fixed top-6 right-6 z-50 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2">
@@ -199,6 +203,17 @@ export function FloatingNav() {
 
                 {/* Language, shown once there is more than one */}
                 <LanguagePicker className="px-4 py-3 border-b border-giraffe-100" />
+
+                {/* Replay the welcome tour */}
+                <DropdownMenu.Item asChild>
+                  <Link
+                    to="/welcome"
+                    search={{ from: undefined }}
+                    className="block w-full px-4 py-2 text-left text-sm text-brown-700 hover:bg-giraffe-50 active:bg-giraffe-100 transition-colors font-medium cursor-pointer"
+                  >
+                    {t.nav.tour}
+                  </Link>
+                </DropdownMenu.Item>
 
                 {/* Admin panel, for the few accounts allowed to open it */}
                 {isAdmin && (

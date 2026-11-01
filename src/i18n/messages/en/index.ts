@@ -8,6 +8,7 @@ import { home } from './home'
 import { layout } from './layout'
 import { learn } from './learn'
 import { nav } from './nav'
+import { onboarding } from './onboarding'
 import { practice } from './practice'
 import { profile } from './profile'
 import { results } from './results'
@@ -32,4 +33,5 @@ export const en = {
   feelings,
   profile,
   challenges,
+  onboarding,
 }

@@ -16,6 +16,7 @@ export const nav = {
     points: 'Points',
     streak: 'Streak',
   },
+  tour: 'Tour of the app',
   admin: 'Admin',
   logOut: 'Log out',
   signIn: 'Sign in',
