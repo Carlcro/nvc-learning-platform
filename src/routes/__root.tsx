@@ -13,6 +13,7 @@ import { NotFoundPage } from '~/components/layout/ErrorStates'
 import { SpeechBubble } from '~/components/ui/SpeechBubble'
 import { SITE_NAME } from '~/lib/seo'
 import { LocaleSync } from '~/components/layout/LocaleSync'
+import { OnboardingRedirect } from '~/components/layout/OnboardingRedirect'
 import { getMessages } from '~/i18n/messages'
 import { resolveLocale } from '~/i18n/resolveLocale'
 import { useLocale, useT } from '~/i18n/useT'
@@ -120,6 +121,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <LocaleSync />
+        <OnboardingRedirect />
         <FloatingNav />
         <div>{children}</div>
         <Scripts />

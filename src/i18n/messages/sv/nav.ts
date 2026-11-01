@@ -18,6 +18,7 @@ export const nav: Messages['nav'] = {
     points: 'Poäng',
     streak: 'Svit',
   },
+  tour: 'Rundtur i appen',
   admin: 'Admin',
   logOut: 'Logga ut',
   signIn: 'Logga in',

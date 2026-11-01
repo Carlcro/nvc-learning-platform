@@ -18,6 +18,7 @@ export const nav: Messages['nav'] = {
     points: 'Points',
     streak: 'Série',
   },
+  tour: "Visite de l'appli",
   admin: 'Admin',
   logOut: 'Se déconnecter',
   signIn: 'Se connecter',

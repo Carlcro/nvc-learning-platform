@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as FeelingsRouteImport } from './routes/feelings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,11 @@ import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$user
 import { Route as PracticeScenarioIdTranscriptConversationIdRouteImport } from './routes/practice/$scenarioId/transcript/$conversationId'
 import { Route as PracticeScenarioIdConversationConversationIdRouteImport } from './routes/practice/$scenarioId/conversation/$conversationId'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeelingsRoute = FeelingsRouteImport.update({
   id: '/feelings',
   path: '/feelings',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/feelings': typeof FeelingsRouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/feelings/check-in': typeof FeelingsCheckInRoute
   '/feelings/intensity': typeof FeelingsIntensityRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/welcome': typeof WelcomeRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/feelings/check-in': typeof FeelingsCheckInRoute
   '/feelings/intensity': typeof FeelingsIntensityRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/feelings': typeof FeelingsRouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/challenges/daily': typeof ChallengesDailyRoute
   '/feelings/check-in': typeof FeelingsCheckInRoute
   '/feelings/intensity': typeof FeelingsIntensityRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/feelings'
+    | '/welcome'
     | '/challenges/daily'
     | '/feelings/check-in'
     | '/feelings/intensity'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/welcome'
     | '/challenges/daily'
     | '/feelings/check-in'
     | '/feelings/intensity'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/feelings'
+    | '/welcome'
     | '/challenges/daily'
     | '/feelings/check-in'
     | '/feelings/intensity'
@@ -331,6 +343,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   FeelingsRoute: typeof FeelingsRouteWithChildren
+  WelcomeRoute: typeof WelcomeRoute
   ChallengesDailyRoute: typeof ChallengesDailyRoute
   LearnFeelingRoute: typeof LearnFeelingRoute
   LearnIntegrationRoute: typeof LearnIntegrationRoute
@@ -351,6 +364,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/feelings': {
       id: '/feelings'
       path: '/feelings'
@@ -555,6 +575,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   FeelingsRoute: FeelingsRouteWithChildren,
+  WelcomeRoute: WelcomeRoute,
   ChallengesDailyRoute: ChallengesDailyRoute,
   LearnFeelingRoute: LearnFeelingRoute,
   LearnIntegrationRoute: LearnIntegrationRoute,
